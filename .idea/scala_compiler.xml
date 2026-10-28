@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ScalaCompilerConfiguration">
+    <option name="separateProdTestSources" value="true" />
+    <profile name="sbt 1" modules="scaling,scaling.annotations,scaling.boot,scaling.boot~1,scaling.common,scaling.config,scaling.context,scaling.context~1,scaling.data,scaling.data~1,scaling.demo,scaling.demo~1,scaling.intellij-plugin,scaling.intellij-plugin~1,scaling.security,scaling.security~1,scaling.slf4s-plugin,scaling.web,scaling.web~1" />
+    <profile name="sbt 2" modules="scaling.boot.main,scaling.boot.test,scaling.context.main,scaling.context.test,scaling.data.main,scaling.data.test,scaling.demo.main,scaling.demo.test,scaling.security.main,scaling.security.test,scaling.web.main,scaling.web.test">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-no-indent" />
+        <parameter value="-old-syntax" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Var" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Null" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Return" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.While" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.MutableDataStructures" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.OptionPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.TryPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.ScalaApp" />
+        <parameter value="-Xplugin-require:slf4s" />
+      </parameters>
+      <plugins>
+        <plugin path="C:\Users\Pawel\IdeaProjects\scaling\target\out\jvm\scala-3.10.0\slf4s-plugin\slf4s-plugin_3-0.1.0-SNAPSHOT.jar" />
+        <plugin path="C:\Users\Pawel\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\wartremover\wartremover_3.10.0\3.6.3\wartremover_3.10.0-3.6.3.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 3" modules="scaling.boot~1.main,scaling.boot~1.test,scaling.config.main,scaling.config.test,scaling.context~1.main,scaling.context~1.test,scaling.data~1.main,scaling.data~1.test,scaling.demo~1.main,scaling.demo~1.test,scaling.security~1.main,scaling.security~1.test,scaling.web~1.main,scaling.web~1.test">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-no-indent" />
+        <parameter value="-old-syntax" />
+        <parameter value="-Werror" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Var" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Null" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Return" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.While" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.MutableDataStructures" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.OptionPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.TryPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.ScalaApp" />
+        <parameter value="-Xplugin-require:slf4s" />
+      </parameters>
+      <plugins>
+        <plugin path="C:\Users\Pawel\IdeaProjects\scaling\target\out\jvm\scala-3.10.0\slf4s-plugin\slf4s-plugin_3-0.1.0-SNAPSHOT.jar" />
+        <plugin path="C:\Users\Pawel\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\wartremover\wartremover_3.10.0\3.6.3\wartremover_3.10.0-3.6.3.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 4" modules="scaling.intellij-plugin.main,scaling.intellij-plugin.test">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Var" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Null" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Return" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.While" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.MutableDataStructures" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.OptionPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.TryPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.ScalaApp" />
+      </parameters>
+      <plugins>
+        <plugin path="C:\Users\Pawel\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\wartremover\wartremover_2.13.18\3.6.3\wartremover_2.13.18-3.6.3.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 5" modules="scaling.intellij-plugin~1.main,scaling.intellij-plugin~1.test">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-Werror" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Var" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Null" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Return" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.While" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.MutableDataStructures" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.OptionPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.TryPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.ScalaApp" />
+      </parameters>
+      <plugins>
+        <plugin path="C:\Users\Pawel\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\wartremover\wartremover_2.13.18\3.6.3\wartremover_2.13.18-3.6.3.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 6" modules="scaling.annotations.main,scaling.annotations.test,scaling.main,scaling.test">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-no-indent" />
+        <parameter value="-old-syntax" />
+        <parameter value="-Werror" />
+      </parameters>
+      <plugins>
+        <plugin path="C:\Users\Pawel\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\wartremover\wartremover_3.10.0\3.6.3\wartremover_3.10.0-3.6.3.jar" />
+      </plugins>
+    </profile>
+    <profile name="sbt 7" modules="scaling.common.main,scaling.common.test,scaling.slf4s-plugin.main,scaling.slf4s-plugin.test">
+      <option name="deprecationWarnings" value="true" />
+      <option name="uncheckedWarnings" value="true" />
+      <option name="featureWarnings" value="true" />
+      <parameters>
+        <parameter value="-no-indent" />
+        <parameter value="-old-syntax" />
+        <parameter value="-Werror" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Var" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Null" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.Return" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.While" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.MutableDataStructures" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.OptionPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.TryPartial" />
+        <parameter value="-P:wartremover:traverser:org.wartremover.warts.ScalaApp" />
+      </parameters>
+      <plugins>
+        <plugin path="C:\Users\Pawel\AppData\Local\Coursier\Cache\v1\https\repo1.maven.org\maven2\org\wartremover\wartremover_3.10.0\3.6.3\wartremover_3.10.0-3.6.3.jar" />
+      </plugins>
+    </profile>
+  </component>
+</project>
