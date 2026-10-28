@@ -1,0 +1,8 @@
+app:
+  name: yaml
+  port: 2
+  servers:
+    - c
+    - d
+  only-yaml: true
+  empty:
