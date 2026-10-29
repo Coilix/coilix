@@ -1,8 +1,8 @@
 # Scaling
 
-Framework IoC dla Scali 3 z API wzorowanym na Springu. Build: sbt 2, testy: munit. Licencja: Apache-2.0 (do zatwierdzenia, `docs/legal/`).
+Framework IoC dla Scali 3 z API wzorowanym na Springu. Build: sbt 2, testy: munit. Licencja: Apache-2.0 (`docs/legal/`).
 
-Projekt zmienia nazwę na **Mortise** (SCALING-00008). Do czasu tej zmiany nowy kod nadal używa nazw `Scaling`, pakietu `org.scaling` i kluczy `scaling.*`, żeby zmiana objęła wszystko naraz.
+Projekt zmienia nazwę na **Coilix** z pakietem `io.github.coilix` (SCALING-00008). Do czasu tej zmiany nowy kod nadal używa nazw `Scaling`, pakietu `org.scaling` i kluczy `scaling.*`, żeby zmiana objęła wszystko naraz.
 
 ## Moduły
 

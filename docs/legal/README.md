@@ -10,25 +10,27 @@ Wynik taska [SCALING-00006](../../tasks/SCALING-00006_legal_and_publication.md).
 2. **Interfejs API i funkcjonalność nie są w UE chronione jak kod.** TSUE w sprawie C-406/10 *SAS Institute v World Programming* (2012) orzekł, że funkcjonalność programu, język programowania i format plików nie są chronione prawem autorskim do programu komputerowego (dyrektywa 2009/24/WE). W USA Sąd Najwyższy w *Google v. Oracle* (2021) uznał ponowną implementację deklaracji API Javy za dozwolony użytek (*fair use*).
 3. **Kod nie jest kopią.** Framework jest napisany w Scali 3 z inną architekturą (traity, `ConfigPath`, `ComponentProvider`, plugin kompilatora `@Slf4s`), a Spring w Javie. Komunikaty błędów i logi są napisane od nowa. Szczegóły są w [spring-similarity.md](spring-similarity.md).
 
-Ryzyko nie leży w kodzie, tylko w **znaku towarowym**: słowa „Spring” i „Spring Boot” należą do Broadcom i obowiązują je zasady z [spring.io/trademarks](https://spring.io/trademarks). Nazwa „Scaling” ich nie narusza. Ograniczenia opisu projektu są w [spring-similarity.md](spring-similarity.md#znaki-towarowe).
+Ryzyko nie leży w kodzie, tylko w **znaku towarowym**: słowa „Spring” i „Spring Boot” należą do Broadcom i obowiązują je zasady z [spring.io/trademarks](https://spring.io/trademarks). Nazwa „Coilix” ich nie narusza. Ograniczenia opisu projektu są w [spring-similarity.md](spring-similarity.md#znaki-towarowe).
 
-## Decyzje do zatwierdzenia
+## Decyzje
 
-| # | Decyzja | Rekomendacja | Dokument |
+Wszystkie decyzje zatwierdzone 2026-10-29.
+
+| # | Decyzja | Wybór | Dokument |
 |---|---|---|---|
-| 0 | Nazwa projektu | **Mortise** (zatwierdzona 2026-10-29) | [spring-similarity.md](spring-similarity.md#nazwa-projektu) |
+| 0 | Nazwa projektu | **Coilix** | [spring-similarity.md](spring-similarity.md#nazwa-projektu) |
 | 1 | Licencja projektu | Apache-2.0 | [license-decision.md](license-decision.md) |
 | 2 | Nagłówki licencyjne w plikach | brak, tylko `LICENSE` i `NOTICE` | [license-decision.md](license-decision.md#nagłówki-w-plikach) |
 | 3 | Model kontrybucji | DCO (`Signed-off-by`), bez CLA | [license-decision.md](license-decision.md#kontrybucje) |
-| 4 | `groupId` i pakiety | `dev.mortise`, jeśli domena `mortise.dev` jest wolna, w przeciwnym razie `io.github.<login>.mortise` | [publication-checklist.md](publication-checklist.md#przestrzeń-nazw) |
+| 4 | `groupId` i pakiety | `io.github.coilix` (organizacja GitHub [Coilix](https://github.com/Coilix)) | [publication-checklist.md](publication-checklist.md#przestrzeń-nazw) |
 | 5 | Wersjonowanie | SemVer, jedna wersja dla wszystkich modułów, `early-semver`, wersja z tagu | [../architecture/versioning.md](../architecture/versioning.md) |
 | 6 | Wersja Scali publikowanych artefaktów | Scala 3.9 LTS zamiast 3.10 | [../architecture/versioning.md](../architecture/versioning.md#wersja-scali-i-jdk) |
 | 7 | Niezależność modułów | `data`, `web`, `security` opcjonalne, podłączane przez SPI | [../architecture/modularity.md](../architecture/modularity.md) |
 
-## Pytania, na które odpowiedzieć może tylko autor
+## Pytania do autora
 
-- **Pracodawca i umowy.** Jeśli kod powstaje w ramach obowiązków pracowniczych, majątkowe prawa autorskie do programu należą do pracodawcy (art. 74 ust. 3 ustawy o prawie autorskim i prawach pokrewnych). To samo może wynikać z umowy B2B albo regulaminu pracy. Trzeba potwierdzić, że projekt powstaje poza obowiązkami i na własnym sprzęcie albo mieć zgodę pracodawcy na piśmie.
-- **Login GitHub** dla przestrzeni nazw `io.github.<login>` i adresu GitHub Pages.
+- **Pracodawca i umowy.** Jeśli kod powstaje w ramach obowiązków pracowniczych, majątkowe prawa autorskie do programu należą do pracodawcy (art. 74 ust. 3 ustawy o prawie autorskim i prawach pokrewnych). To samo może wynikać z umowy B2B albo regulaminu pracy. **Odpowiedź (2026-10-29): autor potwierdził, że prawa do kodu należą do niego.**
+- **Konto GitHub:** organizacja [Coilix](https://github.com/Coilix), repozytorium `Coilix/coilix`.
 
 ## Dokumenty
 
