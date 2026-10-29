@@ -31,8 +31,8 @@ API nie jest stabilne. Zgodnie z `early-semver`:
 
 ## Kompatybilność
 
-- **Binarna:** [MiMa](https://github.com/lightbend-labs/mima) porównuje bytecode z poprzednim wydaniem. Wsparcie dla sbt 2 jest niepotwierdzone. Jeśli go nie ma, uruchamiamy MiMa jako narzędzie CLI w CI.
-- **TASTy:** [TASTy-MiMa](https://github.com/scalacenter/tasty-mima) sprawdza zgodność dla kodu Scali 3 (inline, typy, `given`), której MiMa nie widzi.
+- **Binarna:** [MiMa](https://github.com/lightbend-labs/mima) (`sbt mimaReportBinaryIssues`, wtyczka dla sbt 2) porównuje bytecode z poprzednim wydaniem tej samej linii `MAJOR.MINOR`. Wydanie odniesienia wybiera się automatycznie z ostatniego tagu (`previousStableVersion` z sbt-dynver), więc przed pierwszym wydaniem i po podniesieniu `MINOR` sprawdzenie nic nie robi. CI uruchamia je w każdym PR.
+- **TASTy:** [TASTy-MiMa](https://github.com/scalacenter/tasty-mima) sprawdza zgodność dla kodu Scali 3 (inline, typy, `given`), której MiMa nie widzi. Nie ma jeszcze wtyczki dla sbt 2 (stan na 2026-10-29), więc do czasu jej wydania trzeba ją uruchamiać ręcznie przed wydaniem patch albo przez API biblioteki w osobnym kroku CI.
 - W fazie `0.x` sprawdzenia działają tylko między wydaniami patch tej samej linii (`0.3.0` ↔ `0.3.1`). Od `1.0.0` obejmują całą linię major.
 - **Wycofywanie API:** element najpierw dostaje `@deprecated("use X instead", since = "0.4.0")`, a znika najwcześniej w następnej wersji niezgodnej (`0.5.0`, a od 1.0 w następnym major).
 
@@ -40,7 +40,7 @@ API nie jest stabilne. Zgodnie z `early-semver`:
 
 Scala 3 jest kompatybilna tylko wstecz: biblioteka skompilowana Scalą 3.N działa tylko w projektach na 3.N i nowszych. Publikując wersję skompilowaną Scalą 3.10, wymuszamy na użytkownikach 3.10.
 
-- **Publikowane moduły kompilujemy Scalą z aktualnej linii LTS.** 3 września 2026 wyszła **Scala 3.9.0 LTS**, która zastępuje 3.3 LTS jako zalecana baza dla bibliotek. Rekomendacja: `scalaVersion := 3.9.x` dla publikowanych modułów zamiast 3.10.0. Wymaga to sprawdzenia, czy kod nie używa funkcji z 3.10.
+- **Publikowane moduły kompilujemy Scalą z aktualnej linii LTS.** 3 września 2026 wyszła **Scala 3.9.0 LTS**, która zastępuje 3.3 LTS jako zalecana baza dla bibliotek. Build używa `scalaVersion := 3.9.0` (zmienione z 3.10.0 w SCALING-00009, kod nie korzystał z funkcji 3.10). Plugin IntelliJ zostaje na Scali 2.13.
 - Wyjątek od zasady „najnowsza stabilna wersja” z `CLAUDE.md`: dla Scali obowiązuje najnowsza wersja **linii LTS**.
 - **JDK:** Scala 3.9 wymaga JDK 17, więc bytecode generujemy dla 17 (`-java-output-version 17` w scalac, `--release 17` w javac), choć build działa na nowszym JDK. CI testuje na JDK 17 i najnowszym LTS (teraz 25).
 - Podniesienie minimalnej wersji Scali lub JDK od `1.0.0` to zmiana `MAJOR`.
@@ -51,7 +51,11 @@ Scala 3 jest kompatybilna tylko wstecz: biblioteka skompilowana Scalą 3.N dzia�
 
 ## Proces wydania
 
-1. `CHANGELOG.md`: sekcja `Unreleased` przemianowana na nową wersję z datą.
-2. Tag `vX.Y.Z` na `master` (podpisany: `git tag -s`).
-3. GitHub Actions: `sbt testFull`, MiMa i TASTy-MiMa, publikacja na Maven Central (sbt-ci-release), plugin IntelliJ do Marketplace, dokumentacja na GitHub Pages (SCALING-00007), GitHub Release z sekcją z changelogu.
-4. Dla linii utrzymywanych równolegle: gałąź `series/X.Y`, z której wychodzą poprawki `X.Y.Z+1`.
+Kroki dla opiekuna są w [docs/process/development.md](../process/development.md#wydanie). Automatyzacja:
+
+- `.github/workflows/ci.yml`: przy każdym pushu na `master` i `series/**` oraz w każdym PR `checkLicenses`, `testFull`, `mimaReportBinaryIssues` i `doc` (bez zepsutych linków) na JDK 17 i 25.
+- `.github/workflows/release.yml`: na tag `v*` te same sprawdzenia, wyciągnięcie sekcji wersji z `CHANGELOG.md` (brak sekcji zatrzymuje wydanie), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem (`-M1`, `-RC1`) daje pre-release.
+- Wersja pochodzi z tagu przez sbt-dynver (część sbt-ci-release): commit z tagiem `v0.1.0` ma wersję `0.1.0`, kolejne commity `0.1.0+N-<hash>-SNAPSHOT`, a przed pierwszym tagiem `0.0.0+N-<hash>-SNAPSHOT`.
+- Do zrobienia później: publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (SCALING-00007).
+
+Sekrety repozytorium wymagane przez `release.yml`: `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` (token z Central Portal).
