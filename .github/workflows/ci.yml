@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  push:
+    branches: [master, "series/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build on JDK ${{ matrix.java }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [17, 25]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: ${{ matrix.java }}
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Check dependency licenses
+        run: sbt checkLicenses
+      - name: Test
+        run: sbt testFull
+      - name: Check binary compatibility
+        run: sbt mimaReportBinaryIssues
+      - name: Generate API documentation
+        run: |
+          sbt doc 2>&1 | tee doc.log
+          if grep -q "Couldn't resolve a member for the given link query" doc.log; then
+            echo "::error::Scaladoc contains broken links"
+            exit 1
+          fi
