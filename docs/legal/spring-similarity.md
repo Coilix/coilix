@@ -47,26 +47,32 @@ Nazwy adnotacji odpowiadają Springowi: `@Component`, `@Service`, `@Repository`,
 
 Zasady Springa nie mówią wprost o sformułowaniu „inspired by”. Bezpieczniejsze jest opisowe „API modeled on” albo „familiar to Spring developers” razem z zastrzeżeniem o braku powiązania.
 
-**Stan obecny:** `CLAUDE.md`, taski i `.gitignore` (`.springBeans`) wspominają Springa wewnętrznie. To nie jest użycie znaku w obrocie, ale `CLAUDE.md` będzie publiczny, więc opis projektu warto zmienić na opisowy („framework IoC z API wzorowanym na Springu”). `@ScalingBootApplication`: słowo „Boot” samo nie jest znakiem, a konstrukcja „<nazwa> Boot” jest szeroko używana. Ryzyko jest niskie, ale do rozważenia przy zmianie nazw.
+**Stan obecny:** `CLAUDE.md`, taski i `.gitignore` (`.springBeans`) wspominają Springa wewnętrznie. To nie jest użycie znaku w obrocie, ale `CLAUDE.md` będzie publiczny, więc opis projektu warto zmienić na opisowy („framework IoC z API wzorowanym na Springu”). `@ScalingBootApplication`: słowo „Boot” samo nie jest znakiem, a konstrukcja „<nazwa> Boot” jest szeroko używana. Ryzyko jest niskie, ale przy zmianie nazwy adnotacja traci „Boot” i staje się `@CoilixApplication` (SCALING-00008).
 
 ## Nazwa projektu
 
-**Decyzja (2026-10-29): projekt zmienia nazwę ze „Scaling” na „Mortise”.**
+**Decyzja (2026-10-29): projekt zmienia nazwę ze „Scaling” na „Coilix”.**
 
 Powody rezygnacji ze „Scaling”:
 
 - to zwykłe angielskie słowo („skalowanie”), więc daje słabą ochronę jako znak towarowy i trudno je wyszukać („scaling scala” zwraca wyniki o skalowaniu aplikacji),
 - **domena `scaling.org` jest zajęta** (zwraca adresy IP), więc `org.scaling` odpada jako `groupId` na Maven Central.
 
-„Mortise” (gniazdo w złączu stolarskim *mortise and tenon*, które trzyma elementy bez gwoździ) nawiązuje do składania komponentów przez kontener IoC. Sprawdzenie z 2026-10-29:
+Odrzucone kandydatury:
+
+- „Mortise”: zajęte `mortise.dev`, `mortise.io`, `mortise.org` i konto `mortise` na GitHubie,
+- „Nimbo”: zajęte domeny i konto GitHub, 474 repozytoria o tej nazwie, w tym narzędzie ofensywne Nimbo-C2,
+- krótkie angielskie słowa ze stolarstwa (`tenon`, `dowel`, `dovetail`, `joinery` i inne): wszystkie domeny `.dev` i konta GitHub zajęte.
+
+„Coilix” to nazwa wymyślona od *coil*: sprężyny i spirali. Spirala to motyw logo Scali, a zwinięta sprężyna oddaje energię komponentów gotowych do użycia. Sprawdzenie z 2026-10-29:
 
 - nie zawiera znaku Spring ani nie nawiązuje do pór roku, więc nie sugeruje związku ze Springiem,
-- wyszukiwarka nie zwraca biblioteki ani frameworka o tej nazwie,
-- Maven Central: brak artefaktów `mortise*`,
-- `mortise.dev` nie odpowiada w DNS (do potwierdzenia u rejestratora, bo domena może być zarejestrowana bez rekordów), `mortise.org` i `mortise.io` są zajęte,
-- konto `mortise` na GitHubie jest zajęte, więc repozytorium będzie pod kontem autora albo organizacją (np. `mortise-framework`).
+- wyszukiwarka nie zwraca produktu, firmy ani znaku o tej nazwie (najbliższa jest firma „Coelix”, inna pisownia i inna branża),
+- Maven Central: brak artefaktów `coilix*`,
+- `coilix.dev` i `coilix.io` niezarejestrowane (RDAP zwraca 404),
+- organizacja GitHub [Coilix](https://github.com/Coilix) założona przez autora. Istnieje nieaktywne konto użytkownika `Coillix` (podwójne „l”, założone w 2014, 0 repozytoriów), co nie koliduje z przestrzenią nazw `io.github.coilix`.
 
-Przed publikacją: przeszukać EUIPO (TMview) i USPTO pod kątem znaków „Mortise” w klasach 9 i 42 Nicei.
+Przed publikacją: przeszukać EUIPO (TMview) i USPTO pod kątem znaków „Coilix” w klasach 9 i 42 Nicei (wymaga ręcznego wyszukania w formularzach rejestrów). Warto też kupić `coilix.dev`, żeby nikt jej nie zajął, nawet jeśli `groupId` zostaje `io.github.coilix`.
 
 ## Działania
 
