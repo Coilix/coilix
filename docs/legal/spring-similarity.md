@@ -9,8 +9,8 @@
 
 | Miejsce | Tekst | Ocena |
 |---|---|---|
-| `DefaultStartupMessageFormatter.started` | `Started <app> in <n> seconds` | Prawie tak samo jak log Spring Boota `Started <app> in <n> seconds (process running for <m>)`. Krótka fraza opisująca fakt, raczej niechroniona, ale rozpoznawalna. **Do przeredagowania**, np. `<app> ready in <n> s`. |
-| `DefaultStartupMessageFormatter.starting` | `Starting <app>` | Fraza ogólna, bez zmian. |
+| `DefaultStartupMessageFormatter.started` | `<app> is up after <n> s` | Wcześniej `Started <app> in <n> seconds`, prawie tak samo jak log Spring Boota. Przeredagowane w SCALING-00008. |
+| `DefaultStartupMessageFormatter.starting` | `Launching <app>` | Wcześniej `Starting <app>`. Zmienione razem z `started`, żeby oba komunikaty były spójne. |
 | `10_demo/.../banner.txt` | ASCII-art „Coilix” | Własny napis wygenerowany fontem FIGlet „standard”. Mechanizm `banner.txt` jest funkcją, a nie utworem. Bez zmian. |
 | Komunikaty wyjątków (`No bean of type ...`, `Circular dependency detected among ...`, `Multiple beans of type ...`) | własne sformułowania | Opisują ten sam problem co Spring, ale innymi słowami. Bez zmian. |
 | Klucze configu (`coilix.boot.*`, `coilix.context.*`) | własna przestrzeń `coilix.*` | Bez zmian. |
@@ -76,7 +76,7 @@ Przed publikacją: przeszukać EUIPO (TMview) i USPTO pod kątem znaków „Coil
 
 ## Działania
 
-1. Zmienić `Started <app> in <n> seconds` na własne sformułowanie (SCALING-00008).
+1. Zmienić `Started <app> in <n> seconds` na własne sformułowanie (zrobione w SCALING-00008).
 2. Dodać do README zastrzeżenie o braku powiązania i atrybucję znaku (SCALING-00008).
 3. Dodać do `CLAUDE.md` zasady: bez „Spring” w nazwach i bez kopiowania tekstów ani kodu Springa (zrobione).
 4. Sprawdzić nazwę w rejestrach znaków przed pierwszą publikacją (SCALING-00008).

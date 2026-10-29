@@ -7,14 +7,14 @@ final class DefaultStartupMessageFormatterTest extends FunSuite {
   private val formatter = DefaultStartupMessageFormatter()
 
   test("formats the starting message") {
-    assertEquals(formatter.starting("DemoApplication"), "Starting DemoApplication")
+    assertEquals(formatter.starting("DemoApplication"), "Launching DemoApplication")
   }
 
   test("formats the started message with seconds") {
-    assertEquals(formatter.started("DemoApplication", 123.millis), "Started DemoApplication in 0.123 seconds")
+    assertEquals(formatter.started("DemoApplication", 123.millis), "DemoApplication is up after 0.123 s")
   }
 
   test("formats whole seconds with three decimals") {
-    assertEquals(formatter.started("DemoApplication", 2.seconds), "Started DemoApplication in 2.000 seconds")
+    assertEquals(formatter.started("DemoApplication", 2.seconds), "DemoApplication is up after 2.000 s")
   }
 }

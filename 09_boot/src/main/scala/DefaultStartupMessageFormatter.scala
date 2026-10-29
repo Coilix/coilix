@@ -6,10 +6,10 @@ import scala.math.BigDecimal.RoundingMode
 final class DefaultStartupMessageFormatter extends StartupMessageFormatter {
 
   override def starting(applicationName: String): String =
-    s"Starting $applicationName"
+    s"Launching $applicationName"
 
   override def started(applicationName: String, elapsed: FiniteDuration): String =
-    s"Started $applicationName in ${seconds(elapsed)} seconds"
+    s"$applicationName is up after ${seconds(elapsed)} s"
 
   private def seconds(elapsed: FiniteDuration): String = (BigDecimal(elapsed.toMillis) / 1000).setScale(
     3,
