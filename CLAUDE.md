@@ -33,7 +33,7 @@ Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/m
 - Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services` (SCALING-00010), a nie przez zależność `boot` od niego.
 - Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
 
-Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`.
+Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy, ma `publish / skip := true`.
 Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/main/scala`, bez katalogów pakietu.
 
 ## Zasady kodu
@@ -63,7 +63,7 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Formatowanie robi scalafmt przy każdej kompilacji (`scalafmtOnCompile`, konfiguracja w `.scalafmt.conf`), a każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
 - Każda nowa klasa ma testy munit w `src/test/scala` swojego modułu.
 - Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (SCALING-00009, `docs/architecture/versioning.md`).
-- Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane.
+- Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.
 - Nie kopiuje się kodu, dokumentacji, komunikatów ani testów ze Springa i innych frameworków, także w parafrazie. Nazwy adnotacji i pojęć mogą odpowiadać Springowi, teksty piszemy od nowa.
 - Słowa „Spring” nie używa się w nazwach typów, pakietów, modułów, artefaktów, kluczy configu ani tytułów dokumentacji. W opisach tylko opisowo („API modeled on Spring”), bez sugerowania powiązania z Broadcom (`docs/legal/spring-similarity.md`).
 
@@ -115,6 +115,7 @@ Taski mają identyfikatory `SCALING-NNNNN` (plik `tasks/SCALING-NNNNN_nazwa.md`)
 
 - `sbt testFull` uruchamia wszystkie testy (`sbt test` w sbt 2 to `testQuick` z cache).
 - `sbt demo/run` uruchamia demo.
+- `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/<scala>/<moduł>/api` (`02_annotations`: `target/out/jvm/u/annotations/api`).
 - `sbt intellij-plugin/installIntellijPlugin` instaluje plugin IDE (potem restart IntelliJ).
 - Gdy działa sbt uruchomione przez IntelliJ, sbt z terminala trzeba odpalać z `-Dsbt.server.autostart=false`.

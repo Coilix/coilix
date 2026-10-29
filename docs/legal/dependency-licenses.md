@@ -1,6 +1,10 @@
 # Licencje zależności
 
-Źródło: `sbt <moduł>/dependencyLicenseInfo` i sekcje `<licenses>` w POM-ach z cache Coursiera, stan na 2026-10-29. Pełny audyt (z narzędziem w CI) jest w zakresie [SCALING-00008](../../tasks/SCALING-00008_license_and_publication_setup.md).
+Źródło: `sbt <moduł>/dependencyLicenseInfo` i sekcje `<licenses>` w POM-ach z cache Coursiera, stan na 2026-10-29.
+
+## Audyt w buildzie
+
+`sbt checkLicenses` (`project/LicenseAudit.scala`) sprawdza zależności `compile` i `runtime` każdego modułu i przerywa build, gdy któraś ma licencję spoza listy z sekcji [Obowiązki](#obowiązki) albo nie ma licencji w POM-ie. Zależność z kilkoma licencjami do wyboru, z których jedna jest dozwolona, trzeba dopisać do `chosenLicenses` w `LicenseAudit.scala` z wybraną licencją (teraz: reflections i javassist). Zależności `test` i `provided` nie są sprawdzane, bo nie trafiają do użytkowników.
 
 ## Zależności runtime publikowanych modułów
 
@@ -24,7 +28,7 @@
 | `org.scala-sbt:compiler-interface`, `util-interface` | Apache-2.0 |
 | `org.ow2.asm:*` | BSD-3-Clause |
 
-`scala3-compiler` jest teraz zwykłą zależnością. Przy publikacji ma mieć zakres `Provided`, bo dostarcza go kompilator użytkownika. Inaczej trafi do jego classpath.
+`scala3-compiler` ma zakres `Provided`, bo dostarcza go kompilator użytkownika.
 
 ## Zależności testowe i narzędzia builda
 
