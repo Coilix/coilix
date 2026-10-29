@@ -1,4 +1,4 @@
-package org.scaling.config
+package io.github.coilix.config
 
 trait ScalarReader {
   def supports(targetType: Class[?]): Boolean

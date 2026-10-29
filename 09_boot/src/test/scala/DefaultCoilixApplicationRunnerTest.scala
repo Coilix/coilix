@@ -1,16 +1,16 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
+import io.github.coilix.boot.application.ArgumentsAwareBean
+import io.github.coilix.boot.application.FixtureApplication
+import io.github.coilix.boot.application.RunJournal
+import io.github.coilix.config.ClasspathEnvironmentLoader
+import io.github.coilix.config.ConfigFormat
+import io.github.coilix.config.Environment
+import io.github.coilix.context.ConfigurableApplicationContext
 import java.util.concurrent.atomic.AtomicReference
 import munit.FunSuite
-import org.scaling.boot.application.ArgumentsAwareBean
-import org.scaling.boot.application.FixtureApplication
-import org.scaling.boot.application.RunJournal
-import org.scaling.config.ClasspathEnvironmentLoader
-import org.scaling.config.ConfigFormat
-import org.scaling.config.Environment
-import org.scaling.context.ConfigurableApplicationContext
 
-final class DefaultScalingApplicationRunnerTest extends FunSuite {
+final class DefaultCoilixApplicationRunnerTest extends FunSuite {
   private val hooked = AtomicReference(List.empty[ConfigurableApplicationContext])
 
   private val registrar = new ShutdownHookRegistrar {
@@ -20,7 +20,7 @@ final class DefaultScalingApplicationRunnerTest extends FunSuite {
     }
   }
 
-  private val runner = DefaultScalingApplicationRunner(
+  private val runner = DefaultCoilixApplicationRunner(
     SimpleArgumentsParser(),
     ClasspathEnvironmentLoader("runner", ConfigFormat.byPrecedence, getClass.getClassLoader),
     components => StartupComponents.default(using components).copy(shutdownHooks = registrar)

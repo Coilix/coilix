@@ -1,4 +1,4 @@
-package org.scaling.common
+package io.github.coilix.common
 
 import scala.reflect.ClassTag
 

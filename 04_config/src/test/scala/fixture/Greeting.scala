@@ -1,6 +1,6 @@
-package org.scaling.config.fixture
+package io.github.coilix.config.fixture
 
-import org.scaling.config.ConfigPath
+import io.github.coilix.config.ConfigPath
 
 trait Greeting {
   def greet(name: String): String

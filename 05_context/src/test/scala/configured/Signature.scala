@@ -1,3 +1,3 @@
-package org.scaling.context.configured
+package io.github.coilix.context.configured
 
 final class Signature(val text: String)

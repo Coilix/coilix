@@ -1,4 +1,4 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
 final class TemplateGreeter(greeting: String) extends Greeter {
   override def greet(name: String): String = s"$greeting, $name"

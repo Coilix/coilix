@@ -10,7 +10,7 @@ Działa przez extension point `org.intellij.scala.syntheticMemberInjector` plugi
 sbt intellij-plugin/installIntellijPlugin
 ```
 
-Task kopiuje jar pluginu do `<katalog konfiguracji IDE>/plugins/scaling-slf4s.jar`. Po instalacji trzeba zrestartować IntelliJ.
+Task kopiuje jar pluginu do `<katalog konfiguracji IDE>/plugins/coilix-slf4s.jar`. Po instalacji trzeba zrestartować IntelliJ.
 
 Ręczna instalacja: `sbt intellij-plugin/packageBin`, a potem w IntelliJ *Settings → Plugins → ⚙ → Install Plugin from Disk...* i wybór jara z `target/out/jvm/scala-2.13.18/intellij-plugin/`.
 

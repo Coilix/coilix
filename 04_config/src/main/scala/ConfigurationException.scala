@@ -1,5 +1,5 @@
-package org.scaling.config
+package io.github.coilix.config
 
-import org.scaling.common.ScalingException
+import io.github.coilix.common.CoilixException
 
-final class ConfigurationException(message: String) extends ScalingException(message)
+final class ConfigurationException(message: String) extends CoilixException(message)

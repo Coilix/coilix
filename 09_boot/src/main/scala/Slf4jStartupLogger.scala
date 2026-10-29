@@ -1,6 +1,6 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.annotation.Slf4s
+import io.github.coilix.annotation.Slf4s
 import scala.concurrent.duration.FiniteDuration
 
 @Slf4s

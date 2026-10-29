@@ -1,6 +1,6 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.config.Environment
+import io.github.coilix.config.Environment
 
 final case class PropertiesInstanceFactory(environment: Environment, prefix: String, beanClass: Class[?]) extends InstanceFactory {
 

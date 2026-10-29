@@ -1,7 +1,7 @@
-package org.scaling.boot.application
+package io.github.coilix.boot.application
 
+import io.github.coilix.annotation.Component
 import java.util.concurrent.atomic.AtomicReference
-import org.scaling.annotation.Component
 
 @Component
 final class RunJournal {

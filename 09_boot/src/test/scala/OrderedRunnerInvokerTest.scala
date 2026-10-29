@@ -1,14 +1,14 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
+import io.github.coilix.boot.application.FirstRunner
+import io.github.coilix.boot.application.RunJournal
+import io.github.coilix.boot.application.SecondRunner
+import io.github.coilix.boot.application.UnorderedRunner
+import io.github.coilix.context.DefaultApplicationContext
+import io.github.coilix.context.ImmutableBeanRegistry
+import io.github.coilix.context.PrimaryCandidateSelector
+import io.github.coilix.context.RegisteredBean
 import munit.FunSuite
-import org.scaling.boot.application.FirstRunner
-import org.scaling.boot.application.RunJournal
-import org.scaling.boot.application.SecondRunner
-import org.scaling.boot.application.UnorderedRunner
-import org.scaling.context.DefaultApplicationContext
-import org.scaling.context.ImmutableBeanRegistry
-import org.scaling.context.PrimaryCandidateSelector
-import org.scaling.context.RegisteredBean
 
 final class OrderedRunnerInvokerTest extends FunSuite {
 

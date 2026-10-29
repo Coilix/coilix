@@ -1,4 +1,4 @@
-package org.scaling.intellij
+package io.github.coilix.intellij
 
 import munit.FunSuite
 

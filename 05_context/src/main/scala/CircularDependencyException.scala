@@ -1,6 +1,6 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.common.ScalingException
+import io.github.coilix.common.CoilixException
 
 final class CircularDependencyException(beanNames: List[String])
-    extends ScalingException(s"Circular dependency detected among: ${beanNames.mkString(", ")}")
+    extends CoilixException(s"Circular dependency detected among: ${beanNames.mkString(", ")}")

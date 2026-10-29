@@ -1,10 +1,10 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.context.wiring.EnglishGreeter
+import io.github.coilix.context.wiring.Farewell
+import io.github.coilix.context.wiring.Greeter
+import io.github.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
-import org.scaling.context.wiring.EnglishGreeter
-import org.scaling.context.wiring.Farewell
-import org.scaling.context.wiring.Greeter
-import org.scaling.context.wiring.PolishGreeter
 
 final class PrimaryCandidateSelectorTest extends FunSuite {
   private val selector = PrimaryCandidateSelector()

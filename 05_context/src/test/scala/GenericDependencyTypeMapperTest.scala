@@ -1,8 +1,8 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.context.constructor.DependencyShapes
+import io.github.coilix.context.wiring.Greeter
 import munit.FunSuite
-import org.scaling.context.constructor.DependencyShapes
-import org.scaling.context.wiring.Greeter
 
 final class GenericDependencyTypeMapperTest extends FunSuite {
   private val mapper = GenericDependencyTypeMapper()

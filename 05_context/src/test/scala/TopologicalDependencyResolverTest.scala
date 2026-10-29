@@ -1,12 +1,12 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.context.cycle.Chicken
+import io.github.coilix.context.cycle.Egg
+import io.github.coilix.context.wiring.ContextAwareBean
+import io.github.coilix.context.wiring.DefaultGreetingService
+import io.github.coilix.context.wiring.EnglishGreeter
+import io.github.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
-import org.scaling.context.cycle.Chicken
-import org.scaling.context.cycle.Egg
-import org.scaling.context.wiring.ContextAwareBean
-import org.scaling.context.wiring.DefaultGreetingService
-import org.scaling.context.wiring.EnglishGreeter
-import org.scaling.context.wiring.PolishGreeter
 
 final class TopologicalDependencyResolverTest extends FunSuite {
   private val resolver = TopologicalDependencyResolver(PrimaryCandidateSelector())

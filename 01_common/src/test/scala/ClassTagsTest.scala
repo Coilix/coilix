@@ -1,7 +1,7 @@
-package org.scaling.common
+package io.github.coilix.common
 
+import io.github.coilix.common.ClassTags.*
 import munit.FunSuite
-import org.scaling.common.ClassTags.*
 import scala.reflect.ClassTag
 
 final class ClassTagsTest extends FunSuite {
@@ -11,6 +11,6 @@ final class ClassTagsTest extends FunSuite {
   }
 
   test("resolves the runtime class from a context bound") {
-    assertEquals(runtimeTypeOf[ScalingException], classOf[ScalingException])
+    assertEquals(runtimeTypeOf[CoilixException], classOf[CoilixException])
   }
 }

@@ -1,7 +1,7 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.annotation.Slf4s
-import org.scaling.config.Environment
+import io.github.coilix.annotation.Slf4s
+import io.github.coilix.config.Environment
 
 @Slf4s
 final class ReflectiveBeanInstantiator(environment: Environment) extends BeanInstantiator {

@@ -1,17 +1,18 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.context.configured.Salutation
+import io.github.coilix.context.configured.ServerSettings
+import io.github.coilix.context.configured.Signature
+import io.github.coilix.context.configured.ValueBean
 import munit.FunSuite
-import org.scaling.config.ComponentProvider
-import org.scaling.context.configured.Salutation
-import org.scaling.context.configured.ServerSettings
-import org.scaling.context.configured.Signature
-import org.scaling.context.configured.ValueBean
 import scala.concurrent.duration.DurationInt
 
 final class ConfiguredContextTest extends FunSuite {
   private given ComponentProvider = Providers.fromHocon("server { host = example.org }, salutation.word = Hi")
 
-  private val context = ApplicationContextBuilder.default.build(ClassPathScanner.default.scan("org.scaling.context.configured"))
+  private val context =
+    ApplicationContextBuilder.default.build(ClassPathScanner.default.scan("io.github.coilix.context.configured"))
 
   test("binds a @ConfigurationProperties bean with defaults") {
     assertEquals(context.getBean[ServerSettings], ServerSettings("example.org", 80))

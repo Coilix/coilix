@@ -1,15 +1,15 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.config.ComponentProvider
-import org.scaling.config.ConfigPath
-import org.scaling.context.ApplicationContext
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.ConfigPath
+import io.github.coilix.context.ApplicationContext
 
 trait RunnerInvoker {
   def invoke(context: ApplicationContext, arguments: ApplicationArguments): Unit
 }
 
 object RunnerInvoker {
-  given ConfigPath[RunnerInvoker] = ConfigPath[RunnerInvoker]("scaling.boot.runner-invoker")
+  given ConfigPath[RunnerInvoker] = ConfigPath[RunnerInvoker]("coilix.boot.runner-invoker")
 
   def default(using components: ComponentProvider): RunnerInvoker =
     components.get[RunnerInvoker](OrderedRunnerInvoker())

@@ -1,13 +1,13 @@
 <idea-plugin>
-  <id>org.scaling.slf4s</id>
-  <name>Scaling Slf4s</name>
+  <id>io.github.coilix.slf4s</id>
+  <name>Coilix Slf4s</name>
   <version>0.1.0</version>
-  <vendor>Scaling</vendor>
+  <vendor>Coilix</vendor>
   <description>Adds the synthetic log member of type org.slf4j.Logger to Scala definitions annotated with @Slf4s.</description>
   <idea-version since-build="262"/>
   <depends>com.intellij.modules.platform</depends>
   <depends>org.intellij.scala</depends>
   <extensions defaultExtensionNs="org.intellij.scala">
-    <syntheticMembersInjector implementation="org.scaling.intellij.Slf4sMembersInjector"/>
+    <syntheticMembersInjector implementation="io.github.coilix.intellij.Slf4sMembersInjector"/>
   </extensions>
 </idea-plugin>

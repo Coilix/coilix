@@ -1,4 +1,4 @@
-package org.scaling.context.wiring
+package io.github.coilix.context.wiring
 
 trait GreetingService {
   def greet(name: String): String

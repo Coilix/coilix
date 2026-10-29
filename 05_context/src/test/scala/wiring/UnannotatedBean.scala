@@ -1,3 +1,3 @@
-package org.scaling.context.wiring
+package io.github.coilix.context.wiring
 
 final class UnannotatedBean

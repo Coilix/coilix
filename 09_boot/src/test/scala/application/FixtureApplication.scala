@@ -1,6 +1,6 @@
-package org.scaling.boot.application
+package io.github.coilix.boot.application
 
-import org.scaling.annotation.ScalingBootApplication
+import io.github.coilix.annotation.CoilixApplication
 
-@ScalingBootApplication
+@CoilixApplication
 object FixtureApplication

@@ -1,4 +1,4 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
 import munit.FunSuite
 import scala.concurrent.duration.DurationInt

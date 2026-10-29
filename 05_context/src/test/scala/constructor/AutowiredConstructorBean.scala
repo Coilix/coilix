@@ -1,6 +1,6 @@
-package org.scaling.context.constructor
+package io.github.coilix.context.constructor
 
-import org.scaling.annotation.Autowired
+import io.github.coilix.annotation.Autowired
 
 final class AutowiredConstructorBean(val first: String, val second: String) {
   @Autowired

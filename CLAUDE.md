@@ -1,8 +1,8 @@
-# Scaling
+# Coilix
 
 Framework IoC dla Scali 3 z API wzorowanym na Springu. Build: sbt 2, testy: munit. Licencja: Apache-2.0 (`docs/legal/`).
 
-Projekt zmienia nazwę na **Coilix** z pakietem `io.github.coilix` (SCALING-00008). Do czasu tej zmiany nowy kod nadal używa nazw `Scaling`, pakietu `org.scaling` i kluczy `scaling.*`, żeby zmiana objęła wszystko naraz.
+Artefakty mają `groupId` `io.github.coilix`, pakiety `io.github.coilix.*`, a klucze configu prefiks `coilix.*`. Repozytorium: [Coilix/coilix](https://github.com/Coilix/coilix). Do 2026-10-29 projekt nazywał się „Scaling” (pakiet `org.scaling`), stąd prefiks `SCALING-` w identyfikatorach tasków.
 
 ## Moduły
 
@@ -12,17 +12,17 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 
 | Katalog | Projekt sbt | Pakiet | Język | Zawartość |
 |---|---|---|---|---|
-| `01_common` | `common` | `org.scaling.common` | Scala | wspólne typy i rozszerzenia |
-| `02_annotations` | `annotations` | `org.scaling.annotation` | Java | adnotacje runtime |
-| `03_slf4s_plugin` | `slf4s-plugin` | `org.scaling.slf4s` | Scala | plugin kompilatora `@Slf4s` |
-| `04_config` | `config` | `org.scaling.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
-| `05_context` | `context` | `org.scaling.context` | Scala | kontener IoC |
-| `06_data` | `data` | `org.scaling.data` | Scala | bazy danych (planowane) |
-| `07_web` | `web` | `org.scaling.web` | Scala | endpointy (planowane) |
-| `08_security` | `security` | `org.scaling.security` | Scala | security (planowane) |
-| `09_boot` | `boot` | `org.scaling.boot` | Scala | start aplikacji |
-| `10_demo` | `demo` | `org.scaling.demo` | Scala | aplikacja demo |
-| `11_intellij_plugin` | `intellij-plugin` | `org.scaling.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
+| `01_common` | `common` | `io.github.coilix.common` | Scala | wspólne typy i rozszerzenia |
+| `02_annotations` | `annotations` | `io.github.coilix.annotation` | Java | adnotacje runtime |
+| `03_slf4s_plugin` | `slf4s-plugin` | `io.github.coilix.slf4s` | Scala | plugin kompilatora `@Slf4s` |
+| `04_config` | `config` | `io.github.coilix.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
+| `05_context` | `context` | `io.github.coilix.context` | Scala | kontener IoC |
+| `06_data` | `data` | `io.github.coilix.data` | Scala | bazy danych (planowane) |
+| `07_web` | `web` | `io.github.coilix.web` | Scala | endpointy (planowane) |
+| `08_security` | `security` | `io.github.coilix.security` | Scala | security (planowane) |
+| `09_boot` | `boot` | `io.github.coilix.boot` | Scala | start aplikacji |
+| `10_demo` | `demo` | `io.github.coilix.demo` | Scala | aplikacja demo |
+| `11_intellij_plugin` | `intellij-plugin` | `io.github.coilix.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
 
 `11_intellij_plugin` to jedyny moduł w Scali 2.13, bo działa w classloaderze pluginu Scala dla IntelliJ (opis w `11_intellij_plugin/README.md`).
 
@@ -30,7 +30,7 @@ Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/m
 
 - `common`, `annotations`, `config`, `context` i `boot` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
-- Moduł funkcji podłącza się przez `ScalingModule` i `META-INF/services` (SCALING-00010), a nie przez zależność `boot` od niego.
+- Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services` (SCALING-00010), a nie przez zależność `boot` od niego.
 - Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`.
@@ -42,7 +42,7 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Zakaz `var`, `null`, `return`, `while` i mutowalnych kolekcji (wymusza wartremover). Zamiast tego rekurencja, `fold` i niemutowalne struktury. Mutowalność tylko tam, gdzie inaczej się nie da (np. API kompilatora).
 - Zakaz `println`, `print`, `printf` (wymusza `checkForbiddenCalls`). Logowanie przez `@Slf4s` i pole `log`.
 - Najpierw interfejs (`trait`), potem implementacja. Domyślne złożenie implementacji w `default` w obiekcie towarzyszącym traitu.
-- Komponent frameworka ma w obiekcie towarzyszącym traitu `given ConfigPath[T]` (np. `scaling.context.constructor-selector`) i `def default(using components: ComponentProvider): T = components.get[T](...)`. Dzięki temu użytkownik podmienia go w configu kluczem `class`.
+- Komponent frameworka ma w obiekcie towarzyszącym traitu `given ConfigPath[T]` (np. `coilix.context.constructor-selector`) i `def default(using components: ComponentProvider): T = components.get[T](...)`. Dzięki temu użytkownik podmienia go w configu kluczem `class`.
 - Jeden plik to jeden typ o tej samej nazwie co plik. Dozwolony jest tylko obiekt towarzyszący o tej samej nazwie.
 - Metody w traitach, klasach i obiektach oddziela jedna pusta linia, także same sygnatury w traicie:
 
@@ -57,7 +57,7 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Małe metody z jedną odpowiedzialnością. Gałąź `case`, `if` albo `for`/`yield` dłuższa niż jedna linia idzie do osobnej metody, nie do bloku.
 - Delegowanie zamiast rozbudowanych metod. Kod rozdrobniony, ale czysty.
 - Bez zwykłych komentarzy (`//`, `/* */`). Jedyne dozwolone komentarze to Scaladoc i Javadoc według sekcji „Dokumentacja”.
-- Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `org.scaling.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
+- Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `io.github.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
 - Java i Scala w osobnych modułach. Java tylko tam, gdzie jest wymagana (adnotacje runtime).
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt przy każdej kompilacji (`scalafmtOnCompile`, konfiguracja w `.scalafmt.conf`), a każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
@@ -75,8 +75,8 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 - Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`10`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]`, testy i moduł `11_intellij_plugin`.
 - Komentarz opisuje kontrakt (co robi, co zwraca, kiedy rzuca wyjątek), a nie implementację. Pierwsze zdanie to samodzielne podsumowanie, bo trafia na listę członków typu.
 - Parametry opisuje się przez `@param`, `@tparam`, `@return` i `@throws` tylko wtedy, gdy nazwa i typ nie mówią wszystkiego. Nie powtarza się sygnatury słowami.
-- Do innych typów linkuje się przez `[[org.scaling.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
-- Przykład użycia w bloku kodu ` ```scala ` dodaje się do API, którego używa programista aplikacji: adnotacje, `ApplicationContext`, `ScalingApplication`, `ConfigPath` i punkty rozszerzeń podmieniane kluczem `class`.
+- Do innych typów linkuje się przez `[[io.github.coilix.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
+- Przykład użycia w bloku kodu ` ```scala ` dodaje się do API, którego używa programista aplikacji: adnotacje, `ApplicationContext`, `CoilixApplication`, `ConfigPath` i punkty rozszerzeń podmieniane kluczem `class`.
 - Implementacja traitu (`Default*`, `Reflective*` itd.) ma komentarz na poziomie klasy: czym różni się od innych implementacji i jaki klucz configu ją wybiera. Metod nadpisujących nie dokumentuje się ponownie, bo Scaladoc dziedziczy opis z traitu. Komentarz przy nadpisaniu dodaje się tylko, gdy zachowanie zawęża albo rozszerza kontrakt.
 - Obiekt towarzyszący traitu komponentu opisuje swój `ConfigPath` (klucz w configu) i domyślną implementację z `default`.
 - Przy zmianie zachowania aktualizuje się Scaladoc w tym samym commicie co kod.
@@ -86,7 +86,7 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 
 Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszystkich modułów, `early-semver`, wersja z tagu `vX.Y.Z`.
 
-- Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `scaling.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
+- Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `coilix.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
 - Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
 - Każda zmiana widoczna dla użytkownika dostaje wpis w `CHANGELOG.md` w sekcji `Unreleased` (po SCALING-00009), z ID taska i oznaczeniem **BREAKING** przy zmianie niezgodnej.
 

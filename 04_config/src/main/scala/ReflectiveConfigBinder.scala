@@ -1,12 +1,12 @@
-package org.scaling.config
+package io.github.coilix.config
 
+import io.github.coilix.annotation.Autowired
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
 import java.lang.reflect.Parameter
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
-import org.scaling.annotation.Autowired
 import scala.util.Try
 
 final class ReflectiveConfigBinder(scalars: ScalarReader, defaults: DefaultArguments, classLoader: ClassLoader)
