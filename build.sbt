@@ -16,12 +16,20 @@ lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
 
 lazy val checkForbiddenCalls = taskKey[Unit]("Fails when Scala sources write to the console")
 
+def isCompilerPluginOption(option: String): Boolean =
+  option.startsWith("-Xplugin") || option.startsWith("-P:")
+
+def scaladocOptions(options: Seq[String], binaryVersion: String, projectVersion: String): Seq[String] =
+  options.filterNot(isCompilerPluginOption) ++
+    Seq("-project", "Scaling", "-project-version", projectVersion).filter(_ => binaryVersion == "3")
+
 def javaModule(id: String, directory: String, packageName: String): Project =
   Project(id, file(directory)).settings(
     idePackagePrefix := Some(packageName),
     crossPaths := false,
     autoScalaLibrary := false,
     javacOptions ++= Seq("-Xlint:all", "-Werror"),
+    Compile / doc / javacOptions := Seq("-Xdoclint:all,-missing", "-Werror"),
     Compile / unmanagedSourceDirectories := Seq((Compile / javaSource).value),
     Test / unmanagedSourceDirectories := Seq((Test / javaSource).value)
   )
@@ -35,7 +43,8 @@ def scalaModule(id: String, directory: String, packageName: String): Project =
     scalafmtOnCompile := true,
     wartremoverErrors ++= forbiddenWarts,
     checkForbiddenCalls := Def.uncached(ForbiddenCalls.check((Compile / unmanagedSources).value ++ (Test / unmanagedSources).value)),
-    Compile / compile := Def.uncached((Compile / compile).dependsOn(checkForbiddenCalls).value)
+    Compile / compile := Def.uncached((Compile / compile).dependsOn(checkForbiddenCalls).value),
+    Compile / doc / scalacOptions := scaladocOptions(scalacOptions.value, scalaBinaryVersion.value, version.value)
   )
 
 def slf4sModule(id: String, directory: String, packageName: String): Project =
