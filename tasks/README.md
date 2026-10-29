@@ -14,6 +14,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | SCALING-00008 | [Nazwa Mortise, licencja, przestrzeń nazw i metadane publikacji](SCALING-00008_license_and_publication_setup.md) | wysoki | do zrobienia |
 | SCALING-00009 | [Wersjonowanie, kompatybilność i proces wydań](SCALING-00009_versioning_and_releases.md) | wysoki | do zrobienia |
 | SCALING-00010 | [Niezależność modułów opcjonalnych](SCALING-00010_module_independence.md) | wysoki | do zrobienia |
+| SCALING-00011 | [Proces developmentu i model gałęzi](SCALING-00011_development_workflow.md) | wysoki | w toku |
 
 Zależności między taskami:
 
@@ -25,12 +26,13 @@ Zależności między taskami:
 - SCALING-00008 wymaga zatwierdzonych decyzji z SCALING-00006. Zmiana pakietów dotyka całego kodu, więc warto ją zrobić przed SCALING-00007 (Scaladoc linkuje pełnymi nazwami).
 - SCALING-00010 zmienia zestaw publikowanych modułów, więc musi być przed pierwszym wydaniem z SCALING-00009.
 - SCALING-00009 wymaga SCALING-00008 (metadane POM, przestrzeń nazw).
+- SCALING-00011 opisuje proces, według którego realizowane są taski od SCALING-00008. Ochrona gałęzi na GitHubie czeka na upublicznienie repozytorium.
 
 ## Zasady
 
 Każdy task realizujemy zgodnie z [CLAUDE.md](../CLAUDE.md): najpierw trait, jeden typ w pliku, brak `var` i `println`, testy munit dla każdej nowej klasy, `[T: ClassTag]` zamiast `Class[T]` w API.
 
-Task jest skończony, gdy wszystkie kryteria akceptacji są spełnione, `sbt testFull` przechodzi, a `sbt demo/run` pokazuje nową funkcję w działaniu. Po skończeniu zmień status w tabeli powyżej.
+Task prowadzi się według [procesu developmentu](../docs/process/development.md): własna gałąź `feature/SCALING-NNNNN-opis`, PR do `master`, definicja ukończenia. Po skończeniu zmień status w tabeli powyżej.
 
 ## Szablon taska
 
