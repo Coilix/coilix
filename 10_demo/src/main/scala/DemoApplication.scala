@@ -1,11 +1,11 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
-import org.scaling.annotation.ScalingBootApplication
-import org.scaling.boot.Scaling
+import io.github.coilix.annotation.CoilixApplication
+import io.github.coilix.boot.Coilix
 
-@ScalingBootApplication
+@CoilixApplication
 object DemoApplication {
   def main(args: Array[String]): Unit = {
-    val _ = Scaling.run[DemoApplication.type](args)
+    val _ = Coilix.run[DemoApplication.type](args)
   }
 }

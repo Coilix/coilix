@@ -1,4 +1,4 @@
-ThisBuild / organization := "org.scaling"
+ThisBuild / organization := "io.github.coilix"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.10.0"
 ThisBuild / scalacOptions ++= Seq("-no-indent", "-old-syntax", "-deprecation", "-feature", "-unchecked", "-Werror")
@@ -21,7 +21,7 @@ def isCompilerPluginOption(option: String): Boolean =
 
 def scaladocOptions(options: Seq[String], binaryVersion: String, projectVersion: String): Seq[String] =
   options.filterNot(isCompilerPluginOption) ++
-    Seq("-project", "Scaling", "-project-version", projectVersion).filter(_ => binaryVersion == "3")
+    Seq("-project", "Coilix", "-project-version", projectVersion).filter(_ => binaryVersion == "3")
 
 def javaModule(id: String, directory: String, packageName: String): Project =
   Project(id, file(directory)).settings(
@@ -58,11 +58,11 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
       libraryDependencies ++= Seq(Dependencies.slf4jApi, Dependencies.slf4jSimple % Test)
     )
 
-lazy val common = scalaModule("common", "01_common", "org.scaling.common")
+lazy val common = scalaModule("common", "01_common", "io.github.coilix.common")
 
-lazy val annotations = javaModule("annotations", "02_annotations", "org.scaling.annotation")
+lazy val annotations = javaModule("annotations", "02_annotations", "io.github.coilix.annotation")
 
-lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "org.scaling.slf4s")
+lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "io.github.coilix.slf4s")
   .settings(
     libraryDependencies ++= Seq(
       Dependencies.scalaCompiler(scalaVersion.value),
@@ -71,27 +71,27 @@ lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "org.scali
     Test / fork := true
   )
 
-lazy val config = slf4sModule("config", "04_config", "org.scaling.config")
+lazy val config = slf4sModule("config", "04_config", "io.github.coilix.config")
   .dependsOn(common)
   .settings(libraryDependencies ++= Seq(Dependencies.typesafeConfig, Dependencies.snakeyamlEngine))
 
-lazy val context = slf4sModule("context", "05_context", "org.scaling.context")
+lazy val context = slf4sModule("context", "05_context", "io.github.coilix.context")
   .dependsOn(config)
   .settings(libraryDependencies += Dependencies.reflections)
 
-lazy val data = slf4sModule("data", "06_data", "org.scaling.data")
+lazy val data = slf4sModule("data", "06_data", "io.github.coilix.data")
   .dependsOn(context)
 
-lazy val web = slf4sModule("web", "07_web", "org.scaling.web")
+lazy val web = slf4sModule("web", "07_web", "io.github.coilix.web")
   .dependsOn(context)
 
-lazy val security = slf4sModule("security", "08_security", "org.scaling.security")
+lazy val security = slf4sModule("security", "08_security", "io.github.coilix.security")
   .dependsOn(web)
 
-lazy val boot = slf4sModule("boot", "09_boot", "org.scaling.boot")
+lazy val boot = slf4sModule("boot", "09_boot", "io.github.coilix.boot")
   .dependsOn(context)
 
-lazy val demo = slf4sModule("demo", "10_demo", "org.scaling.demo")
+lazy val demo = slf4sModule("demo", "10_demo", "io.github.coilix.demo")
   .dependsOn(boot)
   .settings(
     libraryDependencies += Dependencies.slf4jSimple,
@@ -101,7 +101,7 @@ lazy val demo = slf4sModule("demo", "10_demo", "org.scaling.demo")
 
 lazy val installIntellijPlugin = taskKey[File]("Copies the IntelliJ plugin jar into the local IDE plugins directory")
 
-lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "org.scaling.intellij")
+lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "io.github.coilix.intellij")
   .settings(
     scalaVersion := "2.13.18",
     scalacOptions --= Seq("-no-indent", "-old-syntax"),
@@ -119,6 +119,6 @@ lazy val modules: Seq[ProjectReference] =
 lazy val root = (project in file("."))
   .aggregate(modules*)
   .settings(
-    name := "scaling",
+    name := "coilix",
     publish / skip := true
   )

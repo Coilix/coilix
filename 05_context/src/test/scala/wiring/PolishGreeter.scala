@@ -1,7 +1,7 @@
-package org.scaling.context.wiring
+package io.github.coilix.context.wiring
 
-import org.scaling.annotation.Component
-import org.scaling.annotation.Primary
+import io.github.coilix.annotation.Component
+import io.github.coilix.annotation.Primary
 
 @Component
 @Primary

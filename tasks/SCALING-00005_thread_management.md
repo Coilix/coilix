@@ -23,7 +23,7 @@ Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtual
    - `TaskExecutor` (trait) z `execute` i `submit`, zwracającym `Future[T]`,
    - implementacja na wątkach wirtualnych (domyślna),
    - implementacja na stałej puli wątków platformowych (np. do zadań CPU),
-   - nazwane wątki (`scaling-task-1`, ...).
+   - nazwane wątki (`coilix-task-1`, ...).
 2. `TaskScheduler` z zadaniami `fixedRate`, `fixedDelay` i `initialDelay`. Cron to osobny krok w tym samym tasku albo kolejny task.
 3. `@Async` na metodzie beana:
    - wywołanie idzie do `TaskExecutor`,
@@ -39,7 +39,7 @@ Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtual
 
 ## Proponowany projekt
 
-Nowy moduł `05_concurrency` (`org.scaling.concurrency`), zależny od `05_context`. Wymaga przenumerowania pustych modułów:
+Nowy moduł `05_concurrency` (`io.github.coilix.concurrency`), zależny od `05_context`. Wymaga przenumerowania pustych modułów:
 
 | Teraz | Po zmianie |
 |---|---|

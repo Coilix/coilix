@@ -1,9 +1,9 @@
-package org.scaling.context
+package io.github.coilix.context
 
 import com.typesafe.config.ConfigFactory
-import org.scaling.config.ComponentProvider
-import org.scaling.config.Environment
-import org.scaling.config.TypesafeConfigTree
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.Environment
+import io.github.coilix.config.TypesafeConfigTree
 
 object Providers {
   def fromHocon(hocon: String): ComponentProvider =

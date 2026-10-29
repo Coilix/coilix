@@ -1,6 +1,6 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
-import org.scaling.annotation.ConfigurationProperties
+import io.github.coilix.annotation.ConfigurationProperties
 import scala.concurrent.duration.FiniteDuration
 
 @ConfigurationProperties("demo.mail")

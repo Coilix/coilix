@@ -1,6 +1,6 @@
-package org.scaling.boot.scan
+package io.github.coilix.boot.scan
 
-import org.scaling.annotation.ScalingBootApplication
+import io.github.coilix.annotation.CoilixApplication
 
-@ScalingBootApplication(scanBasePackages = Array("org.scaling.boot.fixture", "org.scaling.boot.empty"))
+@CoilixApplication(scanBasePackages = Array("io.github.coilix.boot.fixture", "io.github.coilix.boot.empty"))
 object CustomScanApplication

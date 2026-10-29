@@ -30,11 +30,11 @@ Do sprawdzenia w pierwszej kolejności: czy sbt-unidoc działa z sbt 2 i Scalą 
 
 Opcje scaladoc dla `12_docs`:
 
-- `-project Scaling`, `-project-version <wersja>`,
+- `-project Coilix`, `-project-version <wersja>`,
 - `-siteroot 12_docs/site`,
-- `-source-links:github://<owner>/scaling/<tag lub master>` dla linków „source” przy każdym elemencie,
-- `-social-links:github::https://github.com/<owner>/scaling`,
-- `-versions-dictionary-url https://<owner>.github.io/scaling/versions.json` dla przełącznika wersji.
+- `-source-links:github://Coilix/coilix/<tag lub master>` dla linków „source” przy każdym elemencie,
+- `-social-links:github::https://github.com/Coilix/coilix`,
+- `-versions-dictionary-url https://coilix.github.io/coilix/versions.json` dla przełącznika wersji.
 
 ### Wersja projektu
 

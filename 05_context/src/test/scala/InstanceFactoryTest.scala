@@ -1,10 +1,10 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.context.configured.Salutation
+import io.github.coilix.context.configured.SalutationConfiguration
+import io.github.coilix.context.configured.ServerSettings
+import io.github.coilix.context.configured.WordSalutation
 import munit.FunSuite
-import org.scaling.context.configured.Salutation
-import org.scaling.context.configured.SalutationConfiguration
-import org.scaling.context.configured.ServerSettings
-import org.scaling.context.configured.WordSalutation
 
 final class InstanceFactoryTest extends FunSuite {
 

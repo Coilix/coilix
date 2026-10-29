@@ -1,4 +1,4 @@
-package org.scaling.config
+package io.github.coilix.config
 
 import java.lang.reflect.Type
 

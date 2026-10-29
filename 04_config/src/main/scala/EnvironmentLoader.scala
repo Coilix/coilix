@@ -1,4 +1,4 @@
-package org.scaling.config
+package io.github.coilix.config
 
 trait EnvironmentLoader {
   def load(overrides: Map[String, String]): Environment

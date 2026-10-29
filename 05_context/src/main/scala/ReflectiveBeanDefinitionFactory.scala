@@ -1,9 +1,9 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.annotation.ConfigurationProperties
+import io.github.coilix.annotation.Primary
+import io.github.coilix.config.Environment
 import java.lang.reflect.Modifier
-import org.scaling.annotation.ConfigurationProperties
-import org.scaling.annotation.Primary
-import org.scaling.config.Environment
 
 final class ReflectiveBeanDefinitionFactory(
   constructorSelector: ConstructorSelector,

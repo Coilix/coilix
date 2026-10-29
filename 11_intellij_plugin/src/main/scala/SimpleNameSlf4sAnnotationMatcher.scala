@@ -1,4 +1,4 @@
-package org.scaling.intellij
+package io.github.coilix.intellij
 
 final class SimpleNameSlf4sAnnotationMatcher extends Slf4sAnnotationMatcher {
   private val annotationName = "Slf4s"

@@ -1,4 +1,4 @@
-package org.scaling.context
+package io.github.coilix.context
 
 final class DefaultApplicationContextBuilder(
   resolver:     DependencyResolver,

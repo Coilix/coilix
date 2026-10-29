@@ -1,3 +1,3 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
 trait OptService

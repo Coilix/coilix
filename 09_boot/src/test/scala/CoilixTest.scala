@@ -1,13 +1,13 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
+import io.github.coilix.boot.fixture.Clock
+import io.github.coilix.boot.scan.CustomScanApplication
 import munit.FunSuite
-import org.scaling.boot.fixture.Clock
-import org.scaling.boot.scan.CustomScanApplication
 
-final class ScalingTest extends FunSuite {
+final class CoilixTest extends FunSuite {
 
   test("runs an application from its declared scan packages") {
-    val context = Scaling.run[CustomScanApplication.type](Array("--name=Ann"))
+    val context = Coilix.run[CustomScanApplication.type](Array("--name=Ann"))
     try {
       assertEquals(context.getBean[Clock].now, 42L)
       assertEquals(context.getBean[ApplicationArguments].optionValue("name"), Some("Ann"))

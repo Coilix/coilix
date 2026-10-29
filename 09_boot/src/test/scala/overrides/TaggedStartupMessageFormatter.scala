@@ -1,6 +1,6 @@
-package org.scaling.boot.overrides
+package io.github.coilix.boot.overrides
 
-import org.scaling.boot.StartupMessageFormatter
+import io.github.coilix.boot.StartupMessageFormatter
 import scala.concurrent.duration.FiniteDuration
 
 final class TaggedStartupMessageFormatter(tag: String, delegate: StartupMessageFormatter) extends StartupMessageFormatter {

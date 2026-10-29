@@ -1,8 +1,8 @@
-package org.scaling.boot.application
+package io.github.coilix.boot.application
 
-import org.scaling.annotation.Component
-import org.scaling.boot.ApplicationArguments
-import org.scaling.boot.ApplicationRunner
+import io.github.coilix.annotation.Component
+import io.github.coilix.boot.ApplicationArguments
+import io.github.coilix.boot.ApplicationRunner
 
 @Component
 final class UnorderedRunner(journal: RunJournal) extends ApplicationRunner {

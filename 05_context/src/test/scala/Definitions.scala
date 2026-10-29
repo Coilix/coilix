@@ -1,6 +1,6 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.config.ComponentProvider
+import io.github.coilix.config.ComponentProvider
 
 object Definitions {
   def of(classes: Class[?]*): List[BeanDefinition] =

@@ -1,14 +1,14 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.annotation.Slf4s
-import org.scaling.context.ApplicationContextBuilder
-import org.scaling.context.BeanDefinition
-import org.scaling.context.ClassPathScanner
-import org.scaling.context.ConfigurableApplicationContext
-import org.scaling.context.RegisteredBean
+import io.github.coilix.annotation.Slf4s
+import io.github.coilix.context.ApplicationContextBuilder
+import io.github.coilix.context.BeanDefinition
+import io.github.coilix.context.ClassPathScanner
+import io.github.coilix.context.ConfigurableApplicationContext
+import io.github.coilix.context.RegisteredBean
 
 @Slf4s
-final class DefaultScalingBootstrap(scanner: ClassPathScanner, builder: ApplicationContextBuilder) extends ScalingBootstrap {
+final class DefaultCoilixBootstrap(scanner: ClassPathScanner, builder: ApplicationContextBuilder) extends CoilixBootstrap {
 
   override def start(
     basePackages:     List[String],

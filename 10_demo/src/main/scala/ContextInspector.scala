@@ -1,11 +1,11 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
-import org.scaling.annotation.Component
-import org.scaling.annotation.Order
-import org.scaling.annotation.Slf4s
-import org.scaling.boot.ApplicationArguments
-import org.scaling.boot.ApplicationRunner
-import org.scaling.context.ApplicationContext
+import io.github.coilix.annotation.Component
+import io.github.coilix.annotation.Order
+import io.github.coilix.annotation.Slf4s
+import io.github.coilix.boot.ApplicationArguments
+import io.github.coilix.boot.ApplicationRunner
+import io.github.coilix.context.ApplicationContext
 
 @Component
 @Order(2)

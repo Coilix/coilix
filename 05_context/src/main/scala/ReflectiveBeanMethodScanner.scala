@@ -1,9 +1,9 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.annotation.Bean
+import io.github.coilix.annotation.Configuration
+import io.github.coilix.annotation.Primary
 import java.lang.reflect.Method
-import org.scaling.annotation.Bean
-import org.scaling.annotation.Configuration
-import org.scaling.annotation.Primary
 
 final class ReflectiveBeanMethodScanner(parameterMapper: ParameterDependencyMapper) extends BeanMethodScanner {
 

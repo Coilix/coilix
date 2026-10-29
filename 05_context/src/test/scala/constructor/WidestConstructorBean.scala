@@ -1,4 +1,4 @@
-package org.scaling.context.constructor
+package io.github.coilix.context.constructor
 
 final class WidestConstructorBean(val first: String, val second: String) {
   def this(first: String) = this(first, first)

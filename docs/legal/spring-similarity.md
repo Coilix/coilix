@@ -2,7 +2,7 @@
 
 ## Kod
 
-- Spring Framework i Spring Boot są w Javie, Scaling w Scali 3. Architektura jest inna: traity z implementacją w `default` obiektu towarzyszącego, `ConfigPath` i `ComponentProvider` do podmiany komponentów, niemutowalne rejestry, plugin kompilatora `@Slf4s` zamiast Lomboka. Dosłowne skopiowanie kodu jest w tej sytuacji praktycznie wykluczone.
+- Spring Framework i Spring Boot są w Javie, Coilix w Scali 3. Architektura jest inna: traity z implementacją w `default` obiektu towarzyszącego, `ConfigPath` i `ComponentProvider` do podmiany komponentów, niemutowalne rejestry, plugin kompilatora `@Slf4s` zamiast Lomboka. Dosłowne skopiowanie kodu jest w tej sytuacji praktycznie wykluczone.
 - Porównanie narzędziem typu PMD CPD między Javą a Scalą nie da wiarygodnego wyniku. Zamiast tego sprawdziliśmy teksty, które dałoby się przenieść bez zmian między językami: komunikaty wyjątków, logi, banner, pliki zasobów i dokumentację.
 
 ### Teksty
@@ -11,9 +11,9 @@
 |---|---|---|
 | `DefaultStartupMessageFormatter.started` | `Started <app> in <n> seconds` | Prawie tak samo jak log Spring Boota `Started <app> in <n> seconds (process running for <m>)`. Krótka fraza opisująca fakt, raczej niechroniona, ale rozpoznawalna. **Do przeredagowania**, np. `<app> ready in <n> s`. |
 | `DefaultStartupMessageFormatter.starting` | `Starting <app>` | Fraza ogólna, bez zmian. |
-| `10_demo/.../banner.txt` | ASCII-art „Scaling” | Własny napis wygenerowany fontem FIGlet „standard”. Mechanizm `banner.txt` jest funkcją, a nie utworem. Bez zmian. |
+| `10_demo/.../banner.txt` | ASCII-art „Coilix” | Własny napis wygenerowany fontem FIGlet „standard”. Mechanizm `banner.txt` jest funkcją, a nie utworem. Bez zmian. |
 | Komunikaty wyjątków (`No bean of type ...`, `Circular dependency detected among ...`, `Multiple beans of type ...`) | własne sformułowania | Opisują ten sam problem co Spring, ale innymi słowami. Bez zmian. |
-| Klucze configu (`scaling.boot.*`, `scaling.context.*`) | własna przestrzeń `scaling.*` | Bez zmian. |
+| Klucze configu (`coilix.boot.*`, `coilix.context.*`) | własna przestrzeń `coilix.*` | Bez zmian. |
 | Scaladoc i przewodniki | jeszcze nie istnieją | Zasada: pisać własnymi słowami, nie tłumaczyć ani nie parafrazować dokumentacji Springa. |
 
 ## API
@@ -41,13 +41,13 @@ Nazwy adnotacji odpowiadają Springowi: `@Component`, `@Service`, `@Repository`,
 
 **Dozwolone przy rzetelnym, opisowym użyciu:**
 
-- zdanie w README i dokumentacji w rodzaju: *„Scaling is an IoC framework for Scala 3 with an API modeled on the Spring Framework. It is not affiliated with or endorsed by Broadcom or the Spring team.”*,
+- zdanie w README i dokumentacji w rodzaju: *„Coilix is an IoC framework for Scala 3 with an API modeled on the Spring Framework. It is not affiliated with or endorsed by Broadcom or the Spring team.”*,
 - przewodnik „Coming from Spring” porównujący pojęcia,
 - atrybucja: *„Spring is a trademark of Broadcom Inc. and/or its subsidiaries.”*
 
 Zasady Springa nie mówią wprost o sformułowaniu „inspired by”. Bezpieczniejsze jest opisowe „API modeled on” albo „familiar to Spring developers” razem z zastrzeżeniem o braku powiązania.
 
-**Stan obecny:** `CLAUDE.md`, taski i `.gitignore` (`.springBeans`) wspominają Springa wewnętrznie. To nie jest użycie znaku w obrocie, ale `CLAUDE.md` będzie publiczny, więc opis projektu warto zmienić na opisowy („framework IoC z API wzorowanym na Springu”). `@ScalingBootApplication`: słowo „Boot” samo nie jest znakiem, a konstrukcja „<nazwa> Boot” jest szeroko używana. Ryzyko jest niskie, ale przy zmianie nazwy adnotacja traci „Boot” i staje się `@CoilixApplication` (SCALING-00008).
+**Stan obecny:** `CLAUDE.md`, taski i `.gitignore` (`.springBeans`) wspominają Springa wewnętrznie. To nie jest użycie znaku w obrocie, ale `CLAUDE.md` będzie publiczny, więc opis projektu warto zmienić na opisowy („framework IoC z API wzorowanym na Springu”). Dawna adnotacja `@ScalingBootApplication` przy zmianie nazwy straciła słowo „Boot” i nazywa się `@CoilixApplication` (SCALING-00008).
 
 ## Nazwa projektu
 

@@ -8,10 +8,10 @@ demo:
       - bob@example.com
     timeout: 5s
 
-scaling:
+coilix:
   boot:
     startup-message-formatter:
-      class: org.scaling.demo.PrefixedStartupMessageFormatter
+      class: io.github.coilix.demo.PrefixedStartupMessageFormatter
       prefix: "[demo]"
       delegate:
-        class: org.scaling.boot.DefaultStartupMessageFormatter
+        class: io.github.coilix.boot.DefaultStartupMessageFormatter

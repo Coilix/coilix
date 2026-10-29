@@ -1,8 +1,8 @@
-package org.scaling.config
+package io.github.coilix.config
 
+import io.github.coilix.config.fixture.MailSettings
+import io.github.coilix.config.fixture.PrefixGreeting
 import munit.FunSuite
-import org.scaling.config.fixture.MailSettings
-import org.scaling.config.fixture.PrefixGreeting
 
 final class ScalaDefaultArgumentsTest extends FunSuite {
   private val defaults = ScalaDefaultArguments()

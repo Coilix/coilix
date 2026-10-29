@@ -1,7 +1,7 @@
 import sbt.*
 
 object IntellijPlugin {
-  val pluginFileName: String = "scaling-slf4s.jar"
+  val pluginFileName: String = "coilix-slf4s.jar"
 
   val ideaHome: File =
     file(sys.env.getOrElse("IDEA_HOME", "C:/Program Files/JetBrains/IntelliJ IDEA 262.4852.50"))
