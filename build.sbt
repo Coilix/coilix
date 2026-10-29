@@ -1,7 +1,9 @@
 ThisBuild / organization := "io.github.coilix"
-ThisBuild / version := "0.1.0-SNAPSHOT"
-ThisBuild / scalaVersion := "3.10.0"
+ThisBuild / versionScheme := Some("early-semver")
+ThisBuild / mimaFailOnNoPrevious := false
+ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / scalacOptions ++= Seq("-no-indent", "-old-syntax", "-deprecation", "-feature", "-unchecked", "-Werror")
+ThisBuild / scalacOptions ++= javaOutputVersionOptions
 
 ThisBuild / organizationName := "Coilix"
 ThisBuild / organizationHomepage := Some(url("https://github.com/Coilix"))
@@ -30,6 +32,10 @@ lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.ScalaApp
 )
 
+lazy val javaRelease = "17"
+
+lazy val javaOutputVersionOptions: Seq[String] = Seq("-java-output-version", javaRelease)
+
 lazy val checkForbiddenCalls = taskKey[Unit]("Fails when Scala sources write to the console")
 
 lazy val checkLicenses = taskKey[Unit]("Fails when a compile or runtime dependency has a license outside the allowed list")
@@ -37,9 +43,16 @@ lazy val checkLicenses = taskKey[Unit]("Fails when a compile or runtime dependen
 def legalFiles(converter: xsbti.FileConverter, root: File): Seq[(HashedVirtualFileRef, String)] =
   Seq("LICENSE", "NOTICE").map(name => converter.toVirtualFile((root / name).toPath) -> s"META-INF/$name")
 
+def isSameSeries(previous: String, current: String): Boolean =
+  VersionNumber(previous).numbers.take(2) == VersionNumber(current).numbers.take(2)
+
+def compatibilityBaseline(previous: Option[String], current: String, module: ModuleID): Set[ModuleID] =
+  previous.filter(isSameSeries(_, current)).map(module.withRevision).toSet
+
 def moduleSettings(id: String): Seq[Setting[?]] =
   Seq(
     moduleName := s"coilix-$id",
+    mimaPreviousArtifacts := compatibilityBaseline(previousStableVersion.value, version.value, projectID.value),
     checkLicenses := Def.uncached(LicenseAudit.check(update.value, organization.value, id)),
     Compile / packageBin / mappings ++= Def.uncached(legalFiles(fileConverter.value, (ThisBuild / baseDirectory).value)),
     Compile / packageSrc / mappings ++= Def.uncached(legalFiles(fileConverter.value, (ThisBuild / baseDirectory).value))
@@ -57,7 +70,7 @@ def javaModule(id: String, directory: String, packageName: String): Project =
     idePackagePrefix := Some(packageName),
     crossPaths := false,
     autoScalaLibrary := false,
-    javacOptions ++= Seq("-Xlint:all", "-Werror"),
+    javacOptions ++= Seq("-Xlint:all", "-Werror", "--release", javaRelease),
     Compile / doc / javacOptions := Seq("-Xdoclint:all,-missing", "-Werror"),
     Compile / unmanagedSourceDirectories := Seq((Compile / javaSource).value),
     Test / unmanagedSourceDirectories := Seq((Test / javaSource).value)
@@ -100,7 +113,8 @@ lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "io.github
       Dependencies.scalaCompiler(scalaVersion.value) % Provided,
       Dependencies.slf4jApi % Test
     ),
-    Test / fork := true
+    Test / fork := true,
+    Compile / packageBin / artifactPath := fileConverter.value.toVirtualFile(((Compile / target).value / "coilix-slf4s-plugin.jar").toPath)
   )
 
 lazy val config = slf4sModule("config", "04_config", "io.github.coilix.config")
@@ -137,6 +151,7 @@ lazy val demo = slf4sModule("demo", "10_demo", "io.github.coilix.demo")
   .dependsOn(boot)
   .settings(
     publish / skip := true,
+    mimaPreviousArtifacts := Set.empty,
     libraryDependencies += Dependencies.slf4jSimple,
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput)
@@ -147,8 +162,9 @@ lazy val installIntellijPlugin = taskKey[File]("Copies the IntelliJ plugin jar i
 lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "io.github.coilix.intellij")
   .settings(
     publish / skip := true,
+    mimaPreviousArtifacts := Set.empty,
     scalaVersion := "2.13.18",
-    scalacOptions --= Seq("-no-indent", "-old-syntax"),
+    scalacOptions --= Seq("-no-indent", "-old-syntax") ++ javaOutputVersionOptions,
     Compile / unmanagedJars ++= Def.uncached {
       val converter = fileConverter.value
       IntellijPlugin.compileJars.map(jar => Attributed.blank(converter.toVirtualFile(jar.toPath)))
