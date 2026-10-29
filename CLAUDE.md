@@ -90,6 +90,15 @@ Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszy
 - Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
 - Każda zmiana widoczna dla użytkownika dostaje wpis w `CHANGELOG.md` w sekcji `Unreleased` (po SCALING-00009), z ID taska i oznaczeniem **BREAKING** przy zmianie niezgodnej.
 
+## Proces i gałęzie
+
+Pełna procedura jest w `docs/process/development.md`: trunk-based z gałęzią `master`, gałęzie tematyczne, PR, wydania i linie utrzymaniowe.
+
+- Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/SCALING-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Rebase and merge”.
+- `master` zawsze kompiluje się i przechodzi `sbt testFull`. Niegotowa funkcja czeka na gałęzi albo jest dzielona na samodzielne kroki.
+- Wydanie to podpisany tag `vX.Y.Z` na `master`. Gałąź `series/X.Y` powstaje dopiero, gdy trzeba wydać poprawkę starszej linii.
+- Przed PR: `sbt testFull doc demo/run` i definicja ukończenia z `docs/process/development.md`.
+
 ## Taski
 
 Backlog kolejnych etapów jest w `tasks/`. Indeks i statusy są w `tasks/README.md`. Po skończeniu taska aktualizuj jego status.
@@ -100,6 +109,7 @@ Taski mają identyfikatory `SCALING-NNNNN` (plik `tasks/SCALING-NNNNN_nazwa.md`)
 - Wiadomość po angielsku, zaczyna się od ID taska: `SCALING-00003: Add configuration loading and component overrides`.
 - Treść opisuje tylko to, co zmiana dodaje lub zmienia. Bez wzmianek o narzędziach czy agentach, które ją przygotowały, i bez stopek `Co-Authored-By`.
 - Jeden commit to jedna logiczna zmiana. Pliki grupuje się według tego, co wprowadzają.
+- Każdy commit ma `Signed-off-by` (DCO), czyli powstaje przez `git commit -s`.
 
 ## Komendy
 
