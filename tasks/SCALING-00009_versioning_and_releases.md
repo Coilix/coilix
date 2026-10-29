@@ -41,3 +41,19 @@ Wdrożyć standard z [docs/architecture/versioning.md](../docs/architecture/vers
 - Wsparcie MiMa, TASTy-MiMa i sbt-ci-release dla sbt 2 trzeba potwierdzić przy wdrożeniu. Awaryjnie: narzędzia CLI w CI.
 - Kod może już korzystać z funkcji Scali 3.10. Wtedy trzeba je zastąpić albo świadomie zostać przy 3.10 i opisać to w README.
 - Wtyczki builda (`sbt-scalafmt`, `sbt-wartremover`) muszą obsługiwać wybraną wersję Scali.
+
+## Stan realizacji (2026-10-29)
+
+Zrobione: punkty 1–5 bez pluginu IntelliJ, MiMa z punktu 6 i opis wydania w `docs/process/development.md` (punkt 7, `CONTRIBUTING.md` do niego odsyła).
+
+- wersja z tagu przez sbt-ci-release 1.12.1 (zawiera sbt-dynver), `versionScheme := early-semver`,
+- Scala 3.9.0, bytecode 61 (JDK 17), TASTy 28.9,
+- jar pluginu `@Slf4s` ma stałą nazwę `coilix-slf4s-plugin.jar`, bo wersja z gita zmienia się z każdym commitem, a IntelliJ trzyma ścieżkę do jara,
+- `CHANGELOG.md`, `.github/workflows/ci.yml` i `.github/workflows/release.yml`,
+- MiMa z wydaniem odniesienia wybieranym z ostatniego tagu tej samej linii.
+
+Zostaje:
+
+- sekrety `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` w repozytorium i weryfikacja przestrzeni nazw `io.github.coilix` w Central Portal (wymaga konta autora),
+- TASTy-MiMa: brak wtyczki dla sbt 2,
+- budowa, podpis i publikacja pluginu IntelliJ do Marketplace (z wersją z tagu w `plugin.xml`).
