@@ -88,7 +88,7 @@ Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszy
 
 - Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `coilix.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
 - Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
-- Każda zmiana widoczna dla użytkownika dostaje wpis w `CHANGELOG.md` w sekcji `Unreleased` (po SCALING-00009), z ID taska i oznaczeniem **BREAKING** przy zmianie niezgodnej.
+- Każda zmiana widoczna dla użytkownika dostaje wpis w `CHANGELOG.md` w sekcji `Unreleased`, z ID taska i oznaczeniem **BREAKING** przy zmianie niezgodnej.
 
 ## Proces i gałęzie
 
@@ -116,7 +116,9 @@ Taski mają identyfikatory `SCALING-NNNNN` (plik `tasks/SCALING-NNNNN_nazwa.md`)
 - `sbt testFull` uruchamia wszystkie testy (`sbt test` w sbt 2 to `testQuick` z cache).
 - `sbt demo/run` uruchamia demo.
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
-- `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/<scala>/<moduł>/api` (`02_annotations`: `target/out/jvm/u/annotations/api`).
+- `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
+- `sbt version` pokazuje wersję wyliczoną z tagu gita (sbt-dynver). Wersji nie wpisuje się ręcznie.
+- `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
 - `sbt intellij-plugin/installIntellijPlugin` instaluje plugin IDE (potem restart IntelliJ).
 - Gdy działa sbt uruchomione przez IntelliJ, sbt z terminala trzeba odpalać z `-Dsbt.server.autostart=false`.
-- IntelliJ buduje własnym kompilatorem (nie przez sbt shell, bo sbt 2 nie kopiuje zasobów do `classes`). Jar pluginu `@Slf4s` tworzy tylko sbt. Gdy IntelliJ zgłasza `No plugin in path ...slf4s-plugin_3-0.1.0-SNAPSHOT.jar`, trzeba uruchomić `sbt slf4s-plugin/package`. Jeśli jar istnieje, a błąd zostaje, trzeba zrestartować serwer kompilacji Scali w IntelliJ (trzyma starą wersję jara po przebudowie przez sbt).
+- IntelliJ buduje własnym kompilatorem (nie przez sbt shell, bo sbt 2 nie kopiuje zasobów do `classes`). Jar pluginu `@Slf4s` tworzy tylko sbt. Jar ma stałą nazwę `coilix-slf4s-plugin.jar` (niezależną od wersji z gita). Gdy IntelliJ zgłasza `No plugin in path ...coilix-slf4s-plugin.jar`, trzeba uruchomić `sbt slf4s-plugin/package`. Jeśli jar istnieje, a błąd zostaje, trzeba zrestartować serwer kompilacji Scali w IntelliJ (trzyma starą wersję jara po przebudowie przez sbt).
