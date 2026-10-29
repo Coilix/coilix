@@ -1,6 +1,8 @@
 # Scaling
 
-Framework IoC w stylu Springa napisany w Scali 3. Build: sbt 2, testy: munit.
+Framework IoC dla Scali 3 z API wzorowanym na Springu. Build: sbt 2, testy: munit. Licencja: Apache-2.0 (do zatwierdzenia, `docs/legal/`).
+
+Projekt zmienia nazwę na **Mortise** (SCALING-00008). Do czasu tej zmiany nowy kod nadal używa nazw `Scaling`, pakietu `org.scaling` i kluczy `scaling.*`, żeby zmiana objęła wszystko naraz.
 
 ## Moduły
 
@@ -23,6 +25,13 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `11_intellij_plugin` | `intellij-plugin` | `org.scaling.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
 
 `11_intellij_plugin` to jedyny moduł w Scali 2.13, bo działa w classloaderze pluginu Scala dla IntelliJ (opis w `11_intellij_plugin/README.md`).
+
+Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/modularity.md`):
+
+- `common`, `annotations`, `config`, `context` i `boot` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
+- Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
+- Moduł funkcji podłącza się przez `ScalingModule` i `META-INF/services` (SCALING-00010), a nie przez zależność `boot` od niego.
+- Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`.
 Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/main/scala`, bez katalogów pakietu.
@@ -53,7 +62,18 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt przy każdej kompilacji (`scalafmtOnCompile`, konfiguracja w `.scalafmt.conf`), a każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
 - Każda nowa klasa ma testy munit w `src/test/scala` swojego modułu.
-- Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`.
+- Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (SCALING-00009, `docs/architecture/versioning.md`).
+- Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane.
+- Nie kopiuje się kodu, dokumentacji, komunikatów ani testów ze Springa i innych frameworków, także w parafrazie. Nazwy adnotacji i pojęć mogą odpowiadać Springowi, teksty piszemy od nowa.
+- Słowa „Spring” nie używa się w nazwach typów, pakietów, modułów, artefaktów, kluczy configu ani tytułów dokumentacji. W opisach tylko opisowo („API modeled on Spring”), bez sugerowania powiązania z Broadcom (`docs/legal/spring-similarity.md`).
+
+## Wersjonowanie
+
+Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszystkich modułów, `early-semver`, wersja z tagu `vX.Y.Z`.
+
+- Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `scaling.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
+- Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
+- Każda zmiana widoczna dla użytkownika dostaje wpis w `CHANGELOG.md` w sekcji `Unreleased` (po SCALING-00009), z ID taska i oznaczeniem **BREAKING** przy zmianie niezgodnej.
 
 ## Taski
 
