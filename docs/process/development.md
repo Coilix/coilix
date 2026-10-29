@@ -103,7 +103,7 @@ Wydania wychodzą z `master` (linia bieżąca) albo z `series/X.Y` (starsza lini
    git push origin vX.Y.Z
    ```
 
-4. Tag uruchamia workflow `release.yml`: testy, publikacja na Maven Central, GitHub Release z sekcją z changelogu, plugin IntelliJ, dokumentacja.
+4. Tag uruchamia workflow `release.yml`: sprawdzenia, publikacja na Maven Central i GitHub Release z sekcją z changelogu. Plugin IntelliJ i dokumentacja dojdą w osobnych taskach.
 5. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach) i stronę GitHub Release.
 
 Wydania przedpremierowe (`vX.Y.Z-M1`, `vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
