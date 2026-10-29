@@ -27,7 +27,7 @@ API nie jest stabilne. Zgodnie z `early-semver`:
 | nowe API, nowy moduł, nowy klucz configu, oznaczenie `@deprecated` | `MINOR` |
 | poprawka bez zmiany API | `PATCH` |
 
-**Publiczne API** to wszystko, co jest publiczne w `src/main` publikowanych modułów, klucze configu `scaling.*`, format `banner.txt` i `application.*` oraz zachowanie opisane w Scaladoc. Klasy implementacji (`Default*`, `Reflective*`) są publiczne, bo można je wskazać kluczem `class`, więc też podlegają tym zasadom.
+**Publiczne API** to wszystko, co jest publiczne w `src/main` publikowanych modułów, klucze configu `coilix.*`, format `banner.txt` i `application.*` oraz zachowanie opisane w Scaladoc. Klasy implementacji (`Default*`, `Reflective*`) są publiczne, bo można je wskazać kluczem `class`, więc też podlegają tym zasadom.
 
 ## Kompatybilność
 

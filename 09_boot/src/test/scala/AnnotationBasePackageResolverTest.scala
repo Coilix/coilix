@@ -1,19 +1,19 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
+import io.github.coilix.boot.application.FixtureApplication
+import io.github.coilix.boot.scan.CustomScanApplication
+import io.github.coilix.boot.scan.NotAnnotatedApplication
 import munit.FunSuite
-import org.scaling.boot.application.FixtureApplication
-import org.scaling.boot.scan.CustomScanApplication
-import org.scaling.boot.scan.NotAnnotatedApplication
 
 final class AnnotationBasePackageResolverTest extends FunSuite {
   private val resolver = AnnotationBasePackageResolver()
 
   test("uses the package of the annotated object") {
-    assertEquals(resolver.resolve[FixtureApplication.type], List("org.scaling.boot.application"))
+    assertEquals(resolver.resolve[FixtureApplication.type], List("io.github.coilix.boot.application"))
   }
 
   test("uses the declared scan base packages") {
-    assertEquals(resolver.resolve[CustomScanApplication.type], List("org.scaling.boot.fixture", "org.scaling.boot.empty"))
+    assertEquals(resolver.resolve[CustomScanApplication.type], List("io.github.coilix.boot.fixture", "io.github.coilix.boot.empty"))
   }
 
   test("rejects a class without the annotation") {

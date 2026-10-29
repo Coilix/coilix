@@ -1,4 +1,4 @@
-package org.scaling.intellij
+package io.github.coilix.intellij
 
 import org.jetbrains.plugins.scala.lang.psi.api.toplevel.typedef.ScTypeDefinition
 import org.jetbrains.plugins.scala.lang.psi.impl.toplevel.typedef.SyntheticMembersInjector

@@ -1,10 +1,10 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.config.ComponentProvider
+import io.github.coilix.config.ComponentProvider
 
 final case class StartupComponents(
   resolver:      BasePackageResolver,
-  bootstrap:     ScalingBootstrap,
+  bootstrap:     CoilixBootstrap,
   invoker:       RunnerInvoker,
   startupLogger: StartupLogger,
   shutdownHooks: ShutdownHookRegistrar
@@ -14,7 +14,7 @@ object StartupComponents {
   def default(using components: ComponentProvider): StartupComponents =
     StartupComponents(
       BasePackageResolver.default,
-      ScalingBootstrap.default,
+      CoilixBootstrap.default,
       RunnerInvoker.default,
       StartupLogger.default,
       ShutdownHookRegistrar.default

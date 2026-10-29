@@ -1,4 +1,4 @@
-package org.scaling.intellij
+package io.github.coilix.intellij
 
 import munit.FunSuite
 
@@ -10,15 +10,15 @@ final class SimpleNameSlf4sAnnotationMatcherTest extends FunSuite {
   }
 
   test("matches the fully qualified annotation name") {
-    assert(matcher.matches("org.scaling.annotation.Slf4s"))
+    assert(matcher.matches("io.github.coilix.annotation.Slf4s"))
   }
 
   test("matches the root qualified annotation name") {
-    assert(matcher.matches("_root_.org.scaling.annotation.Slf4s"))
+    assert(matcher.matches("_root_.io.github.coilix.annotation.Slf4s"))
   }
 
   test("ignores other annotations") {
-    assert(!matcher.matches("org.scaling.annotation.Component"))
+    assert(!matcher.matches("io.github.coilix.annotation.Component"))
   }
 
   test("ignores annotations that only contain the name") {

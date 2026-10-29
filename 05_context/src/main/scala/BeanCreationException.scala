@@ -1,5 +1,5 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.common.ScalingException
+import io.github.coilix.common.CoilixException
 
-final class BeanCreationException(message: String) extends ScalingException(message)
+final class BeanCreationException(message: String) extends CoilixException(message)

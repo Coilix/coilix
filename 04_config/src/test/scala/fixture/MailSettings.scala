@@ -1,4 +1,4 @@
-package org.scaling.config.fixture
+package io.github.coilix.config.fixture
 
 import scala.concurrent.duration.FiniteDuration
 

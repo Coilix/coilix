@@ -1,10 +1,10 @@
-package org.scaling.config
+package io.github.coilix.config
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
+import io.github.coilix.annotation.Slf4s
 import java.net.URL
-import org.scaling.annotation.Slf4s
 import scala.jdk.CollectionConverters.*
 
 @Slf4s

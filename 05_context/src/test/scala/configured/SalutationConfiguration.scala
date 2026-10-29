@@ -1,8 +1,8 @@
-package org.scaling.context.configured
+package io.github.coilix.context.configured
 
-import org.scaling.annotation.Bean
-import org.scaling.annotation.Configuration
-import org.scaling.annotation.Value
+import io.github.coilix.annotation.Bean
+import io.github.coilix.annotation.Configuration
+import io.github.coilix.annotation.Value
 
 @Configuration
 final class SalutationConfiguration {

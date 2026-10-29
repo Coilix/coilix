@@ -1,4 +1,4 @@
-package org.scaling.intellij
+package io.github.coilix.intellij
 
 trait LoggerMemberPolicy {
   def loggerMembers(annotationTypes: List[String], memberNames: List[String]): List[String]

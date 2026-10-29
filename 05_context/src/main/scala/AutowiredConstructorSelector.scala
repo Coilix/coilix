@@ -1,7 +1,7 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.annotation.Autowired
 import java.lang.reflect.Constructor
-import org.scaling.annotation.Autowired
 
 final class AutowiredConstructorSelector extends ConstructorSelector {
 

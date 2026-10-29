@@ -1,12 +1,12 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
+import io.github.coilix.boot.ApplicationArguments
+import io.github.coilix.boot.Coilix
 import munit.FunSuite
-import org.scaling.boot.ApplicationArguments
-import org.scaling.boot.Scaling
 import scala.concurrent.duration.DurationInt
 
 final class DemoApplicationTest extends FunSuite {
-  private val context = Scaling.run[DemoApplication.type](Array("--name=Ann", "--demo.greeting=Hey"))
+  private val context = Coilix.run[DemoApplication.type](Array("--name=Ann", "--demo.greeting=Hey"))
 
   override def afterAll(): Unit = context.close()
 

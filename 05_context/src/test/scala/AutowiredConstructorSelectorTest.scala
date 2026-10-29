@@ -1,9 +1,9 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.context.constructor.AutowiredConstructorBean
+import io.github.coilix.context.constructor.HiddenConstructorBean
+import io.github.coilix.context.constructor.WidestConstructorBean
 import munit.FunSuite
-import org.scaling.context.constructor.AutowiredConstructorBean
-import org.scaling.context.constructor.HiddenConstructorBean
-import org.scaling.context.constructor.WidestConstructorBean
 
 final class AutowiredConstructorSelectorTest extends FunSuite {
   private val selector = AutowiredConstructorSelector()

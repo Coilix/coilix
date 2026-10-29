@@ -1,8 +1,8 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.annotation.Value
+import io.github.coilix.config.ValueExpression
 import java.lang.reflect.Parameter
-import org.scaling.annotation.Value
-import org.scaling.config.ValueExpression
 
 final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper) extends ParameterDependencyMapper {
 

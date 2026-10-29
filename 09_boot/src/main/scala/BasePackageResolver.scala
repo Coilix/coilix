@@ -1,7 +1,7 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.config.ComponentProvider
-import org.scaling.config.ConfigPath
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.ConfigPath
 import scala.reflect.ClassTag
 
 trait BasePackageResolver {
@@ -9,7 +9,7 @@ trait BasePackageResolver {
 }
 
 object BasePackageResolver {
-  given ConfigPath[BasePackageResolver] = ConfigPath[BasePackageResolver]("scaling.boot.base-package-resolver")
+  given ConfigPath[BasePackageResolver] = ConfigPath[BasePackageResolver]("coilix.boot.base-package-resolver")
 
   def default(using components: ComponentProvider): BasePackageResolver =
     components.get[BasePackageResolver](AnnotationBasePackageResolver())

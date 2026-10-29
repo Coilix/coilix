@@ -23,7 +23,7 @@ MIT byłaby prostsza, ale nie daje ochrony patentowej. To dobra alternatywa tylk
 ## Co trzeba dodać
 
 - `LICENSE`: pełny tekst Apache-2.0.
-- `NOTICE`: `Scaling`, rok i autor praw. Bez wpisów o zależnościach, bo publikujemy tylko nasze jary, bez dołączania cudzych klas (patrz [dependency-licenses.md](dependency-licenses.md#obowiązki)).
+- `NOTICE`: `Coilix`, rok i autor praw. Bez wpisów o zależnościach, bo publikujemy tylko nasze jary, bez dołączania cudzych klas (patrz [dependency-licenses.md](dependency-licenses.md#obowiązki)).
 - W `build.sbt`: `licenses`, `homepage`, `scmInfo`, `developers`, `startYear`.
 - `META-INF/LICENSE` i `META-INF/NOTICE` w każdym publikowanym jarze.
 - Sekcja „License” w `README.md`.

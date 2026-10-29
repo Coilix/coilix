@@ -1,7 +1,7 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.config.ComponentProvider
-import org.scaling.config.ConfigPath
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.ConfigPath
 
 trait ApplicationContextBuilder {
 
@@ -11,7 +11,7 @@ trait ApplicationContextBuilder {
 }
 
 object ApplicationContextBuilder {
-  given ConfigPath[ApplicationContextBuilder] = ConfigPath[ApplicationContextBuilder]("scaling.context.application-context-builder")
+  given ConfigPath[ApplicationContextBuilder] = ConfigPath[ApplicationContextBuilder]("coilix.context.application-context-builder")
 
   def default(using components: ComponentProvider): ApplicationContextBuilder =
     components.get[ApplicationContextBuilder](

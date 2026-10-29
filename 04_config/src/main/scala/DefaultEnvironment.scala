@@ -1,7 +1,7 @@
-package org.scaling.config
+package io.github.coilix.config
 
+import io.github.coilix.common.ClassTags.runtimeTypeOf
 import java.lang.reflect.Type
-import org.scaling.common.ClassTags.runtimeTypeOf
 import scala.reflect.ClassTag
 
 final class DefaultEnvironment(tree: ConfigTree, binder: ConfigBinder) extends Environment {

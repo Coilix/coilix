@@ -1,4 +1,4 @@
-package org.scaling.slf4s
+package io.github.coilix.slf4s
 
 import dotty.tools.dotc.ast.untpd.*
 import dotty.tools.dotc.core.Constants.Constant

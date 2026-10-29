@@ -1,14 +1,14 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.config.ComponentProvider
-import org.scaling.config.ConfigPath
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.ConfigPath
 
 trait BeanInstantiator {
   def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean
 }
 
 object BeanInstantiator {
-  given ConfigPath[BeanInstantiator] = ConfigPath[BeanInstantiator]("scaling.context.bean-instantiator")
+  given ConfigPath[BeanInstantiator] = ConfigPath[BeanInstantiator]("coilix.context.bean-instantiator")
 
   def default(using components: ComponentProvider): BeanInstantiator =
     components.get[BeanInstantiator](ReflectiveBeanInstantiator(components.environment))

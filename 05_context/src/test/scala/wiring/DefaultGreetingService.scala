@@ -1,6 +1,6 @@
-package org.scaling.context.wiring
+package io.github.coilix.context.wiring
 
-import org.scaling.annotation.Service
+import io.github.coilix.annotation.Service
 
 @Service
 final class DefaultGreetingService(greeter: Greeter, farewell: Option[Farewell], greeters: List[Greeter]) extends GreetingService {

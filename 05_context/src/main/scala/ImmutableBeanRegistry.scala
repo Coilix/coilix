@@ -1,4 +1,4 @@
-package org.scaling.context
+package io.github.coilix.context
 
 final class ImmutableBeanRegistry(override val beans: List[RegisteredBean], selector: CandidateSelector) extends BeanRegistry {
 

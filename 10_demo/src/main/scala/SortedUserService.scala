@@ -1,7 +1,7 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
-import org.scaling.annotation.Primary
-import org.scaling.annotation.Service
+import io.github.coilix.annotation.Primary
+import io.github.coilix.annotation.Service
 
 @Service
 @Primary

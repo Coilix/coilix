@@ -1,10 +1,10 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.context.ConfigurableApplicationContext
+import io.github.coilix.context.ConfigurableApplicationContext
 
 final class RuntimeShutdownHookRegistrar(runtime: Runtime) extends ShutdownHookRegistrar {
 
-  private val hookName = "scaling-shutdown-hook"
+  private val hookName = "coilix-shutdown-hook"
 
   override def register(context: ConfigurableApplicationContext): Thread = {
     val hook = Thread(() => context.close(), hookName)

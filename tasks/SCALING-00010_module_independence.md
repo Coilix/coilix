@@ -8,13 +8,13 @@ Sprawić, żeby `data`, `web` i `security` były opcjonalne: aplikacja działa b
 
 - `boot` zależy tylko od `context`, więc rdzeń już dziś nie wymaga modułów funkcji.
 - `security` zależy od `web`.
-- Brak mechanizmu, przez który moduł z classpath dodaje swoje beany. `DefaultScalingBootstrap.start` przyjmuje `extraDefinitions`, ale nikt ich nie dostarcza z modułów.
+- Brak mechanizmu, przez który moduł z classpath dodaje swoje beany. `DefaultCoilixBootstrap.start` przyjmuje `extraDefinitions`, ale nikt ich nie dostarcza z modułów.
 - Moduły `data`, `web`, `security` są puste.
 
 ## Zakres
 
-1. `ScalingModule` i `ModuleLoader` (trait, `given ConfigPath`, `default`) w `context`, implementacja `ServiceLoaderModuleLoader` z wyłączaniem przez `scaling.modules.<nazwa>.enabled`.
-2. Podpięcie modułów w `DefaultScalingBootstrap`: definicje z modułów razem z definicjami ze skanowania.
+1. `CoilixModule` i `ModuleLoader` (trait, `given ConfigPath`, `default`) w `context`, implementacja `ServiceLoaderModuleLoader` z wyłączaniem przez `coilix.modules.<nazwa>.enabled`.
+2. Podpięcie modułów w `DefaultCoilixBootstrap`: definicje z modułów razem z definicjami ze skanowania.
 3. Podział `security` na `security` (bez `web`) i `security-web` (integracja). Przenumerowanie katalogów zgodnie z zasadą poziomów z `CLAUDE.md`.
 4. Sprawdzenie w `build.sbt`, że rdzeń i `boot` nie zależą od modułów funkcji, a moduły funkcji nie zależą od siebie. Uruchamiane w `sbt testFull`.
 5. Test, że `boot` startuje bez modułów funkcji, i test modułu wykrywanego przez `ServiceLoader` (moduł testowy w `src/test` z plikiem `META-INF/services`).
@@ -22,8 +22,8 @@ Sprawić, żeby `data`, `web` i `security` były opcjonalne: aplikacja działa b
 
 ## Kryteria akceptacji
 
-1. Dodanie zależności od modułu z `ScalingModule` w `META-INF/services` dodaje jego beany do kontekstu bez zmian w kodzie aplikacji.
-2. `scaling.modules.<nazwa>.enabled = false` wyłącza moduł.
+1. Dodanie zależności od modułu z `CoilixModule` w `META-INF/services` dodaje jego beany do kontekstu bez zmian w kodzie aplikacji.
+2. `coilix.modules.<nazwa>.enabled = false` wyłącza moduł.
 3. `security` nie zależy od `web`.
 4. Build przerywa się, gdy rdzeń albo `boot` dostanie zależność od modułu funkcji.
 5. `sbt testFull` i `sbt demo/run` przechodzą.

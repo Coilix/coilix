@@ -1,15 +1,15 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.annotation.Component
+import io.github.coilix.annotation.Configuration
+import io.github.coilix.annotation.ConfigurationProperties
+import io.github.coilix.annotation.Repository
+import io.github.coilix.annotation.Service
 import java.lang.annotation.Annotation
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ConfigurationBuilder
 import org.reflections.util.FilterBuilder
-import org.scaling.annotation.Component
-import org.scaling.annotation.Configuration
-import org.scaling.annotation.ConfigurationProperties
-import org.scaling.annotation.Repository
-import org.scaling.annotation.Service
 import scala.jdk.CollectionConverters.*
 
 final class ReflectionsClassPathScanner(factory: BeanDefinitionFactory) extends ClassPathScanner {
