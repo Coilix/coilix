@@ -14,7 +14,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | SCALING-00008 | [Nazwa Coilix, licencja, przestrzeń nazw i metadane publikacji](SCALING-00008_license_and_publication_setup.md) | wysoki | zrobiony, przed publikacją zostaje ręczne sprawdzenie nazwy w TMview i USPTO |
 | SCALING-00009 | [Wersjonowanie, kompatybilność i proces wydań](SCALING-00009_versioning_and_releases.md) | wysoki | wersje, CI i publikacja gotowe, zostały sekrety, TASTy-MiMa i plugin w Marketplace |
 | SCALING-00010 | [Niezależność modułów opcjonalnych](SCALING-00010_module_independence.md) | wysoki | do zrobienia |
-| SCALING-00011 | [Proces developmentu i model gałęzi](SCALING-00011_development_workflow.md) | wysoki | w toku |
+| SCALING-00011 | [Proces developmentu i model gałęzi](SCALING-00011_development_workflow.md) | wysoki | zrobiony, reguły ochrony gałęzi po upublicznieniu repozytorium |
 
 Zależności między taskami:
 
