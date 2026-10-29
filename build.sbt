@@ -3,6 +3,22 @@ ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.10.0"
 ThisBuild / scalacOptions ++= Seq("-no-indent", "-old-syntax", "-deprecation", "-feature", "-unchecked", "-Werror")
 
+ThisBuild / organizationName := "Coilix"
+ThisBuild / organizationHomepage := Some(url("https://github.com/Coilix"))
+ThisBuild / homepage := Some(url("https://github.com/Coilix/coilix"))
+ThisBuild / licenses := List(License.Apache2)
+ThisBuild / startYear := Some(2026)
+ThisBuild / scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/Coilix/coilix"),
+    "scm:git:https://github.com/Coilix/coilix.git",
+    "scm:git:git@github.com:Coilix/coilix.git"
+  )
+)
+ThisBuild / developers := List(
+  Developer("pawelwojcik7", "Paweł Wójcik", "79653195+pawelwojcik7@users.noreply.github.com", url("https://github.com/pawelwojcik7"))
+)
+
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
   Wart.Null,
@@ -16,6 +32,19 @@ lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
 
 lazy val checkForbiddenCalls = taskKey[Unit]("Fails when Scala sources write to the console")
 
+lazy val checkLicenses = taskKey[Unit]("Fails when a compile or runtime dependency has a license outside the allowed list")
+
+def legalFiles(converter: xsbti.FileConverter, root: File): Seq[(HashedVirtualFileRef, String)] =
+  Seq("LICENSE", "NOTICE").map(name => converter.toVirtualFile((root / name).toPath) -> s"META-INF/$name")
+
+def moduleSettings(id: String): Seq[Setting[?]] =
+  Seq(
+    moduleName := s"coilix-$id",
+    checkLicenses := Def.uncached(LicenseAudit.check(update.value, organization.value, id)),
+    Compile / packageBin / mappings ++= Def.uncached(legalFiles(fileConverter.value, (ThisBuild / baseDirectory).value)),
+    Compile / packageSrc / mappings ++= Def.uncached(legalFiles(fileConverter.value, (ThisBuild / baseDirectory).value))
+  )
+
 def isCompilerPluginOption(option: String): Boolean =
   option.startsWith("-Xplugin") || option.startsWith("-P:")
 
@@ -24,7 +53,7 @@ def scaladocOptions(options: Seq[String], binaryVersion: String, projectVersion:
     Seq("-project", "Coilix", "-project-version", projectVersion).filter(_ => binaryVersion == "3")
 
 def javaModule(id: String, directory: String, packageName: String): Project =
-  Project(id, file(directory)).settings(
+  Project(id, file(directory)).settings(moduleSettings(id)).settings(
     idePackagePrefix := Some(packageName),
     crossPaths := false,
     autoScalaLibrary := false,
@@ -35,7 +64,7 @@ def javaModule(id: String, directory: String, packageName: String): Project =
   )
 
 def scalaModule(id: String, directory: String, packageName: String): Project =
-  Project(id, file(directory)).settings(
+  Project(id, file(directory)).settings(moduleSettings(id)).settings(
     idePackagePrefix := Some(packageName),
     Compile / unmanagedSourceDirectories := Seq((Compile / scalaSource).value),
     Test / unmanagedSourceDirectories := Seq((Test / scalaSource).value),
@@ -59,13 +88,16 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
     )
 
 lazy val common = scalaModule("common", "01_common", "io.github.coilix.common")
+  .settings(description := "Shared types and extensions for Coilix")
 
 lazy val annotations = javaModule("annotations", "02_annotations", "io.github.coilix.annotation")
+  .settings(description := "Runtime annotations for Coilix components, configuration and logging")
 
 lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "io.github.coilix.slf4s")
   .settings(
+    description := "Scala 3 compiler plugin that adds an SLF4J logger to classes annotated with @Slf4s",
     libraryDependencies ++= Seq(
-      Dependencies.scalaCompiler(scalaVersion.value),
+      Dependencies.scalaCompiler(scalaVersion.value) % Provided,
       Dependencies.slf4jApi % Test
     ),
     Test / fork := true
@@ -73,27 +105,38 @@ lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "io.github
 
 lazy val config = slf4sModule("config", "04_config", "io.github.coilix.config")
   .dependsOn(common)
-  .settings(libraryDependencies ++= Seq(Dependencies.typesafeConfig, Dependencies.snakeyamlEngine))
+  .settings(
+    description := "Configuration loading, binding and component overrides for Coilix",
+    libraryDependencies ++= Seq(Dependencies.typesafeConfig, Dependencies.snakeyamlEngine)
+  )
 
 lazy val context = slf4sModule("context", "05_context", "io.github.coilix.context")
   .dependsOn(config)
-  .settings(libraryDependencies += Dependencies.reflections)
+  .settings(
+    description := "Coilix IoC container",
+    libraryDependencies += Dependencies.reflections
+  )
 
 lazy val data = slf4sModule("data", "06_data", "io.github.coilix.data")
   .dependsOn(context)
+  .settings(description := "Database support for Coilix")
 
 lazy val web = slf4sModule("web", "07_web", "io.github.coilix.web")
   .dependsOn(context)
+  .settings(description := "Web endpoints for Coilix")
 
 lazy val security = slf4sModule("security", "08_security", "io.github.coilix.security")
   .dependsOn(web)
+  .settings(description := "Security for Coilix")
 
 lazy val boot = slf4sModule("boot", "09_boot", "io.github.coilix.boot")
   .dependsOn(context)
+  .settings(description := "Application startup for Coilix")
 
 lazy val demo = slf4sModule("demo", "10_demo", "io.github.coilix.demo")
   .dependsOn(boot)
   .settings(
+    publish / skip := true,
     libraryDependencies += Dependencies.slf4jSimple,
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput)
@@ -103,6 +146,7 @@ lazy val installIntellijPlugin = taskKey[File]("Copies the IntelliJ plugin jar i
 
 lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "io.github.coilix.intellij")
   .settings(
+    publish / skip := true,
     scalaVersion := "2.13.18",
     scalacOptions --= Seq("-no-indent", "-old-syntax"),
     Compile / unmanagedJars ++= Def.uncached {
