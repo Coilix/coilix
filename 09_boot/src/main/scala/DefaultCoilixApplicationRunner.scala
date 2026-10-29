@@ -1,20 +1,20 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.common.ClassTags.runtimeTypeOf
-import org.scaling.config.ComponentProvider
-import org.scaling.config.Environment
-import org.scaling.config.EnvironmentLoader
-import org.scaling.context.ConfigurableApplicationContext
-import org.scaling.context.RegisteredBean
+import io.github.coilix.common.ClassTags.runtimeTypeOf
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.Environment
+import io.github.coilix.config.EnvironmentLoader
+import io.github.coilix.context.ConfigurableApplicationContext
+import io.github.coilix.context.RegisteredBean
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
-final class DefaultScalingApplicationRunner(
+final class DefaultCoilixApplicationRunner(
   parser:            ArgumentsParser,
   environmentLoader: EnvironmentLoader,
   assemble: ComponentProvider => StartupComponents
-) extends ScalingApplicationRunner {
+) extends CoilixApplicationRunner {
 
   private val argumentsBeanName   = "applicationArguments"
   private val environmentBeanName = "environment"

@@ -1,3 +1,3 @@
-package org.scaling.context.constructor
+package io.github.coilix.context.constructor
 
 final class HiddenConstructorBean private ()

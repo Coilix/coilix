@@ -1,7 +1,7 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
+import io.github.coilix.boot.DefaultStartupMessageFormatter
 import munit.FunSuite
-import org.scaling.boot.DefaultStartupMessageFormatter
 import scala.concurrent.duration.DurationInt
 
 final class PrefixedStartupMessageFormatterTest extends FunSuite {

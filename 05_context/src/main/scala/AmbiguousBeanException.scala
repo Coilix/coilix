@@ -1,8 +1,8 @@
-package org.scaling.context
+package io.github.coilix.context
 
-import org.scaling.common.ScalingException
+import io.github.coilix.common.CoilixException
 
 final class AmbiguousBeanException(requested: Class[?], candidates: List[String])
-    extends ScalingException(
+    extends CoilixException(
       s"Multiple beans of type ${requested.getName}: ${candidates.mkString(", ")}. Use @Primary or @Qualifier."
     )

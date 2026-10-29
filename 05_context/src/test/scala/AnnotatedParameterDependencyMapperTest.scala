@@ -1,10 +1,10 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.config.ValueExpression
+import io.github.coilix.context.configured.ValueBean
+import io.github.coilix.context.wiring.DefaultGreetingService
+import io.github.coilix.context.wiring.Greeter
 import munit.FunSuite
-import org.scaling.config.ValueExpression
-import org.scaling.context.configured.ValueBean
-import org.scaling.context.wiring.DefaultGreetingService
-import org.scaling.context.wiring.Greeter
 
 final class AnnotatedParameterDependencyMapperTest extends FunSuite {
   private val mapper = AnnotatedParameterDependencyMapper(GenericDependencyTypeMapper())

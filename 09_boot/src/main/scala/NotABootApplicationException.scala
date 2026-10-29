@@ -1,6 +1,6 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.common.ScalingException
+import io.github.coilix.common.CoilixException
 
 final class NotABootApplicationException(applicationClass: Class[?])
-    extends ScalingException(s"${applicationClass.getName} is not annotated with @ScalingBootApplication")
+    extends CoilixException(s"${applicationClass.getName} is not annotated with @CoilixApplication")

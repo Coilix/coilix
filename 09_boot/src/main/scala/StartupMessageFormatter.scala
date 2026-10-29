@@ -1,7 +1,7 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.config.ComponentProvider
-import org.scaling.config.ConfigPath
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.config.ConfigPath
 import scala.concurrent.duration.FiniteDuration
 
 trait StartupMessageFormatter {
@@ -11,7 +11,7 @@ trait StartupMessageFormatter {
 }
 
 object StartupMessageFormatter {
-  given ConfigPath[StartupMessageFormatter] = ConfigPath[StartupMessageFormatter]("scaling.boot.startup-message-formatter")
+  given ConfigPath[StartupMessageFormatter] = ConfigPath[StartupMessageFormatter]("coilix.boot.startup-message-formatter")
 
   def default(using components: ComponentProvider): StartupMessageFormatter =
     components.get[StartupMessageFormatter](DefaultStartupMessageFormatter())

@@ -1,6 +1,6 @@
-package org.scaling.demo
+package io.github.coilix.demo
 
-import org.scaling.annotation.Repository
+import io.github.coilix.annotation.Repository
 
 @Repository
 final class InMemoryUserRepository extends UserRepository {

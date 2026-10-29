@@ -1,7 +1,7 @@
-package org.scaling.context.configured
+package io.github.coilix.context.configured
 
-import org.scaling.annotation.Component
-import org.scaling.annotation.Value
+import io.github.coilix.annotation.Component
+import io.github.coilix.annotation.Value
 import scala.concurrent.duration.FiniteDuration
 
 @Component

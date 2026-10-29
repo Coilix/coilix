@@ -1,6 +1,6 @@
-package org.scaling.config.fixture
+package io.github.coilix.config.fixture
 
-import org.scaling.config.ConfigurationException
+import io.github.coilix.config.ConfigurationException
 
 final class FailingGreeting extends Greeting {
   throw ConfigurationException("boom")

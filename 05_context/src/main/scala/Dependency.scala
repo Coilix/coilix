@@ -1,7 +1,7 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.config.ValueExpression
 import java.lang.reflect.Type
-import org.scaling.config.ValueExpression
 
 enum Dependency {
   case Required(beanType: Class[?])

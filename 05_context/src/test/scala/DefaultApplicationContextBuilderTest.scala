@@ -1,12 +1,12 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.config.ComponentProvider
+import io.github.coilix.context.wiring.ContextAwareBean
+import io.github.coilix.context.wiring.DefaultGreetingService
+import io.github.coilix.context.wiring.EnglishGreeter
+import io.github.coilix.context.wiring.GreetingService
+import io.github.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
-import org.scaling.config.ComponentProvider
-import org.scaling.context.wiring.ContextAwareBean
-import org.scaling.context.wiring.DefaultGreetingService
-import org.scaling.context.wiring.EnglishGreeter
-import org.scaling.context.wiring.GreetingService
-import org.scaling.context.wiring.PolishGreeter
 
 final class DefaultApplicationContextBuilderTest extends FunSuite {
   private given ComponentProvider = ComponentProvider.builtIn

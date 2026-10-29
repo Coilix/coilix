@@ -1,8 +1,8 @@
-package org.scaling.boot
+package io.github.coilix.boot
 
-import org.scaling.annotation.Order
-import org.scaling.annotation.Slf4s
-import org.scaling.context.ApplicationContext
+import io.github.coilix.annotation.Order
+import io.github.coilix.annotation.Slf4s
+import io.github.coilix.context.ApplicationContext
 
 @Slf4s
 final class OrderedRunnerInvoker extends RunnerInvoker {

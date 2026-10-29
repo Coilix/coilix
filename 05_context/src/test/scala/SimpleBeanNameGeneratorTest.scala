@@ -1,8 +1,8 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.context.wiring.EnglishGreeter
+import io.github.coilix.context.wiring.Greeter
 import munit.FunSuite
-import org.scaling.context.wiring.EnglishGreeter
-import org.scaling.context.wiring.Greeter
 
 final class SimpleBeanNameGeneratorTest extends FunSuite {
   private val generator = SimpleBeanNameGenerator()

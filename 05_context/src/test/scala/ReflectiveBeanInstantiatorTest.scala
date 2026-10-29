@@ -1,10 +1,10 @@
-package org.scaling.context
+package io.github.coilix.context
 
+import io.github.coilix.config.Environment
+import io.github.coilix.context.wiring.DefaultGreetingService
+import io.github.coilix.context.wiring.EnglishGreeter
+import io.github.coilix.context.wiring.GreetingService
 import munit.FunSuite
-import org.scaling.config.Environment
-import org.scaling.context.wiring.DefaultGreetingService
-import org.scaling.context.wiring.EnglishGreeter
-import org.scaling.context.wiring.GreetingService
 
 final class ReflectiveBeanInstantiatorTest extends FunSuite {
   private val instantiator  = ReflectiveBeanInstantiator(Environment.empty)
