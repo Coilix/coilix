@@ -32,6 +32,6 @@ final class StartupComponentsTest extends FunSuite {
         |  delegate.class = io.github.coilix.boot.DefaultStartupMessageFormatter
         |}""".stripMargin
     )
-    assertEquals(StartupMessageFormatter.default(using configured).starting("Demo"), "[app] Starting Demo")
+    assertEquals(StartupMessageFormatter.default(using configured).starting("Demo"), "[app] Launching Demo")
   }
 }
