@@ -1,4 +1,4 @@
-# SCALING-00005: Zarządzanie wątkami
+# COILIX-00005: Zarządzanie wątkami
 
 ## Cel
 
@@ -15,7 +15,7 @@ Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtual
 
 - Brak jakiejkolwiek obsługi wątków. Kontekst budowany jest jednowątkowo.
 - Rejestr beanów jest niemutowalny, więc odczyt z kontekstu z wielu wątków jest już bezpieczny.
-- Mechanizmy potrzebne do sprzątania (`close()`, `@PreDestroy`, `BeanPostProcessor`) dochodzą w taskach SCALING-00002 i SCALING-00004.
+- Mechanizmy potrzebne do sprzątania (`close()`, `@PreDestroy`, `BeanPostProcessor`) dochodzą w taskach COILIX-00002 i COILIX-00004.
 
 ## Zakres
 
@@ -56,7 +56,7 @@ Komponenty:
 - `TaskExecutor`, `VirtualThreadTaskExecutor`, `FixedThreadPoolTaskExecutor`, `NamedThreadFactory`,
 - `TaskScheduler`, `ScheduledExecutorTaskScheduler`, `ScheduledTask` (uchwyt do anulowania),
 - `AsyncProxyFactory` (trait) i `JdkAsyncProxyFactory`,
-- `AsyncBeanPostProcessor`, który podmienia bean na proxy (korzysta z `BeanPostProcessor` z taska SCALING-00004),
+- `AsyncBeanPostProcessor`, który podmienia bean na proxy (korzysta z `BeanPostProcessor` z taska COILIX-00004),
 - `ScheduledMethodRegistrar`, który po starcie kontekstu rejestruje metody `@Scheduled`,
 - `ExecutorShutdown` z `@PreDestroy`, który zamyka wykonawców.
 

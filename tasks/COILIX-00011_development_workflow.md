@@ -1,4 +1,4 @@
-# SCALING-00011: Proces developmentu i model gałęzi
+# COILIX-00011: Proces developmentu i model gałęzi
 
 ## Cel
 
@@ -19,13 +19,13 @@ Ustalić, jak zmiany przechodzą od taska do wydania: model gałęzi, pull reque
 ## Kryteria akceptacji
 
 1. `docs/process/development.md` istnieje i jest podlinkowany z `CLAUDE.md`.
-2. Zmiany od SCALING-00008 trafiają na `master` przez gałęzie według procesu.
+2. Zmiany od COILIX-00008 trafiają na `master` przez gałęzie według procesu.
 3. Repozytorium na GitHubie ma ustawione metody scalania i usuwanie gałęzi po scaleniu.
 
 ## Poza zakresem
 
-- Workflowy CI i wydań (SCALING-00009).
-- `CONTRIBUTING.md` dla kontrybutorów z zewnątrz (SCALING-00008), który streszcza ten proces po angielsku.
+- Workflowy CI i wydań (COILIX-00009).
+- `CONTRIBUTING.md` dla kontrybutorów z zewnątrz (COILIX-00008), który streszcza ten proces po angielsku.
 
 ## Ryzyka i otwarte pytania
 

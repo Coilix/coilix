@@ -9,14 +9,14 @@ Trunk-based development: jedna gałąź główna `master` i krótko żyjące ga�
 | Gałąź | Skąd | Dokąd | Żyje | Do czego |
 |---|---|---|---|---|
 | `master` | | | zawsze | Zawsze kompiluje się i przechodzi testy. Każdy commit da się wydać. |
-| `feature/SCALING-NNNNN-opis` | `master` | `master` przez PR | dni | Realizacja taska albo jego części. |
-| `fix/SCALING-NNNNN-opis` | `master` albo `series/X.Y` | ta sama gałąź przez PR | godziny | Poprawka błędu. |
+| `feature/COILIX-NNNNN-opis` | `master` | `master` przez PR | dni | Realizacja taska albo jego części. |
+| `fix/COILIX-NNNNN-opis` | `master` albo `series/X.Y` | ta sama gałąź przez PR | godziny | Poprawka błędu. |
 | `release/vX.Y.Z` | `master` albo `series/X.Y` | ta sama gałąź przez PR | do scalenia | Tylko zmiana nagłówka w `CHANGELOG.md` przed tagiem. |
 | `series/X.Y` | tag `vX.Y.0` | nigdzie | do końca wsparcia linii | Poprawki `X.Y.Z+1` po tym, jak `master` przeszedł na następną wersję. |
 
 Zasady:
 
-- `opis` to kilka słów w kebab-case po angielsku: `feature/SCALING-00004-bean-lifecycle`.
+- `opis` to kilka słów w kebab-case po angielsku: `feature/COILIX-00004-bean-lifecycle`.
 - Jedna gałąź to jeden task. Duży task można podzielić na kilka kolejnych gałęzi, ale każda zostawia `master` w stanie gotowym do wydania.
 - Gałąź żyje krótko. Jeśli praca trwa dłużej niż tydzień, rebase na `master` co najmniej raz w tygodniu, żeby konflikty nie rosły.
 - Funkcja, która nie jest gotowa, nie trafia na `master` w połowie. Albo czeka na gałęzi, albo jest dzielona na samodzielne kroki (najpierw trait i test, potem implementacja, potem podpięcie w `boot`).
@@ -33,10 +33,10 @@ Zasady:
    ```sh
    git switch master
    git pull --rebase
-   git switch -c feature/SCALING-NNNNN-opis
+   git switch -c feature/COILIX-NNNNN-opis
    ```
 
-4. Do pracy nad dwiema rzeczami naraz zamiast przełączania gałęzi służy osobny katalog: `git worktree add ../coilix-NNNNN feature/SCALING-NNNNN-opis`.
+4. Do pracy nad dwiema rzeczami naraz zamiast przełączania gałęzi służy osobny katalog: `git worktree add ../coilix-NNNNN feature/COILIX-NNNNN-opis`.
 
 ### 2. Praca
 
@@ -59,8 +59,8 @@ sbt -Dsbt.server.autostart=false testFull doc demo/run
 ### 4. Pull request
 
 1. Rebase na `master`, żeby historia była liniowa: `git fetch && git rebase origin/master`.
-2. `git push -u origin feature/SCALING-NNNNN-opis` i PR do `master` (albo do `series/X.Y` dla poprawki starszej linii).
-3. Tytuł PR jak pierwszy commit: `SCALING-NNNNN: Opis`. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
+2. `git push -u origin feature/COILIX-NNNNN-opis` i PR do `master` (albo do `series/X.Y` dla poprawki starszej linii).
+3. Tytuł PR jak pierwszy commit: `COILIX-NNNNN: Opis`. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
 4. CI musi być zielone: testy na JDK 17 i 25, `doc`, audyt licencji, a po pierwszym wydaniu MiMa i TASTy-MiMa.
 5. Przegląd według listy z sekcji [Przegląd](#przegląd).
 6. Scalenie przez **Rebase and merge**. Commity zachowują się w historii jeden do jednego, bez commita scalającego. Squash tylko wtedy, gdy commity na gałęzi są poprawkami poprzednich („fix typo”, „review”), a i tak lepiej poprawić je przed PR przez `git commit --fixup` i `git rebase --autosquash`.
@@ -94,7 +94,7 @@ Projekt ma na razie jednego opiekuna, więc przegląd to samodzielne przejście 
 Wydania wychodzą z `master` (linia bieżąca) albo z `series/X.Y` (starsza linia). Numer wynika z [versioning.md](../architecture/versioning.md): w fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`.
 
 1. Upewnij się, że CI na gałęzi wydania jest zielone.
-2. Na gałęzi `release/vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień w `CHANGELOG.md` nagłówek `Unreleased` na `[X.Y.Z] - RRRR-MM-DD` i dodaj nad nim nową, pustą sekcję `Unreleased`. Commit: `SCALING-00000: Release X.Y.Z`. Scal przez PR.
+2. Na gałęzi `release/vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień w `CHANGELOG.md` nagłówek `Unreleased` na `[X.Y.Z] - RRRR-MM-DD` i dodaj nad nim nową, pustą sekcję `Unreleased`. Commit: `COILIX-00000: Release X.Y.Z`. Scal przez PR.
 3. Tag podpisany na commicie z `master`:
 
    ```sh
@@ -112,9 +112,9 @@ Wydania przedpremierowe (`vX.Y.Z-M1`, `vX.Y.Z-RC1`) idą tą samą drogą. `-M` 
 
 Przykład: wydane jest `0.3.0`, `master` ma już zmiany niezgodne do `0.4.0`, a w `0.3.0` jest błąd.
 
-1. Poprawka trafia najpierw na `master` przez zwykły PR (gałąź `fix/SCALING-NNNNN-opis`), o ile błąd tam występuje.
+1. Poprawka trafia najpierw na `master` przez zwykły PR (gałąź `fix/COILIX-NNNNN-opis`), o ile błąd tam występuje.
 2. Gałąź linii, jeśli jeszcze nie istnieje: `git switch -c series/0.3 v0.3.0 && git push -u origin series/0.3`.
-3. Przeniesienie poprawki: gałąź `fix/SCALING-NNNNN-opis-0.3` od `series/0.3`, `git cherry-pick -x <commit>`, PR do `series/0.3`.
+3. Przeniesienie poprawki: gałąź `fix/COILIX-NNNNN-opis-0.3` od `series/0.3`, `git cherry-pick -x <commit>`, PR do `series/0.3`.
 4. Na `series/0.3`: sekcja w `CHANGELOG.md`, tag `v0.3.1` na tej gałęzi, push tagu.
 5. Wpis o wydaniu `0.3.1` trafia też do `CHANGELOG.md` na `master`, żeby historia wydań była w jednym miejscu.
 

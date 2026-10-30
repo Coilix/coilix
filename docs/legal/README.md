@@ -1,6 +1,6 @@
-# Analiza prawna i publikacji (SCALING-00006)
+# Analiza prawna i publikacji (COILIX-00006)
 
-Wynik taska [SCALING-00006](../../tasks/SCALING-00006_legal_and_publication.md). To analiza robocza, a nie porada prawna. Punkty oznaczone jako „do konsultacji” warto sprawdzić z prawnikiem przed pierwszą publikacją.
+Wynik taska [COILIX-00006](../../tasks/COILIX-00006_legal_and_publication.md). To analiza robocza, a nie porada prawna. Punkty oznaczone jako „do konsultacji” warto sprawdzić z prawnikiem przed pierwszą publikacją.
 
 ## Odpowiedź: czy można opublikować projekt inspirowany Springiem?
 
@@ -43,6 +43,6 @@ Wszystkie decyzje zatwierdzone 2026-10-29.
 
 ## Zadania implementacyjne
 
-- [SCALING-00008](../../tasks/SCALING-00008_license_and_publication_setup.md): licencja, metadane publikacji i przestrzeń nazw.
-- [SCALING-00009](../../tasks/SCALING-00009_versioning_and_releases.md): wersjonowanie, kompatybilność i proces wydań.
-- [SCALING-00010](../../tasks/SCALING-00010_module_independence.md): niezależność modułów opcjonalnych.
+- [COILIX-00008](../../tasks/COILIX-00008_license_and_publication_setup.md): licencja, metadane publikacji i przestrzeń nazw.
+- [COILIX-00009](../../tasks/COILIX-00009_versioning_and_releases.md): wersjonowanie, kompatybilność i proces wydań.
+- [COILIX-00010](../../tasks/COILIX-00010_module_independence.md): niezależność modułów opcjonalnych.

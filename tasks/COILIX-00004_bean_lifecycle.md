@@ -1,4 +1,4 @@
-# SCALING-00004: Cykl życia beanów: `@PostConstruct` i `@PreDestroy`
+# COILIX-00004: Cykl życia beanów: `@PostConstruct` i `@PreDestroy`
 
 ## Cel
 
@@ -13,7 +13,7 @@ Semantyka jak w Springu, ale z własnymi adnotacjami frameworka, bez zależnośc
 
 - `05_context/src/main/scala/ReflectiveBeanInstantiator.scala` tylko wywołuje konstruktor i nie ma żadnego kroku po utworzeniu.
 - `DefaultApplicationContextBuilder` składa rejestr przez `foldLeft` po beanach w kolejności zależności, więc kolejność tworzenia jest znana.
-- Kontekst nie ma `close()`. To dochodzi w tasku SCALING-00002.
+- Kontekst nie ma `close()`. To dochodzi w tasku COILIX-00002.
 
 ## Zakres
 
@@ -36,7 +36,7 @@ Semantyka jak w Springu, ale z własnymi adnotacjami frameworka, bez zależnośc
 - `05_context`:
   - `LifecycleMethods`: case class z listami metod init i destroy, jako nowe pole w `BeanDefinition`,
   - `LifecycleMethodScanner` (trait) i `AnnotatedLifecycleMethodScanner`, wywoływane z `ReflectiveBeanDefinitionFactory`,
-  - `BeanPostProcessor` (trait) jako punkt rozszerzeń w stylu Springa. Pierwsza implementacja to `PostConstructProcessor`, a kolejne (np. `@Async` z taska SCALING-00005) dojdą w ten sam sposób,
+  - `BeanPostProcessor` (trait) jako punkt rozszerzeń w stylu Springa. Pierwsza implementacja to `PostConstructProcessor`, a kolejne (np. `@Async` z taska COILIX-00005) dojdą w ten sam sposób,
   - `BeanDestroyer` (trait) i `PreDestroyInvoker`, wywoływane z `close()` kontekstu,
   - `InvalidLifecycleMethodException` i `BeanCreationException` w osobnych plikach.
 - `RegisteredBean` zachowuje definicję albo jej metody destroy, żeby `close()` wiedziało, co wywołać.

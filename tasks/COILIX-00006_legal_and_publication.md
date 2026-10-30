@@ -1,4 +1,4 @@
-# SCALING-00006: Legalność, licencjonowanie i publikacja
+# COILIX-00006: Legalność, licencjonowanie i publikacja
 
 ## Cel
 
@@ -9,7 +9,7 @@ Ten task to analiza i decyzje. Implementacja (pliki licencji, konfiguracja publi
 ## Stan obecny
 
 - Brak pliku `LICENSE`, `NOTICE` i informacji o licencji w `build.sbt` (`licenses`, `homepage`, `scmInfo`, `developers`).
-- `organization := "org.scaling"`, ale nie wiadomo, czy mamy prawo do tej przestrzeni nazw (domena `scaling.org`).
+- `organization` wskazuje domenę `.org` zbieżną z nazwą projektu, ale nie wiadomo, czy mamy prawo do tej przestrzeni nazw.
 - Framework świadomie naśladuje API Springa: nazwy adnotacji (`@Component`, `@Service`, `@Autowired`, `@Value`, `@Configuration`, `@Bean`, `@ConfigurationProperties`), pojęcia (`ApplicationContext`, `ApplicationRunner`) i dokumentacja („w stylu Springa”).
 - Moduł `11_intellij_plugin` korzysta z IntelliJ Platform SDK i pluginu Scala.
 - Zasada „bez komentarzy” z `CLAUDE.md` koliduje z ewentualnymi nagłówkami licencyjnymi w plikach.
@@ -29,7 +29,7 @@ Ten task to analiza i decyzje. Implementacja (pliki licencji, konfiguracja publi
    - lista miejsc, gdzie podobieństwo wykracza poza API (np. identyczne komunikaty błędów, teksty dokumentacji, banner), do przeredagowania.
 4. **Znaki towarowe i nazewnictwo**
    - „Spring” i „Spring Boot” to znaki towarowe Broadcom. Sprawdzić, jak wolno ich używać w opisie projektu (użycie opisowe „inspired by”) i czego unikać (nazwa, logo, sugestia powiązania),
-   - sprawdzić kolizje nazwy „Scaling” i pakietu `org.scaling` z istniejącymi projektami i znakami towarowymi.
+   - sprawdzić kolizje nazwy projektu i pakietu z istniejącymi projektami i znakami towarowymi.
 5. **Prawa autorskie i pochodzenie kodu**
    - kto jest właścicielem praw (autor, ewentualny pracodawca, umowy),
    - status prawny kodu powstałego z pomocą narzędzi generujących kod i warunki tych narzędzi,
@@ -66,5 +66,5 @@ Ten task to analiza i decyzje. Implementacja (pliki licencji, konfiguracja publi
 
 - Ocena prawna ochrony API różni się między USA a UE. Przy wątpliwościach decyduje konsultacja z prawnikiem.
 - Licencje przechodnich zależności mogą być niepełne w metadanych POM i wymagać ręcznej weryfikacji.
-- Przestrzeń nazw `org.scaling` na Maven Central wymaga domeny. Bez niej trzeba zmienić `organization`, co dotyka wszystkich pakietów.
+- Obecna przestrzeń nazw na Maven Central wymaga domeny. Bez niej trzeba zmienić `organization`, co dotyka wszystkich pakietów.
 - Status praw autorskich do kodu tworzonego z pomocą narzędzi generujących zależy od jurysdykcji i warunków tych narzędzi.

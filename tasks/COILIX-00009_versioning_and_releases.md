@@ -1,4 +1,4 @@
-# SCALING-00009: Wersjonowanie, kompatybilność i proces wydań
+# COILIX-00009: Wersjonowanie, kompatybilność i proces wydań
 
 ## Cel
 
@@ -34,7 +34,7 @@ Wdrożyć standard z [docs/architecture/versioning.md](../docs/architecture/vers
 
 ## Poza zakresem
 
-- Dokumentacja na GitHub Pages (SCALING-00007, korzysta z wersji z tego taska).
+- Dokumentacja na GitHub Pages (COILIX-00007, korzysta z wersji z tego taska).
 
 ## Ryzyka i otwarte pytania
 

@@ -2,7 +2,7 @@
 
 Framework IoC dla Scali 3 z API wzorowanym na Springu. Build: sbt 2, testy: munit. Licencja: Apache-2.0 (`docs/legal/`).
 
-Artefakty mają `groupId` `io.github.coilix`, pakiety `io.github.coilix.*`, a klucze configu prefiks `coilix.*`. Repozytorium: [Coilix/coilix](https://github.com/Coilix/coilix). Do 2026-10-29 projekt nazywał się „Scaling” (pakiet `org.scaling`), stąd prefiks `SCALING-` w identyfikatorach tasków.
+Artefakty mają `groupId` `io.github.coilix`, pakiety `io.github.coilix.*`, a klucze configu prefiks `coilix.*`. Repozytorium: [Coilix/coilix](https://github.com/Coilix/coilix). Identyfikatory tasków mają prefiks `COILIX-`.
 
 ## Moduły
 
@@ -30,7 +30,7 @@ Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/m
 
 - `common`, `annotations`, `config`, `context` i `boot` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
-- Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services` (SCALING-00010), a nie przez zależność `boot` od niego.
+- Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services` (COILIX-00010), a nie przez zależność `boot` od niego.
 - Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy, ma `publish / skip := true`.
@@ -62,14 +62,14 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt przy każdej kompilacji (`scalafmtOnCompile`, konfiguracja w `.scalafmt.conf`), a każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
 - Każda nowa klasa ma testy munit w `src/test/scala` swojego modułu.
-- Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (SCALING-00009, `docs/architecture/versioning.md`).
+- Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (COILIX-00009, `docs/architecture/versioning.md`).
 - Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.
 - Nie kopiuje się kodu, dokumentacji, komunikatów ani testów ze Springa i innych frameworków, także w parafrazie. Nazwy adnotacji i pojęć mogą odpowiadać Springowi, teksty piszemy od nowa.
 - Słowa „Spring” nie używa się w nazwach typów, pakietów, modułów, artefaktów, kluczy configu ani tytułów dokumentacji. W opisach tylko opisowo („API modeled on Spring”), bez sugerowania powiązania z Broadcom (`docs/legal/spring-similarity.md`).
 
 ## Dokumentacja
 
-Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`) z komentarzy `/** */` w kodzie. Będzie publikowana na GitHub Pages w wersji dla każdego wydania (plan w `tasks/SCALING-00007_documentation_site.md`).
+Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`) z komentarzy `/** */` w kodzie. Będzie publikowana na GitHub Pages w wersji dla każdego wydania (plan w `tasks/COILIX-00007_documentation_site.md`).
 
 - Scaladoc i Javadoc pisze się po angielsku.
 - Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`10`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]`, testy i moduł `11_intellij_plugin`.
@@ -94,7 +94,7 @@ Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszy
 
 Pełna procedura jest w `docs/process/development.md`: trunk-based z gałęzią `master`, gałęzie tematyczne, PR, wydania i linie utrzymaniowe.
 
-- Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/SCALING-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Rebase and merge”.
+- Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/COILIX-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Rebase and merge”.
 - `master` zawsze kompiluje się i przechodzi `sbt testFull`. Niegotowa funkcja czeka na gałęzi albo jest dzielona na samodzielne kroki.
 - Wydanie to podpisany tag `vX.Y.Z` na `master`. Gałąź `series/X.Y` powstaje dopiero, gdy trzeba wydać poprawkę starszej linii.
 - Przed PR: `sbt testFull doc demo/run` i definicja ukończenia z `docs/process/development.md`.
@@ -102,11 +102,11 @@ Pełna procedura jest w `docs/process/development.md`: trunk-based z gałęzią 
 ## Taski
 
 Backlog kolejnych etapów jest w `tasks/`. Indeks i statusy są w `tasks/README.md`. Po skończeniu taska aktualizuj jego status.
-Taski mają identyfikatory `SCALING-NNNNN` (plik `tasks/SCALING-NNNNN_nazwa.md`). `SCALING-00000` to zmiany spoza tasków (build, narzędzia, szkielet).
+Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). `COILIX-00000` to zmiany spoza tasków (build, narzędzia, szkielet).
 
 ## Commity
 
-- Wiadomość po angielsku, zaczyna się od ID taska: `SCALING-00003: Add configuration loading and component overrides`.
+- Wiadomość po angielsku, zaczyna się od ID taska: `COILIX-00003: Add configuration loading and component overrides`.
 - Treść opisuje tylko to, co zmiana dodaje lub zmienia. Bez wzmianek o narzędziach czy agentach, które ją przygotowały, i bez stopek `Co-Authored-By`.
 - Jeden commit to jedna logiczna zmiana. Pliki grupuje się według tego, co wprowadzają.
 - Każdy commit ma `Signed-off-by` (DCO), czyli powstaje przez `git commit -s`.
