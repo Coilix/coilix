@@ -5,15 +5,15 @@ Thank you for helping. This file is a short summary. The full workflow (in Polis
 ## Before you start
 
 - For anything larger than a small fix, open an issue first so we can agree on the approach.
-- Work is tracked as tasks in [tasks/](tasks/README.md) with identifiers `SCALING-NNNNN` (the project was called Scaling before it became Coilix). Changes outside any task use `SCALING-00000`.
+- Work is tracked as tasks in [tasks/](tasks/README.md) with identifiers `COILIX-NNNNN`. Changes outside any task use `COILIX-00000`.
 
 ## Workflow
 
-1. Branch from `master`: `feature/SCALING-NNNNN-short-description` or `fix/SCALING-NNNNN-short-description`.
+1. Branch from `master`: `feature/COILIX-NNNNN-short-description` or `fix/COILIX-NNNNN-short-description`.
 2. Keep each commit to one logical change. Commit messages are in English and start with the task identifier:
 
    ```text
-   SCALING-00004: Add @PostConstruct and @PreDestroy support
+   COILIX-00004: Add @PostConstruct and @PreDestroy support
    ```
 
 3. Sign off every commit (see [Developer Certificate of Origin](#developer-certificate-of-origin)): `git commit -s`.

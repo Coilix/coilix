@@ -8,6 +8,10 @@ target/
 .idea/jarRepositories.xml
 .idea/compiler.xml
 .idea/claudeCodeTabState.xml
+.idea/sbt.xml
+.idea/scala_compiler.xml
+.idea/modules/
+.idea/.name
 .idea/libraries/
 *.iws
 *.iml

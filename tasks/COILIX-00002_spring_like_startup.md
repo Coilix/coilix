@@ -1,4 +1,4 @@
-# SCALING-00002: Uruchamianie aplikacji w stylu Spring Boot
+# COILIX-00002: Uruchamianie aplikacji w stylu Spring Boot
 
 ## Cel
 
@@ -7,24 +7,24 @@ Start aplikacji ma przypominać Spring Boot: adnotacja na klasie startowej, jedn
 Docelowo:
 
 ```scala
-@ScalingBootApplication
+@CoilixApplication
 object DemoApplication {
   def main(args: Array[String]): Unit = {
-    val _ = Scaling.run[DemoApplication.type](args)
+    val _ = Coilix.run[DemoApplication.type](args)
   }
 }
 ```
 
 ## Stan obecny
 
-- `09_boot/src/main/scala/ScalingApplication.scala` to trait, który aplikacja rozszerza. Trzeba w nim ręcznie nadpisać `basePackage` (string) i `run(context)`.
+- `09_boot` ma trait aplikacji, który aplikacja rozszerza. Trzeba w nim ręcznie nadpisać `basePackage` (string) i `run(context)`.
 - Logika demo (`DemoRunner`, `ContextInspector`) jest wywoływana ręcznie z `Main.run`.
 - Kontekstu nie da się zamknąć, nie ma shutdown hooka ani logu z czasem startu.
 
 ## Zakres
 
-1. Adnotacja `@ScalingBootApplication` w `02_annotations` z opcjonalnym `scanBasePackages`.
-2. `Scaling.run[T: ClassTag](args)` w `09_boot`:
+1. Adnotacja `@CoilixApplication` w `02_annotations` z opcjonalnym `scanBasePackages`.
+2. `Coilix.run[T: ClassTag](args)` w `09_boot`:
    - pakiet bazowy domyślnie to pakiet klasy `T`, jak w Springu,
    - zwraca działający kontekst.
 3. `ApplicationArguments`, czyli bean z argumentami wywołania. Na początek parsowanie `--klucz=wartość` i argumentów pozycyjnych.
@@ -39,17 +39,17 @@ object DemoApplication {
    - `ConfigurableApplicationContext` (albo `ClosableApplicationContext`) z `close()`,
    - shutdown hook JVM, który zamyka kontekst.
 7. Migracja `10_demo` na nowy sposób uruchamiania. `DemoRunner` i `ContextInspector` stają się runnerami.
-8. Usunięcie starego traitu `ScalingApplication` po migracji.
+8. Usunięcie starego traitu aplikacji po migracji.
 
 ## Proponowany projekt
 
-- `02_annotations`: `ScalingBootApplication.java`, `Order.java`.
+- `02_annotations`: `CoilixApplication.java`, `Order.java`.
 - `05_context`:
   - `ConfigurableApplicationContext` (trait) rozszerzający `ApplicationContext` o `close()`,
   - `DefaultApplicationContext` implementuje nowy trait.
 - `09_boot`:
-  - `Scaling`: obiekt z `run[T: ClassTag](args)` delegujący do `ScalingApplicationRunner`,
-  - `ScalingApplicationRunner` (trait) i `DefaultScalingApplicationRunner`, które składają kroki startu,
+  - `Coilix`: obiekt z `run[T: ClassTag](args)` delegujący do `CoilixApplicationRunner`,
+  - `CoilixApplicationRunner` (trait) i `DefaultCoilixApplicationRunner`, które składają kroki startu,
   - `BasePackageResolver` (trait) i `AnnotationBasePackageResolver`, które czytają `scanBasePackages` albo pakiet klasy startowej,
   - `ApplicationArguments`, `ArgumentsParser` (trait) i `SimpleArgumentsParser`,
   - `ApplicationRunner` (trait dla runnerów użytkownika) i `RunnerInvoker`, który sortuje po `@Order` i wywołuje,
@@ -59,7 +59,7 @@ object DemoApplication {
 
 ## Kryteria akceptacji
 
-1. `10_demo` startuje przez `@ScalingBootApplication` i `Scaling.run[...]`, bez nadpisywania `basePackage`.
+1. `10_demo` startuje przez `@CoilixApplication` i `Coilix.run[...]`, bez nadpisywania `basePackage`.
 2. Runnery demo wykonują się automatycznie po starcie, w kolejności `@Order`.
 3. Log zawiera banner, `Starting ...` i `Started ... in X seconds`.
 4. `ApplicationArguments` da się wstrzyknąć do beana, a `--name=Ann` jest dostępne jako opcja.
@@ -75,4 +75,4 @@ object DemoApplication {
 ## Ryzyka i otwarte pytania
 
 - Czy Java-adnotacja na `object` Scali ląduje na klasie `DemoApplication$`, tak że `ClassTag[DemoApplication.type]` ją widzi? Trzeba to sprawdzić testem na początku taska. Jeśli nie, klasą startową będzie `class` z obiektem towarzyszącym.
-- Czy `Scaling.run` ma zwracać kontekst, czy `Unit` jak `main`? Proponowane: zwraca kontekst, bo to ułatwia testy.
+- Czy `Coilix.run` ma zwracać kontekst, czy `Unit` jak `main`? Proponowane: zwraca kontekst, bo to ułatwia testy.

@@ -1,4 +1,4 @@
-# SCALING-00003: Konfiguracja: pliki, `@Value`, `@Configuration` i nadpisywanie komponentów frameworka
+# COILIX-00003: Konfiguracja: pliki, `@Value`, `@Configuration` i nadpisywanie komponentów frameworka
 
 ## Cel
 
@@ -14,7 +14,7 @@ Dodatkowo każdy wewnętrzny komponent frameworka (np. `ConstructorSelector`) da
 
 ## Zakres
 
-1. Nowy moduł `04_config` (`org.scaling.config`). Kolejne moduły przesuwają się o jeden numer (`05_context` ... `11_intellij_plugin`).
+1. Nowy moduł `04_config` (`io.github.coilix.config`). Kolejne moduły przesuwają się o jeden numer (`05_context` ... `11_intellij_plugin`).
 2. Ładowanie configu:
    - formaty HOCON (`.conf`), properties i YAML. Wszystkie lądują w jednym drzewie (Typesafe Config, YAML przez snakeyaml-engine),
    - kolejność ważności (od najwyższej): opcje `--klucz=wartość` z linii poleceń, właściwości systemowe JVM, `application.properties`, `application.yaml`, `application.yml`, `application.conf`,
@@ -30,7 +30,7 @@ Dodatkowo każdy wewnętrzny komponent frameworka (np. `ConstructorSelector`) da
    - `@ConfigurationProperties("prefiks")` na klasie: bean powstaje z sekcji configu,
    - `@Configuration` na klasie i `@Bean` na metodach: każda metoda to definicja beana, a jej parametry to zależności.
 5. Nadpisywanie komponentów frameworka:
-   - `ConfigPath[T]`, czyli given w obiekcie towarzyszącym traitu ze ścieżką, np. `scaling.context.constructor-selector`,
+   - `ConfigPath[T]`, czyli given w obiekcie towarzyszącym traitu ze ścieżką, np. `coilix.context.constructor-selector`,
    - `ComponentProvider.get[T: ConfigPath](default: => T): T`. Gdy w configu nie ma ścieżki, zwraca `default`. Gdy jest, buduje klasę z klucza `class` przez `ConfigBinder`,
    - każde `default` w obiektach towarzyszących `context` i `boot` przechodzi przez `ComponentProvider`.
 6. Migracja `10_demo`: `application.yaml`, `@Value`, `@ConfigurationProperties`, `@Configuration` z `@Bean` oraz przykład nadpisania komponentu frameworka.
@@ -40,15 +40,15 @@ Dodatkowo każdy wewnętrzny komponent frameworka (np. `ConstructorSelector`) da
 Przykład nadpisania:
 
 ```hocon
-scaling.boot.startup-message-formatter {
-  class = "org.scaling.demo.DemoStartupMessageFormatter"
+coilix.boot.startup-message-formatter {
+  class = "io.github.coilix.demo.DemoStartupMessageFormatter"
   prefix = ">>"
 }
 ```
 
 ```scala
 object StartupMessageFormatter {
-  given ConfigPath[StartupMessageFormatter] = ConfigPath("scaling.boot.startup-message-formatter")
+  given ConfigPath[StartupMessageFormatter] = ConfigPath("coilix.boot.startup-message-formatter")
 
   def default(using components: ComponentProvider): StartupMessageFormatter =
     components.get[StartupMessageFormatter](DefaultStartupMessageFormatter())

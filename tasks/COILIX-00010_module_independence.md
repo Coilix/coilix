@@ -1,4 +1,4 @@
-# SCALING-00010: Niezależność modułów opcjonalnych
+# COILIX-00010: Niezależność modułów opcjonalnych
 
 ## Cel
 

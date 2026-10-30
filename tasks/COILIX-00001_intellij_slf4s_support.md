@@ -1,4 +1,4 @@
-# SCALING-00001: Wsparcie `@Slf4s` w IntelliJ
+# COILIX-00001: Wsparcie `@Slf4s` w IntelliJ
 
 ## Cel
 
@@ -13,11 +13,11 @@ To wyłącznie wsparcie IDE. Kompilacją zajmuje się już `03_slf4s_plugin`.
 ## Stan obecny
 
 - Plugin kompilatora `03_slf4s_plugin` dodaje przed typerem pole `private final val log = org.slf4j.LoggerFactory.getLogger("<pełna.nazwa>")`. Kod się kompiluje i działa.
-- IntelliJ nie uruchamia pluginów kompilatora podczas analizy kodu, więc `log` świeci się na czerwono, np. w `10_demo/src/main/scala/DemoRunner.scala`, `10_demo/src/main/scala/ContextInspector.scala`, `09_boot/src/main/scala/DefaultScalingBootstrap.scala` i `05_context/src/main/scala/ReflectiveBeanInstantiator.scala`.
+- IntelliJ nie uruchamia pluginów kompilatora podczas analizy kodu, więc `log` świeci się na czerwono, np. w `10_demo/src/main/scala/DemoRunner.scala`, `10_demo/src/main/scala/ContextInspector.scala`, `09_boot/src/main/scala/DefaultCoilixBootstrap.scala` i `05_context/src/main/scala/ReflectiveBeanInstantiator.scala`.
 - Szczegółowa specyfikacja jest w [docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md](../docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md). Część jej treści jest nieaktualna:
   - ścieżka `src/main/scala/demo/DemoBeans.scala` już nie istnieje,
   - build-time rewrite w sbt został zastąpiony pluginem kompilatora,
-  - adnotacja ma teraz pełną nazwę `org.scaling.annotation.Slf4s`.
+  - adnotacja ma teraz pełną nazwę `io.github.coilix.annotation.Slf4s`.
 
 ## Zakres
 
@@ -45,7 +45,7 @@ Komponenty (zgodnie z zasadami projektu, każdy jako trait i implementacja):
 
 ## Kryteria akceptacji
 
-1. W `DemoRunner`, `ContextInspector`, `DefaultScalingBootstrap` i `ReflectiveBeanInstantiator` `log.info(...)` nie jest podkreślane.
+1. W `DemoRunner`, `ContextInspector`, `DefaultCoilixBootstrap` i `ReflectiveBeanInstantiator` `log.info(...)` nie jest podkreślane.
 2. Podgląd typu `log` pokazuje `org.slf4j.Logger`, a `log.` podpowiada `info`, `debug`, `warn`, `error`.
 3. W klasie bez `@Slf4s` odwołanie do `log` dalej jest błędem.
 4. Klasa z `@Slf4s` i własnym `val log` nie dostaje drugiego `log`.
