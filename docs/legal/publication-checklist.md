@@ -4,7 +4,7 @@
 
 Maven Central wymaga `groupId` w przestrzeni nazw, którą kontrolujemy: domena potwierdzona rekordem DNS TXT albo `io.github.<login>`, który Central Portal przyznaje automatycznie po zalogowaniu kontem GitHub.
 
-**Domena `scaling.org` jest zarejestrowana przez kogoś innego**, więc `org.scaling` odpada jako `groupId`. Pakiet `org.scaling` też powinien się zmienić, bo konwencja JVM zakłada pakiety z odwróconej domeny właściciela, a zostawienie cudzej domeny grozi kolizją klas.
+**Domena `.org` zbieżna z roboczą nazwą projektu jest zarejestrowana przez kogoś innego**, więc odpada jako `groupId`. Pakiet oparty na tej domenie też powinien się zmienić, bo konwencja JVM zakłada pakiety z odwróconej domeny właściciela, a zostawienie cudzej domeny grozi kolizją klas.
 
 Projekt zmienia nazwę na **Coilix** ([spring-similarity.md](spring-similarity.md#nazwa-projektu)).
 
@@ -17,7 +17,7 @@ Rozważane i odrzucone warianty:
 | `io.github.<login>` | `io.github.pawelwojcik7` | długie importy, nazwa związana z osobą |
 | własna domena | `dev.coilix` | koszt i weryfikacja DNS. Można przejść później, ale zmiana pakietu to zmiana niezgodna, więc tylko przed `1.0.0` |
 
-Zmiana pakietu dotyka wszystkich plików, `idePackagePrefix` w `build.sbt`, kluczy `class` w configach (`org.scaling.boot.DefaultStartupMessageFormatter`) i dokumentacji. Trzeba ją zrobić **przed** pierwszym wydaniem, razem ze zmianą nazwy (SCALING-00008).
+Zmiana pakietu dotyka wszystkich plików, `idePackagePrefix` w `build.sbt`, kluczy `class` w configach (`io.github.coilix.boot.DefaultStartupMessageFormatter`) i dokumentacji. Trzeba ją zrobić **przed** pierwszym wydaniem, razem ze zmianą nazwy (COILIX-00008).
 
 ## Maven Central (Central Portal)
 
@@ -61,7 +61,7 @@ Publikowane artefakty: `common`, `annotations`, `slf4s-plugin`, `config`, `conte
 ## Kolejność
 
 1. Decyzje z [README.md](README.md#decyzje) i odpowiedź w sprawie praw pracodawcy (zrobione 2026-10-29).
-2. SCALING-00008: licencja, przestrzeń nazw, metadane, README.
-3. SCALING-00010: niezależność modułów (zmienia strukturę artefaktów, więc przed pierwszym wydaniem).
-4. SCALING-00009: wersjonowanie i CI wydań.
-5. Upublicznienie repozytorium, pierwsze wydanie `0.1.0`, potem SCALING-00007 (dokumentacja na GitHub Pages).
+2. COILIX-00008: licencja, przestrzeń nazw, metadane, README.
+3. COILIX-00010: niezależność modułów (zmienia strukturę artefaktów, więc przed pierwszym wydaniem).
+4. COILIX-00009: wersjonowanie i CI wydań.
+5. Upublicznienie repozytorium, pierwsze wydanie `0.1.0`, potem COILIX-00007 (dokumentacja na GitHub Pages).

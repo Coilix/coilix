@@ -1,6 +1,6 @@
 # Specyfikacja dla agenta: plugin IntelliJ z pelnym wsparciem `@Slf4s` (Scala)
 
-> Zrealizowane w module `11_intellij_plugin` (task `tasks/SCALING-00001_intellij_slf4s_support.md`). Ścieżki i opis build-time rewrite poniżej są historyczne: kompilacją zajmuje się plugin kompilatora `03_slf4s_plugin`, a adnotacja to `org.scaling.annotation.Slf4s`.
+> Zrealizowane w module `11_intellij_plugin` (task `tasks/COILIX-00001_intellij_slf4s_support.md`). Ścieżki i opis build-time rewrite poniżej są historyczne: kompilacją zajmuje się plugin kompilatora `03_slf4s_plugin`, a adnotacja to `io.github.coilix.annotation.Slf4s`.
 
 ## 1. Cel dokumentu
 Ten dokument ma sluzyc jako kompletna instrukcja dla osobnego agenta, ktory zaprojektuje plugin IntelliJ (bez implementacji w tym zadaniu), zapewniajacy pelne wsparcie adnotacji `@Slf4s` w kodzie Scala.
@@ -8,7 +8,7 @@ Ten dokument ma sluzyc jako kompletna instrukcja dla osobnego agenta, ktory zapr
 Priorytet: w klasach oznaczonych `@Slf4s` symbol `log` ma byc traktowany przez IDE jak prawdziwy member typu `org.slf4j.Logger`.
 
 ## 2. Kontekst projektu
-- Repo: `scaling`
+- Repo: `coilix`
 - Przyklad problemu: `src/main/scala/demo/DemoBeans.scala`
 - W kodzie jest:
   - adnotacja `@Slf4s`
@@ -37,7 +37,7 @@ Pelne wsparcie oznacza jednoczesnie:
 
 ### 4.2 Rozszerzenia (po MVP)
 - Wsparcie `object` i `trait` z `@Slf4s`.
-- Rozpoznawanie adnotacji w pelnej nazwie (`@org.scaling.Slf4s`) i po imporcie (`@Slf4s`).
+- Rozpoznawanie adnotacji w pelnej nazwie (`@io.github.coilix.annotation.Slf4s`) i po imporcie (`@Slf4s`).
 - Konfigurowalna nazwa pola (domyslnie `log`) - opcjonalnie.
 
 ## 5. Oczekiwane zachowanie semantyczne
@@ -114,7 +114,7 @@ Wymaganie projektowe:
 
 ### 10.1 Testy pozytywne
 1. `class` z `@Slf4s` i `log.info` -> brak bledu, completion pokazuje metody Logger.
-2. `@org.scaling.Slf4s` (pelna nazwa) -> dziala tak samo.
+2. `@io.github.coilix.annotation.Slf4s` (pelna nazwa) -> dziala tak samo.
 3. `@Slf4s` + import aliasowany -> dziala (jezeli alias wspierany w MVP, w przeciwnym razie jawnie odlozyc do backlogu).
 
 ### 10.2 Testy negatywne

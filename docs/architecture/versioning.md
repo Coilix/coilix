@@ -40,14 +40,14 @@ API nie jest stabilne. Zgodnie z `early-semver`:
 
 Scala 3 jest kompatybilna tylko wstecz: biblioteka skompilowana Scalą 3.N działa tylko w projektach na 3.N i nowszych. Publikując wersję skompilowaną Scalą 3.10, wymuszamy na użytkownikach 3.10.
 
-- **Publikowane moduły kompilujemy Scalą z aktualnej linii LTS.** 3 września 2026 wyszła **Scala 3.9.0 LTS**, która zastępuje 3.3 LTS jako zalecana baza dla bibliotek. Build używa `scalaVersion := 3.9.0` (zmienione z 3.10.0 w SCALING-00009, kod nie korzystał z funkcji 3.10). Plugin IntelliJ zostaje na Scali 2.13.
+- **Publikowane moduły kompilujemy Scalą z aktualnej linii LTS.** 3 września 2026 wyszła **Scala 3.9.0 LTS**, która zastępuje 3.3 LTS jako zalecana baza dla bibliotek. Build używa `scalaVersion := 3.9.0` (zmienione z 3.10.0 w COILIX-00009, kod nie korzystał z funkcji 3.10). Plugin IntelliJ zostaje na Scali 2.13.
 - Wyjątek od zasady „najnowsza stabilna wersja” z `CLAUDE.md`: dla Scali obowiązuje najnowsza wersja **linii LTS**.
 - **JDK:** Scala 3.9 wymaga JDK 17, więc bytecode generujemy dla 17 (`-java-output-version 17` w scalac, `--release 17` w javac), choć build działa na nowszym JDK. CI testuje na JDK 17 i najnowszym LTS (teraz 25).
 - Podniesienie minimalnej wersji Scali lub JDK od `1.0.0` to zmiana `MAJOR`.
 
 ## Changelog
 
-`CHANGELOG.md` w formacie [Keep a Changelog](https://keepachangelog.com/): sekcja `Unreleased` i sekcja na każde wydanie z grupami `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Wpis zawiera ID taska (`SCALING-00004`). Zmiana niezgodna jest oznaczona **BREAKING** i opisuje migrację.
+`CHANGELOG.md` w formacie [Keep a Changelog](https://keepachangelog.com/): sekcja `Unreleased` i sekcja na każde wydanie z grupami `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Wpis zawiera ID taska (`COILIX-00004`). Zmiana niezgodna jest oznaczona **BREAKING** i opisuje migrację.
 
 ## Proces wydania
 
@@ -56,6 +56,6 @@ Kroki dla opiekuna są w [docs/process/development.md](../process/development.md
 - `.github/workflows/ci.yml`: przy każdym pushu na `master` i `series/**` oraz w każdym PR `checkLicenses`, `testFull`, `mimaReportBinaryIssues` i `doc` (bez zepsutych linków) na JDK 17 i 25.
 - `.github/workflows/release.yml`: na tag `v*` te same sprawdzenia, wyciągnięcie sekcji wersji z `CHANGELOG.md` (brak sekcji zatrzymuje wydanie), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem (`-M1`, `-RC1`) daje pre-release.
 - Wersja pochodzi z tagu przez sbt-dynver (część sbt-ci-release): commit z tagiem `v0.1.0` ma wersję `0.1.0`, kolejne commity `0.1.0+N-<hash>-SNAPSHOT`, a przed pierwszym tagiem `0.0.0+N-<hash>-SNAPSHOT`.
-- Do zrobienia później: publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (SCALING-00007).
+- Do zrobienia później: publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (COILIX-00007).
 
 Sekrety repozytorium wymagane przez `release.yml`: `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` (token z Central Portal).

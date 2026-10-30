@@ -9,7 +9,7 @@
 
 | Miejsce | Tekst | Ocena |
 |---|---|---|
-| `DefaultStartupMessageFormatter.started` | `<app> is up after <n> s` | Wcześniej `Started <app> in <n> seconds`, prawie tak samo jak log Spring Boota. Przeredagowane w SCALING-00008. |
+| `DefaultStartupMessageFormatter.started` | `<app> is up after <n> s` | Wcześniej `Started <app> in <n> seconds`, prawie tak samo jak log Spring Boota. Przeredagowane w COILIX-00008. |
 | `DefaultStartupMessageFormatter.starting` | `Launching <app>` | Wcześniej `Starting <app>`. Zmienione razem z `started`, żeby oba komunikaty były spójne. |
 | `10_demo/.../banner.txt` | ASCII-art „Coilix” | Własny napis wygenerowany fontem FIGlet „standard”. Mechanizm `banner.txt` jest funkcją, a nie utworem. Bez zmian. |
 | Komunikaty wyjątków (`No bean of type ...`, `Circular dependency detected among ...`, `Multiple beans of type ...`) | własne sformułowania | Opisują ten sam problem co Spring, ale innymi słowami. Bez zmian. |
@@ -47,16 +47,16 @@ Nazwy adnotacji odpowiadają Springowi: `@Component`, `@Service`, `@Repository`,
 
 Zasady Springa nie mówią wprost o sformułowaniu „inspired by”. Bezpieczniejsze jest opisowe „API modeled on” albo „familiar to Spring developers” razem z zastrzeżeniem o braku powiązania.
 
-**Stan obecny:** `CLAUDE.md`, taski i `.gitignore` (`.springBeans`) wspominają Springa wewnętrznie. To nie jest użycie znaku w obrocie, ale `CLAUDE.md` będzie publiczny, więc opis projektu warto zmienić na opisowy („framework IoC z API wzorowanym na Springu”). Dawna adnotacja `@ScalingBootApplication` przy zmianie nazwy straciła słowo „Boot” i nazywa się `@CoilixApplication` (SCALING-00008).
+**Stan obecny:** `CLAUDE.md`, taski i `.gitignore` (`.springBeans`) wspominają Springa wewnętrznie. To nie jest użycie znaku w obrocie, ale `CLAUDE.md` będzie publiczny, więc opis projektu warto zmienić na opisowy („framework IoC z API wzorowanym na Springu”). Adnotacja startowa przy zmianie nazwy straciła słowo „Boot” i nazywa się `@CoilixApplication` (COILIX-00008).
 
 ## Nazwa projektu
 
-**Decyzja (2026-10-29): projekt zmienia nazwę ze „Scaling” na „Coilix”.**
+**Decyzja (2026-10-29): projekt zmienia roboczą nazwę na „Coilix”.**
 
-Powody rezygnacji ze „Scaling”:
+Powody rezygnacji z roboczej nazwy:
 
-- to zwykłe angielskie słowo („skalowanie”), więc daje słabą ochronę jako znak towarowy i trudno je wyszukać („scaling scala” zwraca wyniki o skalowaniu aplikacji),
-- **domena `scaling.org` jest zajęta** (zwraca adresy IP), więc `org.scaling` odpada jako `groupId` na Maven Central.
+- to zwykłe angielskie słowo, więc daje słabą ochronę jako znak towarowy i trudno je wyszukać (wyniki dotyczą znaczenia słowa, a nie projektu),
+- **domena `.org` z tą nazwą jest zajęta** (zwraca adresy IP), więc odpada jako `groupId` na Maven Central.
 
 Odrzucone kandydatury:
 
@@ -76,7 +76,7 @@ Przed publikacją: przeszukać EUIPO (TMview) i USPTO pod kątem znaków „Coil
 
 ## Działania
 
-1. Zmienić `Started <app> in <n> seconds` na własne sformułowanie (zrobione w SCALING-00008).
-2. Dodać do README zastrzeżenie o braku powiązania i atrybucję znaku (SCALING-00008).
+1. Zmienić `Started <app> in <n> seconds` na własne sformułowanie (zrobione w COILIX-00008).
+2. Dodać do README zastrzeżenie o braku powiązania i atrybucję znaku (COILIX-00008).
 3. Dodać do `CLAUDE.md` zasady: bez „Spring” w nazwach i bez kopiowania tekstów ani kodu Springa (zrobione).
-4. Sprawdzić nazwę w rejestrach znaków przed pierwszą publikacją (SCALING-00008).
+4. Sprawdzić nazwę w rejestrach znaków przed pierwszą publikacją (COILIX-00008).
