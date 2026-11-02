@@ -72,11 +72,13 @@ Odrzucone kandydatury:
 - `coilix.dev` i `coilix.io` niezarejestrowane (RDAP zwraca 404),
 - organizacja GitHub [Coilix](https://github.com/Coilix) założona przez autora. Istnieje nieaktywne konto użytkownika `Coillix` (podwójne „l”, założone w 2014, 0 repozytoriów), co nie koliduje z przestrzenią nazw `io.github.coilix`.
 
-Przed publikacją: przeszukać EUIPO (TMview) i USPTO pod kątem znaków „Coilix” w klasach 9 i 42 Nicei (wymaga ręcznego wyszukania w formularzach rejestrów). Warto też kupić `coilix.dev`, żeby nikt jej nie zajął, nawet jeśli `groupId` zostaje `io.github.coilix`.
+Rejestry znaków towarowych sprawdzone ręcznie 2026-10-30: EUIPO (TMview) i USPTO nie mają znaku „Coilix”.
+
+Domena `coilix.dev` na razie nie jest kupiona. `groupId` zostaje `io.github.coilix`, więc domena nie jest potrzebna do publikacji, ale ktoś inny może ją zająć.
 
 ## Działania
 
 1. Zmienić `Started <app> in <n> seconds` na własne sformułowanie (zrobione w COILIX-00008).
 2. Dodać do README zastrzeżenie o braku powiązania i atrybucję znaku (COILIX-00008).
 3. Dodać do `CLAUDE.md` zasady: bez „Spring” w nazwach i bez kopiowania tekstów ani kodu Springa (zrobione).
-4. Sprawdzić nazwę w rejestrach znaków przed pierwszą publikacją (COILIX-00008).
+4. Sprawdzić nazwę w rejestrach znaków przed pierwszą publikacją (zrobione 2026-10-30, COILIX-00008).
