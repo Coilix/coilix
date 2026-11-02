@@ -124,10 +124,10 @@ Wspierana jest tylko najnowsza linia `MINOR`. Starsze linie dostają poprawki be
 
 ## Ochrona gałęzi na GitHubie
 
-Ustawienia repozytorium (dla repozytorium prywatnego na darmowym planie reguły gałęzi nie działają, więc włączają się po upublicznieniu):
+Repozytorium jest publiczne od 2026-11-02 i ma reguły (rulesets) zapisane w [`.github/rulesets/`](../../.github/rulesets). Po zmianie reguły w ustawieniach GitHuba aktualizuje się też plik JSON, a nowe repozytorium konfiguruje się przez `gh api -X POST repos/<org>/<repo>/rulesets --input <plik>`.
 
-- reguła dla `master` i `series/*`: zmiany tylko przez PR, wymagane zielone CI, wymagana liniowa historia, zakaz force-push i usuwania,
-- reguła dla tagów `v*`: tworzenie tylko przez opiekunów, zakaz usuwania i nadpisywania,
+- `master` i `series/**`: zmiany tylko przez PR, wymagane zielone checki `Build on JDK 17`, `Build on JDK 25` i `Test coverage` na gałęzi aktualnej względem bazy, rozwiązane wątki przeglądu, liniowa historia, zakaz force-push i usuwania. Zatwierdzenie przez drugą osobę nie jest wymagane, dopóki projekt ma jednego opiekuna,
+- tagi `v*`: tworzy je tylko administrator repozytorium, nikt nie może ich usunąć ani przesunąć,
 - metody scalania: tylko „Rebase and merge” (i ewentualnie „Squash”), wyłączony „Merge commit”,
 - „Automatically delete head branches” włączone,
-- aplikacja DCO sprawdzająca `Signed-off-by` w każdym commicie PR.
+- aplikacja DCO sprawdzająca `Signed-off-by` w każdym commicie PR (do zainstalowania, wtedy jej check dochodzi do wymaganych).
