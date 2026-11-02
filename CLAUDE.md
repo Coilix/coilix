@@ -69,6 +69,8 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 
 ## Dokumentacja
 
+Opis działania frameworka jest w `docs/architecture/overview.md` (start, budowa kontekstu, tabela punktów rozszerzeń), a decyzje architektoniczne w `docs/adr/`. Nowy komponent z `given ConfigPath` dopisuje się do tabeli w `overview.md`, a decyzję dotyczącą publicznego API, modułów, zależności albo procesu wydań zapisuje się jako nowy ADR w tym samym PR.
+
 Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`) z komentarzy `/** */` w kodzie. Będzie publikowana na GitHub Pages w wersji dla każdego wydania (plan w `tasks/COILIX-00007_documentation_site.md`).
 
 - Scaladoc i Javadoc pisze się po angielsku.

@@ -76,7 +76,8 @@ Status w `tasks/README.md` zmienia się na „zrobiony” w ostatnim PR taska. T
 - `sbt testFull`, `sbt doc` (bez zepsutych linków) i `sbt demo/run` przechodzą.
 - Każda nowa klasa ma testy, każdy publiczny element w `src/main` ma Scaladoc.
 - Wpis w `CHANGELOG.md` z ID taska, z **BREAKING** i instrukcją migracji przy zmianie niezgodnej.
-- `CLAUDE.md`, dokumenty w `docs/` i status w `tasks/README.md` zaktualizowane.
+- `CLAUDE.md`, dokumenty w `docs/` (w tym tabela punktów rozszerzeń w `docs/architecture/overview.md`) i status w `tasks/README.md` zaktualizowane.
+- Decyzja architektoniczna ma ADR w `docs/adr/`.
 - Nowa zależność dopisana do [dependency-licenses.md](../legal/dependency-licenses.md) z licencją z listy dozwolonych.
 
 ## Przegląd

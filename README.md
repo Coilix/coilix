@@ -81,6 +81,10 @@ sbt demo/run      # the demo application
 sbt doc           # API documentation
 ```
 
+## Roadmap
+
+Planned features and their order are in [ROADMAP.md](ROADMAP.md).
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Security issues: see [SECURITY.md](SECURITY.md). This project follows the [Contributor Covenant](CODE_OF_CONDUCT.md).
