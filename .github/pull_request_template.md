@@ -1,0 +1,17 @@
+## What changes
+
+<!-- Task identifier and a short description, e.g. COILIX-00004: Add @PostConstruct support. -->
+
+## How to verify
+
+<!-- Tests to look at, or steps in the demo application. -->
+
+## Checklist
+
+- [ ] Commits start with the task identifier and are signed off (`git commit -s`).
+- [ ] Commits and this description do not mention AI tools (no `Co-Authored-By` for AI tools, no "Generated with" lines).
+- [ ] `sbt testFull doc demo/run` passes and `doc` has no broken link warnings.
+- [ ] Every new class has munit tests and every new public element has Scaladoc.
+- [ ] `CHANGELOG.md` has an entry under `Unreleased` (if the change is visible to users).
+- [ ] The change is **BREAKING**: yes / no. If yes, the changelog entry describes the migration.
+- [ ] New dependencies are listed in `docs/legal/dependency-licenses.md`.

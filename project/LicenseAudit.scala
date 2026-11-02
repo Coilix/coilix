@@ -23,7 +23,7 @@ object LicenseAudit {
 
   def check(report: UpdateReport, ownOrganization: String, projectId: String): Unit =
     violations(report, ownOrganization) match {
-      case Nil => ()
+      case Nil   => ()
       case found =>
         sys.error(
           s"Dependencies of $projectId with licenses outside the allowed list (docs/legal/dependency-licenses.md):\n${found.mkString("\n")}"

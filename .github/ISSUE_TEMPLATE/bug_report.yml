@@ -1,0 +1,52 @@
+name: Bug report
+description: Something in Coilix does not work as documented.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please do not report security issues here, see [SECURITY.md](https://github.com/Coilix/coilix/blob/master/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: Coilix version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Scala and JDK versions
+      placeholder: Scala 3.9.0, Temurin 17.0.12
+    validations:
+      required: true
+  - type: dropdown
+    id: module
+    attributes:
+      label: Module
+      multiple: true
+      options:
+        - coilix-boot
+        - coilix-context
+        - coilix-config
+        - coilix-annotations
+        - coilix-slf4s-plugin
+        - IntelliJ plugin
+        - not sure
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened
+      description: What you expected and what happened instead. Include the full stack trace if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: How to reproduce
+      description: The smallest code and configuration that shows the problem.
+      render: scala
+    validations:
+      required: true

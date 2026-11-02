@@ -41,6 +41,7 @@ Zasady:
 ### 2. Praca
 
 - Commity według sekcji „Commity” w `CLAUDE.md`: angielski, prefiks z ID taska, jedna logiczna zmiana na commit.
+- Commity, PR-y, komentarze, issues, `CHANGELOG.md` i notki wydań nie zawierają informacji, że zmianę przygotowano z pomocą AI lub agenta: bez stopek `Co-Authored-By` z narzędziem AI, bez linii „Generated with …” i bez wzmianek o modelu.
 - Każdy commit ma `Signed-off-by` (DCO): `git commit -s`. Żeby nie zapominać, wystarczy alias `git config alias.cs "commit -s"`.
 - Nowe pliki od razu przez `git add`, przeniesienia przez `git mv`.
 - W tym samym commicie co kod: testy munit, Scaladoc publicznego API, wpis w `CHANGELOG.md` (sekcja `Unreleased`), jeśli zmiana jest widoczna dla użytkownika.
@@ -61,7 +62,7 @@ sbt -Dsbt.server.autostart=false testFull doc demo/run
 1. Rebase na `master`, żeby historia była liniowa: `git fetch && git rebase origin/master`.
 2. `git push -u origin feature/COILIX-NNNNN-opis` i PR do `master` (albo do `series/X.Y` dla poprawki starszej linii).
 3. Tytuł PR jak pierwszy commit: `COILIX-NNNNN: Opis`. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
-4. CI musi być zielone: testy na JDK 17 i 25, `doc`, audyt licencji, a po pierwszym wydaniu MiMa i TASTy-MiMa.
+4. CI musi być zielone: formatowanie (scalafmt dla kodu i plików buildu, google-java-format dla Javy), testy na JDK 17 i 25, `doc`, audyt licencji, pokrycie testami (`testCoverage`), a po pierwszym wydaniu MiMa i TASTy-MiMa.
 5. Przegląd według listy z sekcji [Przegląd](#przegląd).
 6. Scalenie przez **Rebase and merge**. Commity zachowują się w historii jeden do jednego, bez commita scalającego. Squash tylko wtedy, gdy commity na gałęzi są poprawkami poprzednich („fix typo”, „review”), a i tak lepiej poprawić je przed PR przez `git commit --fixup` i `git rebase --autosquash`.
 7. Po scaleniu gałąź jest usuwana (GitHub robi to automatycznie przy ustawieniu „Automatically delete head branches”).
@@ -76,7 +77,8 @@ Status w `tasks/README.md` zmienia się na „zrobiony” w ostatnim PR taska. T
 - `sbt testFull`, `sbt doc` (bez zepsutych linków) i `sbt demo/run` przechodzą.
 - Każda nowa klasa ma testy, każdy publiczny element w `src/main` ma Scaladoc.
 - Wpis w `CHANGELOG.md` z ID taska, z **BREAKING** i instrukcją migracji przy zmianie niezgodnej.
-- `CLAUDE.md`, dokumenty w `docs/` i status w `tasks/README.md` zaktualizowane.
+- `CLAUDE.md`, dokumenty w `docs/` (w tym tabela punktów rozszerzeń w `docs/architecture/overview.md`) i status w `tasks/README.md` zaktualizowane.
+- Decyzja architektoniczna ma ADR w `docs/adr/`.
 - Nowa zależność dopisana do [dependency-licenses.md](../legal/dependency-licenses.md) z licencją z listy dozwolonych.
 
 ## Przegląd
