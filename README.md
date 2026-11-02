@@ -1,5 +1,10 @@
 # Coilix
 
+[![CI](https://github.com/Coilix/coilix/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Coilix/coilix/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+[![Scala](https://img.shields.io/badge/scala-3.9%2B-red.svg)](https://www.scala-lang.org/)
+[![JDK](https://img.shields.io/badge/jdk-17%2B-orange.svg)](https://adoptium.net/)
+
 Coilix is a dependency injection and application framework for Scala 3. Its API is modeled on the Spring Framework, so annotations such as `@Component`, `@Service` and `@Value` work the way Spring developers expect, while the implementation is written from scratch in idiomatic Scala: immutable registries, traits with replaceable default implementations and a compiler plugin for logging.
 
 > Coilix is in early development (`0.x`). The API can change between minor versions.
