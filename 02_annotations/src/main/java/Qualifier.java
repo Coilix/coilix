@@ -8,4 +8,3 @@ import java.lang.annotation.*;
 public @interface Qualifier {
     String value();
 }
-

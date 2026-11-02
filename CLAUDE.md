@@ -60,7 +60,7 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `io.github.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
 - Java i Scala w osobnych modułach. Java tylko tam, gdzie jest wymagana (adnotacje runtime).
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
-- Formatowanie robi scalafmt przy każdej kompilacji (`scalafmtOnCompile`, konfiguracja w `.scalafmt.conf`), a każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
+- Formatowanie robi scalafmt (konfiguracja w `.scalafmt.conf`) i google-java-format w stylu AOSP dla Javy (`sbt-java-formatter`), lokalnie przy każdej kompilacji. W CI formatowanie przy kompilacji jest wyłączone (`insideCI`), a krok `Check formatting` przerywa build, gdy kod albo pliki buildu (`*.sbt`, `project/*.scala`) nie są sformatowane. Każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
 - Każda nowa klasa ma testy munit w `src/test/scala` swojego modułu.
 - Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (COILIX-00009, `docs/architecture/versioning.md`).
 - Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.
@@ -119,6 +119,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt testFull` uruchamia wszystkie testy (`sbt test` w sbt 2 to `testQuick` z cache).
 - `sbt demo/run` uruchamia demo.
 - `sbt testCoverage` uruchamia testy z pomiarem pokrycia i przerywa się poniżej progu (90% instrukcji, 80% gałęzi). Raport HTML: `target/out/jvm/scala-<wersja>/coilix/scoverage-report/index.html`. Cache dyskowy sbt 2 przywraca klasy z instrumentacją bez katalogów `scoverage-data`, więc lokalnie trzeba podać pusty katalog cache: `sbt --sbt-cache <pusty katalog> testCoverage`. `demo` i oba pluginy są wyłączone z pomiaru.
+- `sbt scalafmtAll scalafmtSbt javafmtAll` formatuje cały kod i pliki buildu, a `sbt scalafmtCheckAll scalafmtSbtCheck javafmtCheckAll` tylko sprawdza formatowanie (tak jak CI).
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
 - `sbt version` pokazuje wersję wyliczoną z tagu gita (sbt-dynver). Wersji nie wpisuje się ręcznie.

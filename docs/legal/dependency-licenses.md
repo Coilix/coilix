@@ -38,7 +38,7 @@ Nie są dystrybuowane z naszymi artefaktami, więc nie nakładają obowiązków 
 |---|---|
 | `org.scalameta:munit` | Apache-2.0 |
 | `org.slf4j:slf4j-simple` (testy, demo) | MIT |
-| sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage | Apache-2.0 |
+| sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage, sbt-java-formatter, google-java-format | Apache-2.0 |
 
 ## Plugin IntelliJ (`11_intellij_plugin`)
 

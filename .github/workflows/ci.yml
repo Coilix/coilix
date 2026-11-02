@@ -30,6 +30,8 @@ jobs:
           java-version: ${{ matrix.java }}
           cache: sbt
       - uses: sbt/setup-sbt@v1
+      - name: Check formatting
+        run: sbt scalafmtCheckAll scalafmtSbtCheck javafmtCheckAll
       - name: Check dependency licenses
         run: sbt checkLicenses
       - name: Test
