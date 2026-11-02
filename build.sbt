@@ -1,6 +1,9 @@
 ThisBuild / organization := "io.github.coilix"
 ThisBuild / versionScheme := Some("early-semver")
 ThisBuild / mimaFailOnNoPrevious := false
+ThisBuild / coverageMinimumStmtTotal := 90
+ThisBuild / coverageMinimumBranchTotal := 80
+ThisBuild / coverageFailOnMinimum := true
 ThisBuild / scalaVersion := "3.9.0"
 ThisBuild / scalacOptions ++= Seq("-no-indent", "-old-syntax", "-deprecation", "-feature", "-unchecked", "-Werror")
 ThisBuild / scalacOptions ++= javaOutputVersionOptions
@@ -56,6 +59,12 @@ def moduleSettings(id: String): Seq[Setting[?]] =
     checkLicenses := Def.uncached(LicenseAudit.check(update.value, organization.value, id)),
     Compile / packageBin / mappings ++= Def.uncached(legalFiles(fileConverter.value, (ThisBuild / baseDirectory).value)),
     Compile / packageSrc / mappings ++= Def.uncached(legalFiles(fileConverter.value, (ThisBuild / baseDirectory).value))
+  )
+
+lazy val unpublished: Seq[Setting[?]] =
+  Seq(
+    publish / skip := true,
+    mimaPreviousArtifacts := Set.empty
   )
 
 def isCompilerPluginOption(option: String): Boolean =
@@ -114,6 +123,7 @@ lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "io.github
       Dependencies.slf4jApi % Test
     ),
     Test / fork := true,
+    coverageEnabled := false,
     Compile / packageBin / artifactPath := fileConverter.value.toVirtualFile(((Compile / target).value / "coilix-slf4s-plugin.jar").toPath)
   )
 
@@ -133,14 +143,17 @@ lazy val context = slf4sModule("context", "05_context", "io.github.coilix.contex
 
 lazy val data = slf4sModule("data", "06_data", "io.github.coilix.data")
   .dependsOn(context)
+  .settings(unpublished)
   .settings(description := "Database support for Coilix")
 
 lazy val web = slf4sModule("web", "07_web", "io.github.coilix.web")
   .dependsOn(context)
+  .settings(unpublished)
   .settings(description := "Web endpoints for Coilix")
 
 lazy val security = slf4sModule("security", "08_security", "io.github.coilix.security")
   .dependsOn(web)
+  .settings(unpublished)
   .settings(description := "Security for Coilix")
 
 lazy val boot = slf4sModule("boot", "09_boot", "io.github.coilix.boot")
@@ -149,9 +162,9 @@ lazy val boot = slf4sModule("boot", "09_boot", "io.github.coilix.boot")
 
 lazy val demo = slf4sModule("demo", "10_demo", "io.github.coilix.demo")
   .dependsOn(boot)
+  .settings(unpublished)
   .settings(
-    publish / skip := true,
-    mimaPreviousArtifacts := Set.empty,
+    coverageEnabled := false,
     libraryDependencies += Dependencies.slf4jSimple,
     run / fork := true,
     run / outputStrategy := Some(StdoutOutput)
@@ -160,9 +173,9 @@ lazy val demo = slf4sModule("demo", "10_demo", "io.github.coilix.demo")
 lazy val installIntellijPlugin = taskKey[File]("Copies the IntelliJ plugin jar into the local IDE plugins directory")
 
 lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "io.github.coilix.intellij")
+  .settings(unpublished)
   .settings(
-    publish / skip := true,
-    mimaPreviousArtifacts := Set.empty,
+    coverageEnabled := false,
     scalaVersion := "2.13.18",
     scalacOptions --= Seq("-no-indent", "-old-syntax") ++ javaOutputVersionOptions,
     Compile / unmanagedJars ++= Def.uncached {
@@ -182,3 +195,8 @@ lazy val root = (project in file("."))
     name := "coilix",
     publish / skip := true
   )
+
+addCommandAlias(
+  "testCoverage",
+  "; clean ; coverage ; testFull ; coverageAggregate ; coverageOff"
+)

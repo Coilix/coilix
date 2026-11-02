@@ -61,7 +61,7 @@ sbt -Dsbt.server.autostart=false testFull doc demo/run
 1. Rebase na `master`, żeby historia była liniowa: `git fetch && git rebase origin/master`.
 2. `git push -u origin feature/COILIX-NNNNN-opis` i PR do `master` (albo do `series/X.Y` dla poprawki starszej linii).
 3. Tytuł PR jak pierwszy commit: `COILIX-NNNNN: Opis`. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
-4. CI musi być zielone: testy na JDK 17 i 25, `doc`, audyt licencji, a po pierwszym wydaniu MiMa i TASTy-MiMa.
+4. CI musi być zielone: testy na JDK 17 i 25, `doc`, audyt licencji, pokrycie testami (`testCoverage`), a po pierwszym wydaniu MiMa i TASTy-MiMa.
 5. Przegląd według listy z sekcji [Przegląd](#przegląd).
 6. Scalenie przez **Rebase and merge**. Commity zachowują się w historii jeden do jednego, bez commita scalającego. Squash tylko wtedy, gdy commity na gałęzi są poprawkami poprzednich („fix typo”, „review”), a i tak lepiej poprawić je przed PR przez `git commit --fixup` i `git rebase --autosquash`.
 7. Po scaleniu gałąź jest usuwana (GitHub robi to automatycznie przy ustawieniu „Automatically delete head branches”).

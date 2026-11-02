@@ -70,9 +70,10 @@ Requirements: Scala 3.9 or newer and JDK 17 or newer.
 ## Building
 
 ```sh
-sbt testFull   # all tests
-sbt demo/run   # the demo application
-sbt doc        # API documentation
+sbt testFull      # all tests
+sbt testCoverage  # tests with a coverage report
+sbt demo/run      # the demo application
+sbt doc           # API documentation
 ```
 
 ## Contributing
