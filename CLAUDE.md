@@ -124,6 +124,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
 - `sbt version` pokazuje wersję wyliczoną z tagu gita (sbt-dynver). Wersji nie wpisuje się ręcznie.
 - `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
+- Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.
 - `sbt intellij-plugin/installIntellijPlugin` instaluje plugin IDE (potem restart IntelliJ).
 - Gdy działa sbt uruchomione przez IntelliJ, sbt z terminala trzeba odpalać z `-Dsbt.server.autostart=false`.
 - IntelliJ buduje własnym kompilatorem (nie przez sbt shell, bo sbt 2 nie kopiuje zasobów do `classes`). Jar pluginu `@Slf4s` tworzy tylko sbt. Jar ma stałą nazwę `coilix-slf4s-plugin.jar` (niezależną od wersji z gita). Gdy IntelliJ zgłasza `No plugin in path ...coilix-slf4s-plugin.jar`, trzeba uruchomić `sbt slf4s-plugin/package`. Jeśli jar istnieje, a błąd zostaje, trzeba zrestartować serwer kompilacji Scali w IntelliJ (trzyma starą wersję jara po przebudowie przez sbt).
