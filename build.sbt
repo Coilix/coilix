@@ -207,6 +207,11 @@ lazy val root = (project in file("."))
   )
 
 addCommandAlias(
+  "checkFormat",
+  "; scalafmtCheckAll ; scalafmtSbtCheck ; javafmtCheckAll"
+)
+
+addCommandAlias(
   "testCoverage",
   "; clean ; coverage ; testFull ; coverageAggregate ; coverageOff"
 )

@@ -119,7 +119,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt testFull` uruchamia wszystkie testy (`sbt test` w sbt 2 to `testQuick` z cache).
 - `sbt demo/run` uruchamia demo.
 - `sbt testCoverage` uruchamia testy z pomiarem pokrycia i przerywa się poniżej progu (90% instrukcji, 80% gałęzi). Raport HTML: `target/out/jvm/scala-<wersja>/coilix/scoverage-report/index.html`. Cache dyskowy sbt 2 przywraca klasy z instrumentacją bez katalogów `scoverage-data`, więc lokalnie trzeba podać pusty katalog cache: `sbt --sbt-cache <pusty katalog> testCoverage`. `demo` i oba pluginy są wyłączone z pomiaru.
-- `sbt scalafmtAll scalafmtSbt javafmtAll` formatuje cały kod i pliki buildu, a `sbt scalafmtCheckAll scalafmtSbtCheck javafmtCheckAll` tylko sprawdza formatowanie (tak jak CI).
+- `sbt scalafmtAll scalafmtSbt javafmtAll` formatuje cały kod i pliki buildu, a `sbt checkFormat` tylko sprawdza formatowanie (tak jak CI).
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
 - `sbt version` pokazuje wersję wyliczoną z tagu gita (sbt-dynver). Wersji nie wpisuje się ręcznie.
