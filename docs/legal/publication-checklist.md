@@ -48,7 +48,7 @@ Publikowane artefakty: `common`, `annotations`, `slf4s-plugin`, `config`, `conte
 
 ## GitHub
 
-- [ ] decyzja o upublicznieniu repozytorium (GitHub Pages dla repozytoriów prywatnych wymaga płatnego planu),
+- [x] decyzja o upublicznieniu repozytorium (publiczne od 2026-11-02),
 - [ ] `README.md`: opis, przykład, instalacja, zastrzeżenie o braku powiązania ze Springiem i atrybucja znaku (wzór w [spring-similarity.md](spring-similarity.md#znaki-towarowe)),
 - [ ] `LICENSE`, `NOTICE`,
 - [ ] `CONTRIBUTING.md` (DCO, zasady kodu, format commitów),

@@ -8,6 +8,7 @@
 
 ## Checklist
 
+- [ ] The pull request covers one feature or one fix, and its title describes the whole change.
 - [ ] Commits start with the task identifier and are signed off (`git commit -s`).
 - [ ] Commits and this description do not mention AI tools (no `Co-Authored-By` for AI tools, no "Generated with" lines).
 - [ ] `sbt testFull doc demo/run` passes and `doc` has no broken link warnings.

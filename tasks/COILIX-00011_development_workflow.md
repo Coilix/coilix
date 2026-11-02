@@ -29,4 +29,4 @@ Ustalić, jak zmiany przechodzą od taska do wydania: model gałęzi, pull reque
 
 ## Ryzyka i otwarte pytania
 
-- Reguły ochrony gałęzi na darmowym planie GitHuba działają tylko dla repozytoriów publicznych. Do upublicznienia proces opiera się na dyscyplinie.
+- Reguły ochrony gałęzi na darmowym planie GitHuba działają tylko dla repozytoriów publicznych. Do upublicznienia 2026-11-02 proces opierał się na dyscyplinie, od tego dnia reguły są włączone (`.github/rulesets/`).
