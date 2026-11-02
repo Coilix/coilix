@@ -40,7 +40,8 @@ Zasady:
 
 ### 2. Praca
 
-- Commity według sekcji „Commity” w `CLAUDE.md`: angielski, prefiks z ID taska, jedna logiczna zmiana na commit.
+- Jeden PR to jedna funkcja albo jedna poprawka. Wszystkie commity na gałęzi wnoszą albo poprawiają tę jedną rzecz. Inną zmianę (refaktoryzacja obok, aktualizacja narzędzi) robi się w osobnym PR.
+- Commity według sekcji „Commity” w `CLAUDE.md`: angielski, prefiks z ID taska. Na gałęzi mogą być kroki pośrednie i poprawki po przeglądzie, bo PR jest scalany przez squash.
 - Commity, PR-y, komentarze, issues, `CHANGELOG.md` i notki wydań nie zawierają informacji, że zmianę przygotowano z pomocą AI lub agenta: bez stopek `Co-Authored-By` z narzędziem AI, bez linii „Generated with …” i bez wzmianek o modelu.
 - Każdy commit ma `Signed-off-by` (DCO): `git commit -s`. Żeby nie zapominać, wystarczy alias `git config alias.cs "commit -s"`.
 - Nowe pliki od razu przez `git add`, przeniesienia przez `git mv`.
@@ -61,10 +62,10 @@ sbt -Dsbt.server.autostart=false testFull doc demo/run
 
 1. Rebase na `master`, żeby historia była liniowa: `git fetch && git rebase origin/master`.
 2. `git push -u origin feature/COILIX-NNNNN-opis` i PR do `master` (albo do `series/X.Y` dla poprawki starszej linii).
-3. Tytuł PR jak pierwszy commit: `COILIX-NNNNN: Opis`. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
+3. Tytuł PR: `COILIX-NNNNN: Opis`, po angielsku, w trybie rozkazującym. Po scaleniu staje się tytułem commita na `master` (GitHub dopisuje `(#N)`), więc opisuje całą funkcję, a nie ostatni krok. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
 4. CI musi być zielone: formatowanie (scalafmt dla kodu i plików buildu, google-java-format dla Javy), testy na JDK 17 i 25, `doc`, audyt licencji, pokrycie testami (`testCoverage`), a po pierwszym wydaniu MiMa i TASTy-MiMa.
 5. Przegląd według listy z sekcji [Przegląd](#przegląd).
-6. Scalenie przez **Rebase and merge**. Commity zachowują się w historii jeden do jednego, bez commita scalającego. Squash tylko wtedy, gdy commity na gałęzi są poprawkami poprzednich („fix typo”, „review”), a i tak lepiej poprawić je przed PR przez `git commit --fixup` i `git rebase --autosquash`.
+6. Scalenie przez **Squash and merge** (jedyna włączona metoda, [ADR 0008](../adr/0008-squash-merge.md)). Na `master` trafia jeden commit na PR: tytuł z tytułu PR, treść z wiadomości commitów gałęzi, razem z ich `Signed-off-by`. Przed scaleniem warto przejrzeć proponowaną treść i usunąć z niej kroki pośrednie typu „fix typo”, zostawiając linie `Signed-off-by`.
 7. Po scaleniu gałąź jest usuwana (GitHub robi to automatycznie przy ustawieniu „Automatically delete head branches”).
 
 ### 5. Zamknięcie taska
@@ -128,6 +129,6 @@ Repozytorium jest publiczne od 2026-11-02 i ma reguły (rulesets) zapisane w [`.
 
 - `master` i `series/**`: zmiany tylko przez PR, wymagane zielone checki `Build on JDK 17`, `Build on JDK 25` i `Test coverage` na gałęzi aktualnej względem bazy, rozwiązane wątki przeglądu, liniowa historia, zakaz force-push i usuwania. Zatwierdzenie przez drugą osobę nie jest wymagane, dopóki projekt ma jednego opiekuna,
 - tagi `v*`: tworzy je tylko administrator repozytorium, nikt nie może ich usunąć ani przesunąć,
-- metody scalania: tylko „Rebase and merge” (i ewentualnie „Squash”), wyłączony „Merge commit”,
+- metody scalania: tylko „Squash and merge”, z tytułem commita z tytułu PR i treścią z wiadomości commitów (`squash_merge_commit_title=PR_TITLE`, `squash_merge_commit_message=COMMIT_MESSAGES`),
 - „Automatically delete head branches” włączone,
 - aplikacja DCO sprawdzająca `Signed-off-by` w każdym commicie PR (do zainstalowania, wtedy jej check dochodzi do wymaganych).

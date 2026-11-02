@@ -13,6 +13,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0005](0005-slf4s-compiler-plugin.md) | Logger `@Slf4s` przez plugin kompilatora | przyjęta |
 | [0006](0006-scala-lts-and-jdk-baseline.md) | Scala z linii LTS i JDK 17 dla publikowanych modułów | przyjęta |
 | [0007](0007-apache-license-and-dco.md) | Apache-2.0 i DCO zamiast CLA | przyjęta |
+| [0008](0008-squash-merge.md) | Scalanie przez squash, jeden PR to jedna zmiana | przyjęta |
 
 ## Nowa decyzja
 
