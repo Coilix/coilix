@@ -10,7 +10,7 @@ Thank you for helping. This file is a short summary. The full workflow (in Polis
 ## Workflow
 
 1. Branch from `master`: `feature/COILIX-NNNNN-short-description` or `fix/COILIX-NNNNN-short-description`.
-2. Keep each commit to one logical change. Commit messages are in English and start with the task identifier:
+2. Keep each pull request to one feature or one fix; every commit on the branch adds or fixes that one thing. Commit messages are in English and start with the task identifier:
 
    ```text
    COILIX-00004: Add @PostConstruct and @PreDestroy support
@@ -25,7 +25,7 @@ Thank you for helping. This file is a short summary. The full workflow (in Polis
    ```
 
    and check that the `doc` output has no `Couldn't resolve a member for the given link query` warnings.
-5. Rebase on `master` and open a pull request against `master`. CI must pass. Pull requests are merged with "Rebase and merge", so the commits land on `master` as they are.
+5. Rebase on `master` and open a pull request against `master`. CI must pass. Pull requests are merged with "Squash and merge": the pull request title becomes the commit title on `master`, so write it as `COILIX-NNNNN: Describe the whole change`.
 
 ## Code rules in short
 

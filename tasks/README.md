@@ -10,11 +10,11 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00004 | [Cykl życia beanów: `@PostConstruct` i `@PreDestroy`](COILIX-00004_bean_lifecycle.md) | wysoki | do zrobienia |
 | COILIX-00005 | [Zarządzanie wątkami](COILIX-00005_thread_management.md) | średni | do zrobienia |
 | COILIX-00006 | [Legalność, licencjonowanie i publikacja](COILIX-00006_legal_and_publication.md) | wysoki | zrobiony ([docs/legal](../docs/legal/README.md)) |
-| COILIX-00007 | [Dokumentacja API i strona na GitHub Pages z wersjami](COILIX-00007_documentation_site.md) | wysoki | do zrobienia |
+| COILIX-00007 | [Dokumentacja API i strona na GitHub Pages z wersjami](COILIX-00007_documentation_site.md) | wysoki | w trakcie: Scaladoc `01_common` i Javadoc `02_annotations` gotowe |
 | COILIX-00008 | [Nazwa Coilix, licencja, przestrzeń nazw i metadane publikacji](COILIX-00008_license_and_publication_setup.md) | wysoki | zrobiony |
 | COILIX-00009 | [Wersjonowanie, kompatybilność i proces wydań](COILIX-00009_versioning_and_releases.md) | wysoki | wersje, CI i publikacja gotowe, zostały sekrety, TASTy-MiMa i plugin w Marketplace |
 | COILIX-00010 | [Niezależność modułów opcjonalnych](COILIX-00010_module_independence.md) | wysoki | do zrobienia |
-| COILIX-00011 | [Proces developmentu i model gałęzi](COILIX-00011_development_workflow.md) | wysoki | zrobiony, reguły ochrony gałęzi po upublicznieniu repozytorium |
+| COILIX-00011 | [Proces developmentu i model gałęzi](COILIX-00011_development_workflow.md) | wysoki | zrobiony |
 | COILIX-00012 | [Kolejność tworzenia przy zależnościach `Option[T]` i `List[T]`](COILIX-00012_optional_dependency_ordering.md) | wysoki | do zrobienia |
 | COILIX-00013 | [Wsparcie testów (`coilix-testkit`)](COILIX-00013_testkit.md) | wysoki | do zrobienia |
 | COILIX-00014 | [Profile i warunkowe beany](COILIX-00014_profiles_and_conditions.md) | wysoki | do zrobienia |
@@ -33,7 +33,7 @@ Zależności między taskami:
 - COILIX-00008 wymaga zatwierdzonych decyzji z COILIX-00006. Zmiana pakietów dotyka całego kodu, więc warto ją zrobić przed COILIX-00007 (Scaladoc linkuje pełnymi nazwami).
 - COILIX-00010 zmienia zestaw publikowanych modułów, więc musi być przed pierwszym wydaniem z COILIX-00009.
 - COILIX-00009 wymaga COILIX-00008 (metadane POM, przestrzeń nazw).
-- COILIX-00011 opisuje proces, według którego realizowane są taski od COILIX-00008. Ochrona gałęzi na GitHubie czeka na upublicznienie repozytorium.
+- COILIX-00011 opisuje proces, według którego realizowane są taski od COILIX-00008. Ochrona gałęzi działa od upublicznienia repozytorium 2026-11-02.
 - COILIX-00012 to poprawka błędu, warto ją zrobić przed COILIX-00013 i COILIX-00014, które dokładają kolejne źródła beanów.
 - COILIX-00013 dodaje moduł zależny od `boot`, więc numery katalogów trzeba ustalić razem z przenumerowaniem z COILIX-00010, modułem `12_docs` z COILIX-00007 i modułem benchmarków z COILIX-00017.
 - COILIX-00014 korzysta z `CoilixModule` z COILIX-00010 (`@ConditionalOnMissingBean` dla beanów z modułów).

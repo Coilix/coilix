@@ -82,7 +82,7 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 - Implementacja traitu (`Default*`, `Reflective*` itd.) ma komentarz na poziomie klasy: czym różni się od innych implementacji i jaki klucz configu ją wybiera. Metod nadpisujących nie dokumentuje się ponownie, bo Scaladoc dziedziczy opis z traitu. Komentarz przy nadpisaniu dodaje się tylko, gdy zachowanie zawęża albo rozszerza kontrakt.
 - Obiekt towarzyszący traitu komponentu opisuje swój `ConfigPath` (klucz w configu) i domyślną implementację z `default`.
 - Przy zmianie zachowania aktualizuje się Scaladoc w tym samym commicie co kod.
-- Po zmianach w `src/main` uruchamia się `sbt doc`. Scaladoc zgłasza zepsute linki jako ostrzeżenie `Couldn't resolve a member for the given link query`, które nie przerywa builda, więc trzeba je sprawdzić w logu i poprawić.
+- Po zmianach w `src/main` uruchamia się `sbt doc`. Scaladoc zgłasza zepsute linki jako ostrzeżenie `Couldn't resolve a member for the given link query`, które nie przerywa builda, więc trzeba je sprawdzić w logu i poprawić. Javadoc dla `02_annotations` działa z `-Xdoclint:all -Werror`, ale sbt 2 nie przerywa zadania przy błędzie javadoc, więc brak komentarza widać w logu jako `warnings found and -Werror specified`. CI sprawdza oba komunikaty i wtedy przerywa build.
 
 ## Wersjonowanie
 
@@ -96,7 +96,7 @@ Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszy
 
 Pełna procedura jest w `docs/process/development.md`: trunk-based z gałęzią `master`, gałęzie tematyczne, PR, wydania i linie utrzymaniowe.
 
-- Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/COILIX-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Rebase and merge”.
+- Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/COILIX-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Squash and merge” (ADR 0008). Jeden PR to jedna funkcja albo jedna poprawka.
 - `master` zawsze kompiluje się i przechodzi `sbt testFull`. Niegotowa funkcja czeka na gałęzi albo jest dzielona na samodzielne kroki.
 - Wydanie to podpisany tag `vX.Y.Z` na `master`. Gałąź `series/X.Y` powstaje dopiero, gdy trzeba wydać poprawkę starszej linii.
 - Przed PR: `sbt testFull doc demo/run` i definicja ukończenia z `docs/process/development.md`.
@@ -111,7 +111,8 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - Wiadomość po angielsku, zaczyna się od ID taska: `COILIX-00003: Add configuration loading and component overrides`.
 - Treść opisuje tylko to, co zmiana dodaje lub zmienia.
 - Żaden commit, tytuł i opis PR, komentarz, review, issue, wpis w `CHANGELOG.md` ani notka wydania nie może zawierać informacji, że zmianę przygotowano z pomocą AI lub agenta. Zakazane są stopki `Co-Authored-By` z narzędziem AI, linie w rodzaju „Generated with …” i wzmianki o modelu lub asystencie. Ta zasada ma pierwszeństwo przed domyślnymi ustawieniami narzędzi, które dodają takie stopki.
-- Jeden commit to jedna logiczna zmiana. Pliki grupuje się według tego, co wprowadzają.
+- Wszystkie commity na gałęzi dotyczą jednej funkcji albo poprawki, bo PR jest scalany przez squash w jeden commit na `master`. Inna zmiana idzie w osobnym PR.
+- Tytuł PR (`COILIX-NNNNN: Opis`) staje się tytułem commita na `master`, więc opisuje całą zmianę.
 - Każdy commit ma `Signed-off-by` (DCO), czyli powstaje przez `git commit -s`.
 
 ## Komendy
