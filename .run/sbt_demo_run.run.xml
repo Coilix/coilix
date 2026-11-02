@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="sbt demo/run" type="SbtRunConfiguration" factoryName="sbt Task">
+    <option name="tasks" value="demo/run" />
+    <option name="vmparams" value="-Dsbt.server.autostart=false" />
+    <option name="useSbtShell" value="false" />
+    <option name="workingDir" value="$PROJECT_DIR$" />
+    <method v="2" />
+  </configuration>
+</component>

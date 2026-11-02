@@ -26,5 +26,5 @@ final class ReflectiveBeanInstantiator(environment: Environment) extends BeanIns
     registry.find(beanType).map(_.instance).getOrElse(throw unsatisfied(definition, beanType))
 
   private def unsatisfied(definition: BeanDefinition, beanType: Class[?]): NoSuchBeanException =
-    NoSuchBeanException(s"Cannot satisfy dependency '${beanType.getName}' while creating '${definition.beanName}'")
+    new NoSuchBeanException(s"Cannot satisfy dependency '${beanType.getName}' while creating '${definition.beanName}'")
 }

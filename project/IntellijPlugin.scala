@@ -11,8 +11,7 @@ object IntellijPlugin {
 
   private val scalaPlugin: File = ideaConfig / "plugins" / "Scala"
 
-  def isAvailable: Boolean =
-    (ideaHome / "lib").isDirectory && (scalaPlugin / "lib").isDirectory
+  def isAvailable: Boolean = (ideaHome / "lib").isDirectory && (scalaPlugin / "lib").isDirectory
 
   def compileJars: Seq[File] =
     jarsIn(ideaHome / "lib") ++ jarsIn(ideaHome / "plugins" / "java" / "lib") ++ jarsIn(scalaPlugin / "lib")

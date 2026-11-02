@@ -41,5 +41,5 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
     selector.select(beanType, definitions).getOrElse(throw unsatisfied(definition, beanType))
 
   private def unsatisfied(definition: BeanDefinition, beanType: Class[?]): NoSuchBeanException =
-    NoSuchBeanException(s"No bean satisfies dependency '${beanType.getName}' required by '${definition.beanName}'")
+    new NoSuchBeanException(s"No bean satisfies dependency '${beanType.getName}' required by '${definition.beanName}'")
 }

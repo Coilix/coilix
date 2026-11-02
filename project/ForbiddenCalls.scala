@@ -5,7 +5,7 @@ object ForbiddenCalls {
 
   def check(sources: Seq[File]): Unit =
     violations(sources) match {
-      case Nil => ()
+      case Nil   => ()
       case found => sys.error(s"Forbidden console output, use @Slf4s logging instead:\n${found.mkString("\n")}")
     }
 
