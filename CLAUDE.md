@@ -82,7 +82,7 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 - Implementacja traitu (`Default*`, `Reflective*` itd.) ma komentarz na poziomie klasy: czym różni się od innych implementacji i jaki klucz configu ją wybiera. Metod nadpisujących nie dokumentuje się ponownie, bo Scaladoc dziedziczy opis z traitu. Komentarz przy nadpisaniu dodaje się tylko, gdy zachowanie zawęża albo rozszerza kontrakt.
 - Obiekt towarzyszący traitu komponentu opisuje swój `ConfigPath` (klucz w configu) i domyślną implementację z `default`.
 - Przy zmianie zachowania aktualizuje się Scaladoc w tym samym commicie co kod.
-- Po zmianach w `src/main` uruchamia się `sbt doc`. Scaladoc zgłasza zepsute linki jako ostrzeżenie `Couldn't resolve a member for the given link query`, które nie przerywa builda, więc trzeba je sprawdzić w logu i poprawić.
+- Po zmianach w `src/main` uruchamia się `sbt doc`. Scaladoc zgłasza zepsute linki jako ostrzeżenie `Couldn't resolve a member for the given link query`, które nie przerywa builda, więc trzeba je sprawdzić w logu i poprawić. Javadoc dla `02_annotations` działa z `-Xdoclint:all -Werror`, ale sbt 2 nie przerywa zadania przy błędzie javadoc, więc brak komentarza widać w logu jako `warnings found and -Werror specified`. CI sprawdza oba komunikaty i wtedy przerywa build.
 
 ## Wersjonowanie
 
