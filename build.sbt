@@ -88,7 +88,7 @@ def javaModule(id: String, directory: String, packageName: String): Project =
     autoScalaLibrary                     := false,
     javafmtOnCompile                     := !insideCI.value,
     javacOptions ++= Seq("-Xlint:all", "-Werror", "--release", javaRelease),
-    Compile / doc / javacOptions         := Seq("-Xdoclint:all,-missing", "-Werror"),
+    Compile / doc / javacOptions         := Seq("-Xdoclint:all", "-Werror"),
     Compile / unmanagedSourceDirectories := Seq((Compile / javaSource).value),
     Test / unmanagedSourceDirectories    := Seq((Test / javaSource).value)
   )

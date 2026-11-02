@@ -45,6 +45,10 @@ jobs:
             echo "::error::Scaladoc contains broken links"
             exit 1
           fi
+          if grep -q "warnings found and -Werror specified" doc.log; then
+            echo "::error::Javadoc has errors or missing comments"
+            exit 1
+          fi
 
   coverage:
     name: Test coverage
