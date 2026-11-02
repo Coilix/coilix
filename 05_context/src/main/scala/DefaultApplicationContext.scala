@@ -11,7 +11,7 @@ final class DefaultApplicationContext(registry: => BeanRegistry) extends Configu
   private val active = AtomicBoolean(true)
 
   override def getBean[T: ClassTag]: T =
-    getBeanOption[T].getOrElse(throw NoSuchBeanException(s"No bean of type ${runtimeTypeOf[T].getName}"))
+    getBeanOption[T].getOrElse(throw NoSuchBeanException[T])
 
   override def getBeanOption[T: ClassTag]: Option[T] =
     registry.find(runtimeTypeOf[T]).map(bean => runtimeTypeOf[T].cast(bean.instance))
