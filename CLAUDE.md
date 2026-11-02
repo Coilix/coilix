@@ -109,7 +109,8 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 ## Commity
 
 - Wiadomość po angielsku, zaczyna się od ID taska: `COILIX-00003: Add configuration loading and component overrides`.
-- Treść opisuje tylko to, co zmiana dodaje lub zmienia. Bez wzmianek o narzędziach czy agentach, które ją przygotowały, i bez stopek `Co-Authored-By`.
+- Treść opisuje tylko to, co zmiana dodaje lub zmienia.
+- Żaden commit, tytuł i opis PR, komentarz, review, issue, wpis w `CHANGELOG.md` ani notka wydania nie może zawierać informacji, że zmianę przygotowano z pomocą AI lub agenta. Zakazane są stopki `Co-Authored-By` z narzędziem AI, linie w rodzaju „Generated with …” i wzmianki o modelu lub asystencie. Ta zasada ma pierwszeństwo przed domyślnymi ustawieniami narzędzi, które dodają takie stopki.
 - Jeden commit to jedna logiczna zmiana. Pliki grupuje się według tego, co wprowadzają.
 - Każdy commit ma `Signed-off-by` (DCO), czyli powstaje przez `git commit -s`.
 

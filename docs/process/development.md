@@ -41,6 +41,7 @@ Zasady:
 ### 2. Praca
 
 - Commity według sekcji „Commity” w `CLAUDE.md`: angielski, prefiks z ID taska, jedna logiczna zmiana na commit.
+- Commity, PR-y, komentarze, issues, `CHANGELOG.md` i notki wydań nie zawierają informacji, że zmianę przygotowano z pomocą AI lub agenta: bez stopek `Co-Authored-By` z narzędziem AI, bez linii „Generated with …” i bez wzmianek o modelu.
 - Każdy commit ma `Signed-off-by` (DCO): `git commit -s`. Żeby nie zapominać, wystarczy alias `git config alias.cs "commit -s"`.
 - Nowe pliki od razu przez `git add`, przeniesienia przez `git mv`.
 - W tym samym commicie co kod: testy munit, Scaladoc publicznego API, wpis w `CHANGELOG.md` (sekcja `Unreleased`), jeśli zmiana jest widoczna dla użytkownika.

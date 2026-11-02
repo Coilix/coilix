@@ -17,6 +17,7 @@ Thank you for helping. This file is a short summary. The full workflow (in Polis
    ```
 
 3. Sign off every commit (see [Developer Certificate of Origin](#developer-certificate-of-origin)): `git commit -s`.
+   Commit messages, pull requests, comments, issues and changelog entries must not say that the change was made with AI tools or agents: no `Co-Authored-By` trailers for AI tools, no "Generated with …" lines and no mentions of a model or assistant.
 4. Before opening a pull request, run:
 
    ```sh

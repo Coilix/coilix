@@ -9,6 +9,7 @@
 ## Checklist
 
 - [ ] Commits start with the task identifier and are signed off (`git commit -s`).
+- [ ] Commits and this description do not mention AI tools (no `Co-Authored-By` for AI tools, no "Generated with" lines).
 - [ ] `sbt testFull doc demo/run` passes and `doc` has no broken link warnings.
 - [ ] Every new class has munit tests and every new public element has Scaladoc.
 - [ ] `CHANGELOG.md` has an entry under `Unreleased` (if the change is visible to users).
