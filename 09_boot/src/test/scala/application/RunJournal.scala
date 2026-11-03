@@ -1,4 +1,5 @@
-package dev.coilix.boot.application
+package dev.coilix.boot
+package application
 
 import dev.coilix.annotation.Component
 import java.util.concurrent.atomic.AtomicReference

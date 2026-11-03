@@ -1,4 +1,5 @@
-package dev.coilix.boot.fixture
+package dev.coilix.boot
+package fixture
 
 import dev.coilix.annotation.Component
 
