@@ -23,6 +23,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
+| COILIX-00020 | [Wsparcie efektów `F[_]` (cats-effect, ZIO)](COILIX-00020_effect_types.md) | średni | do analizy, przed `1.0` |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
 
 Zależności między taskami:
@@ -42,6 +43,7 @@ Zależności między taskami:
 - COILIX-00015 zmienia `RegisteredBean`, z którego korzysta `@PreDestroy` z COILIX-00004, więc idzie po nim.
 - COILIX-00016 potrzebuje `close()` i `@PreDestroy` z COILIX-00004 dla zdarzenia `ContextClosing`.
 - COILIX-00018 wymaga pierwszego wydania z COILIX-00009.
+- COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów) i z modułów z COILIX-00010. Zmiany w rdzeniu, których wymaga, powinny trafić przed `1.0`.
 - COILIX-00021 uzupełnia ręczny przegląd z `docs/legal/spring-similarity.md` (COILIX-00006). Warto go zrobić przed pierwszym wydaniem z COILIX-00009.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
