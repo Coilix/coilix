@@ -1,3 +1,4 @@
-package dev.coilix.context.constructor
+package dev.coilix.context
+package constructor
 
 final class HiddenConstructorBean private ()

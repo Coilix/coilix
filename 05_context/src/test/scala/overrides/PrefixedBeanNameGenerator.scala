@@ -1,4 +1,5 @@
-package dev.coilix.context.overrides
+package dev.coilix.context
+package overrides
 
 import dev.coilix.context.BeanNameGenerator
 
