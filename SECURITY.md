@@ -15,4 +15,6 @@ Please do not report security issues in public issues, pull requests or discussi
 
 Report them privately through GitHub: open the [Security tab](https://github.com/Coilix/coilix/security) of the repository and choose **Report a vulnerability**. Include the affected version, a description of the problem and, if possible, steps to reproduce it.
 
+If you cannot use GitHub, send the report by e-mail to [security@coilix.dev](mailto:security@coilix.dev).
+
 You can expect an acknowledgement within 7 days. Once the issue is confirmed, a fix is released as a patch version and announced in a GitHub security advisory and in `CHANGELOG.md` under **Security**. Reporters are credited unless they prefer otherwise.
