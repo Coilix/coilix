@@ -57,3 +57,20 @@ Zostaje:
 - sekrety `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` w repozytorium i weryfikacja przestrzeni nazw `dev.coilix` w Central Portal rekordem DNS TXT w domenie `coilix.dev` (wymaga konta autora),
 - TASTy-MiMa: brak wtyczki dla sbt 2,
 - budowa, podpis i publikacja pluginu IntelliJ do Marketplace (z wersją z tagu w `plugin.xml`).
+
+## Grupy wydań (ADR 0011)
+
+[ADR 0011](../docs/adr/0011-release-groups-and-changelog-files.md) zmienia model wydań. Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
+
+1. **Decyzja:** ADR 0011 i ten plan.
+2. **Changelog w plikach:** katalog `changelog/<grupa>/` z `unreleased.md`, przeniesienie treści z `CHANGELOG.md`, sprawdzanie formatu w CI, strona `/changelog` z tych plików, zasady w `CLAUDE.md` i `docs/process/development.md`.
+3. **Grupy w buildzie:** przypisanie modułów do grup w `build.sbt`, wersja z tagu `<grupa>-v*` dla każdego modułu, MiMa względem poprzedniego wydania grupy, sprawdzenie, że moduł funkcji zależy od wydanego rdzenia, nowy opis w `docs/architecture/versioning.md`.
+4. **Wydanie przy tagu:** `release.yml` dla tagów `*-v*` (sprawdzenia z ADR 0011, publikacja tylko grupy, GitHub Release z pliku changelogu), skrypt i workflow „Prepare release”, ruleset tagów `*-v*`.
+5. **Publikacja strony** (razem z krokiem 7 COILIX-00007): workflow „Publish docs” na tag i ręcznie, sekcje i wersje per grupa, API pod `/api/<grupa>/<linia>/`, lychee przed publikacją, `gh-pages` i domena `docs.coilix.dev`.
+
+Kryteria akceptacji grup wydań:
+
+1. Tag `core-v0.1.0` publikuje tylko moduły rdzenia z wersją `0.1.0`, a tag `web-v0.1.0` tylko `coilix-web` zależny od wydanej wersji rdzenia.
+2. Tag bez pliku `changelog/<grupa>/<wersja>.md` albo z błędnym plikiem nie publikuje niczego.
+3. GitHub Release i strona `/changelog` pokazują treść pliku wydania.
+4. Strona jest publikowana tylko przy tagu albo ręcznie i przechodzi link checker przed publikacją.

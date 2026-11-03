@@ -1,6 +1,6 @@
 # 0010: Strona dokumentacji w Docusaurusie pod `docs.coilix.dev`
 
-- Status: przyjęta
+- Status: przyjęta, punkty 4, 5 i 7 zastąpione przez [0011](0011-release-groups-and-changelog-files.md)
 - Data: 2026-11-03
 - Task: COILIX-00007
 

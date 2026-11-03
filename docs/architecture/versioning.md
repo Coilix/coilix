@@ -1,5 +1,7 @@
 # Wersjonowanie i wydania
 
+> [ADR 0011](../adr/0011-release-groups-and-changelog-files.md) zmienia ten standard: grupy wydań (`core`, moduły funkcji, plugin IntelliJ) z osobnymi wersjami i tagami `<grupa>-vX.Y.Z`, changelog w plikach `changelog/<grupa>/<wersja>.md` i publikacja strony przy tagu. Do wdrożenia w COILIX-00009 obowiązuje opis poniżej.
+
 ## Standard
 
 - **[Semantic Versioning 2.0.0](https://semver.org/)**: `MAJOR.MINOR.PATCH`, wydania przedpremierowe z sufiksem `-M1`, `-RC1`.
