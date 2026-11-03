@@ -1,9 +1,9 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ValueExpression
-import io.github.coilix.context.configured.ValueBean
-import io.github.coilix.context.wiring.DefaultGreetingService
-import io.github.coilix.context.wiring.Greeter
+import dev.coilix.config.ValueExpression
+import dev.coilix.context.configured.ValueBean
+import dev.coilix.context.wiring.DefaultGreetingService
+import dev.coilix.context.wiring.Greeter
 import munit.FunSuite
 
 final class AnnotatedParameterDependencyMapperTest extends FunSuite {

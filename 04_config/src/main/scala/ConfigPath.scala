@@ -1,6 +1,6 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.common.ClassTags.runtimeTypeOf
 import scala.reflect.ClassTag
 
 final case class ConfigPath[T](path: String, componentType: Class[T])

@@ -1,6 +1,6 @@
-package io.github.coilix.config.fixture
+package dev.coilix.config.fixture
 
-import io.github.coilix.config.ConfigurationException
+import dev.coilix.config.ConfigurationException
 
 final class FailingGreeting extends Greeting {
   throw ConfigurationException("boom")

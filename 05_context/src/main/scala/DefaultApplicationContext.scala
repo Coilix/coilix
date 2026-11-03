@@ -1,7 +1,7 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.Slf4s
-import io.github.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.annotation.Slf4s
+import dev.coilix.common.ClassTags.runtimeTypeOf
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.reflect.ClassTag
 

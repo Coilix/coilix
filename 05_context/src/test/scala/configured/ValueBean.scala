@@ -1,7 +1,7 @@
-package io.github.coilix.context.configured
+package dev.coilix.context.configured
 
-import io.github.coilix.annotation.Component
-import io.github.coilix.annotation.Value
+import dev.coilix.annotation.Component
+import dev.coilix.annotation.Value
 import scala.concurrent.duration.FiniteDuration
 
 @Component

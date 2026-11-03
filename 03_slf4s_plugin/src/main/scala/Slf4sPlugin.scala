@@ -1,4 +1,4 @@
-package io.github.coilix.slf4s
+package dev.coilix.slf4s
 
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.plugins.PluginPhase

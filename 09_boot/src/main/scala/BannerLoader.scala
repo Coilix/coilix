@@ -1,7 +1,7 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.ConfigPath
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigPath
 
 trait BannerLoader {
   def load(): Option[String]

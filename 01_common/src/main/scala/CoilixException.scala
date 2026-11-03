@@ -1,4 +1,4 @@
-package io.github.coilix.common
+package dev.coilix.common
 
 /**
  * Base class of all exceptions thrown by Coilix.

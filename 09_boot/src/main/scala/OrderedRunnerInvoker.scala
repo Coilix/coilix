@@ -1,8 +1,8 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.annotation.Order
-import io.github.coilix.annotation.Slf4s
-import io.github.coilix.context.ApplicationContext
+import dev.coilix.annotation.Order
+import dev.coilix.annotation.Slf4s
+import dev.coilix.context.ApplicationContext
 
 @Slf4s
 final class OrderedRunnerInvoker extends RunnerInvoker {

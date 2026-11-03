@@ -39,7 +39,7 @@ Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtual
 
 ## Proponowany projekt
 
-Nowy moduł `05_concurrency` (`io.github.coilix.concurrency`), zależny od `05_context`. Wymaga przenumerowania pustych modułów:
+Nowy moduł `05_concurrency` (`dev.coilix.concurrency`), zależny od `05_context`. Wymaga przenumerowania pustych modułów:
 
 | Teraz | Po zmianie |
 |---|---|

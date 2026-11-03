@@ -1,8 +1,8 @@
-package io.github.coilix.context.configured
+package dev.coilix.context.configured
 
-import io.github.coilix.annotation.Bean
-import io.github.coilix.annotation.Configuration
-import io.github.coilix.annotation.Value
+import dev.coilix.annotation.Bean
+import dev.coilix.annotation.Configuration
+import dev.coilix.annotation.Value
 
 @Configuration
 final class SalutationConfiguration {

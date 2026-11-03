@@ -1,7 +1,7 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.annotation.CoilixApplication
-import io.github.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.annotation.CoilixApplication
+import dev.coilix.common.ClassTags.runtimeTypeOf
 import scala.reflect.ClassTag
 
 final class AnnotationBasePackageResolver extends BasePackageResolver {

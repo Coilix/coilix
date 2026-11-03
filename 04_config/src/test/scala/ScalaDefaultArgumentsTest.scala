@@ -1,7 +1,7 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.config.fixture.MailSettings
-import io.github.coilix.config.fixture.PrefixGreeting
+import dev.coilix.config.fixture.MailSettings
+import dev.coilix.config.fixture.PrefixGreeting
 import munit.FunSuite
 
 final class ScalaDefaultArgumentsTest extends FunSuite {

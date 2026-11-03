@@ -1,8 +1,8 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.ConfigurationProperties
-import io.github.coilix.annotation.Primary
-import io.github.coilix.config.Environment
+import dev.coilix.annotation.ConfigurationProperties
+import dev.coilix.annotation.Primary
+import dev.coilix.config.Environment
 import java.lang.reflect.Modifier
 
 final class ReflectiveBeanDefinitionFactory(

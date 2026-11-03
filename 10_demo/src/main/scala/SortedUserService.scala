@@ -1,7 +1,7 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.annotation.Primary
-import io.github.coilix.annotation.Service
+import dev.coilix.annotation.Primary
+import dev.coilix.annotation.Service
 
 @Service
 @Primary

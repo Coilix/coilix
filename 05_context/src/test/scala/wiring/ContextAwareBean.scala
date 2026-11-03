@@ -1,7 +1,7 @@
-package io.github.coilix.context.wiring
+package dev.coilix.context.wiring
 
-import io.github.coilix.annotation.Component
-import io.github.coilix.context.ApplicationContext
+import dev.coilix.annotation.Component
+import dev.coilix.context.ApplicationContext
 
 @Component
 final class ContextAwareBean(val context: ApplicationContext)

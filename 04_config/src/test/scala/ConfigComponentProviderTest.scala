@@ -1,7 +1,7 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.config.fixture.Greeting
-import io.github.coilix.config.fixture.PlainGreeting
+import dev.coilix.config.fixture.Greeting
+import dev.coilix.config.fixture.PlainGreeting
 import munit.FunSuite
 
 final class ConfigComponentProviderTest extends FunSuite {
@@ -14,7 +14,7 @@ final class ConfigComponentProviderTest extends FunSuite {
   }
 
   test("builds the configured implementation instead of the default") {
-    val configured = provider("test.greeting { class = io.github.coilix.config.fixture.PrefixGreeting, prefix = Hey }")
+    val configured = provider("test.greeting { class = dev.coilix.config.fixture.PrefixGreeting, prefix = Hey }")
     assertEquals(configured.get[Greeting](fail("default must not be built")).greet("Ann"), "Hey Ann")
   }
 

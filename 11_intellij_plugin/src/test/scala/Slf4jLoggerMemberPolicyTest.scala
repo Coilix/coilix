@@ -1,4 +1,4 @@
-package io.github.coilix.intellij
+package dev.coilix.intellij
 
 import munit.FunSuite
 

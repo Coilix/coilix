@@ -1,6 +1,6 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.ConfigurableApplicationContext
 import scala.reflect.ClassTag
 
 object Coilix {

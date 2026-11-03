@@ -1,5 +1,5 @@
 <idea-plugin>
-  <id>io.github.coilix.slf4s</id>
+  <id>dev.coilix.slf4s</id>
   <name>Coilix Slf4s</name>
   <version>0.1.0</version>
   <vendor>Coilix</vendor>
@@ -8,6 +8,6 @@
   <depends>com.intellij.modules.platform</depends>
   <depends>org.intellij.scala</depends>
   <extensions defaultExtensionNs="org.intellij.scala">
-    <syntheticMembersInjector implementation="io.github.coilix.intellij.Slf4sMembersInjector"/>
+    <syntheticMembersInjector implementation="dev.coilix.intellij.Slf4sMembersInjector"/>
   </extensions>
 </idea-plugin>

@@ -1,6 +1,6 @@
-package io.github.coilix.config.fixture
+package dev.coilix.config.fixture
 
-import io.github.coilix.config.ConfigPath
+import dev.coilix.config.ConfigPath
 
 trait Greeting {
   def greet(name: String): String

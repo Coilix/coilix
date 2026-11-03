@@ -1,6 +1,6 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.annotation.Repository
+import dev.coilix.annotation.Repository
 
 @Repository
 final class InMemoryUserRepository extends UserRepository {

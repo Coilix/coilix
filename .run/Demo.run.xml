@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Demo" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="io.github.coilix.demo.DemoApplication" />
+    <option name="MAIN_CLASS_NAME" value="dev.coilix.demo.DemoApplication" />
     <module name="coilix.demo.main" />
     <method v="2">
       <option name="Make" enabled="true" />

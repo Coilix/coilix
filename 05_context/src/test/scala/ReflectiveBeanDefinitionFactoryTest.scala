@@ -1,12 +1,12 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.context.wiring.AbstractBean
-import io.github.coilix.context.wiring.DefaultGreetingService
-import io.github.coilix.context.wiring.EnglishGreeter
-import io.github.coilix.context.wiring.Farewell
-import io.github.coilix.context.wiring.Greeter
-import io.github.coilix.context.wiring.PolishGreeter
+import dev.coilix.config.ComponentProvider
+import dev.coilix.context.wiring.AbstractBean
+import dev.coilix.context.wiring.DefaultGreetingService
+import dev.coilix.context.wiring.EnglishGreeter
+import dev.coilix.context.wiring.Farewell
+import dev.coilix.context.wiring.Greeter
+import dev.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
 
 final class ReflectiveBeanDefinitionFactoryTest extends FunSuite {

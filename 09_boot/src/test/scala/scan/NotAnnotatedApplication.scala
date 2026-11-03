@@ -1,3 +1,3 @@
-package io.github.coilix.boot.scan
+package dev.coilix.boot.scan
 
 object NotAnnotatedApplication

@@ -1,4 +1,4 @@
-package io.github.coilix.config
+package dev.coilix.config
 
 import com.typesafe.config.Config
 import java.net.URL

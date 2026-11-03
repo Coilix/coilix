@@ -1,4 +1,4 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
 import java.net.URL
 import scala.io.Source

@@ -1,9 +1,9 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.configured.Salutation
-import io.github.coilix.context.configured.SalutationConfiguration
-import io.github.coilix.context.configured.ServerSettings
-import io.github.coilix.context.configured.WordSalutation
+import dev.coilix.context.configured.Salutation
+import dev.coilix.context.configured.SalutationConfiguration
+import dev.coilix.context.configured.ServerSettings
+import dev.coilix.context.configured.WordSalutation
 import munit.FunSuite
 
 final class InstanceFactoryTest extends FunSuite {

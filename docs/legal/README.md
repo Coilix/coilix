@@ -22,7 +22,7 @@ Wszystkie decyzje zatwierdzone 2026-10-29.
 | 1 | Licencja projektu | Apache-2.0 | [license-decision.md](license-decision.md) |
 | 2 | Nagłówki licencyjne w plikach | brak, tylko `LICENSE` i `NOTICE` | [license-decision.md](license-decision.md#nagłówki-w-plikach) |
 | 3 | Model kontrybucji | DCO (`Signed-off-by`), bez CLA | [license-decision.md](license-decision.md#kontrybucje) |
-| 4 | `groupId` i pakiety | `io.github.coilix` (organizacja GitHub [Coilix](https://github.com/Coilix)) | [publication-checklist.md](publication-checklist.md#przestrzeń-nazw) |
+| 4 | `groupId` i pakiety | `dev.coilix` (domena [coilix.dev](https://coilix.dev)) | [publication-checklist.md](publication-checklist.md#przestrzeń-nazw) |
 | 5 | Wersjonowanie | SemVer, jedna wersja dla wszystkich modułów, `early-semver`, wersja z tagu | [../architecture/versioning.md](../architecture/versioning.md) |
 | 6 | Wersja Scali publikowanych artefaktów | Scala 3.9 LTS zamiast 3.10 | [../architecture/versioning.md](../architecture/versioning.md#wersja-scali-i-jdk) |
 | 7 | Niezależność modułów | `data`, `web`, `security` opcjonalne, podłączane przez SPI | [../architecture/modularity.md](../architecture/modularity.md) |

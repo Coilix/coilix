@@ -1,7 +1,7 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.Value
-import io.github.coilix.config.ValueExpression
+import dev.coilix.annotation.Value
+import dev.coilix.config.ValueExpression
 import java.lang.reflect.Parameter
 
 final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper) extends ParameterDependencyMapper {

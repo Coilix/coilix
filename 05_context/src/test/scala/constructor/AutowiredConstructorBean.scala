@@ -1,6 +1,6 @@
-package io.github.coilix.context.constructor
+package dev.coilix.context.constructor
 
-import io.github.coilix.annotation.Autowired
+import dev.coilix.annotation.Autowired
 
 final class AutowiredConstructorBean(val first: String, val second: String) {
   @Autowired

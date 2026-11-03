@@ -1,10 +1,10 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.Component
-import io.github.coilix.annotation.Configuration
-import io.github.coilix.annotation.ConfigurationProperties
-import io.github.coilix.annotation.Repository
-import io.github.coilix.annotation.Service
+import dev.coilix.annotation.Component
+import dev.coilix.annotation.Configuration
+import dev.coilix.annotation.ConfigurationProperties
+import dev.coilix.annotation.Repository
+import dev.coilix.annotation.Service
 import java.lang.annotation.Annotation
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners

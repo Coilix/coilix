@@ -1,8 +1,8 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.context.DefaultApplicationContext
-import io.github.coilix.context.ImmutableBeanRegistry
-import io.github.coilix.context.PrimaryCandidateSelector
+import dev.coilix.context.DefaultApplicationContext
+import dev.coilix.context.ImmutableBeanRegistry
+import dev.coilix.context.PrimaryCandidateSelector
 import munit.FunSuite
 
 final class RuntimeShutdownHookRegistrarTest extends FunSuite {

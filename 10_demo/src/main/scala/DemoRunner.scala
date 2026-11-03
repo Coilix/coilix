@@ -1,10 +1,10 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.annotation.Component
-import io.github.coilix.annotation.Order
-import io.github.coilix.annotation.Slf4s
-import io.github.coilix.boot.ApplicationArguments
-import io.github.coilix.boot.ApplicationRunner
+import dev.coilix.annotation.Component
+import dev.coilix.annotation.Order
+import dev.coilix.annotation.Slf4s
+import dev.coilix.boot.ApplicationArguments
+import dev.coilix.boot.ApplicationRunner
 
 @Component
 @Order(1)

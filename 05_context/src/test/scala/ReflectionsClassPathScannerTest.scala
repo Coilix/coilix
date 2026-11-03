@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ComponentProvider
+import dev.coilix.config.ComponentProvider
 import munit.FunSuite
 
 final class ReflectionsClassPathScannerTest extends FunSuite {
@@ -8,12 +8,12 @@ final class ReflectionsClassPathScannerTest extends FunSuite {
 
   test("finds concrete annotated classes in a package") {
     assertEquals(
-      scanner.scan("io.github.coilix.context.wiring").map(_.beanName),
+      scanner.scan("dev.coilix.context.wiring").map(_.beanName),
       List("contextAwareBean", "defaultGreetingService", "englishGreeter", "polishGreeter")
     )
   }
 
   test("does not include classes from other packages") {
-    assertEquals(scanner.scan("io.github.coilix.context.cycle").map(_.beanName), List("chicken", "egg"))
+    assertEquals(scanner.scan("dev.coilix.context.cycle").map(_.beanName), List("chicken", "egg"))
   }
 }

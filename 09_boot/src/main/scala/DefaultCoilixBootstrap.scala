@@ -1,11 +1,11 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.annotation.Slf4s
-import io.github.coilix.context.ApplicationContextBuilder
-import io.github.coilix.context.BeanDefinition
-import io.github.coilix.context.ClassPathScanner
-import io.github.coilix.context.ConfigurableApplicationContext
-import io.github.coilix.context.RegisteredBean
+import dev.coilix.annotation.Slf4s
+import dev.coilix.context.ApplicationContextBuilder
+import dev.coilix.context.BeanDefinition
+import dev.coilix.context.ClassPathScanner
+import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.RegisteredBean
 
 @Slf4s
 final class DefaultCoilixBootstrap(scanner: ClassPathScanner, builder: ApplicationContextBuilder) extends CoilixBootstrap {

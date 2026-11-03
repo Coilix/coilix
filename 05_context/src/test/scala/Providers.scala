@@ -1,9 +1,9 @@
-package io.github.coilix.context
+package dev.coilix.context
 
 import com.typesafe.config.ConfigFactory
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.Environment
-import io.github.coilix.config.TypesafeConfigTree
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.Environment
+import dev.coilix.config.TypesafeConfigTree
 
 object Providers {
   def fromHocon(hocon: String): ComponentProvider =

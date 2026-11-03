@@ -1,9 +1,9 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.Environment
-import io.github.coilix.context.wiring.DefaultGreetingService
-import io.github.coilix.context.wiring.EnglishGreeter
-import io.github.coilix.context.wiring.GreetingService
+import dev.coilix.config.Environment
+import dev.coilix.context.wiring.DefaultGreetingService
+import dev.coilix.context.wiring.EnglishGreeter
+import dev.coilix.context.wiring.GreetingService
 import munit.FunSuite
 
 final class ReflectiveBeanInstantiatorTest extends FunSuite {

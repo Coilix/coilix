@@ -8,16 +8,18 @@ Maven Central wymaga `groupId` w przestrzeni nazw, którą kontrolujemy: domena 
 
 Projekt zmienia nazwę na **Coilix** ([spring-similarity.md](spring-similarity.md#nazwa-projektu)).
 
-**Decyzja (2026-10-29): `groupId` `io.github.coilix` i pakiety `io.github.coilix.*`.** Przestrzeń nazw należy do organizacji GitHub [Coilix](https://github.com/Coilix), a nie do osoby, więc przekazanie projektu innym opiekunom nie wymaga zmiany `groupId`. Central Portal weryfikuje ją przez publiczne repozytorium o podanej nazwie w organizacji, bez domeny i DNS.
+**Decyzja (2026-11-03): `groupId` `dev.coilix` i pakiety `dev.coilix.*`** ([ADR 0009](../adr/0009-dev-coilix-namespace.md)). Domena [coilix.dev](https://coilix.dev) należy do projektu. Central Portal weryfikuje przestrzeń nazw rekordem DNS TXT w tej domenie.
+
+Wcześniejsza decyzja z 2026-10-29 (`io.github.coilix`, weryfikacja przez repozytorium organizacji GitHub [Coilix](https://github.com/Coilix)) obowiązywała do zakupu domeny. Nic nie zostało pod nią wydane.
 
 Rozważane i odrzucone warianty:
 
 | Wariant | `groupId` | Dlaczego nie |
 |---|---|---|
 | `io.github.<login>` | `io.github.pawelwojcik7` | długie importy, nazwa związana z osobą |
-| własna domena | `dev.coilix` | koszt i weryfikacja DNS. Można przejść później, ale zmiana pakietu to zmiana niezgodna, więc tylko przed `1.0.0` |
+| organizacja GitHub | `io.github.coilix` | nazwa zależna od jednego serwisu, dłuższe importy, inny adres niż strona i poczta projektu |
 
-Zmiana pakietu dotyka wszystkich plików, `idePackagePrefix` w `build.sbt`, kluczy `class` w configach (`io.github.coilix.boot.DefaultStartupMessageFormatter`) i dokumentacji. Trzeba ją zrobić **przed** pierwszym wydaniem, razem ze zmianą nazwy (COILIX-00008).
+Przestrzeń nazw zmienia się tylko przed pierwszym wydaniem, bo później to zmiana niezgodna dla wszystkich użytkowników.
 
 ## Maven Central (Central Portal)
 

@@ -1,6 +1,6 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.annotation.Service
+import dev.coilix.annotation.Service
 
 @Service
 final class DefaultUserService(repository: UserRepository) extends UserService {

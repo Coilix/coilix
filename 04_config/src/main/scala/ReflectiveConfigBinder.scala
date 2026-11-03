@@ -1,6 +1,6 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.annotation.Autowired
+import dev.coilix.annotation.Autowired
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier

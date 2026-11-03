@@ -1,7 +1,7 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.wiring.EnglishGreeter
-import io.github.coilix.context.wiring.Greeter
+import dev.coilix.context.wiring.EnglishGreeter
+import dev.coilix.context.wiring.Greeter
 import munit.FunSuite
 
 final class SimpleBeanNameGeneratorTest extends FunSuite {

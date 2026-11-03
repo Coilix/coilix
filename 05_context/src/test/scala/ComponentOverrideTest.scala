@@ -1,9 +1,9 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.ConfigurationException
-import io.github.coilix.context.overrides.PrefixedBeanNameGenerator
-import io.github.coilix.context.wiring.EnglishGreeter
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigurationException
+import dev.coilix.context.overrides.PrefixedBeanNameGenerator
+import dev.coilix.context.wiring.EnglishGreeter
 import munit.FunSuite
 
 final class ComponentOverrideTest extends FunSuite {
@@ -15,9 +15,9 @@ final class ComponentOverrideTest extends FunSuite {
   test("replaces a single internal component with the configured class") {
     given ComponentProvider = Providers.fromHocon(
       """coilix.context.bean-name-generator {
-        |  class = io.github.coilix.context.overrides.PrefixedBeanNameGenerator
+        |  class = dev.coilix.context.overrides.PrefixedBeanNameGenerator
         |  prefix = "my-"
-        |  delegate.class = io.github.coilix.context.SimpleBeanNameGenerator
+        |  delegate.class = dev.coilix.context.SimpleBeanNameGenerator
         |}""".stripMargin
     )
     assertEquals(BeanDefinitionFactory.default.create(classOf[EnglishGreeter]).map(_.beanName), List("my-englishGreeter"))
@@ -25,14 +25,14 @@ final class ComponentOverrideTest extends FunSuite {
 
   test("builds the configured class with its constructor parameters") {
     given ComponentProvider = Providers.fromHocon(
-      "coilix.context.bean-name-generator { class = io.github.coilix.context.overrides.PrefixedBeanNameGenerator, prefix = x, delegate.class = io.github.coilix.context.SimpleBeanNameGenerator }"
+      "coilix.context.bean-name-generator { class = dev.coilix.context.overrides.PrefixedBeanNameGenerator, prefix = x, delegate.class = dev.coilix.context.SimpleBeanNameGenerator }"
     )
     assertEquals(BeanNameGenerator.default.getClass, classOf[PrefixedBeanNameGenerator])
   }
 
   test("fails when a constructor parameter of the configured class is missing") {
     given ComponentProvider = Providers.fromHocon(
-      "coilix.context.bean-name-generator { class = io.github.coilix.context.overrides.PrefixedBeanNameGenerator, prefix = x }"
+      "coilix.context.bean-name-generator { class = dev.coilix.context.overrides.PrefixedBeanNameGenerator, prefix = x }"
     )
     val error               = intercept[ConfigurationException](BeanNameGenerator.default)
     assert(error.getMessage.contains("coilix.context.bean-name-generator.delegate"))

@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.Autowired
+import dev.coilix.annotation.Autowired
 import java.lang.reflect.Constructor
 
 final class AutowiredConstructorSelector extends ConstructorSelector {

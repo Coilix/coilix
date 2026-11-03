@@ -1,7 +1,7 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.Slf4s
-import io.github.coilix.config.Environment
+import dev.coilix.annotation.Slf4s
+import dev.coilix.config.Environment
 
 @Slf4s
 final class ReflectiveBeanInstantiator(environment: Environment) extends BeanInstantiator {
