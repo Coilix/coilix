@@ -6,6 +6,7 @@ import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigSyntax
 import java.net.URL
 
+/** Reads HOCON files with the `.conf` extension, including substitutions such as `${other.key}`. */
 final class HoconConfigFormat extends ConfigFormat {
 
   override def extensions: List[String] = List("conf")

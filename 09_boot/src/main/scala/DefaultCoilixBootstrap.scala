@@ -7,6 +7,17 @@ import dev.coilix.context.ClassPathScanner
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
 
+/**
+ * Scans each base package, drops classes found in more than one package, adds the extra definitions and builds the context.
+ *
+ * Each scanned package and the names of all beans are logged at `INFO` level. This is the default
+ * [[dev.coilix.boot.CoilixBootstrap]].
+ *
+ * @param scanner
+ *   finds components in a package
+ * @param builder
+ *   creates the beans
+ */
 @Slf4s
 final class DefaultCoilixBootstrap(scanner: ClassPathScanner, builder: ApplicationContextBuilder) extends CoilixBootstrap {
 

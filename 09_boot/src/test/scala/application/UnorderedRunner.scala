@@ -1,4 +1,5 @@
-package dev.coilix.boot.application
+package dev.coilix.boot
+package application
 
 import dev.coilix.annotation.Component
 import dev.coilix.boot.ApplicationArguments

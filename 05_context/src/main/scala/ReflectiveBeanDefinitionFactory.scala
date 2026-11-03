@@ -5,6 +5,27 @@ import dev.coilix.annotation.Primary
 import dev.coilix.config.Environment
 import java.lang.reflect.Modifier
 
+/**
+ * Creates bean definitions through reflection.
+ *
+ * A `@ConfigurationProperties` class is bound from the configuration. Any other class is created through the constructor
+ * chosen by the [[dev.coilix.context.ConstructorSelector]], with one dependency per parameter. Interfaces and abstract classes give
+ * no
+ * definition. The `@Bean` methods of the class are added by the [[dev.coilix.context.BeanMethodScanner]].
+ *
+ * This is the default [[dev.coilix.context.BeanDefinitionFactory]].
+ *
+ * @param constructorSelector
+ *   chooses the constructor of a component
+ * @param parameterMapper
+ *   classifies constructor parameters
+ * @param nameGenerator
+ *   names the bean
+ * @param methodScanner
+ *   finds `@Bean` methods
+ * @param environment
+ *   binds `@ConfigurationProperties` classes
+ */
 final class ReflectiveBeanDefinitionFactory(
   constructorSelector: ConstructorSelector,
   parameterMapper:     ParameterDependencyMapper,

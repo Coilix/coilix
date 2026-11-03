@@ -2,6 +2,13 @@ package dev.coilix.config
 
 import dev.coilix.annotation.Slf4s
 
+/**
+ * Creates configured components by binding the section at their [[dev.coilix.config.ConfigPath]] with
+ * [[dev.coilix.config.Environment.bind]].
+ *
+ * Each configured component is logged at `INFO` level with its class and path. This is the implementation returned by
+ * [[dev.coilix.config.ComponentProvider.from]].
+ */
 @Slf4s
 final class ConfigComponentProvider(override val environment: Environment) extends ComponentProvider {
 

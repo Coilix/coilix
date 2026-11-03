@@ -1,4 +1,5 @@
-package dev.coilix.context.wiring
+package dev.coilix.context
+package wiring
 
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Primary
