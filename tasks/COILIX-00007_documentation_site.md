@@ -1,89 +1,62 @@
-# COILIX-00007: Dokumentacja API i strona na GitHub Pages z wersjami
+# COILIX-00007: Dokumentacja API i strona dokumentacji z wersjami i dwoma językami
 
 ## Cel
 
-Udostępnić dokumentację frameworka jako stronę na GitHub Pages: przewodniki dla programisty aplikacji i dokumentację API wygenerowaną ze Scaladoc. Każde wydanie ma własną, niezmienną wersję dokumentacji, a strona pozwala przełączać się między wersjami.
+Publiczna strona `https://docs.coilix.dev` z przewodnikami dla programisty aplikacji po angielsku i po polsku, przełącznikiem wersji, changelogiem i dokumentacją API ze Scaladoc. Każda linia wydań ma własną wersję dokumentacji, a zasady pisania i publikacji są spisane i sprawdzane przez CI.
+
+Narzędzie i adres wybiera [ADR 0010](../docs/adr/0010-docusaurus-documentation-site.md). Zasady są w [docs/process/documentation.md](../docs/process/documentation.md).
 
 ## Stan obecny
 
-- `CLAUDE.md` wymaga Scaladoc na publicznym API (sekcja „Dokumentacja”), ale istniejący kod nie ma komentarzy, bo wcześniej obowiązywał zakaz Scaladoc.
-- `sbt doc` działa: każdy moduł generuje osobną dokumentację w `target/out/jvm/<scala>/<moduł>/api`. Opcje pluginów kompilatora są odfiltrowane z opcji scaladoc, a javadoc dla `02_annotations` dostaje `-Xdoclint:all,-missing -Werror` zamiast opcji javac.
-- Nie ma wspólnej strony dla wszystkich modułów, przewodników, remote'a na GitHubie ani CI.
-- Wersja jest wpisana na sztywno w `build.sbt` (`0.1.0-SNAPSHOT`).
-- `docs/` zawiera tylko historyczną specyfikację `AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md`. COILIX-00006 planuje tam `docs/legal/`.
+- Scaladoc mają `01_common` i `04_config`, a Javadoc `02_annotations` (z `-Xdoclint:all -Werror`).
+- Bez Scaladoc: `05_context`, `09_boot`, `03_slf4s_plugin`, `10_demo`.
+- `sbt doc` generuje osobną dokumentację dla każdego modułu. Nie ma wspólnej strony, przewodników ani publikacji.
+- Wersja projektu pochodzi z tagu gita (COILIX-00009), repozytorium jest publiczne, domena `coilix.dev` należy do projektu.
 
 ## Zakres
 
-1. **Scaladoc dla istniejącego kodu** według zasad z `CLAUDE.md`, moduł po module: `01_common`, `04_config`, `05_context`, `09_boot`, `03_slf4s_plugin`, `10_demo`, oraz Javadoc dla adnotacji w `02_annotations`. Po tym kroku javadoc dostaje pełne `-Xdoclint:all` (z kontrolą brakujących komentarzy).
-2. **Moduł `12_docs`** (projekt sbt `docs`), który zależy od modułów `01`–`10` i generuje jedną stronę Scaladoc dla nich wszystkich. Moduł nie ma kodu, tylko przewodniki w Markdownie.
-3. **Przewodniki** w `12_docs/site/_docs/`: wprowadzenie, pierwsza aplikacja, komponenty i wstrzykiwanie zależności, konfiguracja (`@Value`, `@ConfigurationProperties`, nadpisywanie komponentów kluczem `class`), `@Slf4s` i plugin IntelliJ. Przykłady w blokach ` ```scala sc:compile `, żeby kompilator je sprawdzał.
-4. **Wersjonowanie dokumentacji**: przełącznik wersji w Scaladoc i układ katalogów na gałęzi `gh-pages`. Wersja projektu z tagu gita pochodzi z COILIX-00009.
-5. **CI w GitHub Actions**: budowanie i publikacja dokumentacji wydania oraz bieżącej wersji z `master`.
+Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
+
+1. **Projekt i zasady:** ADR 0010, `docs/process/documentation.md`, ten task.
+2. **Scaladoc `05_context`.**
+3. **Scaladoc `09_boot`.**
+4. **Scaladoc `03_slf4s_plugin` i `10_demo`.**
+5. **Szkielet `12_docs`:**
+   - projekt sbt `docs` (bez publikacji) kompilujący `examples/next/` i budujący jedną stronę Scaladoc dla modułów `01`–`10` z Javadoc obok,
+   - Docusaurus w `12_docs/website/` z językami EN i PL, przełącznikiem wersji, stroną changelogu i stałymi działami menu,
+   - skrypty sprawdzające z sekcji „Sprawdzenia w CI” zasad i krok w CI, który buduje stronę w PR bez publikacji.
+6. **Przewodniki:** Getting started, Guides i Reference w obu językach, z przykładami w `examples/next/`. Jeden dział na PR.
+7. **Publikacja:**
+   - `.github/workflows/docs.yml` (push na `master`: przewodniki i `/api/next/`, tag: `/api/X.Y/`),
+   - gałąź `gh-pages`, GitHub Pages z domeną `docs.coilix.dev`, rekord CNAME w Cloudflare (akcja ręczna opiekuna),
+   - skrypt `npm run version` i opis w `docs/process/development.md` w sekcji „Wydanie”.
 
 ## Proponowany projekt
 
-### Moduł `12_docs`
+Szczegóły (struktura katalogów, menu, tłumaczenia, wersje, changelog, publikacja) są w [docs/process/documentation.md](../docs/process/documentation.md). Ten task nie powtarza ich, żeby było jedno źródło.
 
-Numer 12 jest wyższy niż numery wszystkich modułów, od których zależy, więc spełnia zasadę z `CLAUDE.md`. Nie zależy od `11_intellij_plugin` (Scala 2.13, wewnętrzny plugin IDE).
+Do sprawdzenia przy kroku 5:
 
-Do sprawdzenia w pierwszej kolejności: czy sbt-unidoc działa z sbt 2 i Scalą 3. Jeśli nie, `12_docs` sam składa wejście dla scaladoc: pliki TASTy wszystkich zależnych modułów i ich classpath. Javadoc z `02_annotations` publikujemy jako osobny katalog `javadoc/`, do którego Scaladoc linkuje przez `-external-mappings`.
-
-Opcje scaladoc dla `12_docs`:
-
-- `-project Coilix`, `-project-version <wersja>`,
-- `-siteroot 12_docs/site`,
-- `-source-links:github://Coilix/coilix/<tag lub master>` dla linków „source” przy każdym elemencie,
-- `-social-links:github::https://github.com/Coilix/coilix`,
-- `-versions-dictionary-url https://coilix.github.io/coilix/versions.json` dla przełącznika wersji.
-
-### Wersja projektu
-
-Wersję z tagu gita wprowadza COILIX-00009 ([versioning.md](../docs/architecture/versioning.md)). Ten task tylko jej używa.
-
-### Układ gałęzi `gh-pages`
-
-```
-gh-pages/
-  index.html          przekierowanie do latest/
-  versions.json       {"versions": {"snapshot": ".../snapshot/", "0.2.0": ".../0.2.0/", "0.1.0": ".../0.1.0/"}}
-  latest/             kopia najnowszego wydania
-  snapshot/           dokumentacja z master, nadpisywana przy każdym pushu
-  0.1.0/
-  0.2.0/
-    index.html        strona główna Scaladoc z przewodnikami
-    api/...
-    javadoc/...
-```
-
-Katalogi wydań się nie zmieniają. Stara dokumentacja zostaje taka, jaka była w dniu wydania, a `versions.json` jest jedynym plikiem, który zmienia się przy każdym wydaniu. Strony starszych wersji czytają go przy otwarciu, więc pokazują w przełączniku także nowsze wydania.
-
-### CI
-
-`.github/workflows/docs.yml`:
-
-- push do `master` → `sbt docs/doc` → publikacja do `snapshot/`,
-- tag `v*` → `sbt docs/doc` → publikacja do `<wersja>/` i `latest/`, dopisanie wersji do `versions.json`,
-- publikacja przez `peaceiris/actions-gh-pages` z `destination_dir` i `keep_files: true`, żeby nie kasować innych wersji,
-- krok sprawdzający, czy log `sbt docs/doc` nie zawiera `Couldn't resolve a member` (scaladoc nie przerywa builda przy zepsutych linkach).
+- jak w sbt 2 zbudować jedną stronę Scaladoc dla kilku modułów (sbt-unidoc albo własne zadanie podające TASTy wszystkich modułów i ich classpath),
+- czy `raw-loader` działa z aliasem `@examples` w Docusaurusie 3 bez własnej konfiguracji webpacka, czy potrzebna jest mała wtyczka,
+- narzędzie do sprawdzania licencji zależności npm.
 
 ## Kryteria akceptacji
 
 1. Każdy publiczny element w `src/main` modułów `01`–`10` ma Scaladoc albo Javadoc zgodny z `CLAUDE.md`.
-2. `sbt docs/doc` generuje jedną stronę ze wszystkimi modułami, przewodnikami i bez ostrzeżeń o nierozwiązanych linkach.
-3. Przykłady w przewodnikach kompilują się podczas `sbt docs/doc`.
-4. Katalog wersji na `gh-pages` odpowiada wersji z tagu gita (COILIX-00009).
-5. Push na `master` aktualizuje `snapshot/`, a tag `v*` tworzy nowy katalog wersji, aktualizuje `latest/` i `versions.json`.
-6. Przełącznik wersji na stronie pokazuje wszystkie wydania i `snapshot`.
-7. `CLAUDE.md` opisuje moduł `12_docs` (tabela modułów, komendy).
+2. `docs.coilix.dev` pokazuje przewodniki po angielsku (`/`) i po polsku (`/pl/`), przełącznik wersji z `next` i wydanymi liniami, stronę `/changelog` i dokumentację API dla każdej wersji.
+3. Wszystkie sprawdzenia z sekcji „Sprawdzenia w CI” zasad działają w CI i przerywają build.
+4. Push na `master` aktualizuje wersję `next`, a wydanie `X.Y.0` tworzy wersję `X.Y` skryptem `npm run version`.
+5. `CLAUDE.md` opisuje moduł `12_docs` (tabela modułów, komendy).
 
 ## Poza zakresem
 
-- Własna domena, wyszukiwarka pełnotekstowa poza wbudowaną w Scaladoc i tłumaczenie dokumentacji na polski.
-- Publikacja artefaktów na Maven Central (osobny task po COILIX-00006).
+- Strona główna projektu pod `coilix.dev`.
+- Wyszukiwarka pełnotekstowa (osobny task, gdy będzie rozwiązanie z obsługą polskiego albo zgłoszenie do Algolia DocSearch).
+- Tłumaczenie changelogu i dokumentacji API.
 
 ## Ryzyka i otwarte pytania
 
-- Repozytorium nie ma jeszcze remote'a na GitHubie. GitHub Pages dla repozytorium prywatnego wymaga płatnego planu, więc publikacja strony praktycznie czeka na decyzję o upublicznieniu z COILIX-00006.
-- Zgodność sbt-unidoc i sbt-dynver z sbt 2 jest niepotwierdzona.
-- `docs/` w katalogu głównym zostaje na dokumenty wewnętrzne (`docs/legal/`, specyfikacje). Strona publiczna powstaje tylko z `12_docs/site`, żeby nic wewnętrznego nie trafiło na GitHub Pages.
-- Przy wydaniu poprawkowym starszej linii (np. `0.1.1` po `0.2.0`) `latest/` nie może cofnąć się do starszej wersji. Workflow musi porównywać wersje, a nie brać ostatniego tagu.
+- Zgodność sbt-unidoc z sbt 2 jest niepotwierdzona.
+- Utrzymanie dwóch języków podwaja pracę przy tekstach. CI pilnuje, żeby żadna strona nie została bez tłumaczenia.
+- Przy wydaniu poprawkowym starszej linii (np. `0.1.1` po `0.2.0`) workflow nadpisuje tylko `/api/0.1/` i nie zmienia wersji domyślnej strony.
