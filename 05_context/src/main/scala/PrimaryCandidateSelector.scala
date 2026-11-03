@@ -1,5 +1,16 @@
 package dev.coilix.context
 
+/**
+ * Chooses a bean in this order:
+ *
+ *  1. a candidate whose class is exactly the requested type,
+ *  1. the only candidate assignable to the requested type,
+ *  1. the only assignable candidate marked with `@Primary`.
+ *
+ * Several assignable candidates without exactly one `@Primary` give [[dev.coilix.context.AmbiguousBeanException]]. This is the
+ * default
+ * [[dev.coilix.context.CandidateSelector]].
+ */
 final class PrimaryCandidateSelector extends CandidateSelector {
 
   override def select[A <: BeanDescriptor](requested: Class[?], candidates: List[A]): Option[A] =

@@ -3,6 +3,15 @@ package dev.coilix.context
 import dev.coilix.annotation.Slf4s
 import dev.coilix.config.Environment
 
+/**
+ * Creates beans through their [[dev.coilix.context.InstanceFactory]], resolving each dependency from the registry and `@Value`
+ * parameters from the environment.
+ *
+ * Each created bean is logged at `INFO` level. This is the default [[dev.coilix.context.BeanInstantiator]].
+ *
+ * @param environment
+ *   resolves `@Value` expressions
+ */
 @Slf4s
 final class ReflectiveBeanInstantiator(environment: Environment) extends BeanInstantiator {
 
