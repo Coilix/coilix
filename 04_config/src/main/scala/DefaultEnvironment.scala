@@ -4,6 +4,12 @@ import dev.coilix.common.ClassTags.runtimeTypeOf
 import java.lang.reflect.Type
 import scala.reflect.ClassTag
 
+/**
+ * An [[dev.coilix.config.Environment]] that reads values from a [[dev.coilix.config.ConfigTree]] and converts them with a
+ * [[dev.coilix.config.ConfigBinder]].
+ *
+ * This is the implementation returned by [[dev.coilix.config.Environment.of]].
+ */
 final class DefaultEnvironment(tree: ConfigTree, binder: ConfigBinder) extends Environment {
 
   private val literalKey = "literal"
