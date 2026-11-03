@@ -1,4 +1,5 @@
-package dev.coilix.context.cycle
+package dev.coilix.context
+package cycle
 
 import dev.coilix.annotation.Component
 

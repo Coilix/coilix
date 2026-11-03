@@ -1,4 +1,5 @@
-package dev.coilix.context.constructor
+package dev.coilix.context
+package constructor
 
 import dev.coilix.context.wiring.Greeter
 

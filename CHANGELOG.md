@@ -17,3 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Startup log messages are now `Launching <app>` and `<app> is up after <n> s` (COILIX-00008).
 - Artifacts are compiled with Scala 3.9 LTS for JDK 17, so they work with Scala 3.9 or newer and JDK 17 or newer (COILIX-00009).
+
+### Fixed
+
+- A bean with an `Option[T]` or `List[T]` dependency now receives every matching bean, not only the beans created before it. A cycle through an `Option[T]` dependency is now reported as `CircularDependencyException` (COILIX-00012).

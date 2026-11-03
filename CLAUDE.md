@@ -35,6 +35,7 @@ Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/m
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy (`demo`, plugin IntelliJ i puste moduły funkcji do czasu pierwszej implementacji), dostaje `.settings(unpublished)`, czyli `publish / skip := true` bez bazy MiMa.
 Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/main/scala`, bez katalogów pakietu.
+Plik w podpakiecie, np. fixture testu w katalogu `wiring`, ma pakiet modułu w osobnej klauzuli: `package dev.coilix.context`, a w następnej linii `package wiring`. Tego wymaga IntelliJ przy `idePackagePrefix`, a typy z pakietu modułu są wtedy widoczne bez importu.
 
 ## Zasady kodu
 

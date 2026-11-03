@@ -1,4 +1,5 @@
-package dev.coilix.boot.overrides
+package dev.coilix.boot
+package overrides
 
 import dev.coilix.boot.StartupMessageFormatter
 import scala.concurrent.duration.FiniteDuration

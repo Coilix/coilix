@@ -8,6 +8,11 @@ import org.snakeyaml.engine.v2.api.LoadSettings
 import scala.jdk.CollectionConverters.*
 import scala.util.Using
 
+/**
+ * Reads YAML files with the `.yaml` and `.yml` extensions.
+ *
+ * A file whose root is not a mapping gives an empty configuration.
+ */
 final class YamlConfigFormat extends ConfigFormat {
 
   override def extensions: List[String] = List("yaml", "yml")

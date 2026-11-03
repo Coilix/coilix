@@ -3,6 +3,10 @@ package dev.coilix.config
 import scala.concurrent.duration.FiniteDuration
 import scala.jdk.DurationConverters.*
 
+/**
+ * Reads the scalar types supported by Coilix: `String`, `Int`, `Long`, `Double` and `Boolean` (also in their boxed Java
+ * forms), `java.time.Duration` and `scala.concurrent.duration.FiniteDuration`.
+ */
 final class DefaultScalarReader extends ScalarReader {
 
   private type Read = (ConfigTree, String) => AnyRef
