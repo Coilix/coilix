@@ -5,6 +5,15 @@ import dev.coilix.common.ClassTags.runtimeTypeOf
 import java.util.concurrent.atomic.AtomicBoolean
 import scala.reflect.ClassTag
 
+/**
+ * An application context backed by a [[dev.coilix.context.BeanRegistry]].
+ *
+ * The registry is passed by name, so the context can exist before its beans and be injected into them. Closing the context
+ * logs a message at `INFO` level.
+ *
+ * @param registry
+ *   the beans of the context, evaluated on first access
+ */
 @Slf4s
 final class DefaultApplicationContext(registry: => BeanRegistry) extends ConfigurableApplicationContext {
 

@@ -1,5 +1,19 @@
 package dev.coilix.context
 
+/**
+ * Builds a [[dev.coilix.context.DefaultApplicationContext]]: registers the context itself as `applicationContext` and the given
+ * singletons, orders the definitions with the [[dev.coilix.context.DependencyResolver]] and creates each bean with the
+ * [[dev.coilix.context.BeanInstantiator]].
+ *
+ * This is the default [[dev.coilix.context.ApplicationContextBuilder]].
+ *
+ * @param resolver
+ *   orders bean definitions by their dependencies
+ * @param instantiator
+ *   creates each bean
+ * @param selector
+ *   chooses a bean when several match a requested type
+ */
 final class DefaultApplicationContextBuilder(
   resolver:     DependencyResolver,
   instantiator: BeanInstantiator,

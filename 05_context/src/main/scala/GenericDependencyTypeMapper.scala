@@ -3,6 +3,13 @@ package dev.coilix.context
 import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 
+/**
+ * Maps `Option[T]` to [[dev.coilix.context.Dependency.Optional]], any Scala or Java collection of `T` to
+ * [[dev.coilix.context.Dependency.Collection]]
+ * and every other type to [[dev.coilix.context.Dependency.Required]].
+ *
+ * This is the default [[dev.coilix.context.DependencyTypeMapper]].
+ */
 final class GenericDependencyTypeMapper extends DependencyTypeMapper {
 
   override def map(parameterType: Type): Dependency =
