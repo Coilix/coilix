@@ -1,17 +1,16 @@
 <component name="ProjectCodeStyleConfiguration">
   <code_scheme name="Project" version="173">
     <ScalaCodeStyleSettings>
-      <option name="FORMATTER" value="1" />
-      <option name="USE_SCALA3_INDENTATION_BASED_SYNTAX" value="false" />
-      <option name="ADD_FULL_QUALIFIED_IMPORTS" value="true" />
-      <option name="ADD_IMPORTS_RELATIVE_TO_BASE_PACKAGE" value="false" />
-      <option name="CLASS_COUNT_TO_USE_IMPORT_ON_DEMAND" value="999" />
-      <option name="COLLECT_IMPORTS_TOGETHER" value="false" />
-      <option name="IMPORT_LAYOUT">
+      <option name="addImportsRelativeToBasePackage" value="false" />
+      <option name="classCountToUseImportOnDemand" value="999" />
+      <option name="collectImports" value="false" />
+      <option name="importLayout">
         <array>
+          <option value="base package imports" />
           <option value="all other imports" />
         </array>
       </option>
+      <option name="FORMATTER" value="1" />
     </ScalaCodeStyleSettings>
   </code_scheme>
 </component>
