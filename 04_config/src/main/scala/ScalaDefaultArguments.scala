@@ -3,6 +3,12 @@ package dev.coilix.config
 import java.lang.reflect.Method
 import scala.util.Try
 
+/**
+ * Finds Scala default arguments of constructor parameters through the methods that the Scala compiler generates in the
+ * companion object.
+ *
+ * Classes without a companion object, and parameters without a default, give `None`.
+ */
 final class ScalaDefaultArguments extends DefaultArguments {
 
   private val companionSuffix     = "$"

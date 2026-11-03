@@ -9,6 +9,43 @@ import java.lang.reflect.ParameterizedType
 import java.lang.reflect.Type
 import scala.util.Try
 
+/**
+ * Binds configuration values to objects through reflection.
+ *
+ * The target type decides how the value is read:
+ *
+ *  - `Option[T]`: `None` when the path is not set, otherwise the bound `T`,
+ *  - `Map[String, V]`: one entry per key of the section,
+ *  - `List[T]`, `Vector[T]` and `Set[T]` (and their supertypes such as `Seq[T]`): one element per list item,
+ *  - a type supported by the [[dev.coilix.config.ScalarReader]]: the scalar value,
+ *  - `AnyRef`: the plain value from [[dev.coilix.config.ConfigTree.anyRef]],
+ *  - any other class: a new instance created from the section.
+ *
+ * To create an instance, the binder uses the only public constructor, or the one annotated with `@Autowired` when there are
+ * several. Each parameter is read from the key with the same name or its kebab-case form, and falls back to its Scala
+ * default argument. A section with a `class` key creates that class instead, which must extend the target type; this is how
+ * replaceable components are configured, and it is required when the target type is a trait or an abstract class.
+ *
+ * ```yaml
+ * shop:
+ *   mail:
+ *     host: smtp.example.com
+ *     connect-timeout: 5s
+ * ```
+ *
+ * ```scala
+ * final case class MailSettings(host: String, port: Int = 25, connectTimeout: FiniteDuration)
+ * ```
+ *
+ * Every failure is reported as a [[dev.coilix.config.ConfigurationException]] that names the path.
+ *
+ * @param scalars
+ *   reader for single values
+ * @param defaults
+ *   source of default arguments for constructor parameters
+ * @param classLoader
+ *   class loader for classes named by `class` keys
+ */
 final class ReflectiveConfigBinder(scalars: ScalarReader, defaults: DefaultArguments, classLoader: ClassLoader)
     extends ConfigBinder {
 

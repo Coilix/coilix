@@ -8,6 +8,11 @@ import com.typesafe.config.ConfigValueType
 import java.time.Duration
 import scala.jdk.CollectionConverters.*
 
+/**
+ * A [[dev.coilix.config.ConfigTree]] backed by a Typesafe Config `Config`.
+ *
+ * Errors from Typesafe Config are rethrown as [[dev.coilix.config.ConfigurationException]] with the path that was read.
+ */
 final class TypesafeConfigTree(config: Config) extends ConfigTree {
 
   override def contains(path: String): Boolean =
