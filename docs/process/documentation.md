@@ -27,6 +27,7 @@ Strona powstaje wyłącznie z `12_docs/`. Nic z `docs/` ani `tasks/` nie trafia 
       scala/                  pliki .scala
       resources/              pliki .yaml, .conf, .properties
     0.1/                      zamrożone przykłady wydanej linii, tylko do odczytu
+  src/test/scala/             test, który wczytuje pliki konfiguracji z examples/next/resources
   website/
     docs/                     przewodniki EN dla wersji next
     versioned_docs/           kopie przewodników EN wydanych linii (generowane)
@@ -39,8 +40,11 @@ Strona powstaje wyłącznie z `12_docs/`. Nic z `docs/` ani `tasks/` nie trafia 
       docusaurus-theme-classic/  tłumaczenia menu i stopki (generowane, potem tłumaczone)
       code.json               tłumaczenia tekstów interfejsu
     src/pages/                strona startowa i changelog
+    src/components/           komponenty React używane przez strony
+    src/generated/            kopia CHANGELOG.md (generowana przy budowaniu, poza gitem)
     static/img/               obrazy
-    scripts/                  skrypty sprawdzające i skrypt nowej wersji
+    scripts/                  skrypty sprawdzające, kopiowanie changelogu i skrypt nowej wersji
+      allowed-licenses.json   dozwolone licencje zależności npm
     docusaurus.config.ts
     sidebars.ts
     package.json, package-lock.json, .nvmrc
@@ -79,7 +83,7 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 - **Jeden temat na stronę.** Strona dłuższa niż około 1500 słów dzieli się na kilka.
 - **Pierwszy akapit** mówi, czego czytelnik się nauczy i kiedy tego potrzebuje.
 - **Nagłówki** do poziomu `###`. Tytuły w sentence case: „Configuration properties”, nie „Configuration Properties”.
-- **Linki** między przewodnikami są względne i prowadzą do pliku (`./components.md`), nie do adresu URL. Do API linkuje się ścieżką `/api/next/...` (sekcja [Dokumentacja API](#dokumentacja-api)).
+- **Linki** między przewodnikami są względne i prowadzą do pliku (`./components.md`), nie do adresu URL. Do API linkuje się ścieżką `pathname:///api/next/...` (sekcja [Dokumentacja API](#dokumentacja-api)). Przedrostek `pathname://` jest potrzebny, bo dokumentacja API nie jest częścią builda Docusaurusa i zwykła ścieżka `/api/...` przerwałaby build jako zepsuty link.
 - **Obrazy** w `static/img/<dział>/`, w formacie SVG albo PNG, zawsze z tekstem alternatywnym.
 - **Wyróżnienia** tylko trzech rodzajów: `:::note`, `:::tip`, `:::warning`.
 
@@ -123,6 +127,9 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 - Jeden przykład to jeden plik, bez wycinania fragmentów. Krótki przykład jest lepszy niż długi plik z zaznaczonym fragmentem.
 - W tekście strony wolno wpisać kod ręcznie tylko wtedy, gdy nie jest to Scala ani plik konfiguracji, np. komendę `sbt` albo linię `libraryDependencies`.
 - Oba języki wklejają ten sam plik przykładu. Kod i identyfikatory w przykładach są po angielsku.
+- Przykłady są w pakiecie `com.example`, tak jak kod aplikacji czytelnika, a nie w pakiecie `dev.coilix`.
+- Alias `@examples` wskazuje na `examples/next/`, a `@examples-X.Y` na zamrożone przykłady wydanej linii. Aliasy definiuje wtyczka `coilix-examples` w `docusaurus.config.ts`.
+- Strony `.md` są czytane jako CommonMark, a `.mdx` jako MDX (`markdown.format: 'detect'`), więc znaki `<` i `{` w zwykłym tekście psują tylko strony `.mdx`.
 
 ## Tłumaczenia
 
@@ -143,7 +150,7 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
   npm run version -- X.Y
   ```
 
-  Skrypt wykonuje `docusaurus docs:version X.Y`, kopiuje przewodniki PL do `version-X.Y`, kopiuje `examples/next/` do `examples/X.Y/` i podmienia w skopiowanych stronach ścieżki `@examples/` oraz `/api/next/` na wersję `X.Y`. Ręcznie nie robi się żadnego z tych kroków.
+  Skrypt wykonuje `docusaurus docs:version X.Y`, kopiuje przewodniki PL do `version-X.Y`, kopiuje `examples/next/` do `examples/X.Y/` i podmienia w skopiowanych stronach `@examples/` na `@examples-X.Y/` oraz `/api/next/` na `/api/X.Y/`. Ręcznie nie robi się żadnego z tych kroków.
 - **Wydanie poprawkowe** `X.Y.Z` nie tworzy nowej wersji dokumentacji. Poprawka opisu błędu, który dotyczy wydanej linii, trafia do `docs/` i do `versioned_docs/version-X.Y/` (oraz ich odpowiedników PL) w tym samym PR co poprawka kodu.
 - Zamrożone przykłady w `examples/X.Y/` zmienia się tylko razem z poprawką w wydanej linii.
 - Linie inne niż najnowsza dostają baner „unmaintained”, zgodnie z polityką wsparcia w `SECURITY.md`. Wydanej wersji dokumentacji się nie usuwa, bo zewnętrzne linki przestałyby działać.
@@ -155,7 +162,9 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Dokumentacja API
 
-- Scaladoc wszystkich publikowanych modułów jest budowany jako jedna strona przez projekt sbt `docs`, a Javadoc `02_annotations` obok niej.
+- Scaladoc wszystkich publikowanych modułów Scali (`common`, `slf4s-plugin`, `config`, `context`, `boot`) jest budowany jako jedna strona przez projekt sbt `docs`, a Javadoc `02_annotations` obok niej w katalogu `javadoc/`. Robi to `sbt docs/apiSite`, wynik jest w `target/out/jvm/scala-<wersja>/coilix-docs/api-site/`.
+- Projekt `docs` podaje do Scaladoc pliki TASTy tych modułów (`Compile / doc / tastyFiles`), więc nie potrzebuje sbt-unidoc. Nowy publikowany moduł Scali dopisuje się do tej listy w `build.sbt`.
+- Linki Scaladoc do adnotacji z `dev.coilix.annotation` prowadzą do Javadoc tej samej linii (`-external-mappings`).
 - Adresy: `/api/next/` z `master` oraz `/api/X.Y/` dla każdej wydanej linii, nadpisywane przy każdym wydaniu poprawkowym tej linii.
 - Przewodniki w `docs/` linkują do `/api/next/`. Skrypt nowej wersji zamienia te linki na `/api/X.Y/` w kopii wersji.
 
@@ -169,15 +178,20 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Sprawdzenia w CI
 
-Każdy PR, który zmienia `12_docs/`, `CHANGELOG.md` albo publiczne API, uruchamia budowanie strony. Build przerywa się, gdy:
+Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym PR i przy każdym pushu na `master`, bez publikacji. Działa zawsze, a nie tylko przy zmianie `12_docs/`, bo zmiana publicznego API albo `CHANGELOG.md` też może zepsuć stronę. Build przerywa się, gdy:
 
-- link wewnętrzny, link do kotwicy albo link w Markdownie prowadzi donikąd (`onBrokenLinks`, `onBrokenAnchors` i `onBrokenMarkdownLinks` ustawione na `throw`),
-- zbiór stron EN i PL różni się w którejkolwiek wersji (brak tłumaczenia albo tłumaczenie bez strony EN),
-- strona nie ma któregoś z czterech pól nagłówka albo `id` różni się od nazwy pliku,
-- strona nie jest przypisana do żadnego działu w `sidebars.ts`,
-- przykład w `examples/next/` się nie kompiluje albo plik konfiguracji się nie wczytuje,
-- zależność npm ma licencję spoza listy z `docs/legal/dependency-licenses.md`,
-- Scaladoc zgłasza `Couldn't resolve a member for the given link query`.
+| Problem | Co sprawdza |
+|---|---|
+| link wewnętrzny, link do kotwicy albo link w Markdownie prowadzi donikąd | `npm run build` (`onBrokenLinks`, `onBrokenAnchors` i `markdown.hooks.onBrokenMarkdownLinks` ustawione na `throw`) |
+| zbiór stron EN i PL różni się w którejkolwiek wersji albo tłumaczenie ma inne `id` lub `sidebar_position` | `npm run check` (`scripts/check-pages.mjs`) |
+| strona nie ma któregoś z czterech pól nagłówka albo `id` różni się od nazwy pliku | `npm run check` |
+| strona nie jest w `sidebars.ts` albo dział najwyższego poziomu nie jest jednym z działów z sekcji [Struktura menu](#struktura-menu) lub stoi w złej kolejności | `npm run check` |
+| strona ma blok kodu Scali albo pliku konfiguracji wpisany ręcznie (poza liniami `libraryDependencies`, `addCompilerPlugin`, `addSbtPlugin` i `scalaVersion`) | `npm run check` |
+| przykład w `examples/next/` się nie kompiluje albo plik konfiguracji się nie wczytuje | `sbt docs/testFull` |
+| zależność npm ma licencję spoza `scripts/allowed-licenses.json` | `npm run check` (`scripts/check-licenses.mjs`) |
+| Scaladoc zgłasza `Couldn't resolve a member for the given link query` | `sbt docs/apiSite` i `sbt doc` w jobie `Build` |
+
+Lokalnie te same sprawdzenia uruchamia się w `12_docs/website` przez `npm ci`, `npm run check` i `npm run build`, a podgląd strony przez `npm start` (tylko angielski) albo `npm start -- --locale pl`.
 
 ## Przegląd
 

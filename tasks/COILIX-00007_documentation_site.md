@@ -8,10 +8,9 @@ Narzędzie i adres wybiera [ADR 0010](../docs/adr/0010-docusaurus-documentation-
 
 ## Stan obecny
 
-- Scaladoc mają `01_common` i `04_config`, a Javadoc `02_annotations` (z `-Xdoclint:all -Werror`).
-- Bez Scaladoc: `05_context`, `09_boot`, `03_slf4s_plugin`, `10_demo`.
-- `sbt doc` generuje osobną dokumentację dla każdego modułu. Nie ma wspólnej strony, przewodników ani publikacji.
-- Wersja projektu pochodzi z tagu gita (COILIX-00009), repozytorium jest publiczne, domena `coilix.dev` należy do projektu.
+- Każdy publiczny element modułów `01`–`10` ma Scaladoc albo Javadoc (kroki 2–4).
+- Szkielet `12_docs` jest gotowy (krok 5): projekt sbt `docs`, wspólna strona Scaladoc z Javadoc (`sbt docs/apiSite`), Docusaurus z językami EN i PL, przełącznikiem wersji i stroną `/changelog`, skrypty sprawdzające i job `Documentation site` w CI. Na stronie jest jedna strona przewodnika: Getting started › First application.
+- Nie ma jeszcze pozostałych przewodników ani publikacji na `docs.coilix.dev`.
 
 ## Zakres
 
@@ -35,11 +34,11 @@ Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
 
 Szczegóły (struktura katalogów, menu, tłumaczenia, wersje, changelog, publikacja) są w [docs/process/documentation.md](../docs/process/documentation.md). Ten task nie powtarza ich, żeby było jedno źródło.
 
-Do sprawdzenia przy kroku 5:
+Ustalenia z kroku 5:
 
-- jak w sbt 2 zbudować jedną stronę Scaladoc dla kilku modułów (sbt-unidoc albo własne zadanie podające TASTy wszystkich modułów i ich classpath),
-- czy `raw-loader` działa z aliasem `@examples` w Docusaurusie 3 bez własnej konfiguracji webpacka, czy potrzebna jest mała wtyczka,
-- narzędzie do sprawdzania licencji zależności npm.
+- Jedna strona Scaladoc nie wymaga sbt-unidoc. Projekt `docs` nadpisuje `Compile / doc / tastyFiles` plikami TASTy publikowanych modułów i dokłada classpath pluginu `@Slf4s` do `Compile / doc / dependencyClasspath`.
+- `raw-loader` działa w Docusaurusie 3, ale alias `@examples` wymaga małej wtyczki z `configureWebpack` (`coilix-examples` w `docusaurus.config.ts`).
+- Licencje npm sprawdza własny skrypt `scripts/check-licenses.mjs`, który czyta pole `license` z `package-lock.json`, bez dodatkowej zależności.
 
 ## Kryteria akceptacji
 
@@ -57,6 +56,5 @@ Do sprawdzenia przy kroku 5:
 
 ## Ryzyka i otwarte pytania
 
-- Zgodność sbt-unidoc z sbt 2 jest niepotwierdzona.
 - Utrzymanie dwóch języków podwaja pracę przy tekstach. CI pilnuje, żeby żadna strona nie została bez tłumaczenia.
 - Przy wydaniu poprawkowym starszej linii (np. `0.1.1` po `0.2.0`) workflow nadpisuje tylko `/api/0.1/` i nie zmienia wersji domyślnej strony.

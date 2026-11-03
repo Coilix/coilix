@@ -20,6 +20,7 @@
           { "context": "Build on JDK 17", "integration_id": 15368 },
           { "context": "Build on JDK 25", "integration_id": 15368 },
           { "context": "Test coverage", "integration_id": 15368 },
+          { "context": "Documentation site", "integration_id": 15368 },
           { "context": "DCO", "integration_id": 1861 } ] } }
   ],
   "bypass_actors": []

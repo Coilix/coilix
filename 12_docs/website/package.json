@@ -1,0 +1,37 @@
+{
+  "name": "coilix-docs",
+  "private": true,
+  "description": "Documentation site of Coilix",
+  "license": "Apache-2.0",
+  "scripts": {
+    "prestart": "node scripts/copy-changelog.mjs",
+    "start": "docusaurus start",
+    "prebuild": "node scripts/copy-changelog.mjs",
+    "build": "docusaurus build",
+    "serve": "docusaurus serve",
+    "clear": "docusaurus clear",
+    "write-translations": "docusaurus write-translations",
+    "check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-pages.mjs && node scripts/check-licenses.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@mdx-js/react": "3.1.1",
+    "prism-react-renderer": "2.4.1",
+    "raw-loader": "4.0.2",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@docusaurus/module-type-aliases": "3.10.2",
+    "@docusaurus/types": "3.10.2"
+  },
+  "overrides": {
+    "serialize-javascript": "7.1.4",
+    "tinypool": "2.2.0",
+    "uuid": "14.0.3"
+  }
+}
