@@ -7,6 +7,12 @@ import dotty.tools.dotc.core.Decorators.*
 import dotty.tools.dotc.core.Flags
 import dotty.tools.dotc.util.SourceFile
 
+/**
+ * Creates `private final val log = _root_.org.slf4j.LoggerFactory.getLogger("<name>")`.
+ *
+ * The type of the field is inferred, so it is `org.slf4j.Logger`. SLF4J must be on the compile class path of the module.
+ * This is the factory used by [[dev.coilix.slf4s.Slf4sTreeTransformer.default]].
+ */
 final class Slf4jLoggerFieldFactory extends LoggerFieldFactory {
 
   override def create(loggerName: String, source: SourceFile)(using Context): ValDef = {

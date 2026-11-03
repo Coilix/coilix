@@ -4,6 +4,13 @@ import dotty.tools.dotc.CompilationUnit
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.plugins.PluginPhase
 
+/**
+ * The compiler phase `slf4s`, which runs after parsing and before type checking, so the added field is type checked like
+ * hand-written code. Java sources are skipped.
+ *
+ * @param transformer
+ *   rewrites the syntax tree of each Scala compilation unit
+ */
 final class Slf4sPhase(transformer: Slf4sTreeTransformer) extends PluginPhase {
   override def phaseName: String = "slf4s"
 

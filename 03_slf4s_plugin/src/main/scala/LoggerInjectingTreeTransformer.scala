@@ -5,6 +5,21 @@ import dotty.tools.dotc.ast.untpd.*
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.util.SourceFile
 
+/**
+ * Walks packages, classes and objects, including nested ones, and adds the logger field to every definition the detector
+ * reports as annotated.
+ *
+ * The logger is named after the package and the enclosing definitions joined with dots, for example
+ * `com.example.Shop.Checkout` for class `Checkout` inside object `Shop`. A definition that already has a field named
+ * `log` is left unchanged, so a hand-written logger is never replaced.
+ *
+ * This is the implementation returned by [[dev.coilix.slf4s.Slf4sTreeTransformer.default]].
+ *
+ * @param detector
+ *   decides which definitions get a logger
+ * @param fieldFactory
+ *   creates the field
+ */
 final class LoggerInjectingTreeTransformer(
   detector:     Slf4sAnnotationDetector,
   fieldFactory: LoggerFieldFactory

@@ -5,6 +5,16 @@ import dev.coilix.annotation.Configuration
 import dev.coilix.annotation.Primary
 import java.lang.reflect.Method
 
+/**
+ * Finds the public `@Bean` methods of a `@Configuration` class.
+ *
+ * Each method gives a bean named after the `@Bean` value or the method name, registered under the method's return type and
+ * depending on the configuration bean and the method's parameters. Methods are processed by name. Classes without
+ * `@Configuration` give no definitions. This is the default [[dev.coilix.context.BeanMethodScanner]].
+ *
+ * @param parameterMapper
+ *   classifies method parameters
+ */
 final class ReflectiveBeanMethodScanner(parameterMapper: ParameterDependencyMapper) extends BeanMethodScanner {
 
   override def scan(owner: Class[?]): List[BeanDefinition] =
