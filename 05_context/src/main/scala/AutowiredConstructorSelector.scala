@@ -3,6 +3,13 @@ package dev.coilix.context
 import dev.coilix.annotation.Autowired
 import java.lang.reflect.Constructor
 
+/**
+ * Selects the public constructor annotated with `@Autowired`, or else the public constructor with the most parameters.
+ *
+ * This is the default [[dev.coilix.context.ConstructorSelector]]. Throws [[dev.coilix.context.NoPublicConstructorException]] for a
+ * class without public
+ * constructors.
+ */
 final class AutowiredConstructorSelector extends ConstructorSelector {
 
   override def select(beanClass: Class[?]): Constructor[?] =

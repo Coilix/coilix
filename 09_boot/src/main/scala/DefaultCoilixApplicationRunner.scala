@@ -10,6 +10,20 @@ import scala.concurrent.duration.DurationLong
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
+/**
+ * Runs the startup sequence: parses the arguments, loads the configuration with command-line options as overrides, logs the
+ * start, builds the context, registers the shutdown hook, logs the startup time and calls the runners.
+ *
+ * The arguments and the configuration are registered as beans named `applicationArguments` and `environment`. This is the
+ * implementation returned by [[dev.coilix.boot.CoilixApplicationRunner.default]].
+ *
+ * @param parser
+ *   splits the command-line arguments
+ * @param environmentLoader
+ *   loads the configuration
+ * @param assemble
+ *   creates the other startup components from the loaded configuration, so they can be replaced there
+ */
 final class DefaultCoilixApplicationRunner(
   parser:            ArgumentsParser,
   environmentLoader: EnvironmentLoader,
