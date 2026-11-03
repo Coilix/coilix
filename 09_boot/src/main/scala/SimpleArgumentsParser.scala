@@ -1,5 +1,12 @@
 package dev.coilix.boot
 
+/**
+ * Treats every argument that starts with `--` and has a name as an option: `--name=value` gives a value, `--name` gives an
+ * option without a value, and a repeated option collects all its values. Every other argument, including a lone `--`, is
+ * a non-option argument.
+ *
+ * This is the parser used by [[dev.coilix.boot.CoilixApplicationRunner.default]].
+ */
 final class SimpleArgumentsParser extends ArgumentsParser {
 
   private val optionPrefix = "--"
