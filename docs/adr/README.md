@@ -15,6 +15,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0007](0007-apache-license-and-dco.md) | Apache-2.0 i DCO zamiast CLA | przyjęta |
 | [0008](0008-squash-merge.md) | Scalanie przez squash, jeden PR to jedna zmiana | przyjęta |
 | [0009](0009-dev-coilix-namespace.md) | Przestrzeń nazw `dev.coilix` | przyjęta |
+| [0010](0010-docusaurus-documentation-site.md) | Strona dokumentacji w Docusaurusie pod `docs.coilix.dev` | przyjęta |
 
 ## Nowa decyzja
 
