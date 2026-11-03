@@ -127,8 +127,8 @@ Wspierana jest tylko najnowsza linia `MINOR`. Starsze linie dostają poprawki be
 
 Repozytorium jest publiczne od 2026-11-02 i ma reguły (rulesets) zapisane w [`.github/rulesets/`](../../.github/rulesets). Po zmianie reguły w ustawieniach GitHuba aktualizuje się też plik JSON, a nowe repozytorium konfiguruje się przez `gh api -X POST repos/<org>/<repo>/rulesets --input <plik>`.
 
-- `master` i `series/**`: zmiany tylko przez PR, wymagane zielone checki `Build on JDK 17`, `Build on JDK 25` i `Test coverage` na gałęzi aktualnej względem bazy, rozwiązane wątki przeglądu, liniowa historia, zakaz force-push i usuwania. Zatwierdzenie przez drugą osobę nie jest wymagane, dopóki projekt ma jednego opiekuna,
+- `master` i `series/**`: zmiany tylko przez PR, wymagane zielone checki `Build on JDK 17`, `Build on JDK 25`, `Test coverage` i `DCO` na gałęzi aktualnej względem bazy, rozwiązane wątki przeglądu, liniowa historia, zakaz force-push i usuwania. Zatwierdzenie przez drugą osobę nie jest wymagane, dopóki projekt ma jednego opiekuna,
 - tagi `v*`: tworzy je tylko administrator repozytorium, nikt nie może ich usunąć ani przesunąć,
 - metody scalania: tylko „Squash and merge”, z tytułem commita z tytułu PR i treścią z wiadomości commitów (`squash_merge_commit_title=PR_TITLE`, `squash_merge_commit_message=COMMIT_MESSAGES`),
 - „Automatically delete head branches” włączone,
-- aplikacja DCO sprawdzająca `Signed-off-by` w każdym commicie PR (do zainstalowania, wtedy jej check dochodzi do wymaganych).
+- aplikacja DCO sprawdzająca `Signed-off-by` w każdym commicie PR. Jej check `DCO` jest wymagany do scalenia.
