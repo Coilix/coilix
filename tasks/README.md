@@ -23,6 +23,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
+| COILIX-00020 | [Wsparcie efektów `F[_]` (cats-effect, ZIO)](COILIX-00020_effect_types.md) | średni | do analizy, przed `1.0` |
 
 Zależności między taskami:
 
@@ -41,6 +42,7 @@ Zależności między taskami:
 - COILIX-00015 zmienia `RegisteredBean`, z którego korzysta `@PreDestroy` z COILIX-00004, więc idzie po nim.
 - COILIX-00016 potrzebuje `close()` i `@PreDestroy` z COILIX-00004 dla zdarzenia `ContextClosing`.
 - COILIX-00018 wymaga pierwszego wydania z COILIX-00009.
+- COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów) i z modułów z COILIX-00010. Zmiany w rdzeniu, których wymaga, powinny trafić przed `1.0`.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
