@@ -1,6 +1,6 @@
 # 0009: Przestrzeń nazw `dev.coilix`
 
-- Status: proponowana
+- Status: przyjęta
 - Data: 2026-11-03
 - Task: COILIX-00019
 
