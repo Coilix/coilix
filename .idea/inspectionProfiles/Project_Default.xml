@@ -2,6 +2,7 @@
   <profile version="1.0">
     <option name="myName" value="Project Default" />
     <inspection_tool class="AbstractValueInTrait" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="AbsoluteImport" enabled="false" level="WARNING" enabled_by_default="false" />
     <inspection_tool class="AutoTupling" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="ComparingLength" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="DeprecatedPackageObject" enabled="true" level="WARNING" enabled_by_default="true" />
