@@ -1,3 +1,4 @@
-package dev.coilix.boot.scan
+package dev.coilix.boot
+package scan
 
 object NotAnnotatedApplication

@@ -1,4 +1,5 @@
-package dev.coilix.boot.scan
+package dev.coilix.boot
+package scan
 
 import dev.coilix.annotation.CoilixApplication
 

@@ -1,4 +1,5 @@
-package dev.coilix.context.configured
+package dev.coilix.context
+package configured
 
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Value
