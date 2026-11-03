@@ -1,7 +1,7 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.annotation.CoilixApplication
-import io.github.coilix.boot.Coilix
+import dev.coilix.annotation.CoilixApplication
+import dev.coilix.boot.Coilix
 
 @CoilixApplication
 object DemoApplication {

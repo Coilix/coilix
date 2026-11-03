@@ -1,8 +1,8 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.ConfigPath
-import io.github.coilix.context.ApplicationContext
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigPath
+import dev.coilix.context.ApplicationContext
 
 trait RunnerInvoker {
   def invoke(context: ApplicationContext, arguments: ApplicationArguments): Unit

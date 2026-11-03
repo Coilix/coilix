@@ -2,7 +2,7 @@
 
 Framework IoC dla Scali 3 z API wzorowanym na Springu. Build: sbt 2, testy: munit. Licencja: Apache-2.0 (`docs/legal/`).
 
-Artefakty mają `groupId` `io.github.coilix`, pakiety `io.github.coilix.*`, a klucze configu prefiks `coilix.*`. Repozytorium: [Coilix/coilix](https://github.com/Coilix/coilix). Identyfikatory tasków mają prefiks `COILIX-`.
+Artefakty mają `groupId` `dev.coilix`, pakiety `dev.coilix.*`, a klucze configu prefiks `coilix.*`. Repozytorium: [Coilix/coilix](https://github.com/Coilix/coilix). Identyfikatory tasków mają prefiks `COILIX-`.
 
 ## Moduły
 
@@ -12,17 +12,17 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 
 | Katalog | Projekt sbt | Pakiet | Język | Zawartość |
 |---|---|---|---|---|
-| `01_common` | `common` | `io.github.coilix.common` | Scala | wspólne typy i rozszerzenia |
-| `02_annotations` | `annotations` | `io.github.coilix.annotation` | Java | adnotacje runtime |
-| `03_slf4s_plugin` | `slf4s-plugin` | `io.github.coilix.slf4s` | Scala | plugin kompilatora `@Slf4s` |
-| `04_config` | `config` | `io.github.coilix.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
-| `05_context` | `context` | `io.github.coilix.context` | Scala | kontener IoC |
-| `06_data` | `data` | `io.github.coilix.data` | Scala | bazy danych (planowane) |
-| `07_web` | `web` | `io.github.coilix.web` | Scala | endpointy (planowane) |
-| `08_security` | `security` | `io.github.coilix.security` | Scala | security (planowane) |
-| `09_boot` | `boot` | `io.github.coilix.boot` | Scala | start aplikacji |
-| `10_demo` | `demo` | `io.github.coilix.demo` | Scala | aplikacja demo |
-| `11_intellij_plugin` | `intellij-plugin` | `io.github.coilix.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
+| `01_common` | `common` | `dev.coilix.common` | Scala | wspólne typy i rozszerzenia |
+| `02_annotations` | `annotations` | `dev.coilix.annotation` | Java | adnotacje runtime |
+| `03_slf4s_plugin` | `slf4s-plugin` | `dev.coilix.slf4s` | Scala | plugin kompilatora `@Slf4s` |
+| `04_config` | `config` | `dev.coilix.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
+| `05_context` | `context` | `dev.coilix.context` | Scala | kontener IoC |
+| `06_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
+| `07_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
+| `08_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
+| `09_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
+| `10_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
+| `11_intellij_plugin` | `intellij-plugin` | `dev.coilix.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
 
 `11_intellij_plugin` to jedyny moduł w Scali 2.13, bo działa w classloaderze pluginu Scala dla IntelliJ (opis w `11_intellij_plugin/README.md`).
 
@@ -57,7 +57,7 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 - Małe metody z jedną odpowiedzialnością. Gałąź `case`, `if` albo `for`/`yield` dłuższa niż jedna linia idzie do osobnej metody, nie do bloku.
 - Delegowanie zamiast rozbudowanych metod. Kod rozdrobniony, ale czysty.
 - Bez zwykłych komentarzy (`//`, `/* */`). Jedyne dozwolone komentarze to Scaladoc i Javadoc według sekcji „Dokumentacja”.
-- Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `io.github.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
+- Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `dev.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
 - Java i Scala w osobnych modułach. Java tylko tam, gdzie jest wymagana (adnotacje runtime).
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt (konfiguracja w `.scalafmt.conf`) i google-java-format w stylu AOSP dla Javy (`sbt-java-formatter`), lokalnie przy każdej kompilacji. W CI formatowanie przy kompilacji jest wyłączone (`insideCI`), a krok `Check formatting` przerywa build, gdy kod albo pliki buildu (`*.sbt`, `project/*.scala`) nie są sformatowane. Każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
@@ -77,7 +77,7 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 - Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`10`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]`, testy i moduł `11_intellij_plugin`.
 - Komentarz opisuje kontrakt (co robi, co zwraca, kiedy rzuca wyjątek), a nie implementację. Pierwsze zdanie to samodzielne podsumowanie, bo trafia na listę członków typu.
 - Parametry opisuje się przez `@param`, `@tparam`, `@return` i `@throws` tylko wtedy, gdy nazwa i typ nie mówią wszystkiego. Nie powtarza się sygnatury słowami.
-- Do innych typów linkuje się przez `[[io.github.coilix.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
+- Do innych typów linkuje się przez `[[dev.coilix.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
 - Przykład użycia w bloku kodu ` ```scala ` dodaje się do API, którego używa programista aplikacji: adnotacje, `ApplicationContext`, `CoilixApplication`, `ConfigPath` i punkty rozszerzeń podmieniane kluczem `class`.
 - Implementacja traitu (`Default*`, `Reflective*` itd.) ma komentarz na poziomie klasy: czym różni się od innych implementacji i jaki klucz configu ją wybiera. Metod nadpisujących nie dokumentuje się ponownie, bo Scaladoc dziedziczy opis z traitu. Komentarz przy nadpisaniu dodaje się tylko, gdy zachowanie zawęża albo rozszerza kontrakt.
 - Obiekt towarzyszący traitu komponentu opisuje swój `ConfigPath` (klucz w configu) i domyślną implementację z `default`.

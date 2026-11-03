@@ -11,7 +11,7 @@ demo:
 coilix:
   boot:
     startup-message-formatter:
-      class: io.github.coilix.demo.PrefixedStartupMessageFormatter
+      class: dev.coilix.demo.PrefixedStartupMessageFormatter
       prefix: "[demo]"
       delegate:
-        class: io.github.coilix.boot.DefaultStartupMessageFormatter
+        class: dev.coilix.boot.DefaultStartupMessageFormatter

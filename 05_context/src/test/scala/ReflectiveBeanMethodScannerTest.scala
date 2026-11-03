@@ -1,10 +1,10 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.configured.Salutation
-import io.github.coilix.context.configured.SalutationConfiguration
-import io.github.coilix.context.configured.ServerSettings
-import io.github.coilix.context.configured.Signature
-import io.github.coilix.context.wiring.EnglishGreeter
+import dev.coilix.context.configured.Salutation
+import dev.coilix.context.configured.SalutationConfiguration
+import dev.coilix.context.configured.ServerSettings
+import dev.coilix.context.configured.Signature
+import dev.coilix.context.wiring.EnglishGreeter
 import munit.FunSuite
 
 final class ReflectiveBeanMethodScannerTest extends FunSuite {

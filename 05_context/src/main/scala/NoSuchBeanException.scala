@@ -1,7 +1,7 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.common.ClassTags.runtimeTypeOf
-import io.github.coilix.common.CoilixException
+import dev.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.common.CoilixException
 import scala.reflect.ClassTag
 
 final class NoSuchBeanException(message: String) extends CoilixException(message)

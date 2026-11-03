@@ -1,3 +1,3 @@
-package io.github.coilix.context.wiring
+package dev.coilix.context.wiring
 
 final class UnannotatedBean

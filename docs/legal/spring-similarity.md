@@ -70,11 +70,11 @@ Odrzucone kandydatury:
 - wyszukiwarka nie zwraca produktu, firmy ani znaku o tej nazwie (najbliższa jest firma „Coelix”, inna pisownia i inna branża),
 - Maven Central: brak artefaktów `coilix*`,
 - `coilix.dev` i `coilix.io` niezarejestrowane (RDAP zwraca 404),
-- organizacja GitHub [Coilix](https://github.com/Coilix) założona przez autora. Istnieje nieaktywne konto użytkownika `Coillix` (podwójne „l”, założone w 2014, 0 repozytoriów), co nie koliduje z przestrzenią nazw `io.github.coilix`.
+- organizacja GitHub [Coilix](https://github.com/Coilix) założona przez autora. Istnieje nieaktywne konto użytkownika `Coillix` (podwójne „l”, założone w 2014, 0 repozytoriów), co nie koliduje z nazwą organizacji.
 
 Rejestry znaków towarowych sprawdzone ręcznie 2026-10-30: EUIPO (TMview) i USPTO nie mają znaku „Coilix”.
 
-Domena `coilix.dev` na razie nie jest kupiona. `groupId` zostaje `io.github.coilix`, więc domena nie jest potrzebna do publikacji, ale ktoś inny może ją zająć.
+Domena `coilix.dev` należy do projektu od 2026-11-02 i wyznacza `groupId` `dev.coilix` ([ADR 0009](../adr/0009-dev-coilix-namespace.md)). Domena `coilix.com` jest zajęta przez kogoś innego.
 
 ## Działania
 

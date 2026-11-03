@@ -12,8 +12,8 @@ Coilix is a dependency injection and application framework for Scala 3. Its API 
 ## Example
 
 ```scala
-import io.github.coilix.annotation.{CoilixApplication, Component, Service, Slf4s}
-import io.github.coilix.boot.{ApplicationArguments, ApplicationRunner, Coilix}
+import dev.coilix.annotation.{CoilixApplication, Component, Service, Slf4s}
+import dev.coilix.boot.{ApplicationArguments, ApplicationRunner, Coilix}
 
 trait UserService {
   def listUsers(): List[String]
@@ -64,10 +64,10 @@ object App {
 
 ## Installation
 
-Coilix has not been released yet. The first release will be published to Maven Central under the `io.github.coilix` group:
+Coilix has not been released yet. The first release will be published to Maven Central under the `dev.coilix` group:
 
 ```scala
-libraryDependencies += "io.github.coilix" %% "coilix-boot" % "<version>"
+libraryDependencies += "dev.coilix" %% "coilix-boot" % "<version>"
 ```
 
 Requirements: Scala 3.9 or newer and JDK 17 or newer.

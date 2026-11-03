@@ -1,4 +1,4 @@
-package io.github.coilix.config
+package dev.coilix.config
 
 import com.typesafe.config.ConfigFactory
 

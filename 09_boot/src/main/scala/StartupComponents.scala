@@ -1,6 +1,6 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.config.ComponentProvider
+import dev.coilix.config.ComponentProvider
 
 final case class StartupComponents(
   resolver:      BasePackageResolver,

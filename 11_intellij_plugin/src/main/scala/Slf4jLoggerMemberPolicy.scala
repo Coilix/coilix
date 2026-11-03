@@ -1,4 +1,4 @@
-package io.github.coilix.intellij
+package dev.coilix.intellij
 
 final class Slf4jLoggerMemberPolicy(matcher: Slf4sAnnotationMatcher) extends LoggerMemberPolicy {
   private val loggerName   = "log"

@@ -1,4 +1,4 @@
-package io.github.coilix.context
+package dev.coilix.context
 
 final case class BeanDefinition(
   beanName:     String,

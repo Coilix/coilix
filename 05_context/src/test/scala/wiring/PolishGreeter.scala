@@ -1,7 +1,7 @@
-package io.github.coilix.context.wiring
+package dev.coilix.context.wiring
 
-import io.github.coilix.annotation.Component
-import io.github.coilix.annotation.Primary
+import dev.coilix.annotation.Component
+import dev.coilix.annotation.Primary
 
 @Component
 @Primary

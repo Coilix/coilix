@@ -1,4 +1,4 @@
-package io.github.coilix.boot.fixture
+package dev.coilix.boot.fixture
 
 trait Clock {
   def now: Long

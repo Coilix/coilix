@@ -1,4 +1,4 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
 final class SimpleArgumentsParser extends ArgumentsParser {
 

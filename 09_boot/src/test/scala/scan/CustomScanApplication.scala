@@ -1,6 +1,6 @@
-package io.github.coilix.boot.scan
+package dev.coilix.boot.scan
 
-import io.github.coilix.annotation.CoilixApplication
+import dev.coilix.annotation.CoilixApplication
 
-@CoilixApplication(scanBasePackages = Array("io.github.coilix.boot.fixture", "io.github.coilix.boot.empty"))
+@CoilixApplication(scanBasePackages = Array("dev.coilix.boot.fixture", "dev.coilix.boot.empty"))
 object CustomScanApplication

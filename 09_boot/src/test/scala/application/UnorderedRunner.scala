@@ -1,8 +1,8 @@
-package io.github.coilix.boot.application
+package dev.coilix.boot.application
 
-import io.github.coilix.annotation.Component
-import io.github.coilix.boot.ApplicationArguments
-import io.github.coilix.boot.ApplicationRunner
+import dev.coilix.annotation.Component
+import dev.coilix.boot.ApplicationArguments
+import dev.coilix.boot.ApplicationRunner
 
 @Component
 final class UnorderedRunner(journal: RunJournal) extends ApplicationRunner {

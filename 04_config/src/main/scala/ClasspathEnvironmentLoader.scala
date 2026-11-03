@@ -1,9 +1,9 @@
-package io.github.coilix.config
+package dev.coilix.config
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
-import io.github.coilix.annotation.Slf4s
+import dev.coilix.annotation.Slf4s
 import java.net.URL
 import scala.jdk.CollectionConverters.*
 

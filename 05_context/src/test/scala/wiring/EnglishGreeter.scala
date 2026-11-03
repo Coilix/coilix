@@ -1,6 +1,6 @@
-package io.github.coilix.context.wiring
+package dev.coilix.context.wiring
 
-import io.github.coilix.annotation.Component
+import dev.coilix.annotation.Component
 
 @Component
 final class EnglishGreeter extends Greeter {

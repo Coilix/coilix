@@ -1,12 +1,12 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.ConfigPath
-import io.github.coilix.context.ApplicationContextBuilder
-import io.github.coilix.context.BeanDefinition
-import io.github.coilix.context.ClassPathScanner
-import io.github.coilix.context.ConfigurableApplicationContext
-import io.github.coilix.context.RegisteredBean
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigPath
+import dev.coilix.context.ApplicationContextBuilder
+import dev.coilix.context.BeanDefinition
+import dev.coilix.context.ClassPathScanner
+import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.RegisteredBean
 
 trait CoilixBootstrap {
   def start(

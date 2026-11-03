@@ -1,8 +1,8 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.ConfigPath
-import io.github.coilix.context.ConfigurableApplicationContext
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigPath
+import dev.coilix.context.ConfigurableApplicationContext
 
 trait ShutdownHookRegistrar {
   def register(context: ConfigurableApplicationContext): Thread

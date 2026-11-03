@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.wiring.Farewell
+import dev.coilix.context.wiring.Farewell
 import munit.FunSuite
 
 final class NoSuchBeanExceptionTest extends FunSuite {

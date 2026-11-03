@@ -1,3 +1,3 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
 trait OptService

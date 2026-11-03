@@ -1,6 +1,6 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.annotation.Slf4s
+import dev.coilix.annotation.Slf4s
 
 @Slf4s
 final class ConfigComponentProvider(override val environment: Environment) extends ComponentProvider {

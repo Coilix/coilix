@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.Environment
+import dev.coilix.config.Environment
 
 final case class PropertiesInstanceFactory(environment: Environment, prefix: String, beanClass: Class[?]) extends InstanceFactory {
 

@@ -1,7 +1,7 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.boot.fixture.Clock
-import io.github.coilix.boot.scan.CustomScanApplication
+import dev.coilix.boot.fixture.Clock
+import dev.coilix.boot.scan.CustomScanApplication
 import munit.FunSuite
 
 final class CoilixTest extends FunSuite {

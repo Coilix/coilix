@@ -1,4 +1,4 @@
-package io.github.coilix.intellij
+package dev.coilix.intellij
 
 trait Slf4sAnnotationMatcher {
   def matches(annotationType: String): Boolean

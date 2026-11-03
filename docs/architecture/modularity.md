@@ -19,7 +19,7 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 
 1. **Rdzeń i `boot` nie znają modułów funkcji.** Nie zależą od nich w `build.sbt` i nie odwołują się do ich klas, nawet przez nazwę w stringu.
 2. **Moduły funkcji nie zależą od siebie nawzajem.** Połączenie dwóch funkcji (np. security dla endpointów HTTP) idzie do osobnego modułu integracyjnego, który zależy od obu.
-3. **Moduł funkcji podłącza się przez SPI.** Udostępnia implementację traitu `CoilixModule` z `context` i rejestruje ją w `META-INF/services/io.github.coilix.context.CoilixModule`. `boot` wczytuje moduły z classpath przez `java.util.ServiceLoader` i dodaje ich definicje beanów do kontekstu.
+3. **Moduł funkcji podłącza się przez SPI.** Udostępnia implementację traitu `CoilixModule` z `context` i rejestruje ją w `META-INF/services/dev.coilix.context.CoilixModule`. `boot` wczytuje moduły z classpath przez `java.util.ServiceLoader` i dodaje ich definicje beanów do kontekstu.
 4. **Moduł można wyłączyć w configu** (`coilix.modules.<nazwa>.enabled = false`) mimo obecności na classpath.
 5. **Ciężkie zależności zewnętrzne tylko w modułach funkcji.** Rdzeń zależy wyłącznie od biblioteki Scali, `slf4j-api`, bibliotek configu i skanera classpath. Serwer HTTP, JDBC i kryptografia nie mogą trafić do rdzenia.
 6. **Adnotacje.** Adnotacje rdzenia są w `annotations`. Adnotacje konkretnej funkcji (np. mapowania HTTP) trafiają do osobnego modułu Java tej funkcji (np. `web-annotations`), żeby `annotations` nie rosło o rzeczy niepotrzebne aplikacji bez tej funkcji.

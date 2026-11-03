@@ -1,11 +1,11 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.cycle.Chicken
-import io.github.coilix.context.cycle.Egg
-import io.github.coilix.context.wiring.ContextAwareBean
-import io.github.coilix.context.wiring.DefaultGreetingService
-import io.github.coilix.context.wiring.EnglishGreeter
-import io.github.coilix.context.wiring.PolishGreeter
+import dev.coilix.context.cycle.Chicken
+import dev.coilix.context.cycle.Egg
+import dev.coilix.context.wiring.ContextAwareBean
+import dev.coilix.context.wiring.DefaultGreetingService
+import dev.coilix.context.wiring.EnglishGreeter
+import dev.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
 
 final class TopologicalDependencyResolverTest extends FunSuite {

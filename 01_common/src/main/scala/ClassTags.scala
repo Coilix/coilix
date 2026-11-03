@@ -1,4 +1,4 @@
-package io.github.coilix.common
+package dev.coilix.common
 
 import scala.reflect.ClassTag
 
@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
  * place, which lets APIs take `[T: ClassTag]` instead of an explicit `Class[T]` parameter.
  *
  * ```scala
- * import io.github.coilix.common.ClassTags.runtimeTypeOf
+ * import dev.coilix.common.ClassTags.runtimeTypeOf
  *
  * def beanOf[T: ClassTag](beans: List[AnyRef]): Option[T] =
  *   beans.collectFirst { case bean if runtimeTypeOf[T].isInstance(bean) => runtimeTypeOf[T].cast(bean) }

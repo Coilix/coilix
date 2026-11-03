@@ -1,13 +1,13 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.boot.application.FirstRunner
-import io.github.coilix.boot.application.RunJournal
-import io.github.coilix.boot.application.SecondRunner
-import io.github.coilix.boot.application.UnorderedRunner
-import io.github.coilix.context.DefaultApplicationContext
-import io.github.coilix.context.ImmutableBeanRegistry
-import io.github.coilix.context.PrimaryCandidateSelector
-import io.github.coilix.context.RegisteredBean
+import dev.coilix.boot.application.FirstRunner
+import dev.coilix.boot.application.RunJournal
+import dev.coilix.boot.application.SecondRunner
+import dev.coilix.boot.application.UnorderedRunner
+import dev.coilix.context.DefaultApplicationContext
+import dev.coilix.context.ImmutableBeanRegistry
+import dev.coilix.context.PrimaryCandidateSelector
+import dev.coilix.context.RegisteredBean
 import munit.FunSuite
 
 final class OrderedRunnerInvokerTest extends FunSuite {

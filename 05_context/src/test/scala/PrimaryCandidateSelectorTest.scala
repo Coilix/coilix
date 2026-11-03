@@ -1,9 +1,9 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.wiring.EnglishGreeter
-import io.github.coilix.context.wiring.Farewell
-import io.github.coilix.context.wiring.Greeter
-import io.github.coilix.context.wiring.PolishGreeter
+import dev.coilix.context.wiring.EnglishGreeter
+import dev.coilix.context.wiring.Farewell
+import dev.coilix.context.wiring.Greeter
+import dev.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
 
 final class PrimaryCandidateSelectorTest extends FunSuite {

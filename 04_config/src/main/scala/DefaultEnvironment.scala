@@ -1,6 +1,6 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.common.ClassTags.runtimeTypeOf
 import java.lang.reflect.Type
 import scala.reflect.ClassTag
 

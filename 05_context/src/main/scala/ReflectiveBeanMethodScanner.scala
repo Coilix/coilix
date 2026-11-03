@@ -1,8 +1,8 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.annotation.Bean
-import io.github.coilix.annotation.Configuration
-import io.github.coilix.annotation.Primary
+import dev.coilix.annotation.Bean
+import dev.coilix.annotation.Configuration
+import dev.coilix.annotation.Primary
 import java.lang.reflect.Method
 
 final class ReflectiveBeanMethodScanner(parameterMapper: ParameterDependencyMapper) extends BeanMethodScanner {

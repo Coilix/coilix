@@ -1,7 +1,7 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.boot.ApplicationArguments
-import io.github.coilix.boot.Coilix
+import dev.coilix.boot.ApplicationArguments
+import dev.coilix.boot.Coilix
 import munit.FunSuite
 import scala.concurrent.duration.DurationInt
 

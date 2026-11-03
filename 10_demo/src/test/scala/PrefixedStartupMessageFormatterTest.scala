@@ -1,6 +1,6 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.boot.DefaultStartupMessageFormatter
+import dev.coilix.boot.DefaultStartupMessageFormatter
 import munit.FunSuite
 import scala.concurrent.duration.DurationInt
 

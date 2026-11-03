@@ -1,6 +1,6 @@
-package io.github.coilix.demo
+package dev.coilix.demo
 
-import io.github.coilix.boot.StartupMessageFormatter
+import dev.coilix.boot.StartupMessageFormatter
 import scala.concurrent.duration.FiniteDuration
 
 final class PrefixedStartupMessageFormatter(prefix: String, delegate: StartupMessageFormatter) extends StartupMessageFormatter {

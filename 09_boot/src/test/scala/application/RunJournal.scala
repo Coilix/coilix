@@ -1,6 +1,6 @@
-package io.github.coilix.boot.application
+package dev.coilix.boot.application
 
-import io.github.coilix.annotation.Component
+import dev.coilix.annotation.Component
 import java.util.concurrent.atomic.AtomicReference
 
 @Component

@@ -1,6 +1,6 @@
-package io.github.coilix.boot.fixture
+package dev.coilix.boot.fixture
 
-import io.github.coilix.annotation.Component
+import dev.coilix.annotation.Component
 
 @Component
 final class FixedClock extends Clock {

@@ -1,6 +1,6 @@
-package io.github.coilix.common
+package dev.coilix.common
 
-import io.github.coilix.common.ClassTags.*
+import dev.coilix.common.ClassTags.*
 import munit.FunSuite
 import scala.reflect.ClassTag
 

@@ -1,12 +1,12 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.boot.application.ArgumentsAwareBean
-import io.github.coilix.boot.application.FixtureApplication
-import io.github.coilix.boot.application.RunJournal
-import io.github.coilix.config.ClasspathEnvironmentLoader
-import io.github.coilix.config.ConfigFormat
-import io.github.coilix.config.Environment
-import io.github.coilix.context.ConfigurableApplicationContext
+import dev.coilix.boot.application.ArgumentsAwareBean
+import dev.coilix.boot.application.FixtureApplication
+import dev.coilix.boot.application.RunJournal
+import dev.coilix.config.ClasspathEnvironmentLoader
+import dev.coilix.config.ConfigFormat
+import dev.coilix.config.Environment
+import dev.coilix.context.ConfigurableApplicationContext
 import java.util.concurrent.atomic.AtomicReference
 import munit.FunSuite
 

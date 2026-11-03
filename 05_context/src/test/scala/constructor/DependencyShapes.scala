@@ -1,6 +1,6 @@
-package io.github.coilix.context.constructor
+package dev.coilix.context.constructor
 
-import io.github.coilix.context.wiring.Greeter
+import dev.coilix.context.wiring.Greeter
 
 final class DependencyShapes(
   val required: Greeter,

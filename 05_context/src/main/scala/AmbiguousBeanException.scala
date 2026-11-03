@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.common.CoilixException
+import dev.coilix.common.CoilixException
 
 final class AmbiguousBeanException(requested: Class[?], candidates: List[String])
     extends CoilixException(

@@ -1,6 +1,6 @@
-package io.github.coilix.boot.application
+package dev.coilix.boot.application
 
-import io.github.coilix.annotation.CoilixApplication
+import dev.coilix.annotation.CoilixApplication
 
 @CoilixApplication
 object FixtureApplication

@@ -1,9 +1,9 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
 import com.typesafe.config.ConfigFactory
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.Environment
-import io.github.coilix.config.TypesafeConfigTree
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.Environment
+import dev.coilix.config.TypesafeConfigTree
 import munit.FunSuite
 
 final class StartupComponentsTest extends FunSuite {
@@ -27,9 +27,9 @@ final class StartupComponentsTest extends FunSuite {
   test("replaces a nested component from configuration") {
     val configured = provider(
       """coilix.boot.startup-message-formatter {
-        |  class = io.github.coilix.boot.overrides.TaggedStartupMessageFormatter
+        |  class = dev.coilix.boot.overrides.TaggedStartupMessageFormatter
         |  tag = "[app]"
-        |  delegate.class = io.github.coilix.boot.DefaultStartupMessageFormatter
+        |  delegate.class = dev.coilix.boot.DefaultStartupMessageFormatter
         |}""".stripMargin
     )
     assertEquals(StartupMessageFormatter.default(using configured).starting("Demo"), "[app] Launching Demo")

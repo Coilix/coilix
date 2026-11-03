@@ -54,6 +54,6 @@ Zrobione: punkty 1–5 bez pluginu IntelliJ, MiMa z punktu 6 i opis wydania w `d
 
 Zostaje:
 
-- sekrety `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` w repozytorium i weryfikacja przestrzeni nazw `io.github.coilix` w Central Portal (wymaga konta autora),
+- sekrety `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` w repozytorium i weryfikacja przestrzeni nazw `dev.coilix` w Central Portal rekordem DNS TXT w domenie `coilix.dev` (wymaga konta autora),
 - TASTy-MiMa: brak wtyczki dla sbt 2,
 - budowa, podpis i publikacja pluginu IntelliJ do Marketplace (z wersją z tagu w `plugin.xml`).

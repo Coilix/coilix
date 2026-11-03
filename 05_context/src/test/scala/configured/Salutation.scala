@@ -1,4 +1,4 @@
-package io.github.coilix.context.configured
+package dev.coilix.context.configured
 
 trait Salutation {
   def salute(name: String): String

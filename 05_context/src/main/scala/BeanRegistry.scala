@@ -1,4 +1,4 @@
-package io.github.coilix.context
+package dev.coilix.context
 
 trait BeanRegistry {
   def beans: List[RegisteredBean]

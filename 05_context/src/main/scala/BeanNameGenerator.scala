@@ -1,7 +1,7 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.ConfigPath
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigPath
 
 trait BeanNameGenerator {
   def generate(beanClass: Class[?]): String

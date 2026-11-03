@@ -14,7 +14,7 @@ Dodatkowo każdy wewnętrzny komponent frameworka (np. `ConstructorSelector`) da
 
 ## Zakres
 
-1. Nowy moduł `04_config` (`io.github.coilix.config`). Kolejne moduły przesuwają się o jeden numer (`05_context` ... `11_intellij_plugin`).
+1. Nowy moduł `04_config` (`dev.coilix.config`). Kolejne moduły przesuwają się o jeden numer (`05_context` ... `11_intellij_plugin`).
 2. Ładowanie configu:
    - formaty HOCON (`.conf`), properties i YAML. Wszystkie lądują w jednym drzewie (Typesafe Config, YAML przez snakeyaml-engine),
    - kolejność ważności (od najwyższej): opcje `--klucz=wartość` z linii poleceń, właściwości systemowe JVM, `application.properties`, `application.yaml`, `application.yml`, `application.conf`,
@@ -41,7 +41,7 @@ Przykład nadpisania:
 
 ```hocon
 coilix.boot.startup-message-formatter {
-  class = "io.github.coilix.demo.DemoStartupMessageFormatter"
+  class = "dev.coilix.demo.DemoStartupMessageFormatter"
   prefix = ">>"
 }
 ```

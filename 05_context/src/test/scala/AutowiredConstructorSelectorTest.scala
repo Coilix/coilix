@@ -1,8 +1,8 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.context.constructor.AutowiredConstructorBean
-import io.github.coilix.context.constructor.HiddenConstructorBean
-import io.github.coilix.context.constructor.WidestConstructorBean
+import dev.coilix.context.constructor.AutowiredConstructorBean
+import dev.coilix.context.constructor.HiddenConstructorBean
+import dev.coilix.context.constructor.WidestConstructorBean
 import munit.FunSuite
 
 final class AutowiredConstructorSelectorTest extends FunSuite {

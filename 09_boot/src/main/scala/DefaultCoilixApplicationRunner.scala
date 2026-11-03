@@ -1,11 +1,11 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
-import io.github.coilix.common.ClassTags.runtimeTypeOf
-import io.github.coilix.config.ComponentProvider
-import io.github.coilix.config.Environment
-import io.github.coilix.config.EnvironmentLoader
-import io.github.coilix.context.ConfigurableApplicationContext
-import io.github.coilix.context.RegisteredBean
+import dev.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.config.ComponentProvider
+import dev.coilix.config.Environment
+import dev.coilix.config.EnvironmentLoader
+import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.RegisteredBean
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag

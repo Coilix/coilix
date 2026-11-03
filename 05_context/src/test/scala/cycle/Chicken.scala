@@ -1,6 +1,6 @@
-package io.github.coilix.context.cycle
+package dev.coilix.context.cycle
 
-import io.github.coilix.annotation.Component
+import dev.coilix.annotation.Component
 
 @Component
 final class Chicken(val egg: Egg)

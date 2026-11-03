@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ComponentProvider
+import dev.coilix.config.ComponentProvider
 
 object Definitions {
   def of(classes: Class[?]*): List[BeanDefinition] =

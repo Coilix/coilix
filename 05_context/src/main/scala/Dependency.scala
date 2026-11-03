@@ -1,6 +1,6 @@
-package io.github.coilix.context
+package dev.coilix.context
 
-import io.github.coilix.config.ValueExpression
+import dev.coilix.config.ValueExpression
 import java.lang.reflect.Type
 
 enum Dependency {

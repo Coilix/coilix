@@ -1,9 +1,9 @@
-package io.github.coilix.config
+package dev.coilix.config
 
-import io.github.coilix.config.fixture.Greeting
-import io.github.coilix.config.fixture.Limits
-import io.github.coilix.config.fixture.MailSettings
-import io.github.coilix.config.fixture.PlainGreeting
+import dev.coilix.config.fixture.Greeting
+import dev.coilix.config.fixture.Limits
+import dev.coilix.config.fixture.MailSettings
+import dev.coilix.config.fixture.PlainGreeting
 import munit.FunSuite
 import scala.concurrent.duration.DurationInt
 
@@ -46,17 +46,17 @@ final class ReflectiveConfigBinderTest extends FunSuite {
   }
 
   test("creates the class named under the class key") {
-    val tree = ConfigTrees.parse("greeting.class = io.github.coilix.config.fixture.PlainGreeting")
+    val tree = ConfigTrees.parse("greeting.class = dev.coilix.config.fixture.PlainGreeting")
     assertEquals(binder.bind(tree, "greeting", classOf[Greeting]).getClass, classOf[PlainGreeting])
   }
 
   test("binds constructor parameters of the configured class recursively") {
     val tree = ConfigTrees.parse(
       """greeting {
-        |  class = io.github.coilix.config.fixture.DecoratedGreeting
+        |  class = dev.coilix.config.fixture.DecoratedGreeting
         |  suffix = "!"
         |  service {
-        |    class = io.github.coilix.config.fixture.PrefixGreeting
+        |    class = dev.coilix.config.fixture.PrefixGreeting
         |    prefix = Hello
         |  }
         |}""".stripMargin
@@ -82,7 +82,7 @@ final class ReflectiveConfigBinderTest extends FunSuite {
   }
 
   test("fails when a constructor parameter is not configured") {
-    val tree  = ConfigTrees.parse("greeting.class = io.github.coilix.config.fixture.DecoratedGreeting")
+    val tree  = ConfigTrees.parse("greeting.class = dev.coilix.config.fixture.DecoratedGreeting")
     val error = intercept[ConfigurationException](binder.bind(tree, "greeting", classOf[Greeting]))
     assert(error.getMessage.contains("greeting.service"))
   }
@@ -92,7 +92,7 @@ final class ReflectiveConfigBinderTest extends FunSuite {
   }
 
   test("reports a failing constructor") {
-    val tree = ConfigTrees.parse("greeting.class = io.github.coilix.config.fixture.FailingGreeting")
+    val tree = ConfigTrees.parse("greeting.class = dev.coilix.config.fixture.FailingGreeting")
     intercept[ConfigurationException](binder.bind(tree, "greeting", classOf[Greeting]))
   }
 

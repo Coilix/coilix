@@ -1,4 +1,4 @@
-package io.github.coilix.boot
+package dev.coilix.boot
 
 import scala.concurrent.duration.FiniteDuration
 import scala.math.BigDecimal.RoundingMode

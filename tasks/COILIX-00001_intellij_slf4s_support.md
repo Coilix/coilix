@@ -17,7 +17,7 @@ To wyłącznie wsparcie IDE. Kompilacją zajmuje się już `03_slf4s_plugin`.
 - Szczegółowa specyfikacja jest w [docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md](../docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md). Część jej treści jest nieaktualna:
   - ścieżka `src/main/scala/demo/DemoBeans.scala` już nie istnieje,
   - build-time rewrite w sbt został zastąpiony pluginem kompilatora,
-  - adnotacja ma teraz pełną nazwę `io.github.coilix.annotation.Slf4s`.
+  - adnotacja ma teraz pełną nazwę `dev.coilix.annotation.Slf4s`.
 
 ## Zakres
 
