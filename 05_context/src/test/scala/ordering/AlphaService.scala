@@ -1,4 +1,5 @@
-package dev.coilix.context.ordering
+package dev.coilix.context
+package ordering
 
 import dev.coilix.annotation.Service
 
