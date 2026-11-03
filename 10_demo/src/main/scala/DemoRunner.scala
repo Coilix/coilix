@@ -6,6 +6,12 @@ import dev.coilix.annotation.Slf4s
 import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ApplicationRunner
 
+/**
+ * Runner that shows the main kinds of dependencies: a primary bean, an optional bean that does not exist, a list of beans,
+ * a bean from a `@Bean` method and a `@ConfigurationProperties` bean.
+ *
+ * Runs first because of `@Order(1)`.
+ */
 @Component
 @Order(1)
 @Slf4s
