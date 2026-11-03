@@ -7,6 +7,12 @@ import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ApplicationRunner
 import dev.coilix.context.ApplicationContext
 
+/**
+ * Runner that shows how to use an injected `ApplicationContext`: it logs the names of all beans, the primary
+ * [[dev.coilix.demo.UserService]] and all user services.
+ *
+ * Runs second, after [[dev.coilix.demo.DemoRunner]], because of `@Order(2)`.
+ */
 @Component
 @Order(2)
 @Slf4s

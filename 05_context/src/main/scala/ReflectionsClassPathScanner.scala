@@ -12,6 +12,16 @@ import org.reflections.util.ConfigurationBuilder
 import org.reflections.util.FilterBuilder
 import scala.jdk.CollectionConverters.*
 
+/**
+ * Finds classes annotated with `@Component`, `@Service`, `@Repository`, `@Configuration` or `@ConfigurationProperties`
+ * using the Reflections library.
+ *
+ * Classes are processed in order of their fully qualified names, so the result does not depend on the class path order.
+ * This is the default [[dev.coilix.context.ClassPathScanner]].
+ *
+ * @param factory
+ *   creates the definitions for each class found
+ */
 final class ReflectionsClassPathScanner(factory: BeanDefinitionFactory) extends ClassPathScanner {
 
   private val componentAnnotations: List[Class[? <: Annotation]] =
