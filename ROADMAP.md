@@ -27,6 +27,7 @@ The goal of the first release is a usable dependency injection container with co
 | COILIX-00016 | application events |
 | COILIX-00017 | startup benchmarks |
 | COILIX-00018 | `sbt new` project template |
+| COILIX-00020 | support for effect types `F[_]` (cats-effect, ZIO): analysis and ADR first |
 | | `data`, `web` and `security` modules (not yet specified) |
 
 ## Known limitations
