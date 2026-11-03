@@ -4,6 +4,13 @@ import dev.coilix.annotation.Order
 import dev.coilix.annotation.Slf4s
 import dev.coilix.context.ApplicationContext
 
+/**
+ * Calls the [[dev.coilix.boot.ApplicationRunner]] beans sorted by their `@Order` value. Runners without `@Order` run last, and
+ * runners
+ * with the same value keep their creation order.
+ *
+ * This is the default [[dev.coilix.boot.RunnerInvoker]].
+ */
 @Slf4s
 final class OrderedRunnerInvoker extends RunnerInvoker {
 
