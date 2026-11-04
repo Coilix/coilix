@@ -1,0 +1,53 @@
+---
+id: first-application
+title: Pierwsza aplikacja
+description: Utwórz aplikację Coilix, która czyta powitanie z konfiguracji i zapisuje je w logu przy starcie.
+sidebar_position: 1
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import FirstApplication from '!!raw-loader!@examples/scala/FirstApplication.scala';
+import HelloRunner from '!!raw-loader!@examples/scala/HelloRunner.scala';
+import ApplicationYaml from '!!raw-loader!@examples/resources/application.yaml';
+
+Ta strona pokazuje najmniejszą aplikację Coilix: punkt wejścia, jeden komponent i plik konfiguracji. Przeczytaj ją najpierw, jeśli wcześniej nie używałeś Coilix.
+
+## Dodaj zależności
+
+Coilix wymaga Scali 3.9 lub nowszej i JDK 17 lub nowszego. Dodaj do `build.sbt` moduł startu aplikacji i plugin kompilatora `@Slf4s`:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-boot" % "<version>"
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "<version>"
+addCompilerPlugin("dev.coilix" %% "coilix-slf4s-plugin" % "<version>")
+```
+
+`slf4j-simple` wypisuje logi na konsolę. Zamiast niego możesz użyć dowolnego innego providera SLF4J.
+
+## Napisz punkt wejścia
+
+Obiekt z adnotacją `@CoilixApplication` uruchamia aplikację. Coilix skanuje jego pakiet i pakiety pod nim w poszukiwaniu komponentów.
+
+<CodeBlock language="scala" title="FirstApplication.scala">{FirstApplication}</CodeBlock>
+
+## Dodaj komponent
+
+Klasa z adnotacją `@Component` staje się beanem. Coilix tworzy go przez konstruktor i wypełnia parametry `@Value` wartościami z konfiguracji. Każdy bean, który rozszerza `ApplicationRunner`, uruchamia się, gdy kontekst aplikacji jest gotowy.
+
+<CodeBlock language="scala" title="HelloRunner.scala">{HelloRunner}</CodeBlock>
+
+## Dodaj konfigurację
+
+Coilix czyta `application.yaml` z classpath, więc plik trafia do `src/main/resources`.
+
+<CodeBlock language="yaml" title="application.yaml">{ApplicationYaml}</CodeBlock>
+
+## Uruchom aplikację
+
+Uruchom aplikację z opcją imienia:
+
+```sh
+sbt "run --name=Ann"
+```
+
+W logu pojawia się `Hello, Ann`. Bez opcji runner wita `World`.

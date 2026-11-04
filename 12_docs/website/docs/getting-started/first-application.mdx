@@ -1,0 +1,53 @@
+---
+id: first-application
+title: First application
+description: Create a Coilix application that reads a greeting from the configuration and logs it at startup.
+sidebar_position: 1
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import FirstApplication from '!!raw-loader!@examples/scala/FirstApplication.scala';
+import HelloRunner from '!!raw-loader!@examples/scala/HelloRunner.scala';
+import ApplicationYaml from '!!raw-loader!@examples/resources/application.yaml';
+
+This page shows the smallest Coilix application: an entry point, one component and a configuration file. Read it first if you have not used Coilix before.
+
+## Add the dependencies
+
+Coilix needs Scala 3.9 or newer and JDK 17 or newer. Add the startup module and the `@Slf4s` compiler plugin to `build.sbt`:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-boot" % "<version>"
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "<version>"
+addCompilerPlugin("dev.coilix" %% "coilix-slf4s-plugin" % "<version>")
+```
+
+`slf4j-simple` prints log messages to the console. You can use any other SLF4J provider instead.
+
+## Write the entry point
+
+The object annotated with `@CoilixApplication` starts the application. Coilix scans its package and the packages below it for components.
+
+<CodeBlock language="scala" title="FirstApplication.scala">{FirstApplication}</CodeBlock>
+
+## Add a component
+
+A class annotated with `@Component` becomes a bean. Coilix creates it through its constructor and fills `@Value` parameters from the configuration. Every bean that extends `ApplicationRunner` runs after the application context is ready.
+
+<CodeBlock language="scala" title="HelloRunner.scala">{HelloRunner}</CodeBlock>
+
+## Add the configuration
+
+Coilix reads `application.yaml` from the classpath, so the file goes to `src/main/resources`.
+
+<CodeBlock language="yaml" title="application.yaml">{ApplicationYaml}</CodeBlock>
+
+## Run the application
+
+Start the application with a name option:
+
+```sh
+sbt "run --name=Ann"
+```
+
+The log contains `Hello, Ann`. Without the option, the runner greets `World`.

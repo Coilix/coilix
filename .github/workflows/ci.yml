@@ -50,6 +50,42 @@ jobs:
             exit 1
           fi
 
+  docs:
+    name: Documentation site
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: 12_docs/website
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Compile examples and build API documentation
+        working-directory: .
+        run: |
+          sbt docs/testFull docs/apiSite 2>&1 | tee doc.log
+          if grep -q "Couldn't resolve a member for the given link query" doc.log; then
+            echo "::error::Scaladoc contains broken links"
+            exit 1
+          fi
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 12_docs/website/.nvmrc
+          cache: npm
+          cache-dependency-path: 12_docs/website/package-lock.json
+      - name: Install site dependencies
+        run: npm ci
+      - name: Check pages and npm licenses
+        run: npm run check
+      - name: Build site
+        run: npm run build
+
   coverage:
     name: Test coverage
     runs-on: ubuntu-latest

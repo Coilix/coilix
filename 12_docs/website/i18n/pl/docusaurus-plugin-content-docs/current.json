@@ -1,0 +1,10 @@
+{
+  "version.label": {
+    "message": "Następna (niewydana)",
+    "description": "The label for version current"
+  },
+  "sidebar.docs.category.Getting started": {
+    "message": "Pierwsze kroki",
+    "description": "The label for category 'Getting started' in sidebar 'docs'"
+  }
+}

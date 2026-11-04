@@ -121,7 +121,7 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
 lazy val common = scalaModule("common", "01_common", "dev.coilix.common")
   .settings(description := "Shared types and extensions for Coilix")
 
-lazy val annotations = javaModule("annotations", "02_annotations", "dev.coilix.annotation")
+lazy val annotations = javaModule("annotations", "02_annotations", "dev[.]coilix[.]annotation")
   .settings(description := "Runtime annotations for Coilix components, configuration and logging")
 
 lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "dev.coilix.slf4s")
@@ -195,8 +195,50 @@ lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "
     installIntellijPlugin                              := Def.uncached(IntellijPlugin.install(fileConverter.value.toPath((Compile / packageBin).value).toFile))
   )
 
+lazy val apiSite =
+  taskKey[File]("Builds the combined Scaladoc of the published modules with the Javadoc of the annotations next to it")
+
+def documentationLine(version: String): String =
+  if (version.contains("SNAPSHOT") || version.contains("+")) "next" else VersionNumber(version).numbers.take(2).mkString(".")
+
+def javadocMapping(line: String): String =
+  s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
+
+lazy val docs = slf4sModule("docs", "12_docs", "com.example")
+  .dependsOn(boot)
+  .settings(unpublished)
+  .settings(
+    description                            := "Compiled examples and the combined API documentation of the Coilix documentation site",
+    coverageEnabled                        := false,
+    Compile / unmanagedSourceDirectories   := Seq(baseDirectory.value / "examples" / "next" / "scala"),
+    Compile / unmanagedResourceDirectories := Seq(baseDirectory.value / "examples" / "next" / "resources"),
+    libraryDependencies += Dependencies.slf4jSimple,
+    run / fork                             := true,
+    run / outputStrategy                   := Some(StdoutOutput),
+    Test / fork                            := true,
+    Test / javaOptions += s"-Dcoilix.docs.resources=${baseDirectory.value / "examples" / "next" / "resources"}",
+    Compile / doc / tastyFiles             := Def.uncached(
+      Seq(
+        (common / Compile / tastyFiles).value,
+        (slf4sPlugin / Compile / tastyFiles).value,
+        (config / Compile / tastyFiles).value,
+        (context / Compile / tastyFiles).value,
+        (boot / Compile / tastyFiles).value
+      ).flatten
+    ),
+    Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
+    Compile / doc / scalacOptions += javadocMapping(documentationLine(version.value)),
+    apiSite                                := Def.uncached(
+      ApiSite.assemble(
+        (Compile / doc).value,
+        (annotations / Compile / doc).value,
+        target.value / "api-site"
+      )
+    )
+  )
+
 lazy val modules: Seq[ProjectReference] =
-  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, demo) ++
+  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, demo, docs) ++
     Seq[ProjectReference](intellijPlugin).filter(_ => IntellijPlugin.isAvailable)
 
 lazy val root = (project in file("."))
