@@ -11,8 +11,8 @@ Trunk-based development: jedna gałąź główna `master` i krótko żyjące ga�
 | `master` | | | zawsze | Zawsze kompiluje się i przechodzi testy. Każdy commit da się wydać. |
 | `feature/COILIX-NNNNN-opis` | `master` | `master` przez PR | dni | Realizacja taska albo jego części. |
 | `fix/COILIX-NNNNN-opis` | `master` albo `series/X.Y` | ta sama gałąź przez PR | godziny | Poprawka błędu. |
-| `release/vX.Y.Z` | `master` albo `series/X.Y` | ta sama gałąź przez PR | do scalenia | Tylko zamknięcie changelogu wydania przed tagiem. |
-| `series/X.Y` | tag `vX.Y.0` | nigdzie | do końca wsparcia linii | Poprawki `X.Y.Z+1` po tym, jak `master` przeszedł na następną wersję. |
+| `release/<grupa>-vX.Y.Z` | `master` albo `series/<grupa>-X.Y` | ta sama gałąź przez PR | do scalenia | Tylko zamknięcie changelogu wydania przed tagiem. |
+| `series/<grupa>-X.Y` | tag `<grupa>-vX.Y.0` | nigdzie | do końca wsparcia linii | Poprawki `X.Y.Z+1` grupy po tym, jak `master` przeszedł na następną wersję. |
 
 Zasady:
 
@@ -20,7 +20,7 @@ Zasady:
 - Jedna gałąź to jeden task. Duży task można podzielić na kilka kolejnych gałęzi, ale każda zostawia `master` w stanie gotowym do wydania.
 - Gałąź żyje krótko. Jeśli praca trwa dłużej niż tydzień, rebase na `master` co najmniej raz w tygodniu, żeby konflikty nie rosły.
 - Funkcja, która nie jest gotowa, nie trafia na `master` w połowie. Albo czeka na gałęzi, albo jest dzielona na samodzielne kroki (najpierw trait i test, potem implementacja, potem podpięcie w `boot`).
-- Gałęzi `series/X.Y` nie tworzy się na zapas, tylko wtedy, gdy trzeba wydać poprawkę starszej linii.
+- Gałęzi `series/<grupa>-X.Y` nie tworzy się na zapas, tylko wtedy, gdy trzeba wydać poprawkę starszej linii.
 
 ## Cykl życia taska
 
@@ -61,7 +61,7 @@ sbt -Dsbt.server.autostart=false testFull doc demo/run
 ### 4. Pull request
 
 1. Rebase na `master`, żeby historia była liniowa: `git fetch && git rebase origin/master`.
-2. `git push -u origin feature/COILIX-NNNNN-opis` i PR do `master` (albo do `series/X.Y` dla poprawki starszej linii).
+2. `git push -u origin feature/COILIX-NNNNN-opis` i PR do `master` (albo do `series/<grupa>-X.Y` dla poprawki starszej linii).
 3. Tytuł PR: `COILIX-NNNNN: Opis`, po angielsku, w trybie rozkazującym. Po scaleniu staje się tytułem commita na `master` (GitHub dopisuje `(#N)`), więc opisuje całą funkcję, a nie ostatni krok. Opis PR: co się zmienia, jak to sprawdzić, czy zmiana jest **BREAKING**.
 4. CI musi być zielone: formatowanie (scalafmt dla kodu i plików buildu, google-java-format dla Javy), testy na JDK 17 i 25, `doc`, audyt licencji, pokrycie testami (`testCoverage`), a po pierwszym wydaniu MiMa i TASTy-MiMa.
 5. Przegląd według listy z sekcji [Przegląd](#przegląd).
@@ -95,31 +95,31 @@ Projekt ma na razie jednego opiekuna, więc przegląd to samodzielne przejście 
 
 ## Wydanie
 
-Wydania wychodzą z `master` (linia bieżąca) albo z `series/X.Y` (starsza linia). Numer wynika z [versioning.md](../architecture/versioning.md): w fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`.
+Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tagi `<grupa>-vX.Y.Z` ([versioning.md](../architecture/versioning.md)). Wydania wychodzą z `master` (linia bieżąca) albo z `series/<grupa>-X.Y` (starsza linia). W fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`. Na razie workflow wydaje tylko grupę `core`. Wydanie modułu funkcji i pluginu IntelliJ dojdzie w kroku 4 [COILIX-00009](../../tasks/COILIX-00009_versioning_and_releases.md#grupy-wydań-adr-0011).
 
 1. Upewnij się, że CI na gałęzi wydania jest zielone.
-2. Na gałęzi `release/vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień nazwę `changelog/core/unreleased.md` na `X.Y.Z.md` (`git mv`), dodaj na jego początku nagłówek z `version: X.Y.Z` i `date: RRRR-MM-DD` i załóż pusty `changelog/core/unreleased.md`. Commit: `COILIX-00000: Release X.Y.Z`. Scal przez PR. Do czasu grup wydań w buildzie (kroki 3 i 4 z [COILIX-00009](../../tasks/COILIX-00009_versioning_and_releases.md#grupy-wydań-adr-0011)) tag `vX.Y.Z` wydaje grupę `core`, a ten krok robi się ręcznie.
+2. Na gałęzi `release/core-vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień nazwę `changelog/core/unreleased.md` na `X.Y.Z.md` (`git mv`), dodaj na jego początku nagłówek z `version: X.Y.Z` i `date: RRRR-MM-DD` i załóż pusty `changelog/core/unreleased.md`. Commit: `COILIX-00000: Release core X.Y.Z`. Scal przez PR. Do czasu workflow „Prepare release” (krok 4) ten krok robi się ręcznie.
 3. Tag podpisany na commicie z `master`:
 
    ```sh
    git switch master && git pull --rebase
-   git tag -s vX.Y.Z -m "Coilix X.Y.Z"
-   git push origin vX.Y.Z
+   git tag -s core-vX.Y.Z -m "Coilix Core X.Y.Z"
+   git push origin core-vX.Y.Z
    ```
 
-4. Tag uruchamia workflow `release.yml`: sprawdzenia, publikacja na Maven Central i GitHub Release z treścią pliku `changelog/core/X.Y.Z.md`. Plugin IntelliJ i dokumentacja dojdą w osobnych taskach.
+4. Tag `core-v*` uruchamia workflow `release.yml`: sprawdzenia, publikacja modułów rdzenia na Maven Central i GitHub Release z treścią pliku `changelog/core/X.Y.Z.md`. Plugin IntelliJ i dokumentacja dojdą w osobnych taskach.
 5. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach) i stronę GitHub Release.
 
-Wydania przedpremierowe (`vX.Y.Z-M1`, `vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
+Wydania przedpremierowe (`core-vX.Y.Z-M1`, `core-vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
 
 ## Utrzymanie starszej linii
 
 Przykład: wydane jest `0.3.0`, `master` ma już zmiany niezgodne do `0.4.0`, a w `0.3.0` jest błąd.
 
 1. Poprawka trafia najpierw na `master` przez zwykły PR (gałąź `fix/COILIX-NNNNN-opis`), o ile błąd tam występuje.
-2. Gałąź linii, jeśli jeszcze nie istnieje: `git switch -c series/0.3 v0.3.0 && git push -u origin series/0.3`.
-3. Przeniesienie poprawki: gałąź `fix/COILIX-NNNNN-opis-0.3` od `series/0.3`, `git cherry-pick -x <commit>`, PR do `series/0.3`.
-4. Na `series/0.3`: plik `changelog/core/0.3.1.md` (jak w kroku 2 [wydania](#wydanie)), tag `v0.3.1` na tej gałęzi, push tagu.
+2. Gałąź linii, jeśli jeszcze nie istnieje: `git switch -c series/core-0.3 core-v0.3.0 && git push -u origin series/core-0.3`.
+3. Przeniesienie poprawki: gałąź `fix/COILIX-NNNNN-opis-0.3` od `series/core-0.3`, `git cherry-pick -x <commit>`, PR do `series/core-0.3`.
+4. Na `series/core-0.3`: plik `changelog/core/0.3.1.md` (jak w kroku 2 [wydania](#wydanie)), tag `core-v0.3.1` na tej gałęzi, push tagu.
 5. Plik `changelog/core/0.3.1.md` trafia też na `master` przez PR, żeby wszystkie wydania były na stronie `/changelog`, która powstaje z `master`.
 
 Wspierana jest tylko najnowsza linia `MINOR`. Starsze linie dostają poprawki bezpieczeństwa, jeśli opiekun tak zdecyduje, a decyzja trafia do `SECURITY.md`.
@@ -128,8 +128,8 @@ Wspierana jest tylko najnowsza linia `MINOR`. Starsze linie dostają poprawki be
 
 Repozytorium jest publiczne od 2026-11-02 i ma reguły (rulesets) zapisane w [`.github/rulesets/`](../../.github/rulesets). Po zmianie reguły w ustawieniach GitHuba aktualizuje się też plik JSON, a nowe repozytorium konfiguruje się przez `gh api -X POST repos/<org>/<repo>/rulesets --input <plik>`.
 
-- `master` i `series/**`: zmiany tylko przez PR, wymagane zielone checki `Build on JDK 17`, `Build on JDK 25`, `Test coverage` i `DCO` na gałęzi aktualnej względem bazy, rozwiązane wątki przeglądu, liniowa historia, zakaz force-push i usuwania. Zatwierdzenie przez drugą osobę nie jest wymagane, dopóki projekt ma jednego opiekuna,
-- tagi `v*`: tworzy je tylko administrator repozytorium, nikt nie może ich usunąć ani przesunąć,
+- `master` i `series/**`: zmiany tylko przez PR, wymagane zielone checki `Build on JDK 17`, `Build on JDK 25`, `Test coverage`, `Documentation site` i `DCO` na gałęzi aktualnej względem bazy, rozwiązane wątki przeglądu, liniowa historia, zakaz force-push i usuwania. Zatwierdzenie przez drugą osobę nie jest wymagane, dopóki projekt ma jednego opiekuna,
+- tagi `*-v*` (np. `core-v0.1.0`): tworzy je tylko administrator repozytorium, nikt nie może ich usunąć ani przesunąć,
 - metody scalania: tylko „Squash and merge”, z tytułem commita z tytułu PR i treścią z wiadomości commitów (`squash_merge_commit_title=PR_TITLE`, `squash_merge_commit_message=COMMIT_MESSAGES`),
 - „Automatically delete head branches” włączone,
 - aplikacja DCO sprawdzająca `Signed-off-by` w każdym commicie PR. Jej check `DCO` jest wymagany do scalenia.
