@@ -160,7 +160,7 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 - Jedynym źródłem jest katalog `changelog/` w katalogu głównym: podkatalog dla każdej grupy wydań, `unreleased.md` i plik `<wersja>.md` dla każdego wydania ([ADR 0011](../adr/0011-release-groups-and-changelog-files.md)). Format opisuje [changelog/README.md](../../changelog/README.md), a zasady wpisów sekcja „Wersjonowanie” w `CLAUDE.md`.
 - Strona `/changelog` powstaje przy budowaniu (`scripts/generate-changelog.mjs`) z plików wydań, bez `unreleased.md`: najpierw `core`, potem moduły funkcji alfabetycznie, na końcu plugin IntelliJ, w każdej grupie od najnowszej wersji. Wydanie ma kotwicę `#<grupa>-<wersja>`, np. `/changelog#core-0.1.0`, a wydanie modułu funkcji pokazuje linię rdzenia z `requires-core`.
 - Wygenerowany plik jest w `.gitignore` i nikt go nie edytuje.
-- Skrypty changelogu są w `scripts/changelog.mjs` i mają testy w `scripts/changelog.test.mjs` (`npm test`). `release.yml` bierze z nich notkę wydania (`scripts/release-notes.mjs`).
+- Skrypty changelogu są w `scripts/changelog.mjs` i mają testy w `scripts/changelog.test.mjs` (`npm test`). Skrypty wydania są w `scripts/release.mjs` (testy w `scripts/release.test.mjs`): `release-tag.mjs` sprawdza tag w `release.yml` i zapisuje notkę wydania, a `prepare-release.mjs` przygotowuje PR wydania.
 
 ## Dokumentacja API
 

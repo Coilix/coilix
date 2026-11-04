@@ -93,6 +93,10 @@ Opiekun robi podpisany tag `<grupa>-vX.Y.Z` na commicie z `master` (albo z `seri
 6. Przed publikacją cała zbudowana strona, razem z API, przechodzi przez link checker (lychee) i test obecności kluczowych stron. Błąd zatrzymuje publikację.
 7. W PR-ach CI dalej buduje i sprawdza stronę z bieżącego stanu, w tym z niewydanych przewodników, ale nic nie publikuje.
 
+### Zmiany przy wdrożeniu
+
+- Punkt 4 changelogu: PR wydania przygotowuje lokalny skrypt `npm run prepare-release` zamiast ręcznego workflow „Prepare release”, bo PR otwarty domyślnym tokenem GitHub Actions nie uruchamia CI, a osobny token w sekretach byłby kolejnym kluczem do pilnowania. Kopia przewodników dla linii `X.Y` dojdzie do skryptu razem z publikacją strony.
+
 ## Konsekwencje
 
 - Zmienia się `docs/architecture/versioning.md` (grupy zamiast jednej wersji), `docs/process/development.md` (wydanie, linie utrzymaniowe), `docs/process/documentation.md` (publikacja, sekcje, changelog), `CLAUDE.md` (wersjonowanie, changelog) i ruleset tagów (`*-v*` zamiast `v*`). Zmiany wchodzą razem z wdrożeniem, a do tego czasu obowiązuje obecny opis.
