@@ -54,7 +54,7 @@ Publikowane artefakty: `common`, `annotations`, `slf4s-plugin`, `config`, `conte
 - [ ] `README.md`: opis, przykład, instalacja, zastrzeżenie o braku powiązania ze Springiem i atrybucja znaku (wzór w [spring-similarity.md](spring-similarity.md#znaki-towarowe)),
 - [ ] `LICENSE`, `NOTICE`,
 - [ ] `CONTRIBUTING.md` (DCO, zasady kodu, format commitów),
-- [ ] `CHANGELOG.md` ([versioning.md](../architecture/versioning.md#changelog)),
+- [x] changelog w katalogu `changelog/` ([versioning.md](../architecture/versioning.md#changelog)),
 - [ ] `SECURITY.md` z adresem do zgłaszania podatności,
 - [ ] `CODE_OF_CONDUCT.md` (Contributor Covenant),
 - [ ] ochrona gałęzi `master`: wymagane CI, bez force-push,

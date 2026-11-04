@@ -81,7 +81,9 @@ jobs:
           cache-dependency-path: 12_docs/website/package-lock.json
       - name: Install site dependencies
         run: npm ci
-      - name: Check pages and npm licenses
+      - name: Test site scripts
+        run: npm test
+      - name: Check pages, changelog and npm licenses
         run: npm run check
       - name: Build site
         run: npm run build

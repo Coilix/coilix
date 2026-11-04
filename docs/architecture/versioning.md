@@ -49,14 +49,16 @@ Scala 3 jest kompatybilna tylko wstecz: biblioteka skompilowana Scalą 3.N dzia�
 
 ## Changelog
 
-`CHANGELOG.md` w formacie [Keep a Changelog](https://keepachangelog.com/): sekcja `Unreleased` i sekcja na każde wydanie z grupami `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Wpis zawiera ID taska (`COILIX-00004`). Zmiana niezgodna jest oznaczona **BREAKING** i opisuje migrację.
+Changelog to katalog `changelog/` z podkatalogiem dla każdej grupy wydań (`core`, `intellij`, moduły funkcji, [ADR 0011](../adr/0011-release-groups-and-changelog-files.md)). Grupa ma plik `unreleased.md` ze zmianami po ostatnim wydaniu i plik `<wersja>.md` dla każdego wydania, z nagłówkiem `version`, `date` i (dla modułu funkcji) `requires-core`. Treść jest w formacie [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) z sekcjami `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Wpis zawiera ID taska (`COILIX-00004`). Zmiana niezgodna jest oznaczona **BREAKING** i opisuje migrację.
+
+Pełny opis formatu jest w [changelog/README.md](../../changelog/README.md). Format wszystkich plików sprawdza job `Documentation site` w każdym PR (`npm run check`), a obecność wpisu sprawdza przegląd PR.
 
 ## Proces wydania
 
 Kroki dla opiekuna są w [docs/process/development.md](../process/development.md#wydanie). Automatyzacja:
 
 - `.github/workflows/ci.yml`: przy każdym pushu na `master` i `series/**` oraz w każdym PR `checkLicenses`, `testFull`, `mimaReportBinaryIssues` i `doc` (bez zepsutych linków) na JDK 17 i 25.
-- `.github/workflows/release.yml`: na tag `v*` te same sprawdzenia, wyciągnięcie sekcji wersji z `CHANGELOG.md` (brak sekcji zatrzymuje wydanie), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem (`-M1`, `-RC1`) daje pre-release.
+- `.github/workflows/release.yml`: na tag `v*` te same sprawdzenia, notka wydania z `changelog/core/X.Y.Z.md` (brak pliku albo błąd formatu zatrzymuje wydanie przed testami), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem (`-M1`, `-RC1`) daje pre-release.
 - Wersja pochodzi z tagu przez sbt-dynver (część sbt-ci-release): commit z tagiem `v0.1.0` ma wersję `0.1.0`, kolejne commity `0.1.0+N-<hash>-SNAPSHOT`, a przed pierwszym tagiem `0.0.0+N-<hash>-SNAPSHOT`.
 - Do zrobienia później: publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (COILIX-00007).
 

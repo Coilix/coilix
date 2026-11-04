@@ -62,8 +62,8 @@ Zostaje:
 
 [ADR 0011](../docs/adr/0011-release-groups-and-changelog-files.md) zmienia model wydań. Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
 
-1. **Decyzja:** ADR 0011 i ten plan.
-2. **Changelog w plikach:** katalog `changelog/<grupa>/` z `unreleased.md`, przeniesienie treści z `CHANGELOG.md`, sprawdzanie formatu w CI, strona `/changelog` z tych plików, zasady w `CLAUDE.md` i `docs/process/development.md`.
+1. **Decyzja:** ADR 0011 i ten plan (zrobione, ADR przyjęta).
+2. **Changelog w plikach:** katalog `changelog/<grupa>/` z `unreleased.md`, przeniesienie treści z `CHANGELOG.md`, sprawdzanie formatu w CI, strona `/changelog` z tych plików, zasady w `CLAUDE.md` i `docs/process/development.md` (zrobione: format opisuje `changelog/README.md`, sprawdza `npm run check`, a do czasu kroku 4 tag `v*` bierze notkę z `changelog/core/X.Y.Z.md`).
 3. **Grupy w buildzie:** przypisanie modułów do grup w `build.sbt`, wersja z tagu `<grupa>-v*` dla każdego modułu, MiMa względem poprzedniego wydania grupy, sprawdzenie, że moduł funkcji zależy od wydanego rdzenia, nowy opis w `docs/architecture/versioning.md`.
 4. **Wydanie przy tagu:** `release.yml` dla tagów `*-v*` (sprawdzenia z ADR 0011, publikacja tylko grupy, GitHub Release z pliku changelogu), skrypt i workflow „Prepare release”, ruleset tagów `*-v*`.
 5. **Publikacja strony** (razem z krokiem 7 COILIX-00007): workflow „Publish docs” na tag i ręcznie, sekcje i wersje per grupa, API pod `/api/<grupa>/<linia>/`, lychee przed publikacją, `gh-pages` i domena `docs.coilix.dev`.
