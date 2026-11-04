@@ -23,8 +23,11 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `09_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
 | `10_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
 | `11_intellij_plugin` | `intellij-plugin` | `dev.coilix.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
+| `12_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
 `11_intellij_plugin` to jedyny moduł w Scali 2.13, bo działa w classloaderze pluginu Scala dla IntelliJ (opis w `11_intellij_plugin/README.md`).
+
+`12_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `12_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
 Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
@@ -125,6 +128,9 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt scalafmtAll scalafmtSbt javafmtAll` formatuje cały kod i pliki buildu, a `sbt checkFormat` tylko sprawdza formatowanie (tak jak CI).
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
+- `sbt docs/apiSite` buduje jedną stronę Scaladoc publikowanych modułów z Javadoc adnotacji w `javadoc/` do `target/out/jvm/scala-<wersja>/coilix-docs/api-site`.
+- `sbt docs/testFull` kompiluje przykłady z `12_docs/examples/next/` i wczytuje ich pliki konfiguracji.
+- W `12_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm run check` sprawdza strony i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
 - `sbt version` pokazuje wersję wyliczoną z tagu gita (sbt-dynver). Wersji nie wpisuje się ręcznie.
 - `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
 - Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.

@@ -8,3 +8,15 @@ updates:
       prefix: "COILIX-00000:"
     labels:
       - dependencies
+  - package-ecosystem: npm
+    directory: /12_docs/website
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: "COILIX-00000:"
+    labels:
+      - dependencies
+    groups:
+      docusaurus:
+        patterns:
+          - "@docusaurus/*"

@@ -40,6 +40,18 @@ Nie są dystrybuowane z naszymi artefaktami, więc nie nakładają obowiązków 
 | `org.slf4j:slf4j-simple` (testy, demo) | MIT |
 | sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage, sbt-java-formatter, google-java-format | Apache-2.0 |
 
+## Strona dokumentacji (`12_docs/website`)
+
+Zależności npm (Docusaurus i jego zależności przechodnie) służą tylko do zbudowania statycznej strony `docs.coilix.dev`. Nie trafiają do artefaktów Coilix, więc nie nakładają obowiązków na użytkowników. Na stronę trafia tylko JavaScript i CSS wygenerowany przez Docusaurusa (MIT) i React (MIT).
+
+`npm run check` (`scripts/check-licenses.mjs`) sprawdza licencję każdego pakietu z `package-lock.json` i przerywa build, gdy któraś jest spoza `scripts/allowed-licenses.json`. Wyrażenie z `OR` przechodzi, gdy jedna z opcji jest dozwolona. Pakiet bez pola `license` dopisuje się do sekcji `packages` tego pliku z licencją sprawdzoną ręcznie w jego pliku licencji (teraz: `require-like`, MIT).
+
+Dozwolone licencje narzędzi budowania strony to licencje z sekcji [Obowiązki](#obowiązki) oraz licencje permisywne typowe dla npm: ISC, 0BSD, MIT-0, BlueOak-1.0.0, CC0-1.0, CC-BY-4.0 (dane `caniuse-lite`) i Python-2.0 (`argparse`). GPL, AGPL i LGPL są zakazane tak samo jak w kodzie.
+
+Stan na 2026-11-03: 1281 pakietów, większość na MIT.
+
+Podatne wersje zależności przechodnich, których Docusaurus jeszcze nie podbił, nadpisuje sekcja `overrides` w `package.json` (teraz `serialize-javascript`, `tinypool`, `uuid`). Nadpisanie usuwa się, gdy Docusaurus sam wymaga poprawionej wersji.
+
 ## Plugin IntelliJ (`11_intellij_plugin`)
 
 - Kompiluje się na jarach IntelliJ Platform i pluginu Scala z lokalnej instalacji IDE. Oba są na Apache-2.0 (intellij-community, intellij-scala).
