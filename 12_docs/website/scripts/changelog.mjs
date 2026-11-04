@@ -201,7 +201,7 @@ export function releaseNotes(group, version, root = changelogRoot) {
   return `${release.body.trim()}\n`;
 }
 
-function groupLabel(group) {
+export function groupLabel(group) {
   return groupLabels[group] ?? `coilix-${group}`;
 }
 

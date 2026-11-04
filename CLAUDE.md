@@ -105,7 +105,7 @@ Pełna procedura jest w `docs/process/development.md`: trunk-based z gałęzią 
 
 - Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/COILIX-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Squash and merge” (ADR 0008). Jeden PR to jedna funkcja albo jedna poprawka.
 - `master` zawsze kompiluje się i przechodzi `sbt testFull`. Niegotowa funkcja czeka na gałęzi albo jest dzielona na samodzielne kroki.
-- Wydanie to podpisany tag `<grupa>-vX.Y.Z` na `master` (na razie wydaje się tylko `core`). Gałąź `series/X.Y` powstaje dopiero, gdy trzeba wydać poprawkę starszej linii.
+- Wydanie to podpisany tag `<grupa>-vX.Y.Z` na `master` po scaleniu PR z `npm run prepare-release -- <grupa> <wersja>`. Gałąź `series/<grupa>-X.Y` powstaje dopiero, gdy trzeba wydać poprawkę starszej linii.
 - Przed PR: `sbt testFull doc demo/run` i definicja ukończenia z `docs/process/development.md`.
 
 ## Taski
@@ -135,6 +135,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - W `12_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm test` uruchamia testy skryptów strony, `npm run check` sprawdza strony, pliki `changelog/` i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
 - `sbt version` pokazuje wersję każdego modułu wyliczoną z tagów jego grupy (sbt-dynver), a `sbt "show releaseGroup"` grupę modułu. Wersji nie wpisuje się ręcznie.
 - `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
+- `sbt "releaseVerify <grupa> <wersja>"` sprawdza przed wydaniem moduły grupy (wersja z tagu, testy, licencje, MiMa, `checkReleasedCore`). W `12_docs/website` `npm run prepare-release -- <grupa> <wersja>` przygotowuje PR wydania (`docs/process/development.md`).
 - Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.
 - Styl kodu IntelliJ jest w `.idea/codeStyles/`: formatowanie Scali (Ctrl+Alt+L) idzie przez scalafmt z `.scalafmt.conf`, a kod generowany przez IDE ma klamry zamiast składni wcięć.
 - `sbt intellij-plugin/installIntellijPlugin` instaluje plugin IDE (potem restart IntelliJ).
