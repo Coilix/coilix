@@ -143,7 +143,7 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 - Wersja dokumentacji to linia `MINOR`: `next`, `0.2`, `0.1`. Domyślnie strona pokazuje najnowszą wydaną linię, a `next` jest opisana jako „Next (unreleased)”.
 - `docs/` i `i18n/pl/.../current/` zawsze opisują stan `master`. Zmiana kodu widoczna dla użytkownika aktualizuje przewodnik w tym samym PR.
-- **Nowa linia** powstaje w PR wydania `X.Y.0` (gałąź `release/vX.Y.0`) przez:
+- **Nowa linia** powstaje w PR wydania `X.Y.0` (gałąź `release/core-vX.Y.0`) przez:
 
   ```sh
   cd 12_docs/website
@@ -174,7 +174,7 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 - Stronę publikuje tylko GitHub Actions (`.github/workflows/docs.yml`) na gałąź `gh-pages`. Nikt nie wypycha zmian na `gh-pages` ręcznie.
 - Push na `master` buduje przewodniki we wszystkich wersjach i obu językach oraz `/api/next/`.
-- Tag `vX.Y.Z` buduje `/api/X.Y/`.
+- Tag `core-vX.Y.Z` buduje `/api/X.Y/`.
 - Publikacja przewodników zastępuje całą zawartość `gh-pages` poza katalogiem `api/` i plikiem `CNAME`. Dzięki temu usunięta strona znika ze strony, a dokumentacja API starszych linii zostaje.
 - Adres `docs.coilix.dev` wskazuje na GitHub Pages rekordem CNAME w Cloudflare.
 

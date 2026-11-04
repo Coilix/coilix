@@ -31,6 +31,8 @@ ThisBuild / developers           := List(
   )
 )
 
+ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, ReleaseGroups.intellij, "data", "web", "security"))
+
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
   Wart.Null,
@@ -118,13 +120,24 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
       libraryDependencies ++= Seq(Dependencies.slf4jApi, Dependencies.slf4jSimple % Test)
     )
 
+lazy val coreGroup: Seq[Setting[?]] = ReleaseGroups.groupSettings(ReleaseGroups.core)
+
+lazy val coreModules: Seq[Project] = Seq(common, annotations, slf4sPlugin, config, context, boot)
+
+def featureGroup(id: String): Seq[Setting[?]] =
+  ReleaseGroups.groupSettings(id) ++
+    ReleaseGroups.featureSettings(coreModules.map(_ / moduleName).join, coreModules.map(_ / baseDirectory).join)
+
 lazy val common = scalaModule("common", "01_common", "dev.coilix.common")
+  .settings(coreGroup)
   .settings(description := "Shared types and extensions for Coilix")
 
 lazy val annotations = javaModule("annotations", "02_annotations", "dev[.]coilix[.]annotation")
+  .settings(coreGroup)
   .settings(description := "Runtime annotations for Coilix components, configuration and logging")
 
 lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "dev.coilix.slf4s")
+  .settings(coreGroup)
   .settings(
     description                         := "Scala 3 compiler plugin that adds an SLF4J logger to classes annotated with @Slf4s",
     libraryDependencies ++= Seq(
@@ -139,6 +152,7 @@ lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "dev.coili
 
 lazy val config = slf4sModule("config", "04_config", "dev.coilix.config")
   .dependsOn(common)
+  .settings(coreGroup)
   .settings(
     description := "Configuration loading, binding and component overrides for Coilix",
     libraryDependencies ++= Seq(Dependencies.typesafeConfig, Dependencies.snakeyamlEngine)
@@ -146,6 +160,7 @@ lazy val config = slf4sModule("config", "04_config", "dev.coilix.config")
 
 lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
   .dependsOn(config)
+  .settings(coreGroup)
   .settings(
     description := "Coilix IoC container",
     libraryDependencies += Dependencies.reflections
@@ -153,21 +168,25 @@ lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
 
 lazy val data = slf4sModule("data", "06_data", "dev.coilix.data")
   .dependsOn(context)
+  .settings(featureGroup("data"))
   .settings(unpublished)
   .settings(description := "Database support for Coilix")
 
 lazy val web = slf4sModule("web", "07_web", "dev.coilix.web")
   .dependsOn(context)
+  .settings(featureGroup("web"))
   .settings(unpublished)
   .settings(description := "Web endpoints for Coilix")
 
 lazy val security = slf4sModule("security", "08_security", "dev.coilix.security")
   .dependsOn(web)
+  .settings(featureGroup("security"))
   .settings(unpublished)
   .settings(description := "Security for Coilix")
 
 lazy val boot = slf4sModule("boot", "09_boot", "dev.coilix.boot")
   .dependsOn(context)
+  .settings(coreGroup)
   .settings(description := "Application startup for Coilix")
 
 lazy val demo = slf4sModule("demo", "10_demo", "dev.coilix.demo")
@@ -183,6 +202,7 @@ lazy val demo = slf4sModule("demo", "10_demo", "dev.coilix.demo")
 lazy val installIntellijPlugin = taskKey[File]("Copies the IntelliJ plugin jar into the local IDE plugins directory")
 
 lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "dev.coilix.intellij")
+  .settings(ReleaseGroups.groupSettings(ReleaseGroups.intellij))
   .settings(unpublished)
   .settings(
     coverageEnabled                                    := false,
