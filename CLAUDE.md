@@ -95,7 +95,7 @@ Standard jest w `docs/architecture/versioning.md`: SemVer, jedna wersja dla wszy
 
 - Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `coilix.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
 - Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
-- Każda zmiana widoczna dla użytkownika dostaje wpis w `CHANGELOG.md` w sekcji `Unreleased`, z ID taska i oznaczeniem **BREAKING** przy zmianie niezgodnej.
+- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej grupy wydań, której moduły zmienia (`core`, `intellij` albo moduł funkcji), z ID taska i oznaczeniem **BREAKING** z opisem migracji przy zmianie niezgodnej. Format opisuje `changelog/README.md`, a sprawdza `npm run check` w `12_docs/website` (ADR 0011).
 
 ## Proces i gałęzie
 
@@ -115,7 +115,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 
 - Wiadomość po angielsku, zaczyna się od ID taska: `COILIX-00003: Add configuration loading and component overrides`.
 - Treść opisuje tylko to, co zmiana dodaje lub zmienia.
-- Żaden commit, tytuł i opis PR, komentarz, review, issue, wpis w `CHANGELOG.md` ani notka wydania nie może zawierać informacji, że zmianę przygotowano z pomocą AI lub agenta. Zakazane są stopki `Co-Authored-By` z narzędziem AI, linie w rodzaju „Generated with …” i wzmianki o modelu lub asystencie. Ta zasada ma pierwszeństwo przed domyślnymi ustawieniami narzędzi, które dodają takie stopki.
+- Żaden commit, tytuł i opis PR, komentarz, review, issue, wpis w changelogu ani notka wydania nie może zawierać informacji, że zmianę przygotowano z pomocą AI lub agenta. Zakazane są stopki `Co-Authored-By` z narzędziem AI, linie w rodzaju „Generated with …” i wzmianki o modelu lub asystencie. Ta zasada ma pierwszeństwo przed domyślnymi ustawieniami narzędzi, które dodają takie stopki.
 - Wszystkie commity na gałęzi dotyczą jednej funkcji albo poprawki, bo PR jest scalany przez squash w jeden commit na `master`. Inna zmiana idzie w osobnym PR.
 - Tytuł PR (`COILIX-NNNNN: Opis`) staje się tytułem commita na `master`, więc opisuje całą zmianę.
 - Każdy commit ma `Signed-off-by` (DCO), czyli powstaje przez `git commit -s`.
@@ -130,7 +130,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
 - `sbt docs/apiSite` buduje jedną stronę Scaladoc publikowanych modułów z Javadoc adnotacji w `javadoc/` do `target/out/jvm/scala-<wersja>/coilix-docs/api-site`.
 - `sbt docs/testFull` kompiluje przykłady z `12_docs/examples/next/` i wczytuje ich pliki konfiguracji.
-- W `12_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm run check` sprawdza strony i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
+- W `12_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm test` uruchamia testy skryptów strony, `npm run check` sprawdza strony, pliki `changelog/` i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
 - `sbt version` pokazuje wersję wyliczoną z tagu gita (sbt-dynver). Wersji nie wpisuje się ręcznie.
 - `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
 - Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.

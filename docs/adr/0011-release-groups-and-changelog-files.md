@@ -1,6 +1,6 @@
 # 0011: Grupy wydań, changelog w plikach i publikacja przy tagu
 
-- Status: proponowana
+- Status: przyjęta
 - Data: 2026-11-03
 - Task: COILIX-00009, COILIX-00007
 - Zastępuje: zasadę „jedna wersja dla całego frameworka” z `docs/architecture/versioning.md` oraz punkty 4, 5 i 7 z [ADR 0010](0010-docusaurus-documentation-site.md)

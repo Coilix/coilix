@@ -11,7 +11,7 @@ Trunk-based development: jedna gałąź główna `master` i krótko żyjące ga�
 | `master` | | | zawsze | Zawsze kompiluje się i przechodzi testy. Każdy commit da się wydać. |
 | `feature/COILIX-NNNNN-opis` | `master` | `master` przez PR | dni | Realizacja taska albo jego części. |
 | `fix/COILIX-NNNNN-opis` | `master` albo `series/X.Y` | ta sama gałąź przez PR | godziny | Poprawka błędu. |
-| `release/vX.Y.Z` | `master` albo `series/X.Y` | ta sama gałąź przez PR | do scalenia | Tylko zmiana nagłówka w `CHANGELOG.md` przed tagiem. |
+| `release/vX.Y.Z` | `master` albo `series/X.Y` | ta sama gałąź przez PR | do scalenia | Tylko zamknięcie changelogu wydania przed tagiem. |
 | `series/X.Y` | tag `vX.Y.0` | nigdzie | do końca wsparcia linii | Poprawki `X.Y.Z+1` po tym, jak `master` przeszedł na następną wersję. |
 
 Zasady:
@@ -42,10 +42,10 @@ Zasady:
 
 - Jeden PR to jedna funkcja albo jedna poprawka. Wszystkie commity na gałęzi wnoszą albo poprawiają tę jedną rzecz. Inną zmianę (refaktoryzacja obok, aktualizacja narzędzi) robi się w osobnym PR.
 - Commity według sekcji „Commity” w `CLAUDE.md`: angielski, prefiks z ID taska. Na gałęzi mogą być kroki pośrednie i poprawki po przeglądzie, bo PR jest scalany przez squash.
-- Commity, PR-y, komentarze, issues, `CHANGELOG.md` i notki wydań nie zawierają informacji, że zmianę przygotowano z pomocą AI lub agenta: bez stopek `Co-Authored-By` z narzędziem AI, bez linii „Generated with …” i bez wzmianek o modelu.
+- Commity, PR-y, komentarze, issues, changelog i notki wydań nie zawierają informacji, że zmianę przygotowano z pomocą AI lub agenta: bez stopek `Co-Authored-By` z narzędziem AI, bez linii „Generated with …” i bez wzmianek o modelu.
 - Każdy commit ma `Signed-off-by` (DCO): `git commit -s`. Żeby nie zapominać, wystarczy alias `git config alias.cs "commit -s"`.
 - Nowe pliki od razu przez `git add`, przeniesienia przez `git mv`.
-- W tym samym commicie co kod: testy munit, Scaladoc publicznego API, wpis w `CHANGELOG.md` (sekcja `Unreleased`), jeśli zmiana jest widoczna dla użytkownika.
+- W tym samym commicie co kod: testy munit, Scaladoc publicznego API, wpis w `changelog/<grupa>/unreleased.md` każdej zmienionej grupy wydań, jeśli zmiana jest widoczna dla użytkownika ([format](../../changelog/README.md)).
 
 ### 3. Sprawdzenie lokalne przed PR
 
@@ -78,7 +78,7 @@ Status w `tasks/README.md` zmienia się na „zrobiony” w ostatnim PR taska. T
 - `sbt testFull`, `sbt doc` (bez zepsutych linków) i `sbt demo/run` przechodzą.
 - Każda nowa klasa ma testy, każdy publiczny element w `src/main` ma Scaladoc.
 - Zmiana widoczna dla użytkownika ma opis w przewodniku po angielsku i po polsku ([zasady dokumentacji](documentation.md)). Obowiązuje od powstania przewodników w COILIX-00007.
-- Wpis w `CHANGELOG.md` z ID taska, z **BREAKING** i instrukcją migracji przy zmianie niezgodnej.
+- Wpis w `changelog/<grupa>/unreleased.md` z ID taska, z **BREAKING** i instrukcją migracji przy zmianie niezgodnej.
 - `CLAUDE.md`, dokumenty w `docs/` (w tym tabela punktów rozszerzeń w `docs/architecture/overview.md`) i status w `tasks/README.md` zaktualizowane.
 - Decyzja architektoniczna ma ADR w `docs/adr/`.
 - Nowa zależność dopisana do [dependency-licenses.md](../legal/dependency-licenses.md) z licencją z listy dozwolonych.
@@ -98,7 +98,7 @@ Projekt ma na razie jednego opiekuna, więc przegląd to samodzielne przejście 
 Wydania wychodzą z `master` (linia bieżąca) albo z `series/X.Y` (starsza linia). Numer wynika z [versioning.md](../architecture/versioning.md): w fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`.
 
 1. Upewnij się, że CI na gałęzi wydania jest zielone.
-2. Na gałęzi `release/vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień w `CHANGELOG.md` nagłówek `Unreleased` na `[X.Y.Z] - RRRR-MM-DD` i dodaj nad nim nową, pustą sekcję `Unreleased`. Commit: `COILIX-00000: Release X.Y.Z`. Scal przez PR.
+2. Na gałęzi `release/vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień nazwę `changelog/core/unreleased.md` na `X.Y.Z.md` (`git mv`), dodaj na jego początku nagłówek z `version: X.Y.Z` i `date: RRRR-MM-DD` i załóż pusty `changelog/core/unreleased.md`. Commit: `COILIX-00000: Release X.Y.Z`. Scal przez PR. Do czasu grup wydań w buildzie (kroki 3 i 4 z [COILIX-00009](../../tasks/COILIX-00009_versioning_and_releases.md#grupy-wydań-adr-0011)) tag `vX.Y.Z` wydaje grupę `core`, a ten krok robi się ręcznie.
 3. Tag podpisany na commicie z `master`:
 
    ```sh
@@ -107,7 +107,7 @@ Wydania wychodzą z `master` (linia bieżąca) albo z `series/X.Y` (starsza lini
    git push origin vX.Y.Z
    ```
 
-4. Tag uruchamia workflow `release.yml`: sprawdzenia, publikacja na Maven Central i GitHub Release z sekcją z changelogu. Plugin IntelliJ i dokumentacja dojdą w osobnych taskach.
+4. Tag uruchamia workflow `release.yml`: sprawdzenia, publikacja na Maven Central i GitHub Release z treścią pliku `changelog/core/X.Y.Z.md`. Plugin IntelliJ i dokumentacja dojdą w osobnych taskach.
 5. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach) i stronę GitHub Release.
 
 Wydania przedpremierowe (`vX.Y.Z-M1`, `vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
@@ -119,8 +119,8 @@ Przykład: wydane jest `0.3.0`, `master` ma już zmiany niezgodne do `0.4.0`, a 
 1. Poprawka trafia najpierw na `master` przez zwykły PR (gałąź `fix/COILIX-NNNNN-opis`), o ile błąd tam występuje.
 2. Gałąź linii, jeśli jeszcze nie istnieje: `git switch -c series/0.3 v0.3.0 && git push -u origin series/0.3`.
 3. Przeniesienie poprawki: gałąź `fix/COILIX-NNNNN-opis-0.3` od `series/0.3`, `git cherry-pick -x <commit>`, PR do `series/0.3`.
-4. Na `series/0.3`: sekcja w `CHANGELOG.md`, tag `v0.3.1` na tej gałęzi, push tagu.
-5. Wpis o wydaniu `0.3.1` trafia też do `CHANGELOG.md` na `master`, żeby historia wydań była w jednym miejscu.
+4. Na `series/0.3`: plik `changelog/core/0.3.1.md` (jak w kroku 2 [wydania](#wydanie)), tag `v0.3.1` na tej gałęzi, push tagu.
+5. Plik `changelog/core/0.3.1.md` trafia też na `master` przez PR, żeby wszystkie wydania były na stronie `/changelog`, która powstaje z `master`.
 
 Wspierana jest tylko najnowsza linia `MINOR`. Starsze linie dostają poprawki bezpieczeństwa, jeśli opiekun tak zdecyduje, a decyzja trafia do `SECURITY.md`.
 

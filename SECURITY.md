@@ -17,4 +17,4 @@ Report them privately through GitHub: open the [Security tab](https://github.com
 
 If you cannot use GitHub, send the report by e-mail to [security@coilix.dev](mailto:security@coilix.dev).
 
-You can expect an acknowledgement within 7 days. Once the issue is confirmed, a fix is released as a patch version and announced in a GitHub security advisory and in `CHANGELOG.md` under **Security**. Reporters are credited unless they prefer otherwise.
+You can expect an acknowledgement within 7 days. Once the issue is confirmed, a fix is released as a patch version and announced in a GitHub security advisory and in the changelog under **Security**. Reporters are credited unless they prefer otherwise.

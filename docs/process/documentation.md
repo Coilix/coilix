@@ -12,7 +12,7 @@ Zasada ogólna: każda informacja ma jedno miejsce. Jeśli coś trzeba napisać 
 | Przewodniki | `12_docs/website/docs/` | angielski | `/docs/` |
 | Tłumaczenie przewodników | `12_docs/website/i18n/pl/` | polski | `/pl/docs/` |
 | Przykłady kodu | `12_docs/examples/` | kod | wklejane do przewodników |
-| Changelog | `CHANGELOG.md` | angielski | `/changelog` |
+| Changelog | `changelog/<grupa>/` | angielski | `/changelog` |
 | README | `README.md` | angielski | nie, tylko GitHub |
 | Dokumenty wewnętrzne (proces, ADR, sprawy prawne, taski) | `docs/`, `tasks/` | polski | nigdy |
 
@@ -41,9 +41,9 @@ Strona powstaje wyłącznie z `12_docs/`. Nic z `docs/` ani `tasks/` nie trafia 
       code.json               tłumaczenia tekstów interfejsu
     src/pages/                strona startowa i changelog
     src/components/           komponenty React używane przez strony
-    src/generated/            kopia CHANGELOG.md (generowana przy budowaniu, poza gitem)
+    src/generated/            changelog.md z plików changelog/ (generowany przy budowaniu, poza gitem)
     static/img/               obrazy
-    scripts/                  skrypty sprawdzające, kopiowanie changelogu i skrypt nowej wersji
+    scripts/                  skrypty sprawdzające i ich testy, changelog i skrypt nowej wersji
       allowed-licenses.json   dozwolone licencje zależności npm
     docusaurus.config.ts
     sidebars.ts
@@ -157,8 +157,10 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Changelog
 
-- Jedynym źródłem jest `CHANGELOG.md` w formacie [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Zasady wpisów są w sekcji „Wersjonowanie” w `CLAUDE.md`.
-- Strona `/changelog` powstaje przy budowaniu z kopii tego pliku. Kopia jest w `.gitignore` i nikt jej nie edytuje.
+- Jedynym źródłem jest katalog `changelog/` w katalogu głównym: podkatalog dla każdej grupy wydań, `unreleased.md` i plik `<wersja>.md` dla każdego wydania ([ADR 0011](../adr/0011-release-groups-and-changelog-files.md)). Format opisuje [changelog/README.md](../../changelog/README.md), a zasady wpisów sekcja „Wersjonowanie” w `CLAUDE.md`.
+- Strona `/changelog` powstaje przy budowaniu (`scripts/generate-changelog.mjs`) z plików wydań, bez `unreleased.md`: najpierw `core`, potem moduły funkcji alfabetycznie, na końcu plugin IntelliJ, w każdej grupie od najnowszej wersji. Wydanie ma kotwicę `#<grupa>-<wersja>`, np. `/changelog#core-0.1.0`, a wydanie modułu funkcji pokazuje linię rdzenia z `requires-core`.
+- Wygenerowany plik jest w `.gitignore` i nikt go nie edytuje.
+- Skrypty changelogu są w `scripts/changelog.mjs` i mają testy w `scripts/changelog.test.mjs` (`npm test`). `release.yml` bierze z nich notkę wydania (`scripts/release-notes.mjs`).
 
 ## Dokumentacja API
 
@@ -178,7 +180,7 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Sprawdzenia w CI
 
-Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym PR i przy każdym pushu na `master`, bez publikacji. Działa zawsze, a nie tylko przy zmianie `12_docs/`, bo zmiana publicznego API albo `CHANGELOG.md` też może zepsuć stronę. Build przerywa się, gdy:
+Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym PR i przy każdym pushu na `master`, bez publikacji. Działa zawsze, a nie tylko przy zmianie `12_docs/`, bo zmiana publicznego API albo pliku w `changelog/` też może zepsuć stronę. Build przerywa się, gdy:
 
 | Problem | Co sprawdza |
 |---|---|
@@ -188,10 +190,12 @@ Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym P
 | strona nie jest w `sidebars.ts` albo dział najwyższego poziomu nie jest jednym z działów z sekcji [Struktura menu](#struktura-menu) lub stoi w złej kolejności | `npm run check` |
 | strona ma blok kodu Scali albo pliku konfiguracji wpisany ręcznie (poza liniami `libraryDependencies`, `addCompilerPlugin`, `addSbtPlugin` i `scalaVersion`) | `npm run check` |
 | przykład w `examples/next/` się nie kompiluje albo plik konfiguracji się nie wczytuje | `sbt docs/testFull` |
+| plik w `changelog/` ma zły format (opis w `changelog/README.md`), np. nieznaną sekcję, wpis bez ID taska albo nagłówek wydania niezgodny z nazwą pliku | `npm run check` (`scripts/check-changelog.mjs`) |
+| skrypt strony nie przechodzi swoich testów | `npm test` |
 | zależność npm ma licencję spoza `scripts/allowed-licenses.json` | `npm run check` (`scripts/check-licenses.mjs`) |
 | Scaladoc zgłasza `Couldn't resolve a member for the given link query` | `sbt docs/apiSite` i `sbt doc` w jobie `Build` |
 
-Lokalnie te same sprawdzenia uruchamia się w `12_docs/website` przez `npm ci`, `npm run check` i `npm run build`, a podgląd strony przez `npm start` (tylko angielski) albo `npm start -- --locale pl`.
+Lokalnie te same sprawdzenia uruchamia się w `12_docs/website` przez `npm ci`, `npm test`, `npm run check` i `npm run build`, a podgląd strony przez `npm start` (tylko angielski) albo `npm start -- --locale pl`.
 
 ## Przegląd
 

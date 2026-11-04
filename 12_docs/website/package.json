@@ -4,14 +4,15 @@
   "description": "Documentation site of Coilix",
   "license": "Apache-2.0",
   "scripts": {
-    "prestart": "node scripts/copy-changelog.mjs",
+    "prestart": "node scripts/generate-changelog.mjs",
     "start": "docusaurus start",
-    "prebuild": "node scripts/copy-changelog.mjs",
+    "prebuild": "node scripts/generate-changelog.mjs",
     "build": "docusaurus build",
     "serve": "docusaurus serve",
     "clear": "docusaurus clear",
     "write-translations": "docusaurus write-translations",
-    "check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-pages.mjs && node scripts/check-licenses.mjs"
+    "check": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-pages.mjs && node scripts/check-changelog.mjs && node scripts/check-licenses.mjs",
+    "test": "node --test scripts/*.test.mjs"
   },
   "engines": {
     "node": ">=24"

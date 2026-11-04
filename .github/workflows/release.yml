@@ -21,20 +21,13 @@ jobs:
           java-version: 17
           cache: sbt
       - uses: sbt/setup-sbt@v1
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 12_docs/website/.nvmrc
+      - name: Extract release notes
+        run: node 12_docs/website/scripts/release-notes.mjs core "${GITHUB_REF_NAME#v}" > release-notes.md
       - name: Verify
         run: sbt checkLicenses testFull mimaReportBinaryIssues
-      - name: Extract release notes
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          awk -v heading="## [$version]" '
-            index($0, heading) == 1 { found = 1; next }
-            found && /^## \[/ { exit }
-            found { print }
-          ' CHANGELOG.md > release-notes.md
-          if [ ! -s release-notes.md ]; then
-            echo "::error::CHANGELOG.md has no section for $version"
-            exit 1
-          fi
       - name: Publish
         run: sbt ci-release
         env:

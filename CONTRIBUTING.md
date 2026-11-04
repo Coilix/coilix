@@ -38,7 +38,7 @@ Thank you for helping. This file is a short summary. The full workflow (in Polis
 
 ## Changelog and versioning
 
-Coilix follows [Semantic Versioning](https://semver.org/) with one version for all modules. Every user-visible change adds an entry to the `Unreleased` section of `CHANGELOG.md` with the task identifier. Incompatible changes are marked **BREAKING** and describe the migration. Details are in [docs/architecture/versioning.md](docs/architecture/versioning.md).
+Coilix follows [Semantic Versioning](https://semver.org/) with one version for all modules. Every user-visible change adds an entry with the task identifier to `changelog/<group>/unreleased.md` of each release group it changes. Incompatible changes are marked **BREAKING** and describe the migration. The format is described in [changelog/README.md](changelog/README.md). Details are in [docs/architecture/versioning.md](docs/architecture/versioning.md).
 
 ## Developer Certificate of Origin
 
