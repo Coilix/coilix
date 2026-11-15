@@ -105,7 +105,7 @@ Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tag
    npm run prepare-release -- <grupa> X.Y.Z
    ```
 
-   Skrypt (`scripts/prepare-release.mjs`) sprawdza gałąź, wersję względem tagów grupy, wpisy w `unreleased.md` i to, że moduł funkcji ma wydany rdzeń. Potem zakłada gałąź `release/<grupa>-vX.Y.Z`, zmienia nazwę `changelog/<grupa>/unreleased.md` na `X.Y.Z.md` z nagłówkiem (`version`, dzisiejsza `date`, dla modułu funkcji `requires-core` z ostatniego tagu `core-v*`), zakłada pusty `unreleased.md`, commituje z `Signed-off-by` (`COILIX-00000: Release <grupa> X.Y.Z`), wypycha gałąź i otwiera PR przez `gh`. Z `--no-push` kończy na lokalnym commicie. Skrypt działa lokalnie, a nie jako workflow, bo PR otwarty domyślnym tokenem GitHub Actions nie uruchamia CI.
+   Skrypt (`scripts/prepare-release.mjs`) sprawdza gałąź, wersję względem tagów grupy, wpisy w `unreleased.md` i to, że moduł funkcji ma wydany rdzeń. Potem zakłada gałąź `release/<grupa>-vX.Y.Z`, zmienia nazwę `changelog/<grupa>/unreleased.md` na `X.Y.Z.md` z nagłówkiem (`version`, dzisiejsza `date`, dla modułu funkcji `requires-core` z ostatniego tagu `core-v*`), zakłada pusty `unreleased.md`, przy pierwszej wersji nowej linii grupy z przewodnikami (np. `core` `X.Y.0`) tworzy kopię przewodników i przykładów dla linii `X.Y` ([documentation.md](documentation.md#wersje), wymaga `npm ci`), commituje z `Signed-off-by` (`COILIX-00000: Release <grupa> X.Y.Z`), wypycha gałąź i otwiera PR przez `gh`. Z `--no-push` kończy na lokalnym commicie. Skrypt działa lokalnie, a nie jako workflow, bo PR otwarty domyślnym tokenem GitHub Actions nie uruchamia CI.
 3. Popraw w PR treść wpisów, jeśli trzeba, i scal go przez „Squash and merge”.
 4. Tag podpisany na commicie scalenia:
 

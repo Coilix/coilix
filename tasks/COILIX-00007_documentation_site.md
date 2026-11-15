@@ -25,10 +25,10 @@ Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
    - Docusaurus w `12_docs/website/` z językami EN i PL, przełącznikiem wersji, stroną changelogu i stałymi działami menu,
    - skrypty sprawdzające z sekcji „Sprawdzenia w CI” zasad i krok w CI, który buduje stronę w PR bez publikacji.
 6. **Przewodniki:** Getting started, Guides i Reference w obu językach, z przykładami w `examples/next/`. Jeden dział na PR.
-7. **Publikacja:**
-   - `.github/workflows/docs.yml` (push na `master`: przewodniki i `/api/next/`, tag: `/api/X.Y/`),
-   - gałąź `gh-pages`, GitHub Pages z domeną `docs.coilix.dev`, rekord CNAME w Cloudflare (akcja ręczna opiekuna),
-   - skrypt `npm run version` i opis w `docs/process/development.md` w sekcji „Wydanie”.
+7. **Publikacja** (według ADR 0011, razem z krokiem 5 z COILIX-00009):
+   - sekcja `core` pod `/core/`, tryb publikacji tylko z wydanymi liniami, API pod `/api/<grupa>/<linia>/` i kopia przewodników nowej linii w `npm run prepare-release` (zrobione),
+   - `.github/workflows/docs.yml` przy tagu i ręcznie, z lychee przed publikacją,
+   - gałąź `gh-pages`, GitHub Pages z domeną `docs.coilix.dev`, rekord CNAME w Cloudflare (akcja ręczna opiekuna).
 
 ## Proponowany projekt
 
@@ -43,9 +43,9 @@ Ustalenia z kroku 5:
 ## Kryteria akceptacji
 
 1. Każdy publiczny element w `src/main` modułów `01`–`10` ma Scaladoc albo Javadoc zgodny z `CLAUDE.md`.
-2. `docs.coilix.dev` pokazuje przewodniki po angielsku (`/`) i po polsku (`/pl/`), przełącznik wersji z `next` i wydanymi liniami, stronę `/changelog` i dokumentację API dla każdej wersji.
+2. `docs.coilix.dev` pokazuje przewodniki po angielsku (`/core/`) i po polsku (`/pl/core/`), przełącznik wersji z wydanymi liniami, stronę `/changelog` i dokumentację API dla każdej wydanej linii.
 3. Wszystkie sprawdzenia z sekcji „Sprawdzenia w CI” zasad działają w CI i przerywają build.
-4. Push na `master` aktualizuje wersję `next`, a wydanie `X.Y.0` tworzy wersję `X.Y` skryptem `npm run version`.
+4. PR wydania `X.Y.0` tworzy wersję `X.Y` przez `npm run prepare-release`, a tag i ręczne uruchomienie publikują stronę.
 5. `CLAUDE.md` opisuje moduł `12_docs` (tabela modułów, komendy).
 
 ## Poza zakresem

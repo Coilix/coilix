@@ -5,11 +5,23 @@ import type * as Preset from '@docusaurus/preset-classic';
 import {themes as prismThemes} from 'prism-react-renderer';
 
 const examples = path.resolve(__dirname, '..', 'examples');
+const published = process.env.COILIX_DOCS_PUBLISH === 'true';
 
 function releasedLines(): string[] {
   const file = path.resolve(__dirname, 'versions.json');
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
 }
+
+function publishedLines(): string[] {
+  const lines = releasedLines();
+  if (lines.length === 0) {
+    throw new Error('COILIX_DOCS_PUBLISH is set, but core has no released documentation line in versions.json');
+  }
+  return lines;
+}
+
+const coreDocsVersions = published ? {onlyIncludeVersions: publishedLines()} : {};
+const coreApiLine = published ? publishedLines()[0] : 'next';
 
 function exampleAliases(): Record<string, string> {
   const versioned = releasedLines().map((line) => [`@examples-${line}`, path.join(examples, line)]);
@@ -32,6 +44,7 @@ const config: Config = {
   organizationName: 'Coilix',
   projectName: 'coilix',
   trailingSlash: false,
+  customFields: {coreApiLine},
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',
@@ -54,9 +67,11 @@ const config: Config = {
       'classic',
       {
         docs: {
+          routeBasePath: 'core',
           sidebarPath: './sidebars.ts',
           editUrl: 'https://github.com/Coilix/coilix/edit/master/12_docs/website/',
           versions: {current: {label: 'Next (unreleased)'}},
+          ...coreDocsVersions,
         },
         blog: false,
         theme: {customCss: './src/css/custom.css'},
@@ -72,7 +87,7 @@ const config: Config = {
       logo: {alt: 'Coilix', src: 'img/favicon.svg'},
       items: [
         {type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs'},
-        {href: 'pathname:///api/next/index.html', position: 'left', label: 'API'},
+        {href: `pathname:///api/core/${coreApiLine}/index.html`, position: 'left', label: 'API'},
         {to: '/changelog', position: 'left', label: 'Changelog'},
         {type: 'docsVersionDropdown', position: 'right'},
         {type: 'localeDropdown', position: 'right'},
