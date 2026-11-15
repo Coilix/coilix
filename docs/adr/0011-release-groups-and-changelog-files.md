@@ -96,6 +96,7 @@ Opiekun robi podpisany tag `<grupa>-vX.Y.Z` na commicie z `master` (albo z `seri
 ### Zmiany przy wdrożeniu
 
 - Punkt 4 changelogu: PR wydania przygotowuje lokalny skrypt `npm run prepare-release` zamiast ręcznego workflow „Prepare release”, bo PR otwarty domyślnym tokenem GitHub Actions nie uruchamia CI, a osobny token w sekretach byłby kolejnym kluczem do pilnowania. Kopia przewodników dla linii `X.Y` dojdzie do skryptu razem z publikacją strony.
+- Strona dokumentacji, punkt 1: build w PR dalej pokazuje `next` (punkt 7), a opublikowana strona nie. Rozróżnia je zmienna `COILIX_DOCS_PUBLISH=true`, z którą Docusaurus dostaje `onlyIncludeVersions` z wydanymi liniami. Sekcja `core` korzysta z domyślnej instancji wtyczki docs z `routeBasePath: 'core'`, więc przewodniki zostają w `docs/` bez przenoszenia plików.
 
 ## Konsekwencje
 

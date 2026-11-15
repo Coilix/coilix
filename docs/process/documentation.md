@@ -8,9 +8,9 @@ Zasada ogólna: każda informacja ma jedno miejsce. Jeśli coś trzeba napisać 
 
 | Rodzaj | Gdzie | Język | Na stronie |
 |---|---|---|---|
-| Dokumentacja API | Scaladoc i Javadoc w `src/main` | angielski | `/api/<wersja>/` |
-| Przewodniki | `12_docs/website/docs/` | angielski | `/docs/` |
-| Tłumaczenie przewodników | `12_docs/website/i18n/pl/` | polski | `/pl/docs/` |
+| Dokumentacja API | Scaladoc i Javadoc w `src/main` | angielski | `/api/<grupa>/<linia>/` |
+| Przewodniki | `12_docs/website/docs/` | angielski | `/core/` |
+| Tłumaczenie przewodników | `12_docs/website/i18n/pl/` | polski | `/pl/core/` |
 | Przykłady kodu | `12_docs/examples/` | kod | wklejane do przewodników |
 | Changelog | `changelog/<grupa>/` | angielski | `/changelog` |
 | README | `README.md` | angielski | nie, tylko GitHub |
@@ -43,14 +43,24 @@ Strona powstaje wyłącznie z `12_docs/`. Nic z `docs/` ani `tasks/` nie trafia 
     src/components/           komponenty React używane przez strony
     src/generated/            changelog.md z plików changelog/ (generowany przy budowaniu, poza gitem)
     static/img/               obrazy
-    scripts/                  skrypty sprawdzające i ich testy, changelog i skrypt nowej wersji
+    scripts/                  skrypty sprawdzające i ich testy, changelog, wydanie i kopia przewodników nowej linii
       allowed-licenses.json   dozwolone licencje zależności npm
     docusaurus.config.ts
     sidebars.ts
     package.json, package-lock.json, .nvmrc
 ```
 
-Katalogów oznaczonych jako „generowane” nie zakłada się ręcznie. Powstają przez skrypt nowej wersji (sekcja [Wersje](#wersje)).
+Katalogów oznaczonych jako „generowane” nie zakłada się ręcznie. Powstają w PR wydania (sekcja [Wersje](#wersje)).
+
+## Sekcje grup wydań
+
+Każda grupa wydań z przewodnikami ma na stronie własną sekcję z własnym przełącznikiem wersji ([ADR 0011](../adr/0011-release-groups-and-changelog-files.md)). Sekcja to osobna instancja wtyczki docs Docusaurusa, a jej wersje to linie `MINOR` tej grupy.
+
+| Grupa | Adres | Przewodniki | Instancja wtyczki |
+|---|---|---|---|
+| `core` | `/core/` | `docs/` i `i18n/pl/docusaurus-plugin-content-docs/` | domyślna |
+
+Plugin IntelliJ jest opisany w sekcji `core`, a przykłady z `examples/` należą do sekcji `core`. Moduł funkcji dostaje sekcję razem z pierwszym przewodnikiem: instancję wtyczki w `docusaurus.config.ts`, wpis w `docsSections` w `scripts/docs-line.mjs` i wiersz w tej tabeli.
 
 ## Struktura menu
 
@@ -83,7 +93,7 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 - **Jeden temat na stronę.** Strona dłuższa niż około 1500 słów dzieli się na kilka.
 - **Pierwszy akapit** mówi, czego czytelnik się nauczy i kiedy tego potrzebuje.
 - **Nagłówki** do poziomu `###`. Tytuły w sentence case: „Configuration properties”, nie „Configuration Properties”.
-- **Linki** między przewodnikami są względne i prowadzą do pliku (`./components.md`), nie do adresu URL. Do API linkuje się ścieżką `pathname:///api/next/...` (sekcja [Dokumentacja API](#dokumentacja-api)). Przedrostek `pathname://` jest potrzebny, bo dokumentacja API nie jest częścią builda Docusaurusa i zwykła ścieżka `/api/...` przerwałaby build jako zepsuty link.
+- **Linki** między przewodnikami są względne i prowadzą do pliku (`./components.md`), nie do adresu URL. Do API linkuje się ścieżką `pathname:///api/core/next/...` (sekcja [Dokumentacja API](#dokumentacja-api)). Przedrostek `pathname://` jest potrzebny, bo dokumentacja API nie jest częścią builda Docusaurusa i zwykła ścieżka `/api/...` przerwałaby build jako zepsuty link.
 - **Obrazy** w `static/img/<dział>/`, w formacie SVG albo PNG, zawsze z tekstem alternatywnym.
 - **Wyróżnienia** tylko trzech rodzajów: `:::note`, `:::tip`, `:::warning`.
 
@@ -141,16 +151,10 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Wersje
 
-- Wersja dokumentacji to linia `MINOR`: `next`, `0.2`, `0.1`. Domyślnie strona pokazuje najnowszą wydaną linię, a `next` jest opisana jako „Next (unreleased)”.
+- Wersja dokumentacji to linia `MINOR` grupy: `next`, `0.2`, `0.1`. Domyślnie sekcja pokazuje najnowszą wydaną linię, a `next` jest opisana jako „Next (unreleased)”.
+- Opublikowana strona pokazuje tylko wydane linie, bez `next`. Build w PR i lokalny `npm run build` pokazują też `next`, żeby sprawdzić niewydane przewodniki. Tryb publikacji włącza zmienna `COILIX_DOCS_PUBLISH=true`, a bez żadnej wydanej linii build w tym trybie kończy się błędem.
 - `docs/` i `i18n/pl/.../current/` zawsze opisują stan `master`. Zmiana kodu widoczna dla użytkownika aktualizuje przewodnik w tym samym PR.
-- **Nowa linia** powstaje w PR wydania `X.Y.0` (gałąź `release/core-vX.Y.0`) przez:
-
-  ```sh
-  cd 12_docs/website
-  npm run version -- X.Y
-  ```
-
-  Skrypt wykonuje `docusaurus docs:version X.Y`, kopiuje przewodniki PL do `version-X.Y`, kopiuje `examples/next/` do `examples/X.Y/` i podmienia w skopiowanych stronach `@examples/` na `@examples-X.Y/` oraz `/api/next/` na `/api/X.Y/`. Ręcznie nie robi się żadnego z tych kroków.
+- **Nowa linia** powstaje w PR wydania pierwszej wersji linii bez przyrostka, zwykle `X.Y.0` (gałąź `release/core-vX.Y.0`). Robi to `npm run prepare-release` (`scripts/docs-line.mjs`): wykonuje `docusaurus docs:version X.Y`, które kopiuje przewodniki EN i PL, menu i tłumaczenia menu, kopiuje `examples/next/` do `examples/X.Y/` i podmienia w skopiowanych stronach `@examples/` na `@examples-X.Y/` oraz `/api/core/next/` na `/api/core/X.Y/`. Wydanie przedpremierowe (`X.Y.0-RC1`) nie tworzy linii. Ręcznie nie robi się żadnego z tych kroków.
 - **Wydanie poprawkowe** `X.Y.Z` nie tworzy nowej wersji dokumentacji. Poprawka opisu błędu, który dotyczy wydanej linii, trafia do `docs/` i do `versioned_docs/version-X.Y/` (oraz ich odpowiedników PL) w tym samym PR co poprawka kodu.
 - Zamrożone przykłady w `examples/X.Y/` zmienia się tylko razem z poprawką w wydanej linii.
 - Linie inne niż najnowsza dostają baner „unmaintained”, zgodnie z polityką wsparcia w `SECURITY.md`. Wydanej wersji dokumentacji się nie usuwa, bo zewnętrzne linki przestałyby działać.
@@ -167,15 +171,18 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 - Scaladoc wszystkich publikowanych modułów Scali (`common`, `slf4s-plugin`, `config`, `context`, `boot`) jest budowany jako jedna strona przez projekt sbt `docs`, a Javadoc `02_annotations` obok niej w katalogu `javadoc/`. Robi to `sbt docs/apiSite`, wynik jest w `target/out/jvm/scala-<wersja>/coilix-docs/api-site/`.
 - Projekt `docs` podaje do Scaladoc pliki TASTy tych modułów (`Compile / doc / tastyFiles`), więc nie potrzebuje sbt-unidoc. Nowy publikowany moduł Scali dopisuje się do tej listy w `build.sbt`.
 - Linki Scaladoc do adnotacji z `dev.coilix.annotation` prowadzą do Javadoc tej samej linii (`-external-mappings`).
-- Adresy: `/api/next/` z `master` oraz `/api/X.Y/` dla każdej wydanej linii, nadpisywane przy każdym wydaniu poprawkowym tej linii.
-- Przewodniki w `docs/` linkują do `/api/next/`. Skrypt nowej wersji zamienia te linki na `/api/X.Y/` w kopii wersji.
+- Adresy: `/api/<grupa>/X.Y/` dla każdej wydanej linii grupy, budowane z commitu tagu i nadpisywane przy każdym wydaniu poprawkowym tej linii. `/api/core/next/` istnieje tylko jako cel linków w niewydanych przewodnikach i nie jest publikowany.
+- Przewodniki w `docs/` linkują do `/api/core/next/`. Przy tworzeniu nowej linii te linki w jej kopii zmieniają się na `/api/core/X.Y/`. Link „API” w menu i na stronie startowej prowadzi do najnowszej wydanej linii rdzenia.
 
 ## Publikacja
 
-- Stronę publikuje tylko GitHub Actions (`.github/workflows/docs.yml`) na gałąź `gh-pages`. Nikt nie wypycha zmian na `gh-pages` ręcznie.
-- Push na `master` buduje przewodniki we wszystkich wersjach i obu językach oraz `/api/next/`.
-- Tag `core-vX.Y.Z` buduje `/api/X.Y/`.
+Zasady z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md). Workflow publikacji dochodzi w kroku 5 z `tasks/COILIX-00009`.
+
+- Stronę publikuje tylko GitHub Actions (workflow „Publish docs”, `.github/workflows/docs.yml`) na gałąź `gh-pages`. Nikt nie wypycha zmian na `gh-pages` ręcznie.
+- Publikacja następuje przy tagu wydania i ręcznie, nigdy przy pushu na `master`. Przewodniki są budowane zawsze z aktualnego `master` w trybie publikacji (`COILIX_DOCS_PUBLISH=true`), więc poprawka opisu wydanej linii wymaga tylko PR na `master` i ręcznego uruchomienia workflow.
+- Tag `<grupa>-vX.Y.Z` buduje dodatkowo `/api/<grupa>/X.Y/` z commitu tagu.
 - Publikacja przewodników zastępuje całą zawartość `gh-pages` poza katalogiem `api/` i plikiem `CNAME`. Dzięki temu usunięta strona znika ze strony, a dokumentacja API starszych linii zostaje.
+- Przed publikacją cała zbudowana strona razem z API przechodzi link checker (lychee). Błąd zatrzymuje publikację.
 - Adres `docs.coilix.dev` wskazuje na GitHub Pages rekordem CNAME w Cloudflare.
 
 ## Sprawdzenia w CI

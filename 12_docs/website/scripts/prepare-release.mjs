@@ -2,6 +2,7 @@ import {execFileSync} from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import {changelogProblems, changelogRoot, groupLabel} from './changelog.mjs';
+import {createDocsLine, docusaurusInstalled, needsDocsLine} from './docs-line.mjs';
 import {
   fail,
   git,
@@ -37,6 +38,8 @@ const branch = git('branch', '--show-current');
 const coreVersion = lastCoreVersion();
 
 const upstream = tryGit('rev-parse', `origin/${branch}`);
+const line = lineOf(version);
+const docsLine = needsDocsLine(group, version);
 const problems = [
   ...versionProblems(group, version, branch, groupVersions(group)),
   ...unreleasedEntriesProblems(fs.readFileSync(unreleasedFile, 'utf8')),
@@ -44,6 +47,7 @@ const problems = [
   ...(upstream === git('rev-parse', 'HEAD') ? [] : [`${branch} is not the same as origin/${branch}, run git pull first`]),
   ...(needsCore(group) && !coreVersion ? ['there is no core-v* tag before this commit, release core first'] : []),
   ...(fs.existsSync(releaseFileName) ? [`changelog/${group}/${version}.md already exists`] : []),
+  ...(docsLine && !docusaurusInstalled() ? [`the ${group} guides need a copy for line ${line}, run npm ci first`] : []),
 ];
 
 if (problems.length > 0) {
@@ -65,7 +69,9 @@ if (changelog.length > 0) {
   fail(changelog.map((problem) => `changelog/${problem}`));
 }
 
-git('add', releaseFileName, unreleasedFile);
+const docsFiles = docsLine ? createDocsLine(group, line) : [];
+
+git('add', releaseFileName, unreleasedFile, ...docsFiles);
 git('commit', '--signoff', '--message', title);
 console.log(`Committed ${title} on ${releaseBranch}.`);
 
@@ -73,6 +79,7 @@ if (push) {
   git('push', '--set-upstream', 'origin', releaseBranch);
   const body = [
     `Closes the changelog of ${groupLabel(group)} ${version}: \`changelog/${group}/unreleased.md\` becomes \`changelog/${group}/${version}.md\`.`,
+    ...(docsLine ? ['', `Freezes the ${groupLabel(group)} guides and examples as documentation line ${line}.`] : []),
     '',
     `After merging, tag the merge commit: \`git tag -s ${group}-v${version} -m "Coilix ${groupLabel(group)} ${version}"\` and \`git push origin ${group}-v${version}\`.`,
   ].join('\n');

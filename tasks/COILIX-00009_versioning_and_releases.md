@@ -54,7 +54,7 @@ Zrobione: punkty 1–5 bez pluginu IntelliJ, MiMa z punktu 6 i opis wydania w `d
 
 Zostaje:
 
-- sekrety `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` w repozytorium i weryfikacja przestrzeni nazw `dev.coilix` w Central Portal rekordem DNS TXT w domenie `coilix.dev` (wymaga konta autora),
+- ~~sekrety `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` w repozytorium i weryfikacja przestrzeni nazw `dev.coilix` w Central Portal rekordem DNS TXT w domenie `coilix.dev`~~ (zrobione: przestrzeń nazw zweryfikowana 2026-11-03, sekrety są w repozytorium),
 - TASTy-MiMa: brak wtyczki dla sbt 2,
 - budowa, podpis i publikacja pluginu IntelliJ do Marketplace (z wersją z tagu w `plugin.xml`).
 
@@ -66,7 +66,9 @@ Zostaje:
 2. **Changelog w plikach:** katalog `changelog/<grupa>/` z `unreleased.md`, przeniesienie treści z `CHANGELOG.md`, sprawdzanie formatu w CI, strona `/changelog` z tych plików, zasady w `CLAUDE.md` i `docs/process/development.md` (zrobione: format opisuje `changelog/README.md`, sprawdza `npm run check`, a do czasu kroku 4 tag `v*` bierze notkę z `changelog/core/X.Y.Z.md`).
 3. **Grupy w buildzie:** przypisanie modułów do grup w `build.sbt`, wersja z tagu `<grupa>-v*` dla każdego modułu, MiMa względem poprzedniego wydania grupy, sprawdzenie, że moduł funkcji zależy od wydanego rdzenia, nowy opis w `docs/architecture/versioning.md` (zrobione: `project/ReleaseGroups.scala`, `checkReleasedCore`; przy okazji tag `core-v*` w `release.yml` i rulesety tagów `*-v*`, żeby rdzeń dało się wydać bez czekania na krok 4).
 4. **Wydanie przy tagu:** `release.yml` dla tagów `*-v*` (sprawdzenia z ADR 0011, publikacja tylko grupy, GitHub Release z pliku changelogu), skrypt i workflow „Prepare release”, ruleset tagów `*-v*` (zrobione: `release.yml` na `*-v*` z `release-tag.mjs` i `releaseVerify`, publikacja tylko grupy przez `RELEASE_GROUP`, zamiast workflow lokalny skrypt `npm run prepare-release`; zostaje publikacja pluginu IntelliJ w Marketplace).
-5. **Publikacja strony** (razem z krokiem 7 COILIX-00007): workflow „Publish docs” na tag i ręcznie, sekcje i wersje per grupa, API pod `/api/<grupa>/<linia>/`, lychee przed publikacją, `gh-pages` i domena `docs.coilix.dev`.
+5. **Publikacja strony** (razem z krokiem 7 COILIX-00007): workflow „Publish docs” na tag i ręcznie, sekcje i wersje per grupa, API pod `/api/<grupa>/<linia>/`, lychee przed publikacją, `gh-pages` i domena `docs.coilix.dev`. Dwa PR-y:
+   1. sekcja `core` pod `/core/`, tryb publikacji `COILIX_DOCS_PUBLISH=true` tylko z wydanymi liniami, linki do `/api/core/<linia>/` i kopia przewodników nowej linii w `npm run prepare-release` (`scripts/docs-line.mjs`) (zrobione),
+   2. `.github/workflows/docs.yml` z lychee i `gh-pages`, uruchamiany z `release.yml` i ręcznie.
 
 Kryteria akceptacji grup wydań:
 

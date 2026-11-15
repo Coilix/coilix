@@ -1,10 +1,12 @@
 import React from 'react';
 import Link from '@docusaurus/Link';
 import Translate, {translate} from '@docusaurus/Translate';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Layout from '@theme/Layout';
 import styles from './index.module.css';
 
 export default function Home(): React.ReactNode {
+  const {siteConfig} = useDocusaurusContext();
   return (
     <Layout
       title={translate({id: 'home.title', message: 'Dependency injection for Scala 3'})}
@@ -20,10 +22,10 @@ export default function Home(): React.ReactNode {
           </Translate>
         </p>
         <div className={styles.actions}>
-          <Link className="button button--primary button--lg" to="/docs/getting-started/first-application">
+          <Link className="button button--primary button--lg" to="/core/getting-started/first-application">
             <Translate id="home.start">Get started</Translate>
           </Link>
-          <Link className="button button--secondary button--lg" href="pathname:///api/next/index.html">
+          <Link className="button button--secondary button--lg" href={`pathname:///api/core/${siteConfig.customFields.coreApiLine}/index.html`}>
             <Translate id="home.api">API reference</Translate>
           </Link>
         </div>
