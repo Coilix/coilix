@@ -1,6 +1,11 @@
 package dev.coilix.config
 
 import dev.coilix.annotation.Autowired
+import dev.coilix.common.CoilixException
+import dev.coilix.config.enums.EnumDefinition
+import dev.coilix.config.enums.EnumResolver
+import dev.coilix.config.valuetype.ValueTypeDefinition
+import dev.coilix.config.valuetype.ValueTypeResolver
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Modifier
@@ -17,6 +22,9 @@ import scala.util.Try
  *  - `Option[T]`: `None` when the path is not set, otherwise the bound `T`,
  *  - `Map[String, V]`: one entry per key of the section,
  *  - `List[T]`, `Vector[T]` and `Set[T]` (and their supertypes such as `Seq[T]`): one element per list item,
+ *  - a class annotated with [[dev.coilix.annotation.ValueType]]: the inner value, bound by these rules and wrapped in the
+ *    class,
+ *  - an enum annotated with [[dev.coilix.annotation.Enumerated]]: the case with the name given as text,
  *  - a type supported by the [[dev.coilix.config.ScalarReader]]: the scalar value,
  *  - `AnyRef`: the plain value from [[dev.coilix.config.ConfigTree.anyRef]],
  *  - any other class: a new instance created from the section.
@@ -45,9 +53,18 @@ import scala.util.Try
  *   source of default arguments for constructor parameters
  * @param classLoader
  *   class loader for classes named by `class` keys
+ * @param valueTypes
+ *   recognizes and creates value types
+ * @param enums
+ *   recognizes enums and finds their cases by name
  */
-final class ReflectiveConfigBinder(scalars: ScalarReader, defaults: DefaultArguments, classLoader: ClassLoader)
-    extends ConfigBinder {
+final class ReflectiveConfigBinder(
+  scalars:     ScalarReader,
+  defaults:    DefaultArguments,
+  classLoader: ClassLoader,
+  valueTypes:  ValueTypeResolver = ValueTypeResolver.default,
+  enums:       EnumResolver      = EnumResolver.default
+) extends ConfigBinder {
 
   private val classKey = "class"
 
@@ -66,11 +83,33 @@ final class ReflectiveConfigBinder(scalars: ScalarReader, defaults: DefaultArgum
     else bindClass(tree, path, raw)
 
   private def bindClass(tree: ConfigTree, path: String, target: Class[?]): AnyRef =
-    if (hasClassKey(tree, path)) construct(tree, path, configuredClass(tree, path, target))
+    if (valueTypes.isValueType(target)) bindValueType(tree, path, target)
+    else if (enums.isEnum(target)) bindEnum(tree, path, target)
+    else if (hasClassKey(tree, path)) construct(tree, path, configuredClass(tree, path, target))
     else if (scalars.supports(target)) scalars.read(tree, path, target)
     else if (target == classOf[AnyRef]) tree.anyRef(path)
     else if (tree.isSection(path)) construct(tree, path, target)
     else throw ConfigurationException(s"Cannot bind configuration '$path' to ${target.getName}")
+
+  private def bindValueType(tree: ConfigTree, path: String, target: Class[?]): AnyRef =
+    converted(path, target)(createValueType(tree, path, valueTypes.resolve(target)))
+
+  private def createValueType(tree: ConfigTree, path: String, definition: ValueTypeDefinition): AnyRef =
+    definition.create(bind(tree, path, definition.innerType))
+
+  private def bindEnum(tree: ConfigTree, path: String, target: Class[?]): AnyRef =
+    converted(path, target)(findCase(tree, path, enums.resolve(target)))
+
+  private def findCase(tree: ConfigTree, path: String, definition: EnumDefinition): AnyRef =
+    definition.valueOf(tree.string(path))
+
+  private def converted(path: String, target: Class[?])(conversion: => AnyRef): AnyRef =
+    try {
+      conversion
+    } catch {
+      case error: CoilixException if !error.isInstanceOf[ConfigurationException] =>
+        throw ConfigurationException(s"Cannot bind configuration '$path' to ${target.getName}: ${error.getMessage}")
+    }
 
   private def bindOption(tree: ConfigTree, path: String, element: Type): Option[AnyRef] =
     Option.when(tree.contains(path))(bind(tree, path, element))
