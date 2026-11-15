@@ -16,11 +16,14 @@ package dev.coilix.context
  *   arguments passed to `factory`, in order
  * @param isPrimary
  *   whether the bean wins when several beans match a requested type
+ * @param lifecycle
+ *   methods invoked after creation and when the context closes
  */
 final case class BeanDefinition(
   beanName:     String,
   beanClass:    Class[?],
   factory:      InstanceFactory,
   dependencies: List[Dependency],
-  isPrimary:    Boolean
+  isPrimary:    Boolean,
+  lifecycle:    LifecycleMethods = LifecycleMethods.none
 ) extends BeanDescriptor

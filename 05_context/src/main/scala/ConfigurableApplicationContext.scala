@@ -10,6 +10,9 @@ trait ConfigurableApplicationContext extends ApplicationContext with AutoCloseab
   /** Whether the context has not been closed yet. */
   def isActive: Boolean
 
-  /** Closes the context. Closing an already closed context does nothing. */
+  /**
+   * Closes the context and runs the `@PreDestroy` methods of its beans, starting with the bean created last. Closing an already
+   * closed context does nothing.
+   */
   override def close(): Unit
 }

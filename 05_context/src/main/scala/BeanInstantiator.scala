@@ -11,6 +11,8 @@ trait BeanInstantiator {
    *
    * @throws dev.coilix.context.NoSuchBeanException
    *   if a required dependency is not in `registry`
+   * @throws dev.coilix.context.BeanCreationException
+   *   if the bean cannot be created or initialized
    */
   def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean
 }
@@ -29,5 +31,5 @@ object BeanInstantiator {
    * not set.
    */
   def default(using components: ComponentProvider): BeanInstantiator =
-    components.get[BeanInstantiator](ReflectiveBeanInstantiator(components.environment))
+    components.get[BeanInstantiator](ReflectiveBeanInstantiator(components.environment, BeanPostProcessor.default))
 }

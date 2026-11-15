@@ -56,5 +56,28 @@ Semantyka jak w Springu, ale z własnymi adnotacjami frameworka, bez zależnośc
 
 ## Ryzyka i otwarte pytania
 
-- Czy `@PostConstruct` ma być dozwolone na metodach prywatnych? Spring na to pozwala. Proponowane: tak, przez `setAccessible`, ale dopiero po decyzji, bo to omija enkapsulację.
-- Metody Scali bez nawiasów (`def init: Unit`) też są bezargumentowe w bajtkodzie, więc powinny działać. Warto to potwierdzić testem.
+- ~~Czy `@PostConstruct` ma być dozwolone na metodach prywatnych?~~ Decyzja opiekuna (2026-11-15): tak, także w nadklasach, przez `trySetAccessible`. Gdy pakiet nie jest otwarty (JPMS), błąd już przy definicji beana podpowiada `opens`.
+- ~~Metody Scali bez nawiasów (`def init: Unit`)~~ działają, potwierdza to test (`Repository.flush`).
+- Nazwy `@PostConstruct` i `@PreDestroy` pochodzą ze standardu Javy (JSR-250), a nie ze Springa, więc zostają (`docs/legal/spring-similarity.md`).
+
+## Stan realizacji (2026-11-15)
+
+Zrobione w całości:
+
+- `@PostConstruct` i `@PreDestroy` w `02_annotations`,
+- `LifecycleMethods` w `BeanDefinition` i `RegisteredBean`, wypełniane przez `LifecycleMethodScanner` (`AnnotatedLifecycleMethodScanner`) w `ReflectiveBeanDefinitionFactory` dla każdej definicji, także z metod `@Bean` (według typu zwracanego),
+- `BeanPostProcessor` (`PostConstructProcessor`) wołany z `ReflectiveBeanInstantiator` przed rejestracją,
+- `BeanDestroyer` (`PreDestroyInvoker`) wołany z `close()` w `DefaultApplicationContext`,
+- `InvalidLifecycleMethodException`, `BeanCreationException` z przyczyną,
+- demo (`InMemoryUserRepository`), przewodnik „Bean lifecycle” w obu językach, changelog `core`.
+
+Kilka `BeanPostProcessor` naraz (np. dla `@Async` z COILIX-00005) wymaga złożenia ich w jeden komponent. Dojdzie to razem z drugim procesorem.
+
+## Pomysły na rozwój
+
+Na razie metody cyklu życia są synchroniczne, bez parametrów i zwracają `Unit`. To wystarcza do pierwszego wydania. Kierunki na później (pomysł opiekuna z 2026-11-15):
+
+- **Metody efektowe:** `@PostConstruct` i `@PreDestroy` zwracające efekt, np. `IO[Unit]` albo `ZIO[Any, Throwable, Unit]`, uruchamiany przez framework przy starcie i przy zamykaniu, z zachowaniem kolejności beanów. Wymaga decyzji z COILIX-00020 (moduły integracyjne, sposób uruchamiania efektu), więc rdzeń dostałby tylko ogólny punkt rozszerzeń, a obsługę konkretnych bibliotek moduły `coilix-cats-effect` i `coilix-zio`.
+- **Metody z parametrami:** parametry wstrzykiwane tak jak w konstruktorze, np. inny bean, `ApplicationContext`, `@Value` albo `ApplicationArguments`. Walidacja sygnatury przeszłaby wtedy z „bez parametrów” na „każdy parametr da się rozwiązać”, nadal przy tworzeniu definicji.
+
+Obie zmiany rozszerzają obecny kontrakt, więc nie będą zmianą niezgodną dla istniejących beanów.

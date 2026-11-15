@@ -33,7 +33,8 @@ object BeanDefinitionFactory {
         ParameterDependencyMapper.default,
         BeanNameGenerator.default,
         BeanMethodScanner.default,
-        components.environment
+        components.environment,
+        LifecycleMethodScanner.default
       )
     )
 }

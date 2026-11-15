@@ -7,7 +7,7 @@ import dev.coilix.context.wiring.GreetingService
 import munit.FunSuite
 
 final class ReflectiveBeanInstantiatorTest extends FunSuite {
-  private val instantiator  = ReflectiveBeanInstantiator(Environment.empty)
+  private val instantiator  = ReflectiveBeanInstantiator(Environment.empty, PostConstructProcessor())
   private val emptyRegistry = ImmutableBeanRegistry.empty(PrimaryCandidateSelector())
   private val english       = RegisteredBean("englishGreeter", classOf[EnglishGreeter], isPrimary = false, EnglishGreeter())
   private val service       = Definitions.of(classOf[DefaultGreetingService])

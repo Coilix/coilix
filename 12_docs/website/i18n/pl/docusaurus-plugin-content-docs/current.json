@@ -6,5 +6,9 @@
   "sidebar.docs.category.Getting started": {
     "message": "Pierwsze kroki",
     "description": "The label for category 'Getting started' in sidebar 'docs'"
+  },
+  "sidebar.docs.category.Guides": {
+    "message": "Przewodniki",
+    "description": "The label for category 'Guides' in sidebar 'docs'"
   }
 }

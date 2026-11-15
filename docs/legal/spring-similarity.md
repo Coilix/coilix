@@ -18,7 +18,7 @@
 
 ## API
 
-Nazwy adnotacji odpowiadają Springowi: `@Component`, `@Service`, `@Repository`, `@Configuration`, `@Bean`, `@Autowired`, `@Qualifier`, `@Primary`, `@Order`, `@Value`, `@ConfigurationProperties`. Do tego pojęcia `ApplicationContext` i `ApplicationRunner`.
+Nazwy adnotacji odpowiadają Springowi: `@Component`, `@Service`, `@Repository`, `@Configuration`, `@Bean`, `@Autowired`, `@Qualifier`, `@Primary`, `@Order`, `@Value`, `@ConfigurationProperties`. Do tego pojęcia `ApplicationContext` i `ApplicationRunner`. Adnotacje cyklu życia `@PostConstruct` i `@PreDestroy` mają nazwy ze standardu Javy (JSR-250, dziś `jakarta.annotation`), których używają też Jakarta EE, Micronaut i Quarkus. Coilix ma własne adnotacje o tych nazwach w `dev.coilix.annotation`, bez zależności od `jakarta.annotation`.
 
 - **UE:** TSUE (C-406/10 *SAS Institute v World Programming*, 2012) nie uznaje funkcjonalności, języka programowania ani formatu plików za chronione wyrażenie programu komputerowego. Dyrektywa 2009/24/WE chroni wyrażenie (kod), a nie idee i zasady leżące u podstaw interfejsów.
 - **USA:** Sąd Najwyższy (*Google LLC v. Oracle America, Inc.*, 2021) uznał ponowną implementację deklaracji API Javy przez Google za dozwolony użytek, nie rozstrzygając, czy API w ogóle podlega ochronie.

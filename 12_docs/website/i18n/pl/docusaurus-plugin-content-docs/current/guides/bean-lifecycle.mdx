@@ -1,0 +1,31 @@
+---
+id: bean-lifecycle
+title: Cykl życia beana
+description: Uruchom kod po utworzeniu beana i przy zatrzymaniu aplikacji za pomocą @PostConstruct i @PreDestroy.
+sidebar_position: 1
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ReportScheduler from '!!raw-loader!@examples/scala/ReportScheduler.scala';
+
+Ta strona pokazuje, jak bean uruchamia własny kod zaraz po tym, jak Coilix go utworzy, i jeszcze raz przy zatrzymaniu aplikacji. Przyda ci się, gdy bean musi sprawdzić swoje ustawienia, otworzyć zasób albo uruchomić pulę wątków, a potem je zwolnić.
+
+## Oznacz metody cyklu życia
+
+Oznacz metodę adnotacją `@PostConstruct`, żeby uruchomić ją raz po utworzeniu beana i wstrzyknięciu jego zależności. Oznacz metodę adnotacją `@PreDestroy`, żeby uruchomić ją przy zamykaniu kontekstu aplikacji.
+
+<CodeBlock language="scala" title="ReportScheduler.scala">{ReportScheduler}</CodeBlock>
+
+Metoda cyklu życia nie ma parametrów i zwraca `Unit`. Może być prywatna, jak w przykładzie, i może być zadeklarowana w nadklasie beana. Jeśli bean ma kilka metod z tą samą adnotacją, Coilix uruchamia je w kolejności ich nazw.
+
+Metoda z parametrami albo z wynikiem innym niż `Unit` zatrzymuje start aplikacji wyjątkiem `InvalidLifecycleMethodException`. Komunikat podaje nazwę beana i metody.
+
+## Kiedy metody się uruchamiają
+
+Coilix uruchamia metody `@PostConstruct`, zanim przekaże bean jakiemukolwiek innemu beanowi. Bean, który dostaje `ReportScheduler` w konstruktorze, zawsze dostaje obiekt, który już sprawdził swoje ustawienia.
+
+Jeśli metoda `@PostConstruct` rzuci wyjątek, start aplikacji kończy się wyjątkiem `BeanCreationException`. Komunikat podaje nazwę beana i metody, a pierwotny wyjątek jest jego przyczyną.
+
+Kontekst aplikacji zamyka się przy zatrzymaniu JVM, na przykład po Ctrl+C, albo gdy wywołasz `close()` na kontekście zwróconym przez `Coilix.run`. Coilix uruchamia wtedy metody `@PreDestroy`, zaczynając od beana utworzonego jako ostatni. Bean jest więc niszczony przed beanami, od których zależy, i może z nich korzystać, gdy się zatrzymuje.
+
+Jeśli metoda `@PreDestroy` rzuci wyjątek, Coilix zapisuje go w logu jako ostrzeżenie i kontynuuje z pozostałymi metodami i beanami.
