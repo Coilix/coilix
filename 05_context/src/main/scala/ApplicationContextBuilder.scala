@@ -30,11 +30,15 @@ object ApplicationContextBuilder {
 
   /**
    * The configured implementation, or a [[dev.coilix.context.DefaultApplicationContextBuilder]] built from the default dependency
-   * resolver,
-   * bean instantiator and candidate selector.
+   * resolver, bean instantiator, candidate selector and bean destroyer.
    */
   def default(using components: ComponentProvider): ApplicationContextBuilder =
     components.get[ApplicationContextBuilder](
-      DefaultApplicationContextBuilder(DependencyResolver.default, BeanInstantiator.default, CandidateSelector.default)
+      DefaultApplicationContextBuilder(
+        DependencyResolver.default,
+        BeanInstantiator.default,
+        CandidateSelector.default,
+        BeanDestroyer.default
+      )
     )
 }

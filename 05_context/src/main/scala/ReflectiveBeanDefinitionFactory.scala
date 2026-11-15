@@ -11,7 +11,8 @@ import java.lang.reflect.Modifier
  * A `@ConfigurationProperties` class is bound from the configuration. Any other class is created through the constructor
  * chosen by the [[dev.coilix.context.ConstructorSelector]], with one dependency per parameter. Interfaces and abstract classes give
  * no
- * definition. The `@Bean` methods of the class are added by the [[dev.coilix.context.BeanMethodScanner]].
+ * definition. The `@Bean` methods of the class are added by the [[dev.coilix.context.BeanMethodScanner]]. Every definition gets the
+ * lifecycle methods of its bean class from the [[dev.coilix.context.LifecycleMethodScanner]].
  *
  * This is the default [[dev.coilix.context.BeanDefinitionFactory]].
  *
@@ -25,18 +26,24 @@ import java.lang.reflect.Modifier
  *   finds `@Bean` methods
  * @param environment
  *   binds `@ConfigurationProperties` classes
+ * @param lifecycleScanner
+ *   finds `@PostConstruct` and `@PreDestroy` methods
  */
 final class ReflectiveBeanDefinitionFactory(
   constructorSelector: ConstructorSelector,
   parameterMapper:     ParameterDependencyMapper,
   nameGenerator:       BeanNameGenerator,
   methodScanner:       BeanMethodScanner,
-  environment:         Environment
+  environment:         Environment,
+  lifecycleScanner:    LifecycleMethodScanner
 ) extends BeanDefinitionFactory {
 
   override def create(beanClass: Class[?]): List[BeanDefinition] =
-    if (isInstantiable(beanClass)) classDefinition(beanClass) :: methodScanner.scan(beanClass)
+    if (isInstantiable(beanClass)) (classDefinition(beanClass) :: methodScanner.scan(beanClass)).map(withLifecycle)
     else Nil
+
+  private def withLifecycle(definition: BeanDefinition): BeanDefinition =
+    definition.copy(lifecycle = lifecycleScanner.scan(definition.beanName, definition.beanClass))
 
   private def isInstantiable(beanClass: Class[?]): Boolean =
     !beanClass.isInterface && !Modifier.isAbstract(beanClass.getModifiers)

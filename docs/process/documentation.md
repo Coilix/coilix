@@ -119,6 +119,8 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 | extension point | punkt rozszerzenia |
 | startup | start aplikacji |
 | shutdown | zamykanie aplikacji |
+| bean lifecycle | cykl życia beana |
+| lifecycle method | metoda cyklu życia |
 
 Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 

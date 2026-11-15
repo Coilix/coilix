@@ -11,10 +11,13 @@ package dev.coilix.context
  *   whether the bean wins when several beans match a requested type
  * @param instance
  *   the bean itself
+ * @param lifecycle
+ *   lifecycle methods of the bean, of which the `@PreDestroy` methods run when the context closes
  */
 final case class RegisteredBean(
   beanName:  String,
   beanClass: Class[?],
   isPrimary: Boolean,
-  instance:  AnyRef
+  instance:  AnyRef,
+  lifecycle: LifecycleMethods = LifecycleMethods.none
 ) extends BeanDescriptor

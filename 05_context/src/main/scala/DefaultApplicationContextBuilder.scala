@@ -13,17 +13,20 @@ package dev.coilix.context
  *   creates each bean
  * @param selector
  *   chooses a bean when several match a requested type
+ * @param destroyer
+ *   destroys the beans when the built context closes
  */
 final class DefaultApplicationContextBuilder(
   resolver:     DependencyResolver,
   instantiator: BeanInstantiator,
-  selector:     CandidateSelector
+  selector:     CandidateSelector,
+  destroyer:    BeanDestroyer
 ) extends ApplicationContextBuilder {
 
   private val contextBeanName = "applicationContext"
 
   override def build(definitions: List[BeanDefinition], singletons: List[RegisteredBean]): ConfigurableApplicationContext = {
-    lazy val context:  ConfigurableApplicationContext = DefaultApplicationContext(registry)
+    lazy val context:  ConfigurableApplicationContext = DefaultApplicationContext(registry, destroyer)
     lazy val registry: BeanRegistry                   = instantiateAll(definitions, initialRegistry(context, singletons))
     val _ = registry
     context

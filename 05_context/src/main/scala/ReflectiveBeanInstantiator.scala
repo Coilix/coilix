@@ -7,17 +7,27 @@ import dev.coilix.config.Environment
  * Creates beans through their [[dev.coilix.context.InstanceFactory]], resolving each dependency from the registry and `@Value`
  * parameters from the environment.
  *
- * Each created bean is logged at `INFO` level. This is the default [[dev.coilix.context.BeanInstantiator]].
+ * Each new instance goes through the [[dev.coilix.context.BeanPostProcessor]] before it is returned, so `@PostConstruct`
+ * methods have run before any other bean receives it. Each created bean is logged at `INFO` level. This is the default
+ * [[dev.coilix.context.BeanInstantiator]].
  *
  * @param environment
  *   resolves `@Value` expressions
+ * @param postProcessor
+ *   initializes each new instance
  */
 @Slf4s
-final class ReflectiveBeanInstantiator(environment: Environment) extends BeanInstantiator {
+final class ReflectiveBeanInstantiator(environment: Environment, postProcessor: BeanPostProcessor) extends BeanInstantiator {
 
   override def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean = {
     log.info(s"Creating bean ${definition.beanName} (${definition.beanClass.getSimpleName})")
-    RegisteredBean(definition.beanName, definition.beanClass, definition.isPrimary, newInstance(definition, registry))
+    RegisteredBean(
+      beanName  = definition.beanName,
+      beanClass = definition.beanClass,
+      isPrimary = definition.isPrimary,
+      instance  = postProcessor.postProcess(definition, newInstance(definition, registry)),
+      lifecycle = definition.lifecycle
+    )
   }
 
   private def newInstance(definition: BeanDefinition, registry: BeanRegistry): AnyRef =

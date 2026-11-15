@@ -8,6 +8,12 @@ const sidebars: SidebarsConfig = {
       collapsed: false,
       items: ['getting-started/first-application'],
     },
+    {
+      type: 'category',
+      label: 'Guides',
+      collapsed: false,
+      items: ['guides/bean-lifecycle'],
+    },
   ],
 };
 

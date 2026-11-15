@@ -1,0 +1,31 @@
+---
+id: bean-lifecycle
+title: Bean lifecycle
+description: Run code after a bean is created and when the application stops, with @PostConstruct and @PreDestroy.
+sidebar_position: 1
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ReportScheduler from '!!raw-loader!@examples/scala/ReportScheduler.scala';
+
+This page shows how a bean runs its own code right after Coilix creates it and again when the application stops. Use it when a bean has to check its settings, open a resource or start a thread pool, and release it later.
+
+## Mark the lifecycle methods
+
+Annotate a method with `@PostConstruct` to run it once after the bean is created and its dependencies are injected. Annotate a method with `@PreDestroy` to run it when the application context closes.
+
+<CodeBlock language="scala" title="ReportScheduler.scala">{ReportScheduler}</CodeBlock>
+
+A lifecycle method takes no parameters and returns `Unit`. It can be private, as in the example, and it can be declared in a superclass of the bean. If a bean has several methods with the same annotation, Coilix runs them in order of their names.
+
+A method with parameters or with a result other than `Unit` stops the startup with `InvalidLifecycleMethodException`. The message names the bean and the method.
+
+## When the methods run
+
+Coilix runs the `@PostConstruct` methods before it passes the bean to any other bean. A bean that receives `ReportScheduler` in its constructor always gets a scheduler that has already checked its settings.
+
+If a `@PostConstruct` method throws an exception, the startup stops with `BeanCreationException`. The message names the bean and the method, and the original exception is its cause.
+
+The application context closes when the JVM stops, for example after Ctrl+C, or when you call `close()` on the context returned by `Coilix.run`. Coilix then runs the `@PreDestroy` methods, starting with the bean that was created last. A bean is therefore destroyed before the beans it depends on, so it can still use them while it stops.
+
+If a `@PreDestroy` method throws an exception, Coilix logs it as a warning and goes on with the remaining methods and beans.

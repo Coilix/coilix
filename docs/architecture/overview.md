@@ -41,10 +41,14 @@ flowchart LR
   - konstruktor wybrany przez `ConstructorSelector` (z `@Autowired`, a bez niego publiczny z największą liczbą parametrów), z parametrami zamienionymi na `Dependency` przez `ParameterDependencyMapper`,
   - metody `@Bean` w klasach `@Configuration` (`BeanMethodScanner`),
   - klasy `@ConfigurationProperties`, wiązane z configiem zamiast wywołania konstruktora z zależnościami.
+
+  Każda definicja dostaje też metody cyklu życia klasy beana (`LifecycleMethods`) od `LifecycleMethodScanner`: `@PostConstruct` i `@PreDestroy`, także prywatne i z nadklas, po nazwie. Zła sygnatura (parametry, wynik inny niż `Unit`, metoda statyczna) daje `InvalidLifecycleMethodException` już na tym etapie.
 - **Zależności.** `Dependency` ma cztery warianty: `Required` (zwykły typ), `Optional` (`Option[T]`), `Collection` (`List[T]`) i `Value` (`@Value`). Typy generyczne rozpoznaje `GenericDependencyTypeMapper`.
 - **Kolejność.** `TopologicalDependencyResolver` ustawia definicje tak, żeby każdy bean powstawał po beanach, których wymaga. Brak kandydata to `NoSuchBeanException`, a cykl to `CircularDependencyException`. Na kolejność wpływają tylko zależności `Required`. Beany gotowe w tej samej rundzie powstają w kolejności skanowania (po nazwie klasy), więc `Option[T]` i `List[T]` widzą tylko beany utworzone wcześniej. To znane ograniczenie, opisane w ROADMAP.md.
 - **Wybór kandydata.** `PrimaryCandidateSelector` wybiera najpierw bean dokładnie tej klasy, potem jedynego kandydata, a przy kilku kandydatach ten z `@Primary`. Bez jednego `@Primary` zgłasza `AmbiguousBeanException`.
 - **Tworzenie.** `DefaultApplicationContextBuilder` składa rejestr przez `foldLeft` po uporządkowanych definicjach. Każdy krok dodaje nowy `RegisteredBean` do niemutowalnego `ImmutableBeanRegistry`.
+- **Inicjalizacja.** `ReflectiveBeanInstantiator` przepuszcza nową instancję przez `BeanPostProcessor` przed rejestracją. Domyślny `PostConstructProcessor` wywołuje metody `@PostConstruct`, więc beany zależne dostają już zainicjalizowany obiekt. Wyjątek z takiej metody to `BeanCreationException` z nazwą beana i metody.
+- **Zamykanie.** `close()` kontekstu przekazuje beany do `BeanDestroyer`. Domyślny `PreDestroyInvoker` wywołuje metody `@PreDestroy` od beana utworzonego jako ostatni. Wyjątek jest logowany jako `WARN` i nie przerywa niszczenia pozostałych beanów.
 - **Beany wbudowane.** Przed beanami aplikacji rejestr zawiera `applicationContext`, `applicationArguments` i `environment`, więc można je wstrzykiwać.
 
 ## Punkty rozszerzeń
@@ -75,6 +79,9 @@ coilix.context.bean-name-generator.class: com.example.PrefixedBeanNameGenerator
 | `coilix.context.dependency-resolver` | `DependencyResolver` | `TopologicalDependencyResolver` |
 | `coilix.context.candidate-selector` | `CandidateSelector` | `PrimaryCandidateSelector` |
 | `coilix.context.bean-instantiator` | `BeanInstantiator` | `ReflectiveBeanInstantiator` |
+| `coilix.context.lifecycle-method-scanner` | `LifecycleMethodScanner` | `AnnotatedLifecycleMethodScanner` |
+| `coilix.context.bean-post-processor` | `BeanPostProcessor` | `PostConstructProcessor` |
+| `coilix.context.bean-destroyer` | `BeanDestroyer` | `PreDestroyInvoker` |
 
 Nowy komponent frameworka dopisuje się do tej tabeli w tym samym commicie, w którym dostaje `given ConfigPath`.
 

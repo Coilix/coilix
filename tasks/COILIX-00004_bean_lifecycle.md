@@ -56,5 +56,19 @@ Semantyka jak w Springu, ale z własnymi adnotacjami frameworka, bez zależnośc
 
 ## Ryzyka i otwarte pytania
 
-- Czy `@PostConstruct` ma być dozwolone na metodach prywatnych? Spring na to pozwala. Proponowane: tak, przez `setAccessible`, ale dopiero po decyzji, bo to omija enkapsulację.
-- Metody Scali bez nawiasów (`def init: Unit`) też są bezargumentowe w bajtkodzie, więc powinny działać. Warto to potwierdzić testem.
+- ~~Czy `@PostConstruct` ma być dozwolone na metodach prywatnych?~~ Decyzja opiekuna (2026-11-15): tak, także w nadklasach, przez `trySetAccessible`. Gdy pakiet nie jest otwarty (JPMS), błąd już przy definicji beana podpowiada `opens`.
+- ~~Metody Scali bez nawiasów (`def init: Unit`)~~ działają, potwierdza to test (`Repository.flush`).
+- Nazwy `@PostConstruct` i `@PreDestroy` pochodzą ze standardu Javy (JSR-250), a nie ze Springa, więc zostają (`docs/legal/spring-similarity.md`).
+
+## Stan realizacji (2026-11-15)
+
+Zrobione w całości:
+
+- `@PostConstruct` i `@PreDestroy` w `02_annotations`,
+- `LifecycleMethods` w `BeanDefinition` i `RegisteredBean`, wypełniane przez `LifecycleMethodScanner` (`AnnotatedLifecycleMethodScanner`) w `ReflectiveBeanDefinitionFactory` dla każdej definicji, także z metod `@Bean` (według typu zwracanego),
+- `BeanPostProcessor` (`PostConstructProcessor`) wołany z `ReflectiveBeanInstantiator` przed rejestracją,
+- `BeanDestroyer` (`PreDestroyInvoker`) wołany z `close()` w `DefaultApplicationContext`,
+- `InvalidLifecycleMethodException`, `BeanCreationException` z przyczyną,
+- demo (`InMemoryUserRepository`), przewodnik „Bean lifecycle” w obu językach, changelog `core`.
+
+Kilka `BeanPostProcessor` naraz (np. dla `@Async` z COILIX-00005) wymaga złożenia ich w jeden komponent. Dojdzie to razem z drugim procesorem.

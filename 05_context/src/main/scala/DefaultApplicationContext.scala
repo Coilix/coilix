@@ -9,13 +9,16 @@ import scala.reflect.ClassTag
  * An application context backed by a [[dev.coilix.context.BeanRegistry]].
  *
  * The registry is passed by name, so the context can exist before its beans and be injected into them. Closing the context
- * logs a message at `INFO` level.
+ * logs a message at `INFO` level and destroys the beans with the [[dev.coilix.context.BeanDestroyer]].
  *
  * @param registry
  *   the beans of the context, evaluated on first access
+ * @param destroyer
+ *   destroys the beans when the context closes
  */
 @Slf4s
-final class DefaultApplicationContext(registry: => BeanRegistry) extends ConfigurableApplicationContext {
+final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: BeanDestroyer = PreDestroyInvoker())
+    extends ConfigurableApplicationContext {
 
   private val active = AtomicBoolean(true)
 
@@ -37,5 +40,10 @@ final class DefaultApplicationContext(registry: => BeanRegistry) extends Configu
   override def isActive: Boolean = active.get
 
   override def close(): Unit =
-    if (active.compareAndSet(true, false)) log.info("Closing application context")
+    if (active.compareAndSet(true, false)) destroyBeans()
+
+  private def destroyBeans(): Unit = {
+    log.info("Closing application context")
+    destroyer.destroy(registry.beans)
+  }
 }
