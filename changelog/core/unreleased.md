@@ -5,6 +5,7 @@
 - Application startup with `@CoilixApplication`, `Coilix.run`, `ApplicationRunner`, command-line arguments, a banner and a shutdown hook (COILIX-00002).
 - Configuration from HOCON, YAML and properties files, command-line options and system properties, `@Value`, `@ConfigurationProperties`, `@Configuration` with `@Bean`, and replacement of framework components through a `class` key under their `coilix.*` path (COILIX-00003).
 - `EditOption[T]` for partial updates, which tells a field that stays unchanged (`NoEdit`) apart from a field that is set (`SetTo(Some(value))`) or cleared (`SetTo(None)`) (COILIX-00022).
+- `Validator[T]` with `Violation`, `ViolationTemplate` and `ValidationException`, which checks every rule of a value and reports all broken rules at once (COILIX-00022).
 
 ### Changed
 
