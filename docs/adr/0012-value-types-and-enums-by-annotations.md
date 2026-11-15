@@ -13,14 +13,14 @@ Reszta Coilixa opiera się na adnotacjach Javy czytanych refleksyjnie (ADR 0002)
 ## Decyzja
 
 - Typ wartości oznacza się adnotacją `@ValueType`, enum (natywny `enum` Scali 3) adnotacją `@Enumerated`, a własną nazwę przypadku adnotacją `@EnumName`. Nie ma companion traitów ani nazw z przyrostkiem `Object`.
-- Framework rozpoznaje te typy refleksyjnie przez wymienne traity `ValueTypeResolver` i `EnumResolver` w `01_common` (ADR 0003).
-- Części ogólne (typy wartości, enumy, walidacja, `EditOption`) są w rdzeniu, bo potrzebuje ich konfiguracja i przyszłe moduły `web` i `data`. Mapowanie na kolumny bazy jest w `06_data`.
+- Framework rozpoznaje te typy refleksyjnie przez wymienne traity `ValueTypeResolver` i `EnumResolver` w `04_config` (ADR 0003). `config` jest najniższym modułem, który widzi `02_annotations`.
+- Części ogólne są w rdzeniu: walidacja i `EditOption` w `01_common`, typy wartości i enumy w `04_config`, bo potrzebuje ich konfiguracja i przyszłe moduły `web` i `data`. Mapowanie na kolumny bazy jest w `06_data`.
 - Rdzeń nie dostaje makr po stronie użytkownika, derywacji `derives` ani zależności od cats, circe i sangrii. Integracje z tymi bibliotekami będą osobnymi modułami.
 
 ## Konsekwencje
 
 - Użytkownik pisze zwykłą case class albo `enum` z jedną adnotacją, bez dodatkowego kodu.
 - Błędy (zła klasa, zła wartość, nieznana nazwa) wychodzą przy starcie, a nie przy kompilacji, tak jak inne błędy powiązań.
-- `extends AnyVal` może ukrywać typ w sygnaturach JVM. Dokumentacja musi to opisać, a jeśli się potwierdzi, zalecać typ wartości bez `AnyVal`.
+- `extends AnyVal` ukrywa typ w sygnaturach JVM (parametr `Id extends AnyVal` jest tam `long`), więc typ `@ValueType` nie może dziedziczyć po `AnyVal`.
 - Naruszenia walidacji mają jawny kod zamiast nazwy wyprowadzanej makrem.
 - Kodeki JSON i typy GraphQL dla tych typów pojawią się dopiero z modułami integracyjnymi.

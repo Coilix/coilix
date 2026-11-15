@@ -34,20 +34,21 @@ Każdy punkt to osobny PR.
    - `ValidationException` dziedziczący po `CoilixException` zamiast `DomainError`.
 3. **Typy wartości** (zamiennik `AnyValObject`):
    - `@ValueType` w `02_annotations` dla klasy z jednym polem konstruktora, np. `@ValueType final case class UserId(value: Long)`,
-   - trait `ValueTypeResolver` i implementacja refleksyjna w `01_common`: rozpoznaje klasę, podaje typ wewnętrzny, tworzy instancję z wartości i wyciąga wartość z instancji,
+   - trait `ValueTypeResolver` i implementacja refleksyjna w `04_config`: rozpoznaje klasę, podaje typ wewnętrzny, tworzy instancję z wartości i wyciąga wartość z instancji,
    - wyjątek z konstruktora (np. `require`) zamieniony na czytelny błąd z nazwą typu i wartością,
    - `Secret` (dawne `HiddenString`): typ wartości dla haseł i tokenów, `toString` zwraca `*****`.
 4. **Enumy** (zamiennik `EnumProduct` i `EnumSettings`):
    - `@Enumerated` dla natywnego `enum` Scali 3 i `@EnumName("…")` dla własnej nazwy przypadku,
-   - trait `EnumResolver` i implementacja refleksyjna w `01_common`: lista przypadków, wyszukiwanie po nazwie z opcjonalnym ignorowaniem wielkości liter, nazwa przypadku,
+   - trait `EnumResolver` i implementacja refleksyjna w `04_config`: lista przypadków, wyszukiwanie po nazwie z opcjonalnym ignorowaniem wielkości liter, nazwa przypadku,
    - błąd przy nieznanej nazwie podaje dozwolone wartości.
 5. **Konfiguracja** w `04_config`: `DefaultScalarReader` czyta typy `@ValueType` (przez typ wewnętrzny) i `@Enumerated`, więc działają w `@Value` i `@ConfigurationProperties`. Przewodnik na stronie i changelog `core`.
 6. **Mapowanie kolumn w `06_data`**: kodeki kolumn dla typów wartości i enumów. Dopiero razem ze specyfikacją modułu `data` (repozytoria, transakcje, sterownik). Ten task tylko zostawia na to miejsce w resolverach.
 
 ## Proponowany projekt
 
-- Adnotacje Javy z retencją runtime w `02_annotations`: `ValueType.java` (`@Target(TYPE)`), `Enumerated.java` (`@Target(TYPE)`), `EnumName.java` (`@Target({FIELD, TYPE})`, bo przypadek bez parametrów jest polem statycznym, a z parametrami klasą).
-- `01_common` dostaje pakiety `dev.coilix.common.value`, `dev.coilix.common.enums`, `dev.coilix.common.validation` i `dev.coilix.common.edit`.
+- Adnotacje Javy z retencją runtime w `02_annotations`: `ValueType.java` (`@Target(TYPE)`), `Enumerated.java` (`@Target(TYPE)`), `EnumName.java` (`@Target(FIELD)`, bo przypadek enuma jest polem obiektu towarzyszącego).
+- `01_common` dostaje pakiety `dev.coilix.common.validation` i `dev.coilix.common.edit`, które nie potrzebują adnotacji.
+- Resolvery i `Secret` są w `04_config` (pakiety `dev.coilix.config.value` i `dev.coilix.config.enums`), bo `01_common` nie może zależeć od `02_annotations` (moduł zależy tylko od modułów o niższym numerze). `config` jest najniższym modułem, który widzi adnotacje, a `context`, `data` i `web` zależą od niego.
 - Resolvery to traity z domyślną implementacją w companionie, tak jak inne wymienne komponenty (ADR 0003).
 - Wyniki refleksji są cachowane per klasa w niemutowalnej strukturze budowanej leniwie albo przy starcie kontekstu, bez globalnego stanu mutowalnego.
 - Każda przeniesiona klasa dostaje testy munit przepisane z testów implicits tam, gdzie mają sens bez cats i circe.
@@ -73,7 +74,7 @@ Każdy punkt to osobny PR.
 
 ## Ryzyka i otwarte pytania
 
-- **`extends AnyVal`:** parametr konstruktora typu `UserId extends AnyVal` jest w sygnaturze JVM wymazany do typu wewnętrznego (`long`), więc refleksja nie zobaczy `UserId`. Do sprawdzenia w pierwszym PR. Jeśli się potwierdzi, dokumentacja zaleca `@ValueType` bez `extends AnyVal`, a binder rozpoznaje typ z sygnatury generycznej tam, gdzie się da.
-- **Adnotacje na przypadkach enuma:** trzeba sprawdzić, czy adnotacja Javy na `case Blue` trafia na pole statyczne w bajtkodzie Scali 3. Jeśli nie, `@EnumName` zastąpi parametr enuma albo osobna metoda w companionie.
+- **`extends AnyVal`:** sprawdzone (2026-11-15). Parametr konstruktora typu `Id extends AnyVal` ma w sygnaturze JVM typ `long`, a `Id` widać tylko w argumentach typów generycznych (`List<Id>`, `Option<Id>`). Typ `@ValueType` nie może więc dziedziczyć po `AnyVal`: resolver odrzuca taką klasę z czytelnym błędem, a dokumentacja to wyjaśnia.
+- **Adnotacje na przypadkach enuma:** sprawdzone (2026-11-15). Adnotacja Javy na `case Earth` trafia na pole `Earth` w klasie obiektu towarzyszącego (`Planet$`), także dla przypadku z argumentami, a enum ma statyczne `values` i `valueOf`. `@EnumName` ma więc `@Target(FIELD)`.
 - Komunikaty `Violation` w implicits dostają nazwę z makra (nazwa `val`). Bez makra kod naruszenia podaje się jawnie, co jest bardziej rozwlekłe, ale zgodne z ADR 0002.
 - Kod pochodzi z biblioteki tego samego autora na tej samej licencji, więc przeniesienie nie wymaga zgód. Commity i tak podpisuje się przez DCO.
