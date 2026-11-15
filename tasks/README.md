@@ -25,6 +25,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
 | COILIX-00020 | [Wsparcie efektów `F[_]` (cats-effect, ZIO)](COILIX-00020_effect_types.md) | średni | do analizy, przed `1.0` |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
+| COILIX-00022 | [Typy wartości, enumy, walidacja i `EditOption` z biblioteki implicits](COILIX-00022_implicits_port.md) | wysoki | do zrobienia |
 
 Zależności między taskami:
 
@@ -45,6 +46,7 @@ Zależności między taskami:
 - COILIX-00018 wymaga pierwszego wydania z COILIX-00009.
 - COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów) i z modułów z COILIX-00010. Zmiany w rdzeniu, których wymaga, powinny trafić przed `1.0`.
 - COILIX-00021 uzupełnia ręczny przegląd z `docs/legal/spring-similarity.md` (COILIX-00006). Warto go zrobić przed pierwszym wydaniem z COILIX-00009.
+- COILIX-00022 rozszerza `DefaultScalarReader` z COILIX-00003. Mapowanie kolumn czeka na specyfikację modułu `data`, a `Registry` z implicits trafia do COILIX-00010.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
