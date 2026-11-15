@@ -1,6 +1,6 @@
 # Wersjonowanie i wydania
 
-> Model grup wydań pochodzi z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md). Wydanie modułów funkcji i pluginu IntelliJ przy ich tagu oraz publikacja strony przy tagu dojdą w kolejnych krokach COILIX-00009, a do tego czasu tag wydaje tylko grupę `core`.
+> Model grup wydań pochodzi z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md). Publikacja strony dokumentacji przy tagu i pluginu IntelliJ w Marketplace dojdą w kolejnych krokach COILIX-00009 i COILIX-00007.
 
 ## Standard
 
@@ -68,8 +68,9 @@ Pełny opis formatu jest w [changelog/README.md](../../changelog/README.md). For
 Kroki dla opiekuna są w [docs/process/development.md](../process/development.md#wydanie). Automatyzacja:
 
 - `.github/workflows/ci.yml`: przy każdym pushu na `master` i `series/**` oraz w każdym PR `checkLicenses`, `testFull`, `mimaReportBinaryIssues` i `doc` (bez zepsutych linków) na JDK 17 i 25.
-- `.github/workflows/release.yml`: na tag `core-v*` te same sprawdzenia, notka wydania z `changelog/core/X.Y.Z.md` (brak pliku albo błąd formatu zatrzymuje wydanie przed testami), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem (`-M1`, `-RC1`) daje pre-release.
-- sbt-ci-release publikuje wszystkie moduły bez `publish / skip`, a o wydaniu decyduje wersją buildu, czyli grupy `core`. Do czasu publikacji per grupa (krok 4 COILIX-00009) moduły funkcji i plugin IntelliJ mają `unpublished`.
-- Do zrobienia później: wydanie modułów funkcji przy tagu `<moduł>-v*` z `checkReleasedCore`, workflow „Prepare release”, publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (COILIX-00009, COILIX-00007).
+- `.github/workflows/release.yml`: na każdy tag `<grupa>-v*` sprawdzenie tagu i pliku changelogu (`12_docs/website/scripts/release-tag.mjs`), `sbt "releaseVerify <grupa> <wersja>"` (testy, licencje, MiMa i `checkReleasedCore` modułów grupy), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem wersji (`-M1`, `-RC1`) daje pre-release.
+- Publikacja obejmuje tylko jedną grupę: zmienna `RELEASE_GROUP` ustawia `publish / skip` w modułach innych grup (`ThisBuild / releaseGroupFilter`). Moduły z `unpublished` nie są publikowane nigdy, więc grupa bez publikowanych modułów nie ma czego wydać i `releaseVerify` ją odrzuca.
+- PR wydania przygotowuje lokalny skrypt `npm run prepare-release -- <grupa> <wersja>` ([kroki](../process/development.md#wydanie)).
+- Do zrobienia później: publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (COILIX-00009, COILIX-00007).
 
 Sekrety repozytorium wymagane przez `release.yml`: `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` (token z Central Portal).

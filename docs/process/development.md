@@ -95,22 +95,38 @@ Projekt ma na razie jednego opiekuna, więc przegląd to samodzielne przejście 
 
 ## Wydanie
 
-Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tagi `<grupa>-vX.Y.Z` ([versioning.md](../architecture/versioning.md)). Wydania wychodzą z `master` (linia bieżąca) albo z `series/<grupa>-X.Y` (starsza linia). W fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`. Na razie workflow wydaje tylko grupę `core`. Wydanie modułu funkcji i pluginu IntelliJ dojdzie w kroku 4 [COILIX-00009](../../tasks/COILIX-00009_versioning_and_releases.md#grupy-wydań-adr-0011).
+Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tagi `<grupa>-vX.Y.Z` ([versioning.md](../architecture/versioning.md)). Wydania wychodzą z `master` (linia bieżąca) albo z `series/<grupa>-X.Y` (starsza linia). W fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`. Moduł funkcji wychodzi tylko wtedy, gdy rdzeń nie zmienił się od ostatniego `core-v*`. W przeciwnym razie najpierw wychodzi rdzeń.
 
-1. Upewnij się, że CI na gałęzi wydania jest zielone.
-2. Na gałęzi `release/core-vX.Y.Z` (żyje tylko do scalenia tego jednego PR) zmień nazwę `changelog/core/unreleased.md` na `X.Y.Z.md` (`git mv`), dodaj na jego początku nagłówek z `version: X.Y.Z` i `date: RRRR-MM-DD` i załóż pusty `changelog/core/unreleased.md`. Commit: `COILIX-00000: Release core X.Y.Z`. Scal przez PR. Do czasu workflow „Prepare release” (krok 4) ten krok robi się ręcznie.
-3. Tag podpisany na commicie z `master`:
+1. Upewnij się, że CI na gałęzi wydania jest zielone i że jesteś na aktualnym `master` (albo `series/<grupa>-X.Y`) bez lokalnych zmian.
+2. Przygotuj PR wydania:
+
+   ```sh
+   cd 12_docs/website
+   npm run prepare-release -- <grupa> X.Y.Z
+   ```
+
+   Skrypt (`scripts/prepare-release.mjs`) sprawdza gałąź, wersję względem tagów grupy, wpisy w `unreleased.md` i to, że moduł funkcji ma wydany rdzeń. Potem zakłada gałąź `release/<grupa>-vX.Y.Z`, zmienia nazwę `changelog/<grupa>/unreleased.md` na `X.Y.Z.md` z nagłówkiem (`version`, dzisiejsza `date`, dla modułu funkcji `requires-core` z ostatniego tagu `core-v*`), zakłada pusty `unreleased.md`, commituje z `Signed-off-by` (`COILIX-00000: Release <grupa> X.Y.Z`), wypycha gałąź i otwiera PR przez `gh`. Z `--no-push` kończy na lokalnym commicie. Skrypt działa lokalnie, a nie jako workflow, bo PR otwarty domyślnym tokenem GitHub Actions nie uruchamia CI.
+3. Popraw w PR treść wpisów, jeśli trzeba, i scal go przez „Squash and merge”.
+4. Tag podpisany na commicie scalenia:
 
    ```sh
    git switch master && git pull --rebase
-   git tag -s core-vX.Y.Z -m "Coilix Core X.Y.Z"
-   git push origin core-vX.Y.Z
+   git tag -s <grupa>-vX.Y.Z -m "Coilix <grupa> X.Y.Z"
+   git push origin <grupa>-vX.Y.Z
    ```
 
-4. Tag `core-v*` uruchamia workflow `release.yml`: sprawdzenia, publikacja modułów rdzenia na Maven Central i GitHub Release z treścią pliku `changelog/core/X.Y.Z.md`. Plugin IntelliJ i dokumentacja dojdą w osobnych taskach.
-5. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach) i stronę GitHub Release.
+5. Tag uruchamia `release.yml`:
+   1. `scripts/release-tag.mjs` sprawdza nazwę tagu, to, że commit jest na `master` albo `series/<grupa>-X.Y`, że wersja jest nowsza od tagów grupy (na gałęzi linii: od tagów tej linii), plik `changelog/<grupa>/X.Y.Z.md` i dla modułu funkcji zgodność `requires-core` z ostatnim wydaniem rdzenia,
+   2. `sbt "releaseVerify <grupa> X.Y.Z"` sprawdza, że grupa ma publikowane moduły z wersją z tagu, i uruchamia na nich `checkReleasedCore` (moduł funkcji), `checkLicenses`, `testFull` i `mimaReportBinaryIssues`,
+   3. `sbt ci-release` z `RELEASE_GROUP=<grupa>` podpisuje i publikuje na Maven Central tylko moduły tej grupy,
+   4. powstaje GitHub Release z treścią pliku changelogu.
 
-Wydania przedpremierowe (`core-vX.Y.Z-M1`, `core-vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
+   Każdy błąd zatrzymuje wydanie przed publikacją.
+6. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach) i stronę GitHub Release.
+
+Wydania przedpremierowe (`<grupa>-vX.Y.Z-M1`, `<grupa>-vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
+
+Plugin IntelliJ (`intellij-v*`) nie ma jeszcze publikacji w Marketplace, więc `releaseVerify` odrzuca jego tag. Moduł funkcji da się wydać dopiero po zdjęciu z niego `unpublished`.
 
 ## Utrzymanie starszej linii
 

@@ -27,6 +27,14 @@ object ReleaseGroups {
   val checkReleasedCore =
     taskKey[Unit]("Fails when a feature module release would depend on core code that is not released")
 
+  val releaseGroupVariable: String = "RELEASE_GROUP"
+
+  val releaseGroupFilter =
+    settingKey[Option[String]]("Release group named by RELEASE_GROUP, the only group that publishes when it is set")
+
+  val releaseVerify: Command =
+    Command.args("releaseVerify", "<group> <version>")((state, arguments) => verifyCommands(state, arguments) ::: state)
+
   def tagPrefix(group: String): String = s"$group-v"
 
   def buildSettings(groups: Seq[String]): Seq[Setting[?]] =
@@ -46,12 +54,15 @@ object ReleaseGroups {
           .toMap,
       ThisBuild / dynverGitDescribeOutput        := stateOf((ThisBuild / releaseGroupStates).value, core).describe,
       ThisBuild / dynverGitPreviousStableVersion := stateOf((ThisBuild / releaseGroupStates).value, core).previous,
-      ThisBuild / releasedCoreVersion            := lastRelease((ThisBuild / baseDirectory).value, core)
+      ThisBuild / releasedCoreVersion            := lastRelease((ThisBuild / baseDirectory).value, core),
+      ThisBuild / releaseGroupFilter             := sys.env.get(releaseGroupVariable).filter(_.nonEmpty),
+      Global / commands += releaseVerify
     )
 
   def groupSettings(group: String): Seq[Setting[?]] =
     Seq(
       releaseGroup                   := group,
+      publish / skip                 := (publish / skip).value || (ThisBuild / releaseGroupFilter).value.exists(_ != group),
       dynverGitDescribeOutput        := stateOf((ThisBuild / releaseGroupStates).value, group).describe,
       dynverGitPreviousStableVersion := stateOf((ThisBuild / releaseGroupStates).value, group).previous,
       version                        :=
@@ -94,6 +105,43 @@ object ReleaseGroups {
     snapshot:     Boolean
   ): Seq[ModuleID] =
     released.filter(_ => !snapshot).fold(dependencies)(coreVersion => dependencies.map(onCore(_, coreNames, coreVersion)))
+
+  private def verifyCommands(state: State, arguments: Seq[String]): List[String] =
+    arguments match {
+      case Seq(group, expected) => groupChecks(state, Project.extract(state), group, expected)
+      case _                    => fail("Usage: releaseVerify <group> <version>")
+    }
+
+  private def groupChecks(state: State, extracted: Extracted, group: String, expected: String): List[String] = {
+    if (!extracted.get(ThisBuild / releaseGroups).contains(group)) {
+      fail(s"Unknown release group $group, the groups are ${extracted.get(ThisBuild / releaseGroups).mkString(", ")}")
+    }
+    val modules    = publishedModules(state, extracted, group)
+    if (modules.isEmpty) {
+      fail(s"Release group $group has no published modules yet, so there is nothing to release")
+    }
+    val mismatched = modules.filter(module => extracted.get(module / version) != expected)
+    if (mismatched.nonEmpty) {
+      fail(
+        mismatched.map(module => s"${module.project} has version ${extracted.get(module / version)}").mkString(
+          s"Release group $group must have version $expected, but ",
+          ", ",
+          ". Is the tag on this commit and the working tree clean?"
+        )
+      )
+    }
+    modules.flatMap(module => moduleChecks(group).map(check => s"${module.project}/$check"))
+  }
+
+  private def publishedModules(state: State, extracted: Extracted, group: String): List[ProjectRef] =
+    extracted.structure.allProjectRefs.toList
+      .filter(module => extracted.getOpt(module / releaseGroup).contains(group))
+      .filterNot(module => extracted.runTask(module / publish / skip, state)._2)
+
+  private def moduleChecks(group: String): List[String] = {
+    val common = List("checkLicenses", "testFull", "mimaReportBinaryIssues")
+    if (group == core || group == intellij) common else "checkReleasedCore" :: common
+  }
 
   private def readState(base: File, separator: String, date: Date, group: String): GroupState = {
     val instance = DynVer(Some(base), separator, tagPrefix(group))

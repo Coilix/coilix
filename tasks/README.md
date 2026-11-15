@@ -12,7 +12,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00006 | [Legalność, licencjonowanie i publikacja](COILIX-00006_legal_and_publication.md) | wysoki | zrobiony ([docs/legal](../docs/legal/README.md)) |
 | COILIX-00007 | [Dokumentacja API i strona na GitHub Pages z wersjami](COILIX-00007_documentation_site.md) | wysoki | w trakcie: Scaladoc, Javadoc i szkielet `12_docs` gotowe, dalej przewodniki i publikacja |
 | COILIX-00008 | [Nazwa Coilix, licencja, przestrzeń nazw i metadane publikacji](COILIX-00008_license_and_publication_setup.md) | wysoki | zrobiony |
-| COILIX-00009 | [Wersjonowanie, kompatybilność i proces wydań](COILIX-00009_versioning_and_releases.md) | wysoki | wersje, CI i publikacja gotowe; w trakcie: grupy wydań z ADR 0011 (changelog w plikach i grupy w buildzie gotowe, dalej wydanie przy tagu każdej grupy), zostały TASTy-MiMa i plugin w Marketplace |
+| COILIX-00009 | [Wersjonowanie, kompatybilność i proces wydań](COILIX-00009_versioning_and_releases.md) | wysoki | wersje, CI i publikacja gotowe; w trakcie: grupy wydań z ADR 0011 (changelog, grupy w buildzie i wydanie przy tagu grupy gotowe, dalej publikacja strony), zostały TASTy-MiMa i plugin w Marketplace |
 | COILIX-00010 | [Niezależność modułów opcjonalnych](COILIX-00010_module_independence.md) | wysoki | do zrobienia |
 | COILIX-00011 | [Proces developmentu i model gałęzi](COILIX-00011_development_workflow.md) | wysoki | zrobiony |
 | COILIX-00012 | [Kolejność tworzenia przy zależnościach `Option[T]` i `List[T]`](COILIX-00012_optional_dependency_ordering.md) | wysoki | zrobiony |

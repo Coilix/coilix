@@ -2,35 +2,37 @@ name: Release
 
 on:
   push:
-    tags: ["core-v*"]
+    tags: ["*-v*"]
 
 permissions:
   contents: write
 
 jobs:
   publish:
-    name: Publish to Maven Central
+    name: Release ${{ github.ref_name }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 12_docs/website/.nvmrc
+      - name: Check tag, branch and changelog
+        id: tag
+        run: node 12_docs/website/scripts/release-tag.mjs "$GITHUB_REF_NAME" release-notes.md >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 17
           cache: sbt
       - uses: sbt/setup-sbt@v1
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: 12_docs/website/.nvmrc
-      - name: Extract release notes
-        run: node 12_docs/website/scripts/release-notes.mjs core "${GITHUB_REF_NAME#core-v}" > release-notes.md
-      - name: Verify
-        run: sbt checkLicenses testFull mimaReportBinaryIssues
-      - name: Publish
+      - name: Verify the modules of the group
+        run: sbt "releaseVerify ${{ steps.tag.outputs.group }} ${{ steps.tag.outputs.version }}"
+      - name: Publish the modules of the group
         run: sbt ci-release
         env:
+          RELEASE_GROUP: ${{ steps.tag.outputs.group }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}
           PGP_SECRET: ${{ secrets.PGP_SECRET }}
           SONATYPE_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
@@ -38,8 +40,9 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.tag.outputs.title }}
+          PRERELEASE: ${{ steps.tag.outputs.prerelease }}
         run: |
-          version="${GITHUB_REF_NAME#core-v}"
           prerelease=""
-          case "$version" in *-*) prerelease="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Coilix Core $version" --notes-file release-notes.md $prerelease
+          if [ "$PRERELEASE" = "true" ]; then prerelease="--prerelease"; fi
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "$TITLE" --notes-file release-notes.md $prerelease
