@@ -27,7 +27,7 @@ Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
 6. **Przewodniki:** Getting started, Guides i Reference w obu językach, z przykładami w `examples/next/`. Jeden dział na PR.
 7. **Publikacja** (według ADR 0011, razem z krokiem 5 z COILIX-00009):
    - sekcja `core` pod `/core/`, tryb publikacji tylko z wydanymi liniami, API pod `/api/<grupa>/<linia>/` i kopia przewodników nowej linii w `npm run prepare-release` (zrobione),
-   - `.github/workflows/docs.yml` przy tagu i ręcznie, z lychee przed publikacją,
+   - `.github/workflows/docs.yml` przy tagu i ręcznie, z lychee przed publikacją (zrobione),
    - gałąź `gh-pages`, GitHub Pages z domeną `docs.coilix.dev`, rekord CNAME w Cloudflare (akcja ręczna opiekuna).
 
 ## Proponowany projekt

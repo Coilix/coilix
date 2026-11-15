@@ -87,7 +87,7 @@ const config: Config = {
       logo: {alt: 'Coilix', src: 'img/favicon.svg'},
       items: [
         {type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs'},
-        {href: `pathname:///api/core/${coreApiLine}/index.html`, position: 'left', label: 'API'},
+        {type: 'html', position: 'left', value: `<a class="navbar__item navbar__link" href="/api/core/${coreApiLine}/index.html">API</a>`},
         {to: '/changelog', position: 'left', label: 'Changelog'},
         {type: 'docsVersionDropdown', position: 'right'},
         {type: 'localeDropdown', position: 'right'},

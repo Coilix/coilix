@@ -25,9 +25,9 @@ export default function Home(): React.ReactNode {
           <Link className="button button--primary button--lg" to="/core/getting-started/first-application">
             <Translate id="home.start">Get started</Translate>
           </Link>
-          <Link className="button button--secondary button--lg" href={`pathname:///api/core/${siteConfig.customFields.coreApiLine}/index.html`}>
+          <a className="button button--secondary button--lg" href={`/api/core/${siteConfig.customFields.coreApiLine}/index.html`}>
             <Translate id="home.api">API reference</Translate>
-          </Link>
+          </a>
         </div>
       </main>
     </Layout>
