@@ -88,10 +88,13 @@ class ValidatorTest extends munit.FunSuite {
   }
 
   test("list validators check size and elements") {
-    assertEquals(Validator.validateNonEmpty[Int].violations(Nil), List(StandardViolations.emptyList))
+    assertEquals(Validator.validateNonEmpty[Int].violations(Nil), List(StandardViolations.listEmpty))
     assertEquals(Validator.validateMinSize[Int](2).violations(List(1)).map(_.message), List("List must have at least 2 elements"))
-    assertEquals(Validator.validateMaxSize[Int](1).violations(List(1, 2)).map(_.code), List("list.too-long"))
-    assertEquals(Validator.validateEach(emails).violations(List("ann@example.com", "ab")), List(StandardViolations.invalidElements))
+    assertEquals(Validator.validateMaxSize[Int](1).violations(List(1, 2)).map(_.code), List("list.too.long"))
+    assertEquals(
+      Validator.validateEach(emails).violations(List("ann@example.com", "ab")),
+      List(StandardViolations.collectionInvalidElements)
+    )
     assertEquals(Validator.validateEach(emails).violations(List("ann@example.com")), Nil)
   }
 }

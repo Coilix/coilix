@@ -12,9 +12,12 @@ import scala.reflect.TypeTest
  *
  * final case class User(name: String, age: Int)
  *
+ * val blankName   = Violation("Name must not be blank")
+ * val negativeAge = Violation("Age must not be negative")
+ *
  * val users: Validator[User] = Validator[User]
- *   .test(_.name.nonEmpty)(Violation("user.name.blank", "Name must not be blank"))
- *   .testNot(_.age < 0)(Violation("user.age.negative", "Age must not be negative"))
+ *   .test(_.name.nonEmpty)(blankName)
+ *   .testNot(_.age < 0)(negativeAge)
  *
  * users.validate(User("", -1))
  * ```
@@ -124,11 +127,11 @@ object Validator {
 
   /** A validator of lists that reports one violation when any element breaks `validator`. */
   def validateEach[T](validator: Validator[T]): Validator[List[T]] =
-    Validator[List[T]].test(_.forall(validator.isValid))(StandardViolations.invalidElements)
+    Validator[List[T]].test(_.forall(validator.isValid))(StandardViolations.collectionInvalidElements)
 
   /** A validator of lists that rejects an empty list. */
   def validateNonEmpty[T]: Validator[List[T]] =
-    Validator[List[T]].test(_.nonEmpty)(StandardViolations.emptyList)
+    Validator[List[T]].test(_.nonEmpty)(StandardViolations.listEmpty)
 
   /** A validator of lists that rejects a list with fewer than `minSize` elements. */
   def validateMinSize[T](minSize: Int): Validator[List[T]] =

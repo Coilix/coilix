@@ -7,8 +7,11 @@ package validation
  * ```scala
  * import dev.coilix.common.validation.Violation
  *
- * val blankName = Violation("user.name.blank", "Name must not be blank")
+ * val blankName = Violation("Name must not be blank")
  * ```
+ *
+ * `Violation(message)` takes the code from the name of the `val`, here `blank.name`, and checks the message when the code
+ * compiles. `Violation(code, message)` sets the code explicitly.
  *
  * @param code
  *   a stable identifier of the rule, for example for translations or API error codes
@@ -32,4 +35,18 @@ final case class Violation(code: String, message: String, arguments: List[String
   /** The message, preceded by the path when there is one. */
   override def toString: String =
     path.fold(message)(field => s"$field: $message")
+}
+
+/** Creates violations whose code comes from the name of the `val` that holds them. */
+object Violation {
+
+  /**
+   * A violation with `message`, whose code is the name of the enclosing `val` split into lower-case words joined by dots,
+   * so that `val listTooLong = Violation(...)` has the code `list.too.long`.
+   *
+   * Compilation fails when `message` is not a string literal, is empty or contains `%`, or when the result is not assigned
+   * directly to a `val` or `lazy val`.
+   */
+  inline def apply(inline message: String): Violation =
+    ${ ViolationMacros.violation('message) }
 }
