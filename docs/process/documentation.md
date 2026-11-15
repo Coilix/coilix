@@ -93,7 +93,7 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 - **Jeden temat na stronę.** Strona dłuższa niż około 1500 słów dzieli się na kilka.
 - **Pierwszy akapit** mówi, czego czytelnik się nauczy i kiedy tego potrzebuje.
 - **Nagłówki** do poziomu `###`. Tytuły w sentence case: „Configuration properties”, nie „Configuration Properties”.
-- **Linki** między przewodnikami są względne i prowadzą do pliku (`./components.md`), nie do adresu URL. Do API linkuje się ścieżką `pathname:///api/core/next/...` (sekcja [Dokumentacja API](#dokumentacja-api)). Przedrostek `pathname://` jest potrzebny, bo dokumentacja API nie jest częścią builda Docusaurusa i zwykła ścieżka `/api/...` przerwałaby build jako zepsuty link.
+- **Linki** między przewodnikami są względne i prowadzą do pliku (`./components.md`), nie do adresu URL. Do API linkuje się komponentem `ApiLink` (strona musi być `.mdx`): `<ApiLink href="/api/core/next/dev/coilix/context/ApplicationContext.html">ApplicationContext</ApiLink>` po `import ApiLink from '@site/src/components/ApiLink';` (sekcja [Dokumentacja API](#dokumentacja-api)). Komponent wstawia zwykły `<a>`, bo dokumentacja API nie jest częścią builda Docusaurusa: zwykły link Markdown przerwałby build jako zepsuty, a `pathname://` dostaje na polskiej stronie przedrostek `/pl/` i prowadzi donikąd.
 - **Obrazy** w `static/img/<dział>/`, w formacie SVG albo PNG, zawsze z tekstem alternatywnym.
 - **Wyróżnienia** tylko trzech rodzajów: `:::note`, `:::tip`, `:::warning`.
 
@@ -176,13 +176,16 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Publikacja
 
-Zasady z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md). Workflow publikacji dochodzi w kroku 5 z `tasks/COILIX-00009`.
+Zasady z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md).
 
 - Stronę publikuje tylko GitHub Actions (workflow „Publish docs”, `.github/workflows/docs.yml`) na gałąź `gh-pages`. Nikt nie wypycha zmian na `gh-pages` ręcznie.
-- Publikacja następuje przy tagu wydania i ręcznie, nigdy przy pushu na `master`. Przewodniki są budowane zawsze z aktualnego `master` w trybie publikacji (`COILIX_DOCS_PUBLISH=true`), więc poprawka opisu wydanej linii wymaga tylko PR na `master` i ręcznego uruchomienia workflow.
-- Tag `<grupa>-vX.Y.Z` buduje dodatkowo `/api/<grupa>/X.Y/` z commitu tagu.
-- Publikacja przewodników zastępuje całą zawartość `gh-pages` poza katalogiem `api/` i plikiem `CNAME`. Dzięki temu usunięta strona znika ze strony, a dokumentacja API starszych linii zostaje.
-- Przed publikacją cała zbudowana strona razem z API przechodzi link checker (lychee). Błąd zatrzymuje publikację.
+- Publikacja następuje przy tagu wydania (job `docs` w `release.yml` po udanej publikacji artefaktów) i ręcznie (Actions › Publish docs › Run workflow, opcjonalnie z tagiem), nigdy przy pushu na `master`. Przewodniki są budowane zawsze z aktualnego `master` w trybie publikacji (`COILIX_DOCS_PUBLISH=true`), więc poprawka opisu wydanej linii wymaga tylko PR na `master` i ręcznego uruchomienia workflow.
+- `scripts/publish-target.mjs` decyduje, co publikować. Bez wydanej linii rdzenia i przy wydaniu przedpremierowym workflow nic nie publikuje, tylko zostawia notkę.
+- Tag `<grupa>-vX.Y.Z` grupy z dokumentacją API (na razie tylko `core`) buduje dodatkowo `sbt docs/apiSite` z commitu tagu do `/api/<grupa>/X.Y/`. Tag innej grupy odświeża tylko przewodniki i `/changelog`.
+- Publikacja zastępuje całą zawartość `gh-pages` poza katalogiem `api/`, a `CNAME` i `.nojekyll` zapisuje od nowa. Dzięki temu usunięta strona znika ze strony, a dokumentacja API starszych linii zostaje.
+- Przed publikacją złożona strona przechodzi dwa sprawdzenia, a każdy błąd zatrzymuje publikację:
+  - `scripts/check-published-site.mjs`: są strony wejściowe (`index.html`, `changelog.html` w obu językach, `CNAME`) i API każdej wydanej linii rdzenia,
+  - lychee w trybie offline: każdy link wewnętrzny w przewodnikach i w API prowadzi do istniejącego pliku. Linków zewnętrznych nie sprawdza, bo ich awaria nie powinna blokować wydania.
 - Adres `docs.coilix.dev` wskazuje na GitHub Pages rekordem CNAME w Cloudflare.
 
 ## Sprawdzenia w CI

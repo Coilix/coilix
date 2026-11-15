@@ -11,10 +11,6 @@
     "message": "Dokumentacja",
     "description": "Navbar item with label Docs"
   },
-  "item.label.API": {
-    "message": "API",
-    "description": "Navbar item with label API"
-  },
   "item.label.Changelog": {
     "message": "Lista zmian",
     "description": "Navbar item with label Changelog"

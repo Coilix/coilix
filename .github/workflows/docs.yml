@@ -1,0 +1,148 @@
+name: Publish docs
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag whose API documentation is rebuilt, e.g. core-v0.1.0 (empty: guides only)"
+        required: false
+        default: ""
+        type: string
+  workflow_call:
+    inputs:
+      tag:
+        required: false
+        default: ""
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: docs-publish
+  cancel-in-progress: false
+
+jobs:
+  target:
+    name: Decide what to publish
+    runs-on: ubuntu-latest
+    outputs:
+      site: ${{ steps.target.outputs.site }}
+      api: ${{ steps.target.outputs.api }}
+      group: ${{ steps.target.outputs.group }}
+      line: ${{ steps.target.outputs.line }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 12_docs/website/.nvmrc
+      - name: Read the tag and released lines
+        id: target
+        env:
+          TAG: ${{ inputs.tag }}
+        run: node 12_docs/website/scripts/publish-target.mjs "$TAG" >> "$GITHUB_OUTPUT"
+
+  api:
+    name: Build API documentation
+    needs: target
+    if: needs.target.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Build the API site of the tag
+        run: |
+          sbt docs/apiSite 2>&1 | tee doc.log
+          if grep -q "Couldn't resolve a member for the given link query" doc.log; then
+            echo "::error::Scaladoc contains broken links"
+            exit 1
+          fi
+          mv target/out/jvm/scala-*/coilix-docs/api-site api-site
+      - uses: actions/upload-artifact@v7
+        with:
+          name: api-site
+          path: api-site
+          retention-days: 1
+
+  site:
+    name: Publish to gh-pages
+    needs: [target, api]
+    if: always() && needs.target.outputs.site == 'true' && needs.target.result == 'success' && (needs.api.result == 'success' || needs.api.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: 12_docs/website/.nvmrc
+          cache: npm
+          cache-dependency-path: 12_docs/website/package-lock.json
+      - name: Install site dependencies
+        working-directory: 12_docs/website
+        run: npm ci
+      - name: Build the released guides
+        working-directory: 12_docs/website
+        env:
+          COILIX_DOCS_PUBLISH: "true"
+        run: npm run build
+      - name: Check out gh-pages
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null; then
+            git fetch origin gh-pages
+            git worktree add -B gh-pages gh-pages origin/gh-pages
+          else
+            git worktree add --orphan -b gh-pages gh-pages
+          fi
+      - name: Replace the guides and keep older API documentation
+        run: |
+          find gh-pages -mindepth 1 -maxdepth 1 ! -name .git ! -name api -exec rm -rf {} +
+          cp -R 12_docs/website/build/. gh-pages/
+          echo "docs.coilix.dev" > gh-pages/CNAME
+          touch gh-pages/.nojekyll
+      - uses: actions/download-artifact@v7
+        if: needs.target.outputs.api == 'true'
+        with:
+          name: api-site
+          path: api-site
+      - name: Put the API documentation of the tag in place
+        if: needs.target.outputs.api == 'true'
+        env:
+          GROUP: ${{ needs.target.outputs.group }}
+          LINE: ${{ needs.target.outputs.line }}
+        run: |
+          rm -rf "gh-pages/api/$GROUP/$LINE"
+          mkdir -p "gh-pages/api/$GROUP"
+          mv api-site "gh-pages/api/$GROUP/$LINE"
+      - name: Check entry pages
+        run: node 12_docs/website/scripts/check-published-site.mjs gh-pages
+      - name: Check links
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: --offline --no-progress --fallback-extensions html --root-dir "${{ github.workspace }}/gh-pages" "gh-pages/**/*.html"
+          fail: true
+      - name: Push gh-pages
+        working-directory: gh-pages
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          source="${TAG:-master $(git -C .. rev-parse --short HEAD)}"
+          git add --all
+          if git diff --cached --quiet; then
+            echo "gh-pages is up to date"
+            exit 0
+          fi
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit --quiet --message "Publish docs from $source"
+          git push origin gh-pages

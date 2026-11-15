@@ -68,7 +68,7 @@ Zostaje:
 4. **Wydanie przy tagu:** `release.yml` dla tagów `*-v*` (sprawdzenia z ADR 0011, publikacja tylko grupy, GitHub Release z pliku changelogu), skrypt i workflow „Prepare release”, ruleset tagów `*-v*` (zrobione: `release.yml` na `*-v*` z `release-tag.mjs` i `releaseVerify`, publikacja tylko grupy przez `RELEASE_GROUP`, zamiast workflow lokalny skrypt `npm run prepare-release`; zostaje publikacja pluginu IntelliJ w Marketplace).
 5. **Publikacja strony** (razem z krokiem 7 COILIX-00007): workflow „Publish docs” na tag i ręcznie, sekcje i wersje per grupa, API pod `/api/<grupa>/<linia>/`, lychee przed publikacją, `gh-pages` i domena `docs.coilix.dev`. Dwa PR-y:
    1. sekcja `core` pod `/core/`, tryb publikacji `COILIX_DOCS_PUBLISH=true` tylko z wydanymi liniami, linki do `/api/core/<linia>/` i kopia przewodników nowej linii w `npm run prepare-release` (`scripts/docs-line.mjs`) (zrobione),
-   2. `.github/workflows/docs.yml` z lychee i `gh-pages`, uruchamiany z `release.yml` i ręcznie.
+   2. `.github/workflows/docs.yml` z lychee i `gh-pages`, uruchamiany z `release.yml` i ręcznie (zrobione; przy okazji link „API” na polskich stronach prowadził do `/pl/api/...`, więc linki do API idą przez zwykły `<a>` i komponent `ApiLink`). Pierwsza publikacja nastąpi przy `core-v0.1.0`, po niej domena `docs.coilix.dev` w GitHub Pages (akcja ręczna opiekuna).
 
 Kryteria akceptacji grup wydań:
 

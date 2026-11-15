@@ -119,10 +119,11 @@ Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tag
    1. `scripts/release-tag.mjs` sprawdza nazwę tagu, to, że commit jest na `master` albo `series/<grupa>-X.Y`, że wersja jest nowsza od tagów grupy (na gałęzi linii: od tagów tej linii), plik `changelog/<grupa>/X.Y.Z.md` i dla modułu funkcji zgodność `requires-core` z ostatnim wydaniem rdzenia,
    2. `sbt "releaseVerify <grupa> X.Y.Z"` sprawdza, że grupa ma publikowane moduły z wersją z tagu, i uruchamia na nich `checkReleasedCore` (moduł funkcji), `checkLicenses`, `testFull` i `mimaReportBinaryIssues`,
    3. `sbt ci-release` z `RELEASE_GROUP=<grupa>` podpisuje i publikuje na Maven Central tylko moduły tej grupy,
-   4. powstaje GitHub Release z treścią pliku changelogu.
+   4. powstaje GitHub Release z treścią pliku changelogu,
+   5. workflow „Publish docs” publikuje stronę z `master` i dla `core` dokumentację API linii z commitu tagu ([documentation.md](documentation.md#publikacja)).
 
-   Każdy błąd zatrzymuje wydanie przed publikacją.
-6. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach) i stronę GitHub Release.
+   Każdy błąd w krokach 1–3 zatrzymuje wydanie przed publikacją. Gdy zawiedzie tylko publikacja strony, artefakty są już wydane: popraw przyczynę i uruchom „Publish docs” ręcznie z tym tagiem.
+6. Sprawdź artefakty na Maven Central (pojawiają się po kilkunastu minutach), stronę GitHub Release i `docs.coilix.dev`.
 
 Wydania przedpremierowe (`<grupa>-vX.Y.Z-M1`, `<grupa>-vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
 
