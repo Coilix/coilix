@@ -72,3 +72,12 @@ Zrobione w całości:
 - demo (`InMemoryUserRepository`), przewodnik „Bean lifecycle” w obu językach, changelog `core`.
 
 Kilka `BeanPostProcessor` naraz (np. dla `@Async` z COILIX-00005) wymaga złożenia ich w jeden komponent. Dojdzie to razem z drugim procesorem.
+
+## Pomysły na rozwój
+
+Na razie metody cyklu życia są synchroniczne, bez parametrów i zwracają `Unit`. To wystarcza do pierwszego wydania. Kierunki na później (pomysł opiekuna z 2026-11-15):
+
+- **Metody efektowe:** `@PostConstruct` i `@PreDestroy` zwracające efekt, np. `IO[Unit]` albo `ZIO[Any, Throwable, Unit]`, uruchamiany przez framework przy starcie i przy zamykaniu, z zachowaniem kolejności beanów. Wymaga decyzji z COILIX-00020 (moduły integracyjne, sposób uruchamiania efektu), więc rdzeń dostałby tylko ogólny punkt rozszerzeń, a obsługę konkretnych bibliotek moduły `coilix-cats-effect` i `coilix-zio`.
+- **Metody z parametrami:** parametry wstrzykiwane tak jak w konstruktorze, np. inny bean, `ApplicationContext`, `@Value` albo `ApplicationArguments`. Walidacja sygnatury przeszłaby wtedy z „bez parametrów” na „każdy parametr da się rozwiązać”, nadal przy tworzeniu definicji.
+
+Obie zmiany rozszerzają obecny kontrakt, więc nie będą zmianą niezgodną dla istniejących beanów.

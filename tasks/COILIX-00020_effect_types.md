@@ -9,7 +9,7 @@ Ten task jest najpierw analizą. Wynikiem ma być ADR z decyzją, co i w jakiej 
 ## Stan obecny
 
 - Kontener jest synchroniczny. Bean powstaje przez wywołanie konstruktora albo metody `@Bean`, a wynik trafia do kontekstu od razu.
-- Tworzenie beana nie może być efektem (`IO[A]`, `ZIO[R, E, A]`), a zasób z cyklem życia (`Resource[F, A]`, `ZLayer`, `Scope`) nie ma odpowiednika. Zamykanie kontekstu i `@PreDestroy` dopiero powstaną w COILIX-00004.
+- Tworzenie beana nie może być efektem (`IO[A]`, `ZIO[R, E, A]`), a zasób z cyklem życia (`Resource[F, A]`, `ZLayer`, `Scope`) nie ma odpowiednika. Metody `@PostConstruct` i `@PreDestroy` (COILIX-00004) są synchroniczne i zwracają `Unit`.
 - `ApplicationRunner.run` zwraca `Unit`, więc logika startowa w `F` musi być uruchomiona ręcznie (`unsafeRunSync`).
 - Zależności są rozpoznawane przez refleksję w runtime ([ADR 0002](../docs/adr/0002-runtime-reflection-and-java-annotations.md)). Nie jest sprawdzone, co JVM widzi z typów wyższego rzędu, np. czy `UserRepository[IO]` da się odróżnić od `UserRepository[Task]` po wymazaniu typów.
 
@@ -17,11 +17,12 @@ Ten task jest najpierw analizą. Wynikiem ma być ADR z decyzją, co i w jakiej 
 
 1. Jak wygląda typowa aplikacja cats-effect i ZIO, która składa komponenty ręcznie, i co Coilix może w niej uprościć.
 2. Beany tworzone efektem: metoda `@Bean` zwracająca `F[A]` albo `Resource[F, A]`. Zasoby otwierane w kolejności zależności i zamykane w odwrotnej.
-3. Start i zamykanie aplikacji w `F`: odpowiednik `IOApp` / `ZIOAppDefault`, runner zwracający `F[Unit]`, zamknięcie kontekstu jako finalizer.
-4. Jeden typ efektu na aplikację (np. tylko `IO`) czy dowolne `F[_]` z instancjami typu `Sync[F]` jako beanami.
-5. Rozpoznawanie zależności typu `Repository[F]` w runtime: co zostaje w sygnaturach generycznych Scali 3 i czy trzeba `TypeTag` / `Tag` (izumi-reflect) albo makr.
-6. Czy część weryfikacji może przejść na czas kompilacji (makra Scali 3), co pasuje do oczekiwań użytkowników FP.
-7. Przegląd istniejących rozwiązań (distage, macwire, ZLayer) tylko po to, żeby znaleźć miejsce dla Coilix. Bez kopiowania kodu, dokumentacji ani API.
+3. Metody cyklu życia zwracające efekt (`@PostConstruct` i `@PreDestroy` z wynikiem `F[Unit]`), pomysł z sekcji „Pomysły na rozwój” w [COILIX-00004](COILIX-00004_bean_lifecycle.md).
+4. Start i zamykanie aplikacji w `F`: odpowiednik `IOApp` / `ZIOAppDefault`, runner zwracający `F[Unit]`, zamknięcie kontekstu jako finalizer.
+5. Jeden typ efektu na aplikację (np. tylko `IO`) czy dowolne `F[_]` z instancjami typu `Sync[F]` jako beanami.
+6. Rozpoznawanie zależności typu `Repository[F]` w runtime: co zostaje w sygnaturach generycznych Scali 3 i czy trzeba `TypeTag` / `Tag` (izumi-reflect) albo makr.
+7. Czy część weryfikacji może przejść na czas kompilacji (makra Scali 3), co pasuje do oczekiwań użytkowników FP.
+8. Przegląd istniejących rozwiązań (distage, macwire, ZLayer) tylko po to, żeby znaleźć miejsce dla Coilix. Bez kopiowania kodu, dokumentacji ani API.
 
 ## Proponowany kierunek (do potwierdzenia w ADR)
 
