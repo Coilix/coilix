@@ -17,7 +17,8 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0009](0009-dev-coilix-namespace.md) | Przestrzeń nazw `dev.coilix` | przyjęta |
 | [0010](0010-docusaurus-documentation-site.md) | Strona dokumentacji w Docusaurusie pod `docs.coilix.dev` | przyjęta, punkty 4, 5 i 7 zastąpione przez 0011 |
 | [0011](0011-release-groups-and-changelog-files.md) | Grupy wydań, changelog w plikach i publikacja przy tagu | przyjęta |
-| [0012](0012-value-types-and-enums-by-annotations.md) | Typy wartości i enumy przez adnotacje | proponowana |
+| [0012](0012-value-types-and-enums-by-annotations.md) | Typy wartości i enumy przez adnotacje | przyjęta, punkt o kodzie naruszeń zastąpiony przez 0013 |
+| [0013](0013-compile-time-checked-violations.md) | Naruszenia walidacji sprawdzane w czasie kompilacji | proponowana |
 
 ## Nowa decyzja
 

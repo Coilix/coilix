@@ -29,7 +29,7 @@ Każdy punkt to osobny PR.
    - `NoEdit` i `SetTo(Option[T])` z obecnym API (`map`, `flatMap`, `fold`, `filter`, `zip`, `orElse`, `getOrElse`, `toOption`, `toNestedOption`, predykaty),
    - bez instancji cats, circe i sangrii. Te trafią do modułów integracyjnych (poza zakresem).
 2. **Walidacja** w `01_common`:
-   - `Violation(code, message, path)` bez makra (zob. ADR 0012), `Validator[T]` i `Statement[T]` z tym samym płynnym API (`test`, `testNot`, `testAll`, `testAny`, `and`, `subValidator`, `onCaseOf`, `optional`, `validateEach`, rozmiary list),
+   - `Violation(message)` i `ViolationTemplate[T](template)(arguments*)` jako makra `inline`: kod z nazwy `val`, szablon sprawdzany przy kompilacji, tak jak `tvb` w implicits (ADR 0013). Jawny kod przez `Violation(code, message)`, `Validator[T]` i `Statement[T]` z tym samym płynnym API (`test`, `testNot`, `testAll`, `testAny`, `and`, `subValidator`, `onCaseOf`, `optional`, `validateEach`, rozmiary list),
    - wynik `Either[List[Violation], T]` zamiast `Validated`,
    - `ValidationException` dziedziczący po `CoilixException` zamiast `DomainError`.
 3. **Typy wartości** (zamiennik `AnyValObject`):
@@ -71,15 +71,15 @@ Każdy punkt to osobny PR.
 - Cache (scaffeine), i18n komunikatów naruszeń i `OxClock` (wystarczy `java.time.Clock`). Mogą wrócić jako osobne taski.
 - `Email` i inne typy domenowe. Framework nie powinien narzucać modelu domeny, a `Email` może zostać przykładem w przewodniku.
 - `HasDefault`: binder konfiguracji ma już wartości domyślne Scali (`ScalaDefaultArguments`).
-- Makra po stronie użytkownika i derywacja `derives` (ADR 0012).
+- Derywacja `derives` i makra do wykrywania typów (ADR 0012). Wyjątkiem są makra sprawdzające naruszenia (ADR 0013).
 
 ## Ryzyka i otwarte pytania
 
 - **`extends AnyVal`:** sprawdzone (2026-11-15). Parametr konstruktora typu `Id extends AnyVal` ma w sygnaturze JVM typ `long`, a `Id` widać tylko w argumentach typów generycznych (`List<Id>`, `Option<Id>`). Typ `@ValueType` nie powinien więc dziedziczyć po `AnyVal`. Refleksja nie odróżni takiej klasy od zwykłej, więc ostrzega przed tym Javadoc adnotacji.
 - **Adnotacje na przypadkach enuma:** sprawdzone (2026-11-15). Adnotacja Javy na `case Earth` trafia na statyczne pole `Earth` w klasie obiektu towarzyszącego (`Planet$`), także dla przypadku z argumentami konstruktora enuma, a enum ma statyczne `values` i `valueOf`. Enum z przypadkami z parametrami (`case Circle(r: Double)`) nie ma `values`, więc `@Enumerated` go odrzuca. Enumy Javy nie są obsługiwane. `@EnumName` ma więc `@Target(FIELD)`.
-- Komunikaty `Violation` w implicits dostają nazwę z makra (nazwa `val`). Bez makra kod naruszenia podaje się jawnie, co jest bardziej rozwlekłe, ale zgodne z ADR 0002.
+- Komunikaty `Violation` w implicits dostają nazwę z makra (nazwa `val`). Opiekun chce to zachować, więc makra wracają (ADR 0013). Zmiana nazwy `val` zmienia kod naruszenia.
 - Kod pochodzi z biblioteki tego samego autora na tej samej licencji, więc przeniesienie nie wymaga zgód. Commity i tak podpisuje się przez DCO.
 
 ## Stan realizacji (2026-11-16)
 
-PR-y w łańcuchu, każdy na poprzednim: #35 `EditOption`, #36 walidacja, #37 `@ValueType` i `Secret`, #38 `@Enumerated`, #39 wiązanie w konfiguracji. Zostały przewodnik (punkt 6) i mapowanie kolumn (punkt 7).
+#35 `EditOption` scalony. #37 (`@ValueType` i `Secret`) został scalony do gałęzi #36, więc #36 wnosi walidację z makrami (ADR 0013) i typy wartości. Dalej #38 `@Enumerated` i #39 wiązanie w konfiguracji. Zostały przewodnik (punkt 6) i mapowanie kolumn (punkt 7).
