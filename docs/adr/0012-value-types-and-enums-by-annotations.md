@@ -1,6 +1,6 @@
 # 0012: Typy wartości i enumy przez adnotacje
 
-- Status: proponowana
+- Status: przyjęta, punkt o jawnym kodzie naruszeń zastąpiony przez 0013
 - Data: 2026-11-15
 - Task: COILIX-00022
 
