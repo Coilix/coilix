@@ -1,0 +1,67 @@
+---
+id: profiles-and-conditions
+title: Profiles and conditional beans
+description: Choose beans and configuration per environment with profiles, and add beans only when a condition holds.
+sidebar_position: 3
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import MailSender from '!!raw-loader!@examples/scala/MailSender.scala';
+import ConsoleMailSender from '!!raw-loader!@examples/scala/ConsoleMailSender.scala';
+import SmtpMailSender from '!!raw-loader!@examples/scala/SmtpMailSender.scala';
+import AuditLog from '!!raw-loader!@examples/scala/AuditLog.scala';
+import ClockConfiguration from '!!raw-loader!@examples/scala/ClockConfiguration.scala';
+import ApplicationYaml from '!!raw-loader!@examples/resources/guides/profiles/application.yaml';
+import ApplicationDevYaml from '!!raw-loader!@examples/resources/guides/profiles/application-dev.yaml';
+
+This page shows how to run the same application with different beans and settings, for example on your machine and in production. Use it when a bean should exist only in some environments, only when a setting is on, or only when the application does not define its own.
+
+## Activate profiles
+
+A profile is a name for an environment, such as `dev` or `prod`. List the active profiles under `coilix.profiles.active`, either in `application.yaml` or at startup:
+
+```
+--coilix.profiles.active=dev
+```
+
+Several profiles are separated by commas, as in `dev,local`.
+
+## Choose beans by profile
+
+Annotate a component or a `@Bean` method with `@Profile`. The bean is added only when one of the listed profiles is active. A name starting with `!` matches when that profile is not active.
+
+<CodeBlock language="scala" title="MailSender.scala">{MailSender}</CodeBlock>
+
+<CodeBlock language="scala" title="ConsoleMailSender.scala">{ConsoleMailSender}</CodeBlock>
+
+<CodeBlock language="scala" title="SmtpMailSender.scala">{SmtpMailSender}</CodeBlock>
+
+Exactly one `MailSender` exists in each case, so a bean that needs a `MailSender` gets it without any `@Primary`. A `@Profile` on a `@Configuration` class also applies to all its `@Bean` methods.
+
+## Override settings per profile
+
+For each active profile, Coilix also reads `application-<profile>.yaml` (or `.conf`, `.properties`) and lets it override `application.yaml`. When several profiles are active, the one listed last wins. Command-line options and system properties still override every file.
+
+<CodeBlock language="yaml" title="application.yaml">{ApplicationYaml}</CodeBlock>
+
+<CodeBlock language="yaml" title="application-dev.yaml">{ApplicationDevYaml}</CodeBlock>
+
+With the `dev` profile, `mail.host` is `localhost`, and `shop.audit.enabled` still comes from `application.yaml`. A profile file cannot activate more profiles.
+
+## Add a bean when a setting is on
+
+`@ConditionalOnProperty` adds the bean only when a configuration key has the given value. Without `havingValue`, any value except `false` matches. With `matchIfMissing = true`, the bean is also added when the key is not set.
+
+<CodeBlock language="scala" title="AuditLog.scala">{AuditLog}</CodeBlock>
+
+`@ConditionalOnClass` adds the bean only when the named classes are on the classpath, for example a database driver.
+
+## Provide a default that can be replaced
+
+`@ConditionalOnMissingBean` adds the bean only when no other bean has the same type or a subtype. It is meant for beans of optional modules: the module provides a default, and an application that defines its own bean of that type replaces it.
+
+<CodeBlock language="scala" title="ClockConfiguration.scala">{ClockConfiguration}</CodeBlock>
+
+## How conditions are checked
+
+Coilix checks the conditions before it resolves dependencies, so a bean that is left out never causes an ambiguous or a missing dependency. To see why a bean was left out, set the log level of `dev.coilix.context.ConditionalDefinitionFilter` to `DEBUG`.

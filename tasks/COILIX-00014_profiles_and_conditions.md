@@ -51,3 +51,16 @@ Bean może trafić do kontekstu tylko pod warunkiem: aktywny profil, wartość w
 
 - `@ConditionalOnMissingBean` zależy od kolejności oceny. Proponowane: najpierw beany aplikacji, potem beany z modułów (COILIX-00010), i tylko moduły mogą używać tego warunku.
 - Czy profile mają być w `config` (wpływają na pliki), czy w `context` (wpływają na beany)? Proponowane: lista aktywnych profili w `Environment`, a reszta w `context`.
+
+## Stan realizacji (2026-11-16)
+
+Zrobione w całości:
+
+- `config`: `Profiles` i `Environment.activeProfiles` (lista albo tekst z przecinkami pod `coilix.profiles.active`), pliki `application-<profil>.*` w `ClasspathEnvironmentLoader` między właściwościami systemowymi a plikami bazowymi, profil podany później wygrywa, plik profilu nie włącza kolejnych profili,
+- `02_annotations`: `@Profile`, `@ConditionalOnProperty`, `@ConditionalOnClass`, `@ConditionalOnMissingBean`,
+- `context`: `BeanCondition` (`ProfileCondition`, `PropertyCondition`, `ClassCondition`), `BeanConditions` w `BeanDefinition`, `ConditionScanner` (`AnnotatedConditionScanner`, `coilix.context.condition-scanner`) wołany z `ReflectiveBeanDefinitionFactory`, `DefinitionFilter` (`ConditionalDefinitionFilter`, `coilix.context.definition-filter`) w `DefaultApplicationContextBuilder` przed `DependencyResolver`, log `DEBUG` z powodem pominięcia,
+- demo: `ConsoleNotifier` i `SilentNotifier` oraz `application-dev.yaml`,
+- przewodnik „Profiles and conditional beans” w obu językach z kompilowanymi przykładami i testem.
+
+Decyzje: warunki metody `@Bean` to warunki jej klasy `@Configuration` plus własne. `@ConditionalOnMissingBean` ustępuje każdemu beanowi bez tego oznaczenia, który przeszedł pierwszy przebieg, i gotowym singletonom. Ograniczenie do modułów jest tylko zaleceniem w dokumentacji, framework go nie wymusza.
+

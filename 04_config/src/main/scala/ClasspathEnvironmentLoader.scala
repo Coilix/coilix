@@ -15,7 +15,12 @@ import scala.jdk.CollectionConverters.*
  *  1. the `overrides` passed to [[dev.coilix.config.ClasspathEnvironmentLoader.load]], which Coilix fills from command-line
  *     options such as `--server.port=9090`,
  *  1. JVM system properties, such as `-Dserver.port=9090`,
+ *  1. files named `<baseName>-<profile>.<extension>` for each profile listed under `coilix.profiles.active`, where a profile
+ *     listed later wins over one listed earlier,
  *  1. files named `<baseName>.<extension>` on the classpath, in the order of `formats`.
+ *
+ * The active profiles are read from the command line, the system properties and the base files, so a profile file cannot
+ * activate further profiles.
  *
  * Missing files are skipped. Each file that is found is logged at `INFO` level. HOCON substitutions such as `${other.key}` are
  * resolved after the sources are merged, so they can refer to keys from any source.
@@ -33,17 +38,24 @@ import scala.jdk.CollectionConverters.*
 final class ClasspathEnvironmentLoader(baseName: String, formats: List[ConfigFormat], classLoader: ClassLoader)
     extends EnvironmentLoader {
 
-  override def load(overrides: Map[String, String]): Environment =
-    Environment.of(TypesafeConfigTree(layers(overrides).reduceLeft(_.withFallback(_)).resolve()))
+  override def load(overrides: Map[String, String]): Environment = {
+    val base     = ConfigFactory.parseMap(overrides.asJava, "command line") :: systemProperties :: files(baseName)
+    val profiles = Profiles.active(TypesafeConfigTree(merged(base)))
+    if (profiles.nonEmpty) log.info(s"Active profiles: ${profiles.mkString(", ")}")
+    Environment.of(TypesafeConfigTree(merged(base.take(2) ++ profiles.reverse.flatMap(profileFiles) ++ base.drop(2))))
+  }
 
-  private def layers(overrides: Map[String, String]): List[Config] =
-    ConfigFactory.parseMap(overrides.asJava, "command line") :: systemProperties :: files
+  private def merged(layers: List[Config]): Config =
+    layers.reduceLeft(_.withFallback(_)).resolve()
+
+  private def profileFiles(profile: String): List[Config] =
+    files(s"$baseName-$profile")
 
   private def systemProperties: Config =
     ConfigFactory.parseProperties(System.getProperties, ConfigParseOptions.defaults().setOriginDescription("system properties"))
 
-  private def files: List[Config] =
-    formats.flatMap(format => format.extensions.flatMap(extension => fileLayer(format, s"$baseName.$extension")))
+  private def files(name: String): List[Config] =
+    formats.flatMap(format => format.extensions.flatMap(extension => fileLayer(format, s"$name.$extension")))
 
   private def fileLayer(format: ConfigFormat, resource: String): Option[Config] =
     Option(classLoader.getResource(resource)).map(url => parsed(format, resource, url))

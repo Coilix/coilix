@@ -1,0 +1,67 @@
+---
+id: profiles-and-conditions
+title: Profile i beany warunkowe
+description: Wybieraj beany i konfigurację dla środowiska za pomocą profili i dodawaj beany tylko wtedy, gdy spełniony jest warunek.
+sidebar_position: 3
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import MailSender from '!!raw-loader!@examples/scala/MailSender.scala';
+import ConsoleMailSender from '!!raw-loader!@examples/scala/ConsoleMailSender.scala';
+import SmtpMailSender from '!!raw-loader!@examples/scala/SmtpMailSender.scala';
+import AuditLog from '!!raw-loader!@examples/scala/AuditLog.scala';
+import ClockConfiguration from '!!raw-loader!@examples/scala/ClockConfiguration.scala';
+import ApplicationYaml from '!!raw-loader!@examples/resources/guides/profiles/application.yaml';
+import ApplicationDevYaml from '!!raw-loader!@examples/resources/guides/profiles/application-dev.yaml';
+
+Ta strona pokazuje, jak uruchamiać tę samą aplikację z różnymi beanami i ustawieniami, na przykład na twoim komputerze i na produkcji. Przyda ci się, gdy bean ma istnieć tylko w niektórych środowiskach, tylko przy włączonym ustawieniu albo tylko wtedy, gdy aplikacja nie definiuje własnego.
+
+## Włącz profile
+
+Profil to nazwa środowiska, na przykład `dev` albo `prod`. Aktywne profile wpisz pod `coilix.profiles.active`, w `application.yaml` albo przy starcie:
+
+```
+--coilix.profiles.active=dev
+```
+
+Kilka profili oddzielasz przecinkami, na przykład `dev,local`.
+
+## Wybierz beany według profilu
+
+Oznacz komponent albo metodę `@Bean` adnotacją `@Profile`. Bean trafia do kontekstu tylko wtedy, gdy aktywny jest jeden z podanych profili. Nazwa zaczynająca się od `!` pasuje, gdy ten profil nie jest aktywny.
+
+<CodeBlock language="scala" title="MailSender.scala">{MailSender}</CodeBlock>
+
+<CodeBlock language="scala" title="ConsoleMailSender.scala">{ConsoleMailSender}</CodeBlock>
+
+<CodeBlock language="scala" title="SmtpMailSender.scala">{SmtpMailSender}</CodeBlock>
+
+W każdym przypadku istnieje dokładnie jeden `MailSender`, więc bean, który go potrzebuje, dostaje go bez `@Primary`. `@Profile` na klasie `@Configuration` dotyczy też wszystkich jej metod `@Bean`.
+
+## Nadpisz ustawienia dla profilu
+
+Dla każdego aktywnego profilu Coilix czyta też `application-<profil>.yaml` (albo `.conf`, `.properties`), który nadpisuje `application.yaml`. Gdy aktywnych jest kilka profili, wygrywa ten podany jako ostatni. Opcje z linii poleceń i właściwości systemowe nadal nadpisują każdy plik.
+
+<CodeBlock language="yaml" title="application.yaml">{ApplicationYaml}</CodeBlock>
+
+<CodeBlock language="yaml" title="application-dev.yaml">{ApplicationDevYaml}</CodeBlock>
+
+Z profilem `dev` `mail.host` ma wartość `localhost`, a `shop.audit.enabled` nadal pochodzi z `application.yaml`. Plik profilu nie może włączyć kolejnych profili.
+
+## Dodaj bean, gdy ustawienie jest włączone
+
+`@ConditionalOnProperty` dodaje bean tylko wtedy, gdy klucz konfiguracji ma podaną wartość. Bez `havingValue` pasuje każda wartość oprócz `false`. Z `matchIfMissing = true` bean trafia do kontekstu także wtedy, gdy klucza nie ma.
+
+<CodeBlock language="scala" title="AuditLog.scala">{AuditLog}</CodeBlock>
+
+`@ConditionalOnClass` dodaje bean tylko wtedy, gdy podane klasy są na classpath, na przykład sterownik bazy danych.
+
+## Daj wartość domyślną, którą można zastąpić
+
+`@ConditionalOnMissingBean` dodaje bean tylko wtedy, gdy żaden inny bean nie ma tego samego typu ani podtypu. Służy beanom z modułów opcjonalnych: moduł daje wartość domyślną, a aplikacja, która definiuje własny bean tego typu, ją zastępuje.
+
+<CodeBlock language="scala" title="ClockConfiguration.scala">{ClockConfiguration}</CodeBlock>
+
+## Jak sprawdzane są warunki
+
+Coilix sprawdza warunki przed rozwiązaniem zależności, więc pominięty bean nigdy nie powoduje niejednoznacznej ani brakującej zależności. Żeby zobaczyć, dlaczego bean został pominięty, ustaw poziom logowania `dev.coilix.context.ConditionalDefinitionFilter` na `DEBUG`.

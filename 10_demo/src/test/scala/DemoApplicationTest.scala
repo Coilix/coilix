@@ -28,6 +28,7 @@ final class DemoApplicationTest extends FunSuite {
         "greeter",
         "inMemoryUserRepository",
         "mailSettings",
+        "silentNotifier",
         "sortedUserService"
       )
     )

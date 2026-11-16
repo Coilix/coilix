@@ -38,7 +38,8 @@ object ApplicationContextBuilder {
         DependencyResolver.default,
         BeanInstantiator.default,
         CandidateSelector.default,
-        BeanDestroyer.default
+        BeanDestroyer.default,
+        DefinitionFilter.default
       )
     )
 }

@@ -2,7 +2,8 @@ package dev.coilix.context
 
 /**
  * Builds a [[dev.coilix.context.DefaultApplicationContext]]: registers the context itself as `applicationContext` and the given
- * singletons, orders the definitions with the [[dev.coilix.context.DependencyResolver]] and creates each bean with the
+ * singletons, leaves out the definitions rejected by the [[dev.coilix.context.DefinitionFilter]], orders the rest with the
+ * [[dev.coilix.context.DependencyResolver]] and creates each bean with the
  * [[dev.coilix.context.BeanInstantiator]].
  *
  * This is the default [[dev.coilix.context.ApplicationContextBuilder]].
@@ -15,12 +16,15 @@ package dev.coilix.context
  *   chooses a bean when several match a requested type
  * @param destroyer
  *   destroys the beans when the built context closes
+ * @param filter
+ *   leaves out definitions whose conditions do not hold
  */
 final class DefaultApplicationContextBuilder(
   resolver:     DependencyResolver,
   instantiator: BeanInstantiator,
   selector:     CandidateSelector,
-  destroyer:    BeanDestroyer
+  destroyer:    BeanDestroyer,
+  filter:       DefinitionFilter
 ) extends ApplicationContextBuilder {
 
   private val contextBeanName = "applicationContext"
@@ -40,7 +44,7 @@ final class DefaultApplicationContextBuilder(
 
   private def instantiateAll(definitions: List[BeanDefinition], initial: BeanRegistry): BeanRegistry =
     resolver
-      .resolve(definitions, initial.beans.map(_.beanClass))
+      .resolve(filter.filter(definitions, initial.beans.map(_.beanClass)), initial.beans.map(_.beanClass))
       .foldLeft(initial)(instantiate)
 
   private def instantiate(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =
