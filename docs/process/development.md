@@ -56,7 +56,6 @@ sbt -Dsbt.server.autostart=false testFull doc demo/run
 - `testFull` przechodzi (kompilacja z `-Werror`, wartremover, scalafmt, zakaz `println`).
 - W logu `doc` nie ma `Couldn't resolve a member for the given link query`.
 - `demo/run` startuje i pokazuje nową funkcję, jeśli task jej dotyczy.
-- Po zmianie pluginu IntelliJ: `sbt intellij-plugin/installIntellijPlugin` i ręczna weryfikacja w IDE.
 
 ### 4. Pull request
 
@@ -95,7 +94,7 @@ Projekt ma na razie jednego opiekuna, więc przegląd to samodzielne przejście 
 
 ## Wydanie
 
-Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tagi `<grupa>-vX.Y.Z` ([versioning.md](../architecture/versioning.md)). Wydania wychodzą z `master` (linia bieżąca) albo z `series/<grupa>-X.Y` (starsza linia). W fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`. Moduł funkcji wychodzi tylko wtedy, gdy rdzeń nie zmienił się od ostatniego `core-v*`. W przeciwnym razie najpierw wychodzi rdzeń.
+Każda grupa wydań (`core` albo moduł funkcji) ma własne wersje i tagi `<grupa>-vX.Y.Z` ([versioning.md](../architecture/versioning.md)). Wydania wychodzą z `master` (linia bieżąca) albo z `series/<grupa>-X.Y` (starsza linia). W fazie `0.x` zmiana niezgodna podnosi `MINOR`, reszta `PATCH`. Moduł funkcji wychodzi tylko wtedy, gdy rdzeń nie zmienił się od ostatniego `core-v*`. W przeciwnym razie najpierw wychodzi rdzeń.
 
 1. Upewnij się, że CI na gałęzi wydania jest zielone i że jesteś na aktualnym `master` (albo `series/<grupa>-X.Y`) bez lokalnych zmian.
 2. Przygotuj PR wydania:
@@ -127,7 +126,7 @@ Każda grupa wydań (`core`, moduł funkcji, `intellij`) ma własne wersje i tag
 
 Wydania przedpremierowe (`<grupa>-vX.Y.Z-M1`, `<grupa>-vX.Y.Z-RC1`) idą tą samą drogą. `-M` to kamień milowy bez gwarancji stabilności API, `-RC` to kandydat, w którym zmieniają się już tylko poprawki.
 
-Plugin IntelliJ (`intellij-v*`) nie ma jeszcze publikacji w Marketplace, więc `releaseVerify` odrzuca jego tag. Moduł funkcji da się wydać dopiero po zdjęciu z niego `unpublished`.
+Moduł funkcji da się wydać dopiero po zdjęciu z niego `unpublished`.
 
 ## Utrzymanie starszej linii
 

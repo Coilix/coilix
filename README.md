@@ -47,7 +47,7 @@ object App {
 - `@Configuration` classes with `@Bean` methods,
 - configuration from HOCON, YAML and properties files, command-line options and system properties, bound with `@Value` and `@ConfigurationProperties` to scalars, collections, options and case classes,
 - every framework component can be replaced in configuration with a `class` key under its `coilix.*` path,
-- `@Slf4s` compiler plugin that adds an SLF4J `log` field, with an IntelliJ IDEA plugin that makes the field visible in the editor.
+- `@Slf4s` compiler plugin that adds an SLF4J `log` field, with an [IntelliJ IDEA plugin](https://github.com/Coilix/coilix-intellij) that makes the field visible in the editor.
 
 ## Modules
 

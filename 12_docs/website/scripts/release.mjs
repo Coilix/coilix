@@ -5,7 +5,6 @@ import {changelogRoot, compareVersions, groupLabel, parseBody, releaseProblems} 
 
 const tagPattern = /^([a-z][a-z0-9-]*)-v(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
 const versionPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/;
-const groupsWithoutCore = ['core', 'intellij'];
 
 export function parseTag(tag) {
   const match = tag.match(tagPattern);
@@ -24,7 +23,7 @@ export function releaseBranches(group, version) {
 }
 
 export function needsCore(group) {
-  return !groupsWithoutCore.includes(group);
+  return group !== 'core';
 }
 
 export function releaseTitle(group, version) {

@@ -10,15 +10,16 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0002](0002-runtime-reflection-and-java-annotations.md) | Refleksja w runtime i adnotacje w Javie | przyjęta |
 | [0003](0003-replaceable-framework-components.md) | Komponenty frameworka podmieniane w configu | przyjęta |
 | [0004](0004-immutable-context-and-constructor-injection.md) | Niemutowalny kontekst i wstrzykiwanie przez konstruktor | przyjęta |
-| [0005](0005-slf4s-compiler-plugin.md) | Logger `@Slf4s` przez plugin kompilatora | przyjęta |
+| [0005](0005-slf4s-compiler-plugin.md) | Logger `@Slf4s` przez plugin kompilatora | przyjęta, punkt o pluginie IntelliJ zastąpiony przez 0014 |
 | [0006](0006-scala-lts-and-jdk-baseline.md) | Scala z linii LTS i JDK 17 dla publikowanych modułów | przyjęta |
 | [0007](0007-apache-license-and-dco.md) | Apache-2.0 i DCO zamiast CLA | przyjęta |
 | [0008](0008-squash-merge.md) | Scalanie przez squash, jeden PR to jedna zmiana | przyjęta |
 | [0009](0009-dev-coilix-namespace.md) | Przestrzeń nazw `dev.coilix` | przyjęta |
 | [0010](0010-docusaurus-documentation-site.md) | Strona dokumentacji w Docusaurusie pod `docs.coilix.dev` | przyjęta, punkty 4, 5 i 7 zastąpione przez 0011 |
-| [0011](0011-release-groups-and-changelog-files.md) | Grupy wydań, changelog w plikach i publikacja przy tagu | przyjęta |
+| [0011](0011-release-groups-and-changelog-files.md) | Grupy wydań, changelog w plikach i publikacja przy tagu | przyjęta, grupa `intellij` zastąpiona przez 0014 |
 | [0012](0012-value-types-and-enums-by-annotations.md) | Typy wartości i enumy przez adnotacje | przyjęta, punkt o kodzie naruszeń zastąpiony przez 0013 |
 | [0013](0013-compile-time-checked-violations.md) | Naruszenia walidacji sprawdzane w czasie kompilacji | proponowana |
+| [0014](0014-intellij-plugin-in-separate-repository.md) | Plugin IntelliJ w osobnym repozytorium | przyjęta |
 
 ## Nowa decyzja
 

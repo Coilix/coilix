@@ -61,5 +61,5 @@ final class UserServiceTest extends munit.FunSuite {
 
 ## Ryzyka i otwarte pytania
 
-- Numer katalogu: `testkit` zależy od `boot` (`09`), więc według zasady poziomów musi mieć numer wyższy. Propozycja: `10_testkit`, przesunięcie `demo` na `11` i pluginu IntelliJ na `12`. Koliduje to z planowanym `12_docs` z COILIX-00007 i przenumerowaniem z COILIX-00010, więc numery trzeba ustalić razem.
+- Numer katalogu: `testkit` zależy od `boot` (`09`), więc według zasady poziomów musi mieć numer wyższy. Propozycja: `10_testkit`, przesunięcie `demo` na `11`. Numer `11` jest wolny od przeniesienia pluginu IntelliJ do osobnego repozytorium (ADR 0014), ale numery trzeba ustalić razem z przenumerowaniem z COILIX-00010.
 - Czy `withBean` ma usuwać tylko definicje tego samego typu, czy wszystkie przypisywalne? Druga opcja jest wygodniejsza, ale może usunąć więcej, niż test zakłada.

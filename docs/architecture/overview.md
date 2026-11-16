@@ -88,7 +88,7 @@ Nowy komponent frameworka dopisuje się do tej tabeli w tym samym commicie, w kt
 
 ## Logowanie `@Slf4s`
 
-`@Slf4s` to adnotacja Java z `02_annotations`. Plugin kompilatora `03_slf4s_plugin` dodaje do oznaczonej klasy lub obiektu pole `log: org.slf4j.Logger` w trakcie kompilacji, więc w runtime nie ma refleksji ani proxy. IntelliJ nie widzi zmian robionych przez plugin kompilatora, dlatego `11_intellij_plugin` dodaje to samo pole jako syntetyczny element w edytorze.
+`@Slf4s` to adnotacja Java z `02_annotations`. Plugin kompilatora `03_slf4s_plugin` dodaje do oznaczonej klasy lub obiektu pole `log: org.slf4j.Logger` w trakcie kompilacji, więc w runtime nie ma refleksji ani proxy. IntelliJ nie widzi zmian robionych przez plugin kompilatora, dlatego plugin IntelliJ z repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) dodaje to samo pole jako syntetyczny element w edytorze.
 
 ## Czego jeszcze nie ma
 

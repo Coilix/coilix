@@ -31,7 +31,6 @@ body:
         - coilix-config
         - coilix-annotations
         - coilix-slf4s-plugin
-        - IntelliJ plugin
         - not sure
     validations:
       required: true

@@ -34,19 +34,14 @@ Wymagania według [central.sonatype.org/publish/requirements](https://central.so
 - [ ] bez `<repositories>` w POM-ie,
 - [ ] narzędzie publikujące zgodne z sbt 2 (sbt-ci-release ma build dla sbt 2, wersję trzeba sprawdzić przy wdrożeniu),
 - [ ] sekrety w GitHub Actions: `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` (token z Central Portal),
-- [ ] `publish / skip := true` dla `root`, `demo` i `intellij-plugin`,
+- [ ] `publish / skip := true` dla `root` i `demo`,
 - [ ] `scala3-compiler` w `slf4s-plugin` jako `Provided`.
 
-Publikowane artefakty: `common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot`, później `data`, `web`, `security`. Nie publikujemy `demo` ani `intellij-plugin` (ten idzie do JetBrains Marketplace).
+Publikowane artefakty: `common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot`, później `data`, `web`, `security`. Nie publikujemy `demo`.
 
-## JetBrains Marketplace (`11_intellij_plugin`)
+## JetBrains Marketplace
 
-- [ ] konto vendora w JetBrains Marketplace (osoba albo organizacja), zaakceptowany Developer Agreement,
-- [ ] `plugin.xml`: `id` w przestrzeni nazw projektu, `name` bez „Spring” i bez znaków JetBrains w sposób sugerujący oficjalny plugin, `vendor` z e-mailem i URL, `description`, `change-notes`, zakres `since-build`/`until-build`, zależność `org.intellij.scala`,
-- [ ] licencja pluginu (Apache-2.0) i link do kodu źródłowego,
-- [ ] przejście [IntelliJ Plugin Verifier](https://github.com/JetBrains/intellij-plugin-verifier) dla deklarowanego zakresu IDE,
-- [ ] podpisanie pluginu certyfikatem: sprawdzić aktualny wymóg Marketplace; budowa pluginu sbt-em zamiast Gradle wymaga osobnego kroku podpisu, np. narzędziem `marketplace-zip-signer`,
-- [ ] ikona pluginu (`pluginIcon.svg`) bez elementów logo Springa ani Scali.
+Plugin IntelliJ jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) (ADR 0014) i tam ma własną listę kroków publikacji w Marketplace.
 
 ## GitHub
 
