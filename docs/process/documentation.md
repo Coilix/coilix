@@ -121,6 +121,10 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 | shutdown | zamykanie aplikacji |
 | bean lifecycle | cykl życia beana |
 | lifecycle method | metoda cyklu życia |
+| value type | typ wartości |
+| inner value | wartość wewnętrzna |
+| enum case | przypadek enuma |
+| secret | sekret |
 
 Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 

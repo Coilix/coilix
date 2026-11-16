@@ -1,0 +1,7 @@
+shop:
+  port: 8080
+  mode: read-only
+  payment-key: local-test-key
+  backup-ports:
+    - 8081
+    - 8082

@@ -82,4 +82,4 @@ Każdy punkt to osobny PR.
 
 ## Stan realizacji (2026-11-16)
 
-#35 `EditOption` scalony. #37 (`@ValueType` i `Secret`) został scalony do gałęzi #36, więc #36 wnosi walidację z makrami (ADR 0013) i typy wartości. Dalej #38 `@Enumerated` i #39 wiązanie w konfiguracji. Zostały przewodnik (punkt 6) i mapowanie kolumn (punkt 7).
+Scalone: #35 `EditOption`, #36 walidacja z makrami (ADR 0013) razem z typami wartości z #37, #38 `@Enumerated`, #39 wiązanie w konfiguracji. Przewodnik „Value types and enums” w obu językach (punkt 6) dochodzi w osobnym PR. Zostało mapowanie kolumn (punkt 7), które czeka na specyfikację modułu `data`.

@@ -1,0 +1,52 @@
+---
+id: value-types
+title: Value types and enums
+description: Read identifiers, ports, secrets and enum cases from the configuration with @ValueType, Secret and @Enumerated.
+sidebar_position: 2
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Port from '!!raw-loader!@examples/scala/Port.scala';
+import ShopMode from '!!raw-loader!@examples/scala/ShopMode.scala';
+import ShopSettings from '!!raw-loader!@examples/scala/ShopSettings.scala';
+import ShopYaml from '!!raw-loader!@examples/resources/guides/value-types/application.yaml';
+
+This page shows how to give configuration values their own types instead of plain `Int` and `String`. Use it when a value has rules, such as a port that must be in range, a password that must not appear in logs, or a setting with a fixed list of choices.
+
+## Wrap a single value
+
+Annotate a case class with one field with `@ValueType`. Coilix reads the inner value from the configuration and passes it to the constructor, so a check in the constructor runs for every configured value.
+
+<CodeBlock language="scala" title="Port.scala">{Port}</CodeBlock>
+
+The class needs one public constructor with one parameter and a public field with the same name, which a case class has. The inner value can be any type Coilix reads, including a list.
+
+:::warning
+Do not extend `AnyVal`. The JVM sees a parameter of such a class as its inner value, so Coilix cannot recognize the class and the check in the constructor does not run.
+:::
+
+## Choose from a fixed list
+
+Annotate a Scala 3 `enum` with `@Enumerated`. The configuration names a case by its name in the code, or by the name from `@EnumName`. Aliases in `@EnumName` keep old names working after a rename, and `ignoreCase = true` accepts any letter case.
+
+<CodeBlock language="scala" title="ShopMode.scala">{ShopMode}</CodeBlock>
+
+The cases of the enum cannot have parameters.
+
+## Keep secrets out of logs
+
+`Secret` is a value type for passwords and API keys. Its `toString` returns `*****`, so the text stays hidden when the settings object is logged or shown in an error. Read the text with `value` only where you pass it on.
+
+## Use the types in settings
+
+Value types, `Secret` and enums work in `@ConfigurationProperties` classes, in `@Value` parameters, and inside `Option` and collections.
+
+<CodeBlock language="scala" title="ShopSettings.scala">{ShopSettings}</CodeBlock>
+
+<CodeBlock language="yaml" title="application.yaml">{ShopYaml}</CodeBlock>
+
+When you log these settings, the payment key appears as `*****`. Pass the real key at startup, for example with `--shop.payment-key=...`, instead of keeping it in the file.
+
+## When a value is wrong
+
+A value that the constructor rejects, or a name that matches no case, stops the startup with `ConfigurationException`. The message names the configuration key and the reason. For an enum, it also lists the allowed names, for example `expected one of: Open, Closed, read-only`.
