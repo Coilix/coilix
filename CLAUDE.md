@@ -33,7 +33,8 @@ Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/m
 
 - `common`, `annotations`, `config`, `context` i `boot` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
-- Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services` (COILIX-00010), a nie przez zależność `boot` od niego.
+- Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
+- Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.
 - Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy (`demo`, plugin IntelliJ i puste moduły funkcji do czasu pierwszej implementacji), dostaje `.settings(unpublished)`, czyli `publish / skip := true` bez bazy MiMa.

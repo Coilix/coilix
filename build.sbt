@@ -50,6 +50,9 @@ lazy val javaOutputVersionOptions: Seq[String] = Seq("-java-output-version", jav
 
 lazy val checkForbiddenCalls = taskKey[Unit]("Fails when Scala sources write to the console")
 
+lazy val checkModuleLayers =
+  taskKey[Unit]("Fails when the core or boot depends on a feature module, or feature modules depend on each other")
+
 lazy val checkLicenses = taskKey[Unit]("Fails when a compile or runtime dependency has a license outside the allowed list")
 
 def legalFiles(converter: xsbti.FileConverter, root: File): Seq[(HashedVirtualFileRef, String)] =
@@ -179,7 +182,7 @@ lazy val web = slf4sModule("web", "07_web", "dev.coilix.web")
   .settings(description := "Web endpoints for Coilix")
 
 lazy val security = slf4sModule("security", "08_security", "dev.coilix.security")
-  .dependsOn(web)
+  .dependsOn(context)
   .settings(featureGroup("security"))
   .settings(unpublished)
   .settings(description := "Security for Coilix")
@@ -264,8 +267,16 @@ lazy val modules: Seq[ProjectReference] =
 lazy val root = (project in file("."))
   .aggregate(modules *)
   .settings(
-    name           := "coilix",
-    publish / skip := true
+    name              := "coilix",
+    publish / skip    := true,
+    checkModuleLayers := Def.uncached(
+      ModuleLayers.check(
+        buildDependencies.value,
+        coreModules.map(_.id),
+        Seq(data, web, security).map(_.id)
+      )
+    ),
+    Compile / compile := Def.uncached((Compile / compile).dependsOn(checkModuleLayers).value)
   )
 
 addCommandAlias(

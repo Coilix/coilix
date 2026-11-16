@@ -3,12 +3,15 @@ package dev.coilix.boot
 import dev.coilix.annotation.Slf4s
 import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinition
+import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ClassPathScanner
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.ModuleLoader
 import dev.coilix.context.RegisteredBean
 
 /**
- * Scans each base package, drops classes found in more than one package, adds the extra definitions and builds the context.
+ * Scans each base package, drops classes found in more than one package, adds the components of the enabled modules and the
+ * extra definitions, and builds the context.
  *
  * Each scanned package and the names of all beans are logged at `INFO` level. This is the default
  * [[dev.coilix.boot.CoilixBootstrap]].
@@ -17,19 +20,31 @@ import dev.coilix.context.RegisteredBean
  *   finds components in a package
  * @param builder
  *   creates the beans
+ * @param modules
+ *   finds the modules on the classpath
+ * @param factory
+ *   creates the definitions of module components
  */
 @Slf4s
-final class DefaultCoilixBootstrap(scanner: ClassPathScanner, builder: ApplicationContextBuilder) extends CoilixBootstrap {
+final class DefaultCoilixBootstrap(
+  scanner: ClassPathScanner,
+  builder: ApplicationContextBuilder,
+  modules: ModuleLoader,
+  factory: BeanDefinitionFactory
+) extends CoilixBootstrap {
 
   override def start(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean]
   ): ConfigurableApplicationContext =
-    ready(builder.build(discovered(basePackages) ++ extraDefinitions, singletons))
+    ready(builder.build(discovered(basePackages) ++ fromModules ++ extraDefinitions, singletons))
 
   private def discovered(basePackages: List[String]): List[BeanDefinition] =
     basePackages.flatMap(scan).distinctBy(_.beanClass)
+
+  private def fromModules: List[BeanDefinition] =
+    modules.load().flatMap(_.components).flatMap(factory.create)
 
   private def scan(basePackage: String): List[BeanDefinition] = {
     log.info(s"Scanning package $basePackage")

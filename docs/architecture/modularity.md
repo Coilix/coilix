@@ -30,34 +30,35 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 ```
 common ← config ← context ← boot ← demo
 annotations ↗        ↖ data
-                     ↖ web ← security
+                     ↖ web
+                     ↖ security
 slf4s-plugin (plugin kompilatora dla modułów z @Slf4s)
 ```
 
-- `boot` zależy tylko od `context`, więc zasada 1 jest spełniona już teraz.
-- `security` zależy od `web`, co łamie zasadę 2. Security ma sens także bez HTTP (np. autoryzacja metod), więc trzeba je podzielić na `security` (rdzeń, bez `web`) i `security-web` (integracja).
-- `data`, `web` i `security` są puste, więc podział nic nie psuje.
-- Brak mechanizmu SPI: `boot` dodaje tylko definicje ze skanowania pakietu aplikacji (`DefaultCoilixBootstrap.start` przyjmuje już `extraDefinitions`, więc jest gdzie je podpiąć).
+- `boot` zależy tylko od `context`, a `data`, `web` i `security` tylko od `context` (COILIX-00010). Pilnuje tego `checkModuleLayers` w buildzie.
+- `security-web` (integracja security z HTTP) powstanie razem z pierwszym kodem, który go potrzebuje. Numer jego katalogu ustali się wtedy razem z przenumerowaniem dla `testkit` (COILIX-00013) i benchmarków (COILIX-00017), bo musi być wyższy niż `07_web` i `08_security`.
+- `data`, `web` i `security` są jeszcze puste.
 - `config` zawiera trzy formaty (HOCON, properties, YAML). YAML ciągnie `snakeyaml-engine` do rdzenia. Opcjonalnie: wydzielić `config-yaml` jako moduł funkcji. Niski priorytet, bo biblioteka jest mała.
 
-## Projekt SPI
+## SPI
 
 ```scala
 trait CoilixModule {
   def name: String
 
-  def definitions(using components: ComponentProvider): List[BeanDefinition]
+  def components: List[Class[?]]
 }
 
 trait ModuleLoader {
-  def load(using components: ComponentProvider): List[CoilixModule]
+  def load(): List[CoilixModule]
 }
 ```
 
-- `ServiceLoaderModuleLoader` (w `context`) wczytuje moduły przez `ServiceLoader` i pomija wyłączone w configu.
+- Moduł podaje klasy komponentów, a nie gotowe definicje. `DefaultCoilixBootstrap` tworzy z nich definicje tym samym `BeanDefinitionFactory` co dla klas ze skanowania, więc działają adnotacje komponentów, `@Bean` w klasach `@Configuration` i metody cyklu życia.
+- `ServiceLoaderModuleLoader` (w `context`) wczytuje moduły przez `ServiceLoader` z classloadera kontekstowego wątku, sortuje je po nazwie i pomija te z `coilix.modules.<nazwa>.enabled = false`. Każdy wczytany i pominięty moduł trafia do logu.
 - `ModuleLoader` ma `given ConfigPath` (`coilix.context.module-loader`) i `default`, więc można go podmienić, np. w testach.
-- `DefaultCoilixBootstrap` łączy definicje z modułów z definicjami ze skanowania. Konflikt (ten sam typ z modułu i z aplikacji) rozstrzygają istniejące reguły `@Primary` i `CandidateSelector`, a nie kolejność.
+- Definicje z modułów idą razem z definicjami ze skanowania, bez usuwania duplikatów. Konflikt (ten sam typ z modułu i z aplikacji) rozstrzygają istniejące reguły `@Primary` i `CandidateSelector`, a nie kolejność.
 
 ## Weryfikacja w buildzie
 
-Do `build.sbt` trafia sprawdzenie, że w zależnościach rdzenia i `boot` nie ma modułów funkcji (`dependsOn` w drzewie projektów). Sprawdzenie działa przy `sbt testFull`, żeby przypadkowe dodanie zależności przerwało build.
+Zadanie `checkModuleLayers` (`project/ModuleLayers.scala`) sprawdza drzewo `dependsOn`: rdzeń i `boot` nie mogą przechodnio zależeć od `data`, `web` ani `security`, a moduły funkcji od siebie nawzajem. Kompilacja roota zależy od tego zadania, więc przypadkowa zależność przerywa `sbt testFull` z listą naruszeń.

@@ -22,7 +22,7 @@ flowchart TD
 2. **Konfiguracja.** `ClasspathEnvironmentLoader` składa warstwy od najważniejszej: opcje z linii poleceń, właściwości systemowe, `application.properties`, `application.yaml`/`.yml`, `application.conf`. Wynikiem jest `Environment`, który czyta wartości i wiąże je z typami (`ConfigBinder`).
 3. **Komponenty frameworka.** `ComponentProvider` sprawdza, czy pod ścieżką komponentu (`coilix.context.*`, `coilix.boot.*`) jest klucz `class`. Jeśli tak, tworzy wskazaną klasę. Jeśli nie, używa domyślnej implementacji. Dzieje się to przed budową kontekstu, więc komponenty frameworka nie są beanami.
 4. **Pakiety do skanowania.** `AnnotationBasePackageResolver` bierze `scanBasePackages` z `@CoilixApplication`, a gdy jest puste, pakiet klasy aplikacji.
-5. **Kontekst.** `DefaultCoilixBootstrap` skanuje pakiety i przekazuje definicje do `ApplicationContextBuilder` (opis niżej).
+5. **Kontekst.** `DefaultCoilixBootstrap` skanuje pakiety, dokłada komponenty modułów z classpath (`ModuleLoader`, zob. [modularity.md](modularity.md)) i przekazuje definicje do `ApplicationContextBuilder` (opis niżej).
 6. **Po starcie.** Rejestrowany jest shutdown hook, który wywołuje `close()` kontekstu. Potem `OrderedRunnerInvoker` uruchamia beany `ApplicationRunner` w kolejności `@Order`.
 
 ## Budowa kontekstu
@@ -70,6 +70,7 @@ coilix.context.bean-name-generator.class: com.example.PrefixedBeanNameGenerator
 | `coilix.boot.shutdown-hook-registrar` | `ShutdownHookRegistrar` | `RuntimeShutdownHookRegistrar` |
 | `coilix.context.application-context-builder` | `ApplicationContextBuilder` | `DefaultApplicationContextBuilder` |
 | `coilix.context.class-path-scanner` | `ClassPathScanner` | `ReflectionsClassPathScanner` |
+| `coilix.context.module-loader` | `ModuleLoader` | `ServiceLoaderModuleLoader` |
 | `coilix.context.bean-definition-factory` | `BeanDefinitionFactory` | `ReflectiveBeanDefinitionFactory` |
 | `coilix.context.bean-method-scanner` | `BeanMethodScanner` | `ReflectiveBeanMethodScanner` |
 | `coilix.context.bean-name-generator` | `BeanNameGenerator` | `SimpleBeanNameGenerator` |
