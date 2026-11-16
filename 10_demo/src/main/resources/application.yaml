@@ -1,17 +1,47 @@
-demo:
-  greeting: Hello
-  mail:
-    host: smtp.example.com
-    port: 2525
-    recipients:
-      - alice@example.com
-      - bob@example.com
-    timeout: 5s
+workshop:
+  name: Northside Garage
+  token-ttl: 5m
+  max-grants: 8
+  oem-portal:
+    url: https://oem-portal.example.com/workshop-keys
+    api-key: demo-portal-key-7f3a
+  mechanics:
+    - id: M-001
+      name: Anna Nowak
+      certification: master
+    - id: M-002
+      name: Piotr Zielinski
+      certification: TECHNICIAN
+    - id: M-003
+      name: Ola Wisniewska
+      certification: apprentice
+  vehicles:
+    - vin: WVWZZZ1KZ6W000001
+      model: Golf
+      modules:
+        - id: engine
+          kind: engine
+          faults:
+            - P0301
+            - P0420
+        - id: abs
+          kind: brakes
+          faults:
+            - C0035
+        - id: immobilizer
+          kind: immobilizer
+    - vin: TMBJJ7NE8J0000002
+      model: Octavia
+      modules:
+        - id: engine
+          kind: engine
+        - id: abs
+          kind: brakes
 
 coilix:
   boot:
     startup-message-formatter:
       class: dev.coilix.demo.PrefixedStartupMessageFormatter
-      prefix: "[demo]"
+      prefix: "[workshop]"
       delegate:
         class: dev.coilix.boot.DefaultStartupMessageFormatter

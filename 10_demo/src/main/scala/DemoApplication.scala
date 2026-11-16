@@ -4,10 +4,10 @@ import dev.coilix.annotation.CoilixApplication
 import dev.coilix.boot.Coilix
 
 /**
- * Entry point of the demo application.
+ * Entry point of the demo: a car workshop where mechanics get signed, short-lived tokens to diagnose and code vehicles.
  *
- * Run it with `sbt demo/run`. Add `--name=Ann` to change the greeting, or any `--key=value` option to override the
- * configuration in `application.yaml`.
+ * Run it with `sbt demo/run`. Add `--mechanic=M-003` to work as an apprentice, `--vin=TMBJJ7NE8J0000002` to inspect the
+ * other vehicle, or any `--key=value` option to override the configuration in `application.yaml`.
  */
 @CoilixApplication
 object DemoApplication {

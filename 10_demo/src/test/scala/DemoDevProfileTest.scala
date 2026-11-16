@@ -1,6 +1,9 @@
 package dev.coilix.demo
 
 import dev.coilix.boot.Coilix
+import dev.coilix.demo.workshop.ConsoleNotifier
+import dev.coilix.demo.workshop.Notifier
+import dev.coilix.demo.workshop.WorkshopProperties
 import munit.FunSuite
 
 final class DemoDevProfileTest extends FunSuite {
@@ -12,7 +15,7 @@ final class DemoDevProfileTest extends FunSuite {
     assertEquals(context.getBean[Notifier].getClass, classOf[ConsoleNotifier])
   }
 
-  test("reads the greeting from application-dev.yaml") {
-    assertEquals(context.getBean[Greeter].greet("Ann"), "Hello from dev, Ann")
+  test("reads the workshop name from application-dev.yaml") {
+    assertEquals(context.getBean[WorkshopProperties].name, "Northside Garage (dev)")
   }
 }
