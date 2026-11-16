@@ -4,15 +4,18 @@ import dev.coilix.config.ComponentProvider
 import dev.coilix.config.ConfigPath
 import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinition
+import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ClassPathScanner
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.ModuleLoader
 import dev.coilix.context.RegisteredBean
 
 /** Scans for components and builds the application context. */
 trait CoilixBootstrap {
 
   /**
-   * Builds the context from the components in `basePackages`, the `extraDefinitions` and the ready `singletons`.
+   * Builds the context from the components in `basePackages`, the enabled modules, the `extraDefinitions` and the ready
+   * `singletons`.
    *
    * @throws dev.coilix.context.NoSuchBeanException
    *   if a required dependency has no matching bean
@@ -34,5 +37,12 @@ object CoilixBootstrap {
 
   /** The configured implementation, or [[dev.coilix.boot.DefaultCoilixBootstrap]] when `coilix.boot.bootstrap` is not set. */
   def default(using components: ComponentProvider): CoilixBootstrap =
-    components.get[CoilixBootstrap](DefaultCoilixBootstrap(ClassPathScanner.default, ApplicationContextBuilder.default))
+    components.get[CoilixBootstrap](
+      DefaultCoilixBootstrap(
+        ClassPathScanner.default,
+        ApplicationContextBuilder.default,
+        ModuleLoader.default,
+        BeanDefinitionFactory.default
+      )
+    )
 }

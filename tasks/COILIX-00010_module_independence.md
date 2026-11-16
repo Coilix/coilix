@@ -37,3 +37,18 @@ Sprawić, żeby `data`, `web` i `security` były opcjonalne: aplikacja działa b
 
 - Kolejność modułów: czy moduł może wymagać innego (np. `security-web` wymaga obu)? Proponowane: zależności między modułami tylko przez `build.sbt`, a `ModuleLoader` nie sortuje, bo konflikty rozstrzyga `@Primary`.
 - `ServiceLoader` w aplikacjach z niestandardowym classloaderem (np. testy, fat-jar) musi dostać właściwy `ClassLoader`, ten sam co skaner classpath.
+
+## Stan realizacji (2026-11-16)
+
+Zrobione:
+
+- `CoilixModule` (nazwa i lista klas komponentów) i `ModuleLoader` z `ServiceLoaderModuleLoader` w `context`, klucz `coilix.context.module-loader`, wyłączanie przez `coilix.modules.<nazwa>.enabled = false`,
+- `DefaultCoilixBootstrap` dokłada komponenty modułów do definicji ze skanowania, z `@Bean` i metodami cyklu życia,
+- `security` zależy od `context`, a nie od `web`,
+- `checkModuleLayers` w buildzie (`project/ModuleLayers.scala`), uruchamiany przy kompilacji roota, czyli także przy `sbt testFull`,
+- testy: moduł z `META-INF/services` w testach `context`, start `boot` bez modułów i z modułem.
+
+Zmiana względem projektu z `modularity.md`: moduł podaje klasy komponentów zamiast gotowych `BeanDefinition`. Autor modułu nie musi znać fabryki definicji, a komponenty modułu działają tak samo jak klasy ze skanowania.
+
+Odłożone: moduł `security-web` i przenumerowanie katalogów. `security-web` byłby dziś pusty, a numer jego katalogu trzeba ustalić razem z `testkit` (COILIX-00013) i benchmarkami (COILIX-00017). Zrobi się to z pierwszym kodem integracji.
+
