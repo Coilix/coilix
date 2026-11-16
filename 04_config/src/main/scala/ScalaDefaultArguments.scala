@@ -28,5 +28,5 @@ final class ScalaDefaultArguments extends DefaultArguments {
     defaultMethod(companion, parameterIndex).map(_.invoke(companion))
 
   private def defaultMethod(companion: AnyRef, parameterIndex: Int): Option[Method] =
-    Try(companion.getClass.getMethod(defaultMethodPrefix + (parameterIndex + 1))).toOption
+    Try(companion.getClass.getMethod(s"$defaultMethodPrefix${parameterIndex + 1}")).toOption
 }

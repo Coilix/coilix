@@ -16,7 +16,7 @@ To wyłącznie wsparcie IDE. Kompilacją zajmuje się już `03_slf4s_plugin`.
 
 - Plugin kompilatora `03_slf4s_plugin` dodaje przed typerem pole `private final val log = org.slf4j.LoggerFactory.getLogger("<pełna.nazwa>")`. Kod się kompiluje i działa.
 - IntelliJ nie uruchamia pluginów kompilatora podczas analizy kodu, więc `log` świeci się na czerwono, np. w `10_demo/src/main/scala/DemoRunner.scala`, `10_demo/src/main/scala/ContextInspector.scala`, `09_boot/src/main/scala/DefaultCoilixBootstrap.scala` i `05_context/src/main/scala/ReflectiveBeanInstantiator.scala`.
-- Szczegółowa specyfikacja jest w [docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md](../docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md). Część jej treści jest nieaktualna:
+- Szczegółowa specyfikacja jest w `docs/AGENT_INTELLIJ_SLF4S_PLUGIN_SPEC.md` (usunięta w ADR 0014). Część jej treści jest nieaktualna:
   - ścieżka `src/main/scala/demo/DemoBeans.scala` już nie istnieje,
   - build-time rewrite w sbt został zastąpiony pluginem kompilatora,
   - adnotacja ma teraz pełną nazwę `dev.coilix.annotation.Slf4s`.
