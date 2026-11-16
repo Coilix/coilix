@@ -1,0 +1,52 @@
+---
+id: value-types
+title: Typy wartości i enumy
+description: Czytaj identyfikatory, porty, sekrety i przypadki enumów z konfiguracji za pomocą @ValueType, Secret i @Enumerated.
+sidebar_position: 2
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import Port from '!!raw-loader!@examples/scala/Port.scala';
+import ShopMode from '!!raw-loader!@examples/scala/ShopMode.scala';
+import ShopSettings from '!!raw-loader!@examples/scala/ShopSettings.scala';
+import ShopYaml from '!!raw-loader!@examples/resources/guides/value-types/application.yaml';
+
+Ta strona pokazuje, jak nadać wartościom z konfiguracji własne typy zamiast zwykłych `Int` i `String`. Przyda ci się, gdy wartość ma reguły: port musi mieścić się w zakresie, hasło nie może trafić do logów, a ustawienie ma stałą listę możliwości.
+
+## Opakuj jedną wartość
+
+Oznacz case class z jednym polem adnotacją `@ValueType`. Coilix czyta z konfiguracji wartość wewnętrzną i przekazuje ją do konstruktora, więc sprawdzenie w konstruktorze działa dla każdej skonfigurowanej wartości.
+
+<CodeBlock language="scala" title="Port.scala">{Port}</CodeBlock>
+
+Klasa potrzebuje jednego publicznego konstruktora z jednym parametrem i publicznego pola o tej samej nazwie, a case class je ma. Wartość wewnętrzna może mieć dowolny typ, który Coilix czyta, także listę.
+
+:::warning
+Nie dziedzicz po `AnyVal`. JVM widzi parametr takiej klasy jako jej wartość wewnętrzną, więc Coilix nie rozpozna klasy, a sprawdzenie w konstruktorze się nie uruchomi.
+:::
+
+## Wybierz ze stałej listy
+
+Oznacz `enum` Scali 3 adnotacją `@Enumerated`. Konfiguracja wskazuje przypadek jego nazwą z kodu albo nazwą z `@EnumName`. Aliasy w `@EnumName` pozwalają używać starych nazw po zmianie, a `ignoreCase = true` przyjmuje dowolną wielkość liter.
+
+<CodeBlock language="scala" title="ShopMode.scala">{ShopMode}</CodeBlock>
+
+Przypadki enuma nie mogą mieć parametrów.
+
+## Trzymaj sekrety poza logami
+
+`Secret` to typ wartości dla haseł i kluczy API. Jego `toString` zwraca `*****`, więc tekst pozostaje ukryty, gdy obiekt ustawień trafi do logu albo komunikatu błędu. Tekst odczytuj przez `value` tylko tam, gdzie go przekazujesz dalej.
+
+## Użyj typów w ustawieniach
+
+Typy wartości, `Secret` i enumy działają w klasach `@ConfigurationProperties`, w parametrach `@Value` oraz wewnątrz `Option` i kolekcji.
+
+<CodeBlock language="scala" title="ShopSettings.scala">{ShopSettings}</CodeBlock>
+
+<CodeBlock language="yaml" title="application.yaml">{ShopYaml}</CodeBlock>
+
+Gdy zapiszesz te ustawienia w logu, klucz płatności pojawi się jako `*****`. Prawdziwy klucz podaj przy starcie, na przykład przez `--shop.payment-key=...`, zamiast trzymać go w pliku.
+
+## Gdy wartość jest błędna
+
+Wartość odrzucona przez konstruktor albo nazwa, która nie pasuje do żadnego przypadku, zatrzymuje start aplikacji wyjątkiem `ConfigurationException`. Komunikat podaje klucz konfiguracji i powód. Dla enuma wymienia też dozwolone nazwy, na przykład `expected one of: Open, Closed, read-only`.

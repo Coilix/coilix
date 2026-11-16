@@ -13,6 +13,7 @@ The goal of the first release is a usable dependency injection container with co
 | COILIX-00012 | correct creation order for `Option[T]` and `List[T]` dependencies | done |
 | COILIX-00004 | lifecycle callbacks: `@PostConstruct` and `@PreDestroy` | done |
 | COILIX-00010 | optional modules discovered from the classpath | done |
+| COILIX-00022 | value types (`@ValueType`, `Secret`), enums (`@Enumerated`), validation and `EditOption` | done |
 | COILIX-00014 | profiles and conditional beans | planned |
 | COILIX-00013 | test support module (`coilix-testkit`) | planned |
 | COILIX-00007 | versioned API documentation site | planned |
@@ -28,7 +29,6 @@ The goal of the first release is a usable dependency injection container with co
 | COILIX-00017 | startup benchmarks |
 | COILIX-00018 | `sbt new` project template |
 | COILIX-00020 | support for effect types `F[_]` (cats-effect, ZIO): analysis and ADR first |
-| COILIX-00022 | value types (`@ValueType`), enums (`@Enumerated`), validation and `EditOption` |
 | | `data`, `web` and `security` modules (not yet specified) |
 
 ## Known limitations
