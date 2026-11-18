@@ -14,7 +14,7 @@ The goal of the first release is a usable dependency injection container with co
 | COILIX-00004 | lifecycle callbacks: `@PostConstruct` and `@PreDestroy` | done |
 | COILIX-00010 | optional modules discovered from the classpath | done |
 | COILIX-00022 | value types (`@ValueType`, `Secret`), enums (`@Enumerated`), validation and `EditOption` | done |
-| COILIX-00014 | profiles and conditional beans | planned |
+| COILIX-00014 | profiles and conditional beans | done |
 | COILIX-00013 | test support module (`coilix-testkit`) | planned |
 | COILIX-00007 | versioned API documentation site | planned |
 | COILIX-00009 | first release to Maven Central | in progress |

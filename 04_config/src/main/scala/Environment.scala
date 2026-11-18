@@ -22,6 +22,9 @@ trait Environment {
   /** Whether the configuration has a value at `path`. */
   def contains(path: String): Boolean
 
+  /** The profiles listed under `coilix.profiles.active`, in the order they are listed, as read by [[dev.coilix.config.Profiles]]. */
+  def activeProfiles: List[String]
+
   /**
    * The value at `path` converted to `T`, or `None` when the path is not set.
    *

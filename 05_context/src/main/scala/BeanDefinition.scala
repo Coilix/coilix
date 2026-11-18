@@ -18,6 +18,8 @@ package dev.coilix.context
  *   whether the bean wins when several beans match a requested type
  * @param lifecycle
  *   methods invoked after creation and when the context closes
+ * @param conditions
+ *   conditions that decide whether the bean is added to the context
  */
 final case class BeanDefinition(
   beanName:     String,
@@ -25,5 +27,6 @@ final case class BeanDefinition(
   factory:      InstanceFactory,
   dependencies: List[Dependency],
   isPrimary:    Boolean,
-  lifecycle:    LifecycleMethods = LifecycleMethods.none
+  lifecycle:    LifecycleMethods = LifecycleMethods.none,
+  conditions:   BeanConditions   = BeanConditions.none
 ) extends BeanDescriptor

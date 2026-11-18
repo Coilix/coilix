@@ -17,6 +17,9 @@ final class DefaultEnvironment(tree: ConfigTree, binder: ConfigBinder) extends E
   override def contains(path: String): Boolean =
     tree.contains(path)
 
+  override def activeProfiles: List[String] =
+    Profiles.active(tree)
+
   override def get[T: ClassTag](path: String): Option[T] =
     Option.when(contains(path))(typed[T](path, bind(path, runtimeTypeOf[T])))
 

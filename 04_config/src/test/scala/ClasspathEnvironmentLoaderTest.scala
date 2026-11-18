@@ -39,4 +39,32 @@ final class ClasspathEnvironmentLoaderTest extends FunSuite {
   test("loads nothing when files are missing") {
     assert(!ClasspathEnvironmentLoader("missing", ConfigFormat.byPrecedence, classLoader).load(Map.empty).contains("app"))
   }
+
+  private val shop = ClasspathEnvironmentLoader("profiles/shop", ConfigFormat.byPrecedence, classLoader)
+
+  test("loads the files of the profiles listed in the base file over the base files") {
+    val environment = shop.load(Map.empty)
+    assertEquals(environment.activeProfiles, List("dev"))
+    assertEquals((environment.get[String]("app.name"), environment.get[Int]("app.port")), (Some("dev"), Some(2)))
+    assertEquals(environment.get[String]("app.region"), Some("eu"))
+  }
+
+  test("a profile listed later wins, and the command line can choose the profiles") {
+    val environment = shop.load(Map(Profiles.ActivePath -> "dev, local"))
+    assertEquals(environment.activeProfiles, List("dev", "local"))
+    assertEquals((environment.get[String]("app.name"), environment.get[Int]("app.port")), (Some("dev"), Some(3)))
+  }
+
+  test("command line options still beat profile files") {
+    assertEquals(shop.load(Map("app.port" -> "9")).get[Int]("app.port"), Some(9))
+  }
+
+  test("a profile file cannot activate further profiles") {
+    val environment = shop.load(Map(Profiles.ActivePath -> "test"))
+    assertEquals(environment.get[String]("app.name"), Some("base"))
+  }
+
+  test("no profiles when none are listed") {
+    assertEquals(loader(ConfigFormat.byPrecedence*).load(Map.empty).activeProfiles, Nil)
+  }
 }

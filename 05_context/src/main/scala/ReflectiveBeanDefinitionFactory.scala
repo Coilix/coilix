@@ -28,6 +28,8 @@ import java.lang.reflect.Modifier
  *   binds `@ConfigurationProperties` classes
  * @param lifecycleScanner
  *   finds `@PostConstruct` and `@PreDestroy` methods
+ * @param conditionScanner
+ *   reads the conditions such as `@Profile`
  */
 final class ReflectiveBeanDefinitionFactory(
   constructorSelector: ConstructorSelector,
@@ -35,15 +37,20 @@ final class ReflectiveBeanDefinitionFactory(
   nameGenerator:       BeanNameGenerator,
   methodScanner:       BeanMethodScanner,
   environment:         Environment,
-  lifecycleScanner:    LifecycleMethodScanner
+  lifecycleScanner:    LifecycleMethodScanner,
+  conditionScanner:    ConditionScanner
 ) extends BeanDefinitionFactory {
 
   override def create(beanClass: Class[?]): List[BeanDefinition] =
-    if (isInstantiable(beanClass)) (classDefinition(beanClass) :: methodScanner.scan(beanClass)).map(withLifecycle)
+    if (isInstantiable(beanClass))
+      (classDefinition(beanClass) :: methodScanner.scan(beanClass)).map(withLifecycle).map(withConditions)
     else Nil
 
   private def withLifecycle(definition: BeanDefinition): BeanDefinition =
     definition.copy(lifecycle = lifecycleScanner.scan(definition.beanName, definition.beanClass))
+
+  private def withConditions(definition: BeanDefinition): BeanDefinition =
+    definition.copy(conditions = conditionScanner.scan(definition))
 
   private def isInstantiable(beanClass: Class[?]): Boolean =
     !beanClass.isInterface && !Modifier.isAbstract(beanClass.getModifiers)

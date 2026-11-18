@@ -8,7 +8,7 @@ import dev.coilix.boot.ApplicationRunner
 
 /**
  * Runner that shows the main kinds of dependencies: a primary bean, an optional bean that does not exist, a list of beans,
- * a bean from a `@Bean` method and a `@ConfigurationProperties` bean.
+ * a bean from a `@Bean` method, a `@ConfigurationProperties` bean and a bean chosen by the active profile.
  *
  * Runs first because of `@Order(1)`.
  */
@@ -20,7 +20,8 @@ final class DemoRunner(
   optional:     Option[OptService],
   userServices: List[UserService],
   greeter:      Greeter,
-  mail:         MailSettings
+  mail:         MailSettings,
+  notifier:     Notifier
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
@@ -28,6 +29,7 @@ final class DemoRunner(
     log.info(s"Mail: ${mail.host}:${mail.port}, timeout ${mail.timeout}, recipients ${mail.recipients.mkString(", ")}")
     log.info(s"UserService beans visible: ${userServices.size}")
     log.info(s"OptService present: ${optional.isDefined}")
+    log.info(s"Notifications: ${notifier.description}")
     service.listUsers().foreach(logUser)
   }
 
