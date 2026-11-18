@@ -111,7 +111,7 @@ jobs:
           cp -R 12_docs/website/build/. gh-pages/
           echo "docs.coilix.dev" > gh-pages/CNAME
           touch gh-pages/.nojekyll
-      - uses: actions/download-artifact@v7
+      - uses: actions/download-artifact@v8
         if: needs.target.outputs.api == 'true'
         with:
           name: api-site
