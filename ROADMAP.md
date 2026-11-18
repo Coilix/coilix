@@ -29,7 +29,10 @@ The goal of the first release is a usable dependency injection container with co
 | COILIX-00017 | startup benchmarks |
 | COILIX-00018 | `sbt new` project template |
 | COILIX-00020 | support for effect types `F[_]` (cats-effect, ZIO): analysis and ADR first |
-| | `data`, `web` and `security` modules (not yet specified) |
+| COILIX-00023 | `web` module: HTTP contracts as annotated traits, `Response`, compile-time checked endpoints (draft) |
+| COILIX-00024 | serialization: declarative type shape, circe integration and the HTTP bridge (draft) |
+| COILIX-00025 | GraphQL on Sangria over the `web` module (draft) |
+| | `data` and `security` modules (not yet specified) |
 
 ## Known limitations
 

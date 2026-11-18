@@ -26,6 +26,9 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00020 | [Wsparcie efektów `F[_]` (cats-effect, ZIO)](COILIX-00020_effect_types.md) | średni | do analizy, przed `1.0` |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
 | COILIX-00022 | [Typy wartości, enumy, walidacja i `EditOption` z biblioteki implicits](COILIX-00022_implicits_port.md) | wysoki | zrobiony w rdzeniu, mapowanie kolumn czeka na moduł `data` |
+| COILIX-00023 | [Moduł HTTP (`web`)](COILIX-00023_http.md) | wysoki | szkic do doszlifowania |
+| COILIX-00024 | [Serializacja: opis typu, circe i most do HTTP](COILIX-00024_serialization.md) | wysoki | szkic do doszlifowania |
+| COILIX-00025 | [GraphQL na Sangrii](COILIX-00025_graphql.md) | średni | szkic do doszlifowania, po COILIX-00023 i COILIX-00024 |
 
 Zależności między taskami:
 
@@ -47,6 +50,9 @@ Zależności między taskami:
 - COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów) i z modułów z COILIX-00010. Zmiany w rdzeniu, których wymaga, powinny trafić przed `1.0`.
 - COILIX-00021 uzupełnia ręczny przegląd z `docs/legal/spring-similarity.md` (COILIX-00006). Warto go zrobić przed pierwszym wydaniem z COILIX-00009.
 - COILIX-00022 rozszerza `ReflectiveConfigBinder` z COILIX-00003. Mapowanie kolumn czeka na specyfikację modułu `data`, a `Registry` z implicits trafia do COILIX-00010.
+- COILIX-00023 korzysta z `CoilixModule` z COILIX-00010 i typów z COILIX-00022. Numery katalogów nowych modułów ustala się razem z przenumerowaniem z COILIX-00010, COILIX-00013 i COILIX-00017. Instancje `ResponseEffect` dla `IO` i `ZIO` czekają na COILIX-00020.
+- COILIX-00024 dostarcza `BodyReader`/`BodyWriter` dla JSON do COILIX-00023 i opis typu, z którego korzysta COILIX-00025.
+- COILIX-00025 wymaga COILIX-00023 (strumienie i WebSocket w silniku) i COILIX-00024 (opis typu).
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
