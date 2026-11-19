@@ -39,7 +39,7 @@ Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtual
 
 ## Proponowany projekt
 
-Nowy moduł rdzenia `concurrency` (`dev.coilix.concurrency`), zależny od `context`, z kolejnym wolnym numerem z zakresu `06`–`14` (ADR 0018), bez przenumerowania innych modułów.
+Nowy moduł rdzenia `concurrency` (`dev.coilix.concurrency`), zależny od `context`, w katalogu `06_concurrency` (ADR 0018, ADR 0020), bez przenumerowania innych modułów.
 
 Alternatywa: wątki w `05_context`. Odradzane, bo kontekst rośnie.
 
@@ -53,6 +53,13 @@ Komponenty:
 - `ExecutorShutdown` z `@PreDestroy`, który zamyka wykonawców.
 
 Adnotacje `@Async` i `@Scheduled` w `02_annotations`.
+
+## Kroki (osobne PR-y)
+
+1. Moduł `06_concurrency`: `TaskExecutor` na wątkach wirtualnych i na stałej puli, `TaskScheduler` z `fixedRate`, `fixedDelay` i `initialDelay`, ustawienia `coilix.concurrency`, zamykanie z limitem czasu, własny wykonawca przez `@Primary`. Zrobione (ADR 0020). Kryteria 3 i 4.
+2. `@Async` przez proxy JDK (`AsyncBeanPostProcessor`) z błędem startu dla beana bez traitu. Kryteria 1 i 5.
+3. `@Scheduled` (`ScheduledMethodRegistrar`) i demo z nazwami wątków w logach. Kryteria 2 i 6.
+4. Przekazywanie MDC do zadań.
 
 ## Kryteria akceptacji
 
@@ -74,4 +81,4 @@ Adnotacje `@Async` i `@Scheduled` w `02_annotations`.
 - Pule wątków i schedulery są z natury mutowalne. Zgodnie z `CLAUDE.md` to dopuszczalny wyjątek, ale stan powinien być zamknięty w implementacjach JDK, bez własnych `var`.
 - `StructuredTaskScope` jest w JDK 25 nadal w preview. Nie używamy go, dopóki nie będzie stabilny, natomiast `ScopedValue` jest już stabilne i może zastąpić `ThreadLocal` przy przekazywaniu kontekstu.
 - Proxy JDK działa tylko na interfejsach. Wywołania `@Async` z wnętrza tego samego beana (`this.metoda()`) ominą proxy, tak jak w Springu. Trzeba to opisać i przetestować.
-- Numer katalogu wynika z ADR 0018 (kolejny wolny w `06`–`14`).
+- Wątki wirtualne są od JDK 21, a artefakty są dla JDK 17, więc tworzy się je przez refleksję z powrotem do wątków platformowych (ADR 0020).

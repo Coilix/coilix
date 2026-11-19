@@ -1,0 +1,9 @@
+coilix:
+  concurrency:
+    executor:
+      thread-name-prefix: report-
+      virtual-threads: false
+      pool-size: 4
+      shutdown-timeout: 1m
+    scheduler:
+      pool-size: 2

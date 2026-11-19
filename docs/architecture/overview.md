@@ -52,6 +52,7 @@ flowchart LR
 - **Zamykanie.** `close()` kontekstu przekazuje beany do `BeanDestroyer`. Domyślny `PreDestroyInvoker` wywołuje metody `@PreDestroy` od beana utworzonego jako ostatni. Wyjątek jest logowany jako `WARN` i nie przerywa niszczenia pozostałych beanów.
 - **Komponenty zbierane przez moduły.** Moduł może w `CoilixModule.collects` podać adnotacje, których klasy nie mają być beanami (np. procesory tła z COILIX-00026). `DefaultCoilixBootstrap` szuka ich przez `ClassPathScanner.scanAnnotated` w skanowanych pakietach i wśród komponentów modułów, a `ComponentCollector` robi z nich jeden bean `collectedComponents` (`CollectedComponents`). Jego definicja zależy od wszystkich zależności zebranych klas, więc brakujący bean albo cykl wychodzi przy starcie. Moduł tworzy instancje przez `CollectedComponents.create` (zależności, `@Value`, `@PostConstruct`) i zamyka je przez `ManagedComponent.close` (`@PreDestroy`). Klasa z adnotacją komponentu i adnotacją zbieraną to `CollectedComponentConflictException`, a bean, który chce wstrzyknąć zebraną klasę, dostaje `NoSuchBeanException` z wyjaśnieniem (ADR 0017).
 - **Beany wbudowane.** Przed beanami aplikacji rejestr zawiera `applicationContext`, `applicationArguments` i `environment`, więc można je wstrzykiwać.
+- **Wątki.** Moduł rdzenia `concurrency` (`ConcurrencyModule`, ADR 0020) dodaje beany `concurrencySettings` (z `coilix.concurrency`), `taskExecutor` (`ExecutorServiceTaskExecutor`, domyślnie nowy wątek wirtualny na zadanie, na JDK 17 wątek platformowy) i `taskScheduler` (`ScheduledExecutorTaskScheduler`). Oba zamykają się przez `@PreDestroy` z limitem `shutdown-timeout`, po beanach, które z nich korzystają. Własny `TaskExecutor` z `@Primary` zastępuje domyślny przy wstrzykiwaniu.
 
 ## Punkty rozszerzeń
 
@@ -99,4 +100,4 @@ Nowy komponent frameworka dopisuje się do tej tabeli w tym samym commicie, w kt
 
 ## Czego jeszcze nie ma
 
-Cykl życia beanów (COILIX-00004), wątki (COILIX-00005), moduły opcjonalne przez SPI (COILIX-00010), zasięgi, profile, zdarzenia i wsparcie testów. Plan jest w [ROADMAP.md](../../ROADMAP.md) i w [tasks/](../../tasks/README.md).
+`@Async`, `@Scheduled` i przekazywanie MDC do zadań (COILIX-00005), zasięgi beanów i zdarzenia. Plan jest w [ROADMAP.md](../../ROADMAP.md) i w [tasks/](../../tasks/README.md).

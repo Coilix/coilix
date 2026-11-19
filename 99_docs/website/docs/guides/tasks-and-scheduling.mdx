@@ -1,0 +1,56 @@
+---
+id: tasks-and-scheduling
+title: Background tasks and scheduling
+description: Run work on threads managed by Coilix with TaskExecutor, and repeat it with TaskScheduler.
+sidebar_position: 6
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
+import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
+import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
+import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application.yaml';
+
+This page shows how a bean runs work in the background or on a schedule without creating its own threads. Coilix owns the threads, so it stops them when the application stops. Use these beans whenever a bean would otherwise call `Executors.newFixedThreadPool` or start a `Thread`.
+
+## Run a task in the background
+
+Every application has a `TaskExecutor` bean. Inject it and pass it the work: `submit` returns the result as a `Future`, and `execute` starts the work without waiting for it.
+
+<CodeBlock language="scala" title="ThumbnailService.scala">{ThumbnailService}</CodeBlock>
+
+By default each task runs on a new virtual thread named `coilix-task-<number>`. Virtual threads are cheap, so a task can block on a database call or an HTTP request without holding up other tasks. On JDK 17, which has no virtual threads, each task gets a new platform thread instead.
+
+If a task started with `execute` throws an exception, Coilix logs it as an error. A task started with `submit` returns the exception in its `Future`.
+
+The executor can also be passed where a library expects an `ExecutionContext`, through `executor.executionContext`.
+
+## Repeat a task
+
+The `TaskScheduler` bean runs a task once after a delay (`schedule`), at a fixed rate (`scheduleAtFixedRate`), or with a fixed pause between runs (`scheduleWithFixedDelay`). Each method returns a `ScheduledTask` with `cancel()`.
+
+<CodeBlock language="scala" title="StockRefresher.scala">{StockRefresher}</CodeBlock>
+
+Scheduled tasks run on a separate pool, `coilix-scheduler-<number>`, with one thread by default. If one run throws an exception, Coilix logs it and the task still runs next time. Runs of the same task never overlap.
+
+## Configure the threads
+
+All keys under `coilix.concurrency` are optional. This configuration runs tasks on four platform threads named `report-<number>` and gives the scheduler two threads:
+
+<CodeBlock language="yaml" title="application.yaml">{TasksYaml}</CodeBlock>
+
+Without configuration, the executor uses virtual threads named `coilix-task-<number>` and waits 30 seconds for running tasks when the application stops. With `virtual-threads: false` it uses a fixed pool of `pool-size` platform threads, by default one for each processor, for example for CPU-heavy work. The scheduler has one thread named `coilix-scheduler-<number>` and waits 10 seconds by default.
+
+## What happens when the application stops
+
+The executor and the scheduler are closed like other beans when the application context closes, after the beans that use them. The scheduler drops the tasks that are still waiting for their time. Each of them then waits up to its `shutdown-timeout` for running tasks, interrupts those still running, and logs a warning with the number of tasks that did not finish.
+
+## Use your own executor
+
+To run tasks your own way, declare a `TaskExecutor` bean and mark it `@Primary`. Beans that require a `TaskExecutor` then receive yours.
+
+## Test code that uses tasks
+
+The beans work in tests as in the application, and the test context closes them after each `use` block:
+
+<CodeBlock language="scala" title="TasksTest.scala">{TasksTest}</CodeBlock>

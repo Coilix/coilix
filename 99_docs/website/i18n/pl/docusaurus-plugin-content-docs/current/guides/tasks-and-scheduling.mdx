@@ -1,0 +1,56 @@
+---
+id: tasks-and-scheduling
+title: Zadania w tle i harmonogram
+description: Uruchamiaj pracę na wątkach zarządzanych przez Coilix przez TaskExecutor i powtarzaj ją przez TaskScheduler.
+sidebar_position: 6
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
+import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
+import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
+import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application.yaml';
+
+Ta strona pokazuje, jak bean wykonuje pracę w tle albo według harmonogramu bez tworzenia własnych wątków. Wątki należą do Coilix, więc Coilix zatrzymuje je razem z aplikacją. Używaj tych beanów zawsze, gdy bean musiałby wywołać `Executors.newFixedThreadPool` albo uruchomić `Thread`.
+
+## Zadanie w tle
+
+Każda aplikacja ma bean `TaskExecutor`. Wstrzyknij go i przekaż mu pracę: `submit` zwraca wynik jako `Future`, a `execute` uruchamia pracę bez czekania na nią.
+
+<CodeBlock language="scala" title="ThumbnailService.scala">{ThumbnailService}</CodeBlock>
+
+Domyślnie każde zadanie działa na nowym wątku wirtualnym o nazwie `coilix-task-<numer>`. Wątki wirtualne są tanie, więc zadanie może czekać na bazę danych albo zapytanie HTTP bez wstrzymywania innych zadań. Na JDK 17, które nie ma wątków wirtualnych, każde zadanie dostaje zamiast tego nowy wątek platformowy.
+
+Jeśli zadanie uruchomione przez `execute` rzuci wyjątek, Coilix zapisze go w logu jako błąd. Zadanie uruchomione przez `submit` zwraca wyjątek w swoim `Future`.
+
+Wykonawcę można też przekazać tam, gdzie biblioteka oczekuje `ExecutionContext`, przez `executor.executionContext`.
+
+## Zadanie powtarzane
+
+Bean `TaskScheduler` uruchamia zadanie raz po opóźnieniu (`schedule`), ze stałą częstotliwością (`scheduleAtFixedRate`) albo ze stałą przerwą między uruchomieniami (`scheduleWithFixedDelay`). Każda z tych metod zwraca `ScheduledTask` z metodą `cancel()`.
+
+<CodeBlock language="scala" title="StockRefresher.scala">{StockRefresher}</CodeBlock>
+
+Zadania z harmonogramu działają na osobnej puli `coilix-scheduler-<numer>`, domyślnie z jednym wątkiem. Jeśli jedno uruchomienie rzuci wyjątek, Coilix zapisze go w logu, a zadanie uruchomi się następnym razem. Uruchomienia tego samego zadania nigdy na siebie nie nachodzą.
+
+## Konfiguracja wątków
+
+Wszystkie klucze pod `coilix.concurrency` są opcjonalne. Ta konfiguracja uruchamia zadania na czterech wątkach platformowych o nazwach `report-<numer>` i daje harmonogramowi dwa wątki:
+
+<CodeBlock language="yaml" title="application.yaml">{TasksYaml}</CodeBlock>
+
+Bez konfiguracji wykonawca używa wątków wirtualnych o nazwach `coilix-task-<numer>` i przy zatrzymaniu aplikacji czeka 30 sekund na trwające zadania. Przy `virtual-threads: false` używa stałej puli `pool-size` wątków platformowych, domyślnie jednego na procesor, np. dla pracy obciążającej procesor. Harmonogram ma jeden wątek `coilix-scheduler-<numer>` i domyślnie czeka 10 sekund.
+
+## Co się dzieje przy zatrzymaniu aplikacji
+
+Wykonawca i harmonogram są zamykane jak inne beany przy zamykaniu kontekstu aplikacji, po beanach, które z nich korzystają. Harmonogram porzuca zadania, które jeszcze czekają na swój czas. Potem każdy z nich czeka do `shutdown-timeout` na trwające zadania, przerywa te, które nadal działają, i zapisuje w logu ostrzeżenie z liczbą niedokończonych zadań.
+
+## Własny wykonawca
+
+Żeby wykonywać zadania po swojemu, zadeklaruj bean `TaskExecutor` i oznacz go `@Primary`. Beany, które wymagają `TaskExecutor`, dostaną wtedy Twój.
+
+## Testy kodu z zadaniami
+
+Beany działają w testach tak jak w aplikacji, a kontekst testowy zamyka je po każdym bloku `use`:
+
+<CodeBlock language="scala" title="TasksTest.scala">{TasksTest}</CodeBlock>

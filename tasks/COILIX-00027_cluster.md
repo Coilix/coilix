@@ -167,7 +167,7 @@ coilix.cluster {
 | `cluster-http` | funkcja | `cluster` | transport HTTP na osobnym porcie, podpisy HMAC, opcjonalny mTLS |
 | `cluster-kubernetes` | funkcja (później) | `cluster`, klient Kubernetesa | wykrywanie przez EndpointSlices, koordynator na `Lease`, liczba replik z API |
 
-`cluster` jest w rdzeniu, bo korzystają z niego `processing` (moduł funkcji) i `@Scheduled` (COILIX-00005), a moduły funkcji nie mogą zależeć od siebie. Nie ma ciężkich zależności: transport sieciowy jest w osobnych modułach. Katalog `06_cluster`, pierwszy wolny numer bibliotek rdzenia (ADR 0018).
+`cluster` jest w rdzeniu, bo korzystają z niego `processing` (moduł funkcji) i `@Scheduled` (COILIX-00005), a moduły funkcji nie mogą zależeć od siebie. Nie ma ciężkich zależności: transport sieciowy jest w osobnych modułach. Katalog `07_cluster`, nad `06_concurrency`, bo heartbeat korzysta z `TaskScheduler` (ADR 0018, ADR 0020).
 
 Przykład własnego endpointu aplikacji:
 

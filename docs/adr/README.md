@@ -25,6 +25,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0017](0017-components-collected-by-modules.md) | Komponenty zbierane przez moduły | proponowana |
 | [0018](0018-module-directory-number-ranges.md) | Zakresy numerów katalogów modułów | proponowana |
 | [0019](0019-effect-model-and-parameterized-bean-types.md) | Model efektów i beany rozróżniane po argumentach typów | proponowana |
+| [0020](0020-concurrency-module.md) | Moduł `concurrency` z wykonawcą na wątkach wirtualnych | proponowana |
 
 ## Nowa decyzja
 
