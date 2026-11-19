@@ -1,0 +1,31 @@
+package dev.coilix.concurrency
+
+import com.typesafe.config.ConfigFactory
+import dev.coilix.config.Environment
+import dev.coilix.config.TypesafeConfigTree
+import munit.FunSuite
+import scala.concurrent.duration.DurationInt
+
+final class ConcurrencySettingsTest extends FunSuite {
+
+  test("uses the defaults when nothing is configured") {
+    assertEquals(ConcurrencySettings.from(Environment.empty), ConcurrencySettings())
+  }
+
+  test("reads the configured keys and keeps the defaults of the others") {
+    val settings = ConcurrencySettings.from(environment("""
+      coilix.concurrency.executor { virtual-threads = false, pool-size = 3 }
+      coilix.concurrency.scheduler.shutdown-timeout = 2s
+    """))
+    assertEquals(
+      settings,
+      ConcurrencySettings(
+        ExecutorSettings(virtualThreads   = false, poolSize = 3),
+        SchedulerSettings(shutdownTimeout = 2.seconds)
+      )
+    )
+  }
+
+  private def environment(hocon: String): Environment =
+    Environment.of(TypesafeConfigTree(ConfigFactory.parseString(hocon)))
+}

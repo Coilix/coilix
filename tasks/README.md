@@ -8,7 +8,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00002 | [Uruchamianie aplikacji w stylu Spring Boot](COILIX-00002_spring_like_startup.md) | wysoki | zrobiony |
 | COILIX-00003 | [Konfiguracja: pliki, `@Value`, `@Configuration` i nadpisywanie komponentów](COILIX-00003_configuration.md) | wysoki | zrobiony |
 | COILIX-00004 | [Cykl życia beanów: `@PostConstruct` i `@PreDestroy`](COILIX-00004_bean_lifecycle.md) | wysoki | zrobiony |
-| COILIX-00005 | [Zarządzanie wątkami](COILIX-00005_thread_management.md) | średni | do zrobienia |
+| COILIX-00005 | [Zarządzanie wątkami](COILIX-00005_thread_management.md) | średni | w trakcie: krok 1 zrobiony (`06_concurrency`, ADR 0020), dalej `@Async` |
 | COILIX-00006 | [Legalność, licencjonowanie i publikacja](COILIX-00006_legal_and_publication.md) | wysoki | zrobiony ([docs/legal](../docs/legal/README.md)) |
 | COILIX-00007 | [Dokumentacja API i strona na GitHub Pages z wersjami](COILIX-00007_documentation_site.md) | wysoki | w trakcie: Scaladoc, Javadoc, szkielet `99_docs` i workflow publikacji gotowe, dalej przewodniki; strona wyjdzie z `core-v0.1.0` |
 | COILIX-00008 | [Nazwa Coilix, licencja, przestrzeń nazw i metadane publikacji](COILIX-00008_license_and_publication_setup.md) | wysoki | zrobiony |
@@ -23,7 +23,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
-| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | w trakcie: kroki 1–3 zrobione (ADR 0019, `ContextPlan`), dalej zasoby wykonania |
+| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | w trakcie: kroki 1–4 zrobione (ADR 0019, `ContextPlan`, zasoby z `concurrency`), dalej moduł `cats-effect` |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
 | COILIX-00022 | [Typy wartości, enumy, walidacja i `EditOption` z biblioteki implicits](COILIX-00022_implicits_port.md) | wysoki | zrobiony w rdzeniu, mapowanie kolumn czeka na moduł `data` |
 | COILIX-00023 | [Moduł HTTP (`web`)](COILIX-00023_http.md) | wysoki | szkic do doszlifowania |

@@ -24,7 +24,7 @@ Jednorazowe przeniesienie: `06_data` → `20_data`, `07_web` → `21_web`, `08_s
 
 ## Konsekwencje
 
-- Nowy moduł dostaje kolejny wolny numer w swoim zakresie, bez przenoszenia istniejących katalogów. Pierwszy to `06_cluster` (COILIX-00027).
+- Nowy moduł dostaje kolejny wolny numer w swoim zakresie, bez przenoszenia istniejących katalogów. Pierwszy to `06_concurrency` (COILIX-00005, ADR 0020), a po nim `07_cluster` (COILIX-00027).
 - Zasada „niższy numer” nadal działa, a `checkModuleLayers` dalej sprawdza warstwy z grafu zależności, a nie z numerów.
 - Ścieżki w workflowach, skryptach strony i dokumentach zmieniły się raz. Starsze ADR-y zostają z dawnymi ścieżkami jako zapis decyzji z tamtego czasu.
 - IntelliJ trzeba raz przeładować z sbt, bo pliki modułów w `.idea/` nie są w gicie.

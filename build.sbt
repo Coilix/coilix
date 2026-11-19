@@ -125,7 +125,7 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
 
 lazy val coreGroup: Seq[Setting[?]] = ReleaseGroups.groupSettings(ReleaseGroups.core)
 
-lazy val coreModules: Seq[Project] = Seq(common, annotations, slf4sPlugin, config, context, boot, testkit)
+lazy val coreModules: Seq[Project] = Seq(common, annotations, slf4sPlugin, config, context, concurrency, boot, testkit)
 
 def featureGroup(id: String): Seq[Setting[?]] =
   ReleaseGroups.groupSettings(id) ++
@@ -169,6 +169,11 @@ lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
     libraryDependencies += Dependencies.reflections
   )
 
+lazy val concurrency = slf4sModule("concurrency", "06_concurrency", "dev.coilix.concurrency")
+  .dependsOn(context)
+  .settings(coreGroup)
+  .settings(description := "Task executors on virtual threads and a task scheduler for Coilix, closed with the context")
+
 lazy val data = slf4sModule("data", "20_data", "dev.coilix.data")
   .dependsOn(context)
   .settings(featureGroup("data"))
@@ -188,7 +193,7 @@ lazy val security = slf4sModule("security", "22_security", "dev.coilix.security"
   .settings(description := "Security for Coilix")
 
 lazy val boot = slf4sModule("boot", "15_boot", "dev.coilix.boot")
-  .dependsOn(context)
+  .dependsOn(context, concurrency)
   .settings(coreGroup)
   .settings(description := "Application startup for Coilix")
 
@@ -239,6 +244,7 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (slf4sPlugin / Compile / tastyFiles).value,
         (config / Compile / tastyFiles).value,
         (context / Compile / tastyFiles).value,
+        (concurrency / Compile / tastyFiles).value,
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value
       ).flatten
@@ -256,7 +262,21 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
   )
 
 lazy val modules: Seq[ProjectReference] =
-  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, testkit, demo, docs)
+  Seq[ProjectReference](
+    common,
+    annotations,
+    slf4sPlugin,
+    config,
+    context,
+    concurrency,
+    data,
+    web,
+    security,
+    boot,
+    testkit,
+    demo,
+    docs
+  )
 
 lazy val root = (project in file("."))
   .aggregate(modules *)
