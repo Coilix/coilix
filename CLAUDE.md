@@ -78,6 +78,7 @@ Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jedny
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt (konfiguracja w `.scalafmt.conf`) i google-java-format w stylu AOSP dla Javy (`sbt-java-formatter`), lokalnie przy każdej kompilacji. W CI formatowanie przy kompilacji jest wyłączone (`insideCI`), a krok `Check formatting` przerywa build, gdy kod albo pliki buildu (`*.sbt`, `project/*.scala`) nie są sformatowane. Każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
 - Każda nowa klasa ma testy munit w `src/test/scala` swojego modułu.
+- Każda funkcja widoczna dla programisty aplikacji (adnotacja, bean modułu, punkt rozszerzeń) jest użyta w aplikacji demo (`90_demo`) w naturalnym miejscu jej domeny i sprawdzona testem demo, w tym samym PR co funkcja.
 - Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (COILIX-00009, `docs/architecture/versioning.md`).
 - Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.
 - Nie kopiuje się kodu, dokumentacji, komunikatów ani testów ze Springa i innych frameworków, także w parafrazie. Nazwy adnotacji i pojęć mogą odpowiadać Springowi, teksty piszemy od nowa.

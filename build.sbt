@@ -211,7 +211,7 @@ lazy val testkit = slf4sModule("testkit", "16_testkit", "dev.coilix.testkit")
   )
 
 lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
-  .dependsOn(boot, testkit % Test)
+  .dependsOn(boot, cluster, testkit % Test)
   .settings(unpublished)
   .settings(
     coverageEnabled      := false,

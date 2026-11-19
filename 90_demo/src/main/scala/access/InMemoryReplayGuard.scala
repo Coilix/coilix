@@ -17,6 +17,9 @@ final class InMemoryReplayGuard extends ReplayGuard {
   override def claim(session: SessionId, request: RequestId): Either[AccessError, Unit] =
     Either.cond(!claimed.getAndUpdate(_ + (session -> request)).contains(session -> request), (), AccessError.ReplayedRequest)
 
+  /** Forgets every claimed request and returns how many there were. */
+  def forget(): Int = claimed.getAndSet(Set.empty).size
+
   @PostConstruct
   private def open(): Unit = log.info("Replay guard is watching diagnostic requests")
 

@@ -8,8 +8,11 @@ import dev.coilix.boot.Coilix
  *
  * Run it with `sbt demo/run`. Add `--mechanic=M-003` to work as an apprentice, `--vin=TMBJJ7NE8J0000002` to inspect the
  * other vehicle, or any `--key=value` option to override the configuration in `application.yaml`.
+ *
+ * Only the `access`, `vehicle` and `workshop` packages are scanned. The `diagnostics` package is an optional module added
+ * through `META-INF/services`, and `--workshop.telematics.enabled=true` turns on the telematics uplink.
  */
-@CoilixApplication
+@CoilixApplication(scanBasePackages = Array("dev.coilix.demo.access", "dev.coilix.demo.vehicle", "dev.coilix.demo.workshop"))
 object DemoApplication {
 
   /** Starts the demo with the command-line arguments. */

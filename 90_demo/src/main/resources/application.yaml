@@ -1,6 +1,9 @@
 workshop:
   name: Northside Garage
+  bays: 4
   token-ttl: 5m
+  telematics:
+    url: https://oem-portal.example.com/telematics
   max-grants: 8
   oem-portal:
     url: https://oem-portal.example.com/workshop-keys
