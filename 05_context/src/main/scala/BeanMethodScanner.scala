@@ -24,5 +24,7 @@ object BeanMethodScanner {
    * is not set.
    */
   def default(using components: ComponentProvider): BeanMethodScanner =
-    components.get[BeanMethodScanner](ReflectiveBeanMethodScanner(ParameterDependencyMapper.default))
+    components.get[BeanMethodScanner](
+      ReflectiveBeanMethodScanner(ParameterDependencyMapper.default, EffectfulResultRecognizer.default)
+    )
 }

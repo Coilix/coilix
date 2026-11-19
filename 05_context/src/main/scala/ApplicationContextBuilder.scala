@@ -29,17 +29,16 @@ object ApplicationContextBuilder {
   given ConfigPath[ApplicationContextBuilder] = ConfigPath[ApplicationContextBuilder]("coilix.context.application-context-builder")
 
   /**
-   * The configured implementation, or a [[dev.coilix.context.DefaultApplicationContextBuilder]] built from the default dependency
-   * resolver, bean instantiator, candidate selector and bean destroyer.
+   * The configured implementation, or a [[dev.coilix.context.DefaultApplicationContextBuilder]] built from the default context
+   * planner, bean instantiator, candidate selector and bean destroyer.
    */
   def default(using components: ComponentProvider): ApplicationContextBuilder =
     components.get[ApplicationContextBuilder](
       DefaultApplicationContextBuilder(
-        DependencyResolver.default,
+        ContextPlanner.default,
         BeanInstantiator.default,
         CandidateSelector.default,
-        BeanDestroyer.default,
-        DefinitionFilter.default
+        BeanDestroyer.default
       )
     )
 }

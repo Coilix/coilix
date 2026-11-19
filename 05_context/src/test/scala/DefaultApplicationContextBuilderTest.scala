@@ -2,6 +2,9 @@ package dev.coilix.context
 
 import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
+import dev.coilix.context.effects.Later
+import dev.coilix.context.effects.ReportReader
+import dev.coilix.context.effects.TestEffects
 import dev.coilix.context.ordering.AlphaService
 import dev.coilix.context.ordering.ItemCatalog
 import dev.coilix.context.ordering.YankeeItem
@@ -59,5 +62,13 @@ final class DefaultApplicationContextBuilderTest extends FunSuite {
       Definitions.of(classOf[AlphaService], classOf[ItemCatalog], classOf[YankeeItem], classOf[ZuluAudit], classOf[ZuluItem])
     )
     assertEquals((built.getBean[AlphaService].audit.isDefined, built.getBean[ItemCatalog].items.size), (true, 2))
+  }
+
+  test("rejects beans created by effects with a hint about an effect module") {
+    val definitions = TestEffects.definitions ++ Definitions.of(classOf[ReportReader])
+    val error       = intercept[EffectfulBeanException](ApplicationContextBuilder.default.build(definitions))
+    assertEquals(error.definitions.map(_.beanName), List("archive", "report"))
+    assert(error.getMessage.contains(s"'report' (${classOf[Later[?]].getName}["), error.getMessage)
+    assert(error.getMessage.contains("CoilixIOApp"), error.getMessage)
   }
 }
