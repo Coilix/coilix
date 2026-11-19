@@ -23,6 +23,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0015](0015-http-and-serialization-by-macros-and-givens.md) | HTTP i serializacja przez makra i givens | proponowana, szkic |
 | [0016](0016-testkit-module.md) | Moduł testkit w rdzeniu | proponowana |
 | [0017](0017-components-collected-by-modules.md) | Komponenty zbierane przez moduły | proponowana |
+| [0018](0018-module-directory-number-ranges.md) | Zakresy numerów katalogów modułów | proponowana |
 
 ## Nowa decyzja
 

@@ -40,7 +40,7 @@ Nie są dystrybuowane z naszymi artefaktami, więc nie nakładają obowiązków 
 | `org.slf4j:slf4j-simple` (testy, demo) | MIT |
 | sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage, sbt-java-formatter, google-java-format | Apache-2.0 |
 
-## Strona dokumentacji (`12_docs/website`)
+## Strona dokumentacji (`99_docs/website`)
 
 Zależności npm (Docusaurus i jego zależności przechodnie) służą tylko do zbudowania statycznej strony `docs.coilix.dev`. Nie trafiają do artefaktów Coilix, więc nie nakładają obowiązków na użytkowników. Na stronę trafia tylko JavaScript i CSS wygenerowany przez Docusaurusa (MIT) i React (MIT).
 

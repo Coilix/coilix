@@ -10,7 +10,7 @@ import java.nio.file.Paths
 
 class ValueTypesExampleTest extends munit.FunSuite {
 
-  private val resources = Paths.get(sys.props.getOrElse("coilix.docs.resources", "12_docs/examples/next/resources"))
+  private val resources = Paths.get(sys.props.getOrElse("coilix.docs.resources", "99_docs/examples/next/resources"))
 
   private def environment(yaml: String): Environment =
     Environment.of(TypesafeConfigTree(ConfigFactory.parseString(yaml).resolve()))

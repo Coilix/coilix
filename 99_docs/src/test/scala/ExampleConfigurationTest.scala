@@ -9,7 +9,7 @@ import scala.util.Using
 
 class ExampleConfigurationTest extends munit.FunSuite {
 
-  private val resources: Path = Paths.get(sys.props.getOrElse("coilix.docs.resources", "12_docs/examples/next/resources"))
+  private val resources: Path = Paths.get(sys.props.getOrElse("coilix.docs.resources", "99_docs/examples/next/resources"))
 
   test("the examples have configuration files") {
     assert(configurationFiles.nonEmpty, s"No configuration files in $resources")

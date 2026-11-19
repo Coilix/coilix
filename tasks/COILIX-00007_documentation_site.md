@@ -9,7 +9,7 @@ Narzędzie i adres wybiera [ADR 0010](../docs/adr/0010-docusaurus-documentation-
 ## Stan obecny
 
 - Każdy publiczny element modułów `01`–`10` ma Scaladoc albo Javadoc (kroki 2–4).
-- Szkielet `12_docs` jest gotowy (krok 5): projekt sbt `docs`, wspólna strona Scaladoc z Javadoc (`sbt docs/apiSite`), Docusaurus z językami EN i PL, przełącznikiem wersji i stroną `/changelog`, skrypty sprawdzające i job `Documentation site` w CI. Na stronie jest jedna strona przewodnika: Getting started › First application.
+- Szkielet `99_docs` jest gotowy (krok 5): projekt sbt `docs`, wspólna strona Scaladoc z Javadoc (`sbt docs/apiSite`), Docusaurus z językami EN i PL, przełącznikiem wersji i stroną `/changelog`, skrypty sprawdzające i job `Documentation site` w CI. Na stronie jest jedna strona przewodnika: Getting started › First application.
 - Nie ma jeszcze pozostałych przewodników ani publikacji na `docs.coilix.dev`.
 
 ## Zakres
@@ -18,11 +18,11 @@ Kolejne PR-y, każdy zostawia `master` w stanie gotowym do wydania:
 
 1. **Projekt i zasady:** ADR 0010, `docs/process/documentation.md`, ten task.
 2. **Scaladoc `05_context`.**
-3. **Scaladoc `09_boot`.**
+3. **Scaladoc `15_boot`.**
 4. **Scaladoc `03_slf4s_plugin` i `10_demo`.**
-5. **Szkielet `12_docs`:**
+5. **Szkielet `99_docs`:**
    - projekt sbt `docs` (bez publikacji) kompilujący `examples/next/` i budujący jedną stronę Scaladoc dla modułów `01`–`10` z Javadoc obok,
-   - Docusaurus w `12_docs/website/` z językami EN i PL, przełącznikiem wersji, stroną changelogu i stałymi działami menu,
+   - Docusaurus w `99_docs/website/` z językami EN i PL, przełącznikiem wersji, stroną changelogu i stałymi działami menu,
    - skrypty sprawdzające z sekcji „Sprawdzenia w CI” zasad i krok w CI, który buduje stronę w PR bez publikacji.
 6. **Przewodniki:** Getting started, Guides i Reference w obu językach, z przykładami w `examples/next/`. Jeden dział na PR.
 7. **Publikacja** (według ADR 0011, razem z krokiem 5 z COILIX-00009):
@@ -46,7 +46,7 @@ Ustalenia z kroku 5:
 2. `docs.coilix.dev` pokazuje przewodniki po angielsku (`/core/`) i po polsku (`/pl/core/`), przełącznik wersji z wydanymi liniami, stronę `/changelog` i dokumentację API dla każdej wydanej linii.
 3. Wszystkie sprawdzenia z sekcji „Sprawdzenia w CI” zasad działają w CI i przerywają build.
 4. PR wydania `X.Y.0` tworzy wersję `X.Y` przez `npm run prepare-release`, a tag i ręczne uruchomienie publikują stronę.
-5. `CLAUDE.md` opisuje moduł `12_docs` (tabela modułów, komendy).
+5. `CLAUDE.md` opisuje moduł `99_docs` (tabela modułów, komendy).
 
 ## Poza zakresem
 

@@ -8,7 +8,7 @@ Typy wartości i enumy mają działać od razu w konfiguracji (`@Value`, `@Confi
 
 ## Stan obecny
 
-- `06_data` jest pusty (tylko `.gitkeep`), a moduł nie ma specyfikacji (ROADMAP: „not yet specified”).
+- `20_data` jest pusty (tylko `.gitkeep`), a moduł nie ma specyfikacji (ROADMAP: „not yet specified”).
 - `DefaultScalarReader` w `04_config` czyta tylko `String`, liczby, `Boolean` i czasy trwania. Nie zna typów opakowujących jedną wartość ani enumów.
 - implicits (wersja 1.8.3) ma potrzebne klocki, ale zbudowane na zewnętrznych bibliotekach:
   - `AnyValObject[T, A]`: companion trait dla opakowania jednej wartości, wyprowadza kodeki circe i skalar sangrii makrem,
@@ -43,7 +43,7 @@ Każdy punkt to osobny PR.
    - błąd przy nieznanej nazwie podaje dozwolone wartości.
 5. **Konfiguracja** w `04_config`: `ReflectiveConfigBinder` wiąże typy `@ValueType` (przez typ wewnętrzny, więc także `List[String]` w środku) i `@Enumerated`, więc działają w `@Value`, `@ConfigurationProperties`, `Option` i kolekcjach. Changelog `core`.
 6. **Przewodnik** „Typy wartości i enumy” w obu językach, po scaleniu sekcji przewodników z COILIX-00004.
-7. **Mapowanie kolumn w `06_data`**: kodeki kolumn dla typów wartości i enumów. Dopiero razem ze specyfikacją modułu `data` (repozytoria, transakcje, sterownik). Ten task tylko zostawia na to miejsce w resolverach.
+7. **Mapowanie kolumn w `20_data`**: kodeki kolumn dla typów wartości i enumów. Dopiero razem ze specyfikacją modułu `data` (repozytoria, transakcje, sterownik). Ten task tylko zostawia na to miejsce w resolverach.
 
 ## Proponowany projekt
 

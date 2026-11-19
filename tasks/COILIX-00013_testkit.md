@@ -6,7 +6,7 @@ Programista aplikacji pisze test munit, który buduje kontekst Coilix z wybranyc
 
 ## Stan obecny
 
-- Testy frameworka składają kontekst ręcznie (`Definitions.scala`, `Providers.scala` w `05_context/src/test`) albo wołają `Coilix.run` z aplikacją fixture (`09_boot/src/test`).
+- Testy frameworka składają kontekst ręcznie (`Definitions.scala`, `Providers.scala` w `05_context/src/test`) albo wołają `Coilix.run` z aplikacją fixture (`15_boot/src/test`).
 - `Coilix.run` czyta config z classpath i właściwości systemowe. Nie ma sposobu, żeby dać testowi własne wartości bez plików w `src/test/resources`.
 - Nie ma sposobu, żeby zastąpić bean aplikacji atrapą bez zmiany kodu (`@Primary` w źródłach testowych działa, ale wymaga klasy na każdy przypadek).
 - `close()` kontekstu po teście trzeba wołać ręcznie.
@@ -53,7 +53,7 @@ final class WelcomeMailTest extends munit.FunSuite with CoilixFixtures {
 
 ## Kryteria akceptacji
 
-1. Testy `11_demo` i przykład przewodnika w `12_docs/examples/next/test` działają na testkicie.
+1. Testy `90_demo` i przykład przewodnika w `99_docs/examples/next/test` działają na testkicie.
 2. Właściwości z `withProperties` wygrywają z plikami i właściwościami systemowymi.
 3. `replaceBean` zastępuje bean ze skanowania i jest wstrzykiwany do beanów zależnych, a `addBean` dodaje brakujący bean.
 4. Kontekst jest zamknięty po teście (po COILIX-00004 także `@PreDestroy`).
@@ -67,5 +67,5 @@ final class WelcomeMailTest extends munit.FunSuite with CoilixFixtures {
 
 ## Ryzyka i otwarte pytania
 
-- Numer katalogu: rozstrzygnięte, `10_testkit` i `11_demo` (ADR 0016).
+- Numer katalogu: rozstrzygnięte, `16_testkit` i `90_demo` (ADR 0016, zakresy numerów w ADR 0018).
 - Zakres podmiany: rozstrzygnięte, usuwane są wszystkie definicje przypisywalne do typu, a podmiana bez dopasowania jest błędem. Do dodania beana służy osobne `addBean`.

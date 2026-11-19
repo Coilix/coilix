@@ -577,7 +577,7 @@ trait RunningWorker {
 | `processing-web` | integracja | `processing`, `web` | publiczne endpointy administracyjne: topologia klastra, status, statystyki, zdrowie, sterowanie, przegląd i `replay` dead letter |
 | `processing-micrometer` | integracja | `processing`, Micrometer | `ProcessorListener` publikujący metryki z etykietami `processor`, `shard`, `replica` |
 
-Pakiet `dev.coilix.processing`, artefakty `coilix-processing*`. Numery katalogów ustala się razem z przenumerowaniem z COILIX-00010, COILIX-00013, COILIX-00017 i COILIX-00023.
+Pakiet `dev.coilix.processing`, artefakty `coilix-processing*`. Numery katalogów: kolejne wolne od `20` (ADR 0018).
 
 Przykład procesora stanowego:
 

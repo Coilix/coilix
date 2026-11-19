@@ -17,14 +17,14 @@ object DemoApplication {
 
 ## Stan obecny
 
-- `09_boot` ma trait aplikacji, który aplikacja rozszerza. Trzeba w nim ręcznie nadpisać `basePackage` (string) i `run(context)`.
+- `15_boot` ma trait aplikacji, który aplikacja rozszerza. Trzeba w nim ręcznie nadpisać `basePackage` (string) i `run(context)`.
 - Logika demo (`DemoRunner`, `ContextInspector`) jest wywoływana ręcznie z `Main.run`.
 - Kontekstu nie da się zamknąć, nie ma shutdown hooka ani logu z czasem startu.
 
 ## Zakres
 
 1. Adnotacja `@CoilixApplication` w `02_annotations` z opcjonalnym `scanBasePackages`.
-2. `Coilix.run[T: ClassTag](args)` w `09_boot`:
+2. `Coilix.run[T: ClassTag](args)` w `15_boot`:
    - pakiet bazowy domyślnie to pakiet klasy `T`, jak w Springu,
    - zwraca działający kontekst.
 3. `ApplicationArguments`, czyli bean z argumentami wywołania. Na początek parsowanie `--klucz=wartość` i argumentów pozycyjnych.
@@ -47,7 +47,7 @@ object DemoApplication {
 - `05_context`:
   - `ConfigurableApplicationContext` (trait) rozszerzający `ApplicationContext` o `close()`,
   - `DefaultApplicationContext` implementuje nowy trait.
-- `09_boot`:
+- `15_boot`:
   - `Coilix`: obiekt z `run[T: ClassTag](args)` delegujący do `CoilixApplicationRunner`,
   - `CoilixApplicationRunner` (trait) i `DefaultCoilixApplicationRunner`, które składają kroki startu,
   - `BasePackageResolver` (trait) i `AnnotationBasePackageResolver`, które czytają `scanBasePackages` albo pakiet klasy startowej,

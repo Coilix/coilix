@@ -31,7 +31,7 @@ A pull request with a change that users can see adds an entry to `unreleased.md`
 
 ## Release files
 
-Before a release, `unreleased.md` is renamed to `<version>.md`, gets front matter, and an empty `unreleased.md` takes its place. `npm run prepare-release -- <group> <version>` in `12_docs/website` does this on a `release/<group>-v<version>` branch and opens the pull request:
+Before a release, `unreleased.md` is renamed to `<version>.md`, gets front matter, and an empty `unreleased.md` takes its place. `npm run prepare-release -- <group> <version>` in `99_docs/website` does this on a `release/<group>-v<version>` branch and opens the pull request:
 
 ```markdown
 ---
@@ -49,4 +49,4 @@ requires-core: "0.2"
 - `requires-core` is the core line that a feature module works with. Only feature modules have it, `core` does not.
 - A release file is not edited after the release.
 
-The `Documentation site` job checks every file in this directory (`npm run check` in `12_docs/website`).
+The `Documentation site` job checks every file in this directory (`npm run check` in `99_docs/website`).

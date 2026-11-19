@@ -100,7 +100,7 @@ Każda grupa wydań (`core` albo moduł funkcji) ma własne wersje i tagi `<grup
 2. Przygotuj PR wydania:
 
    ```sh
-   cd 12_docs/website
+   cd 99_docs/website
    npm run prepare-release -- <grupa> X.Y.Z
    ```
 

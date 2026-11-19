@@ -23,10 +23,10 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
-          node-version-file: 12_docs/website/.nvmrc
+          node-version-file: 99_docs/website/.nvmrc
       - name: Check tag, branch and changelog
         id: tag
-        run: node 12_docs/website/scripts/release-tag.mjs "$GITHUB_REF_NAME" release-notes.md >> "$GITHUB_OUTPUT"
+        run: node 99_docs/website/scripts/release-tag.mjs "$GITHUB_REF_NAME" release-notes.md >> "$GITHUB_OUTPUT"
       - uses: actions/setup-java@v6
         with:
           distribution: temurin

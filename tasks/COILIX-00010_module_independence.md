@@ -50,5 +50,5 @@ Zrobione:
 
 Zmiana względem projektu z `modularity.md`: moduł podaje klasy komponentów zamiast gotowych `BeanDefinition`. Autor modułu nie musi znać fabryki definicji, a komponenty modułu działają tak samo jak klasy ze skanowania.
 
-Odłożone: moduł `security-web` i przenumerowanie katalogów. `security-web` byłby dziś pusty, a numer jego katalogu trzeba ustalić razem z `testkit` (COILIX-00013) i benchmarkami (COILIX-00017). Zrobi się to z pierwszym kodem integracji.
+Odłożone: moduł `security-web`, bo byłby dziś pusty. Powstanie z pierwszym kodem integracji, z numerem od `20`. Przenumerowanie katalogów zrobione w ADR 0018.
 

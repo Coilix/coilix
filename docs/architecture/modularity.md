@@ -38,7 +38,7 @@ slf4s-plugin (plugin kompilatora dla modułów z @Slf4s)
 ```
 
 - `boot` zależy tylko od `context`, a `data`, `web` i `security` tylko od `context` (COILIX-00010). Pilnuje tego `checkModuleLayers` w buildzie.
-- `security-web` (integracja security z HTTP) powstanie razem z pierwszym kodem, który go potrzebuje. Numer jego katalogu ustali się wtedy razem z przenumerowaniem dla benchmarków (COILIX-00017); `testkit` ma już `10_testkit`, a demo `11_demo` (ADR 0016), bo musi być wyższy niż `07_web` i `08_security`.
+- Numery katalogów idą zakresami (ADR 0018): biblioteki rdzenia `01`–`14`, `15_boot`, `16_testkit`, funkcje i integracje od `20`, niepublikowane aplikacje `90`–`98` i `99_docs`. Nowy moduł nie wymaga przenumerowania istniejących. `security-web` dostanie kolejny wolny numer od `20` razem z pierwszym kodem, który go potrzebuje.
 - `data`, `web` i `security` są jeszcze puste.
 - `config` zawiera trzy formaty (HOCON, properties, YAML). YAML ciągnie `snakeyaml-engine` do rdzenia. Opcjonalnie: wydzielić `config-yaml` jako moduł funkcji. Niski priorytet, bo biblioteka jest mała.
 
