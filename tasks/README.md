@@ -31,6 +31,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00025 | [GraphQL na Sangrii](COILIX-00025_graphql.md) | średni | szkic do doszlifowania, po COILIX-00023 i COILIX-00024 |
 | COILIX-00026 | [Przetwarzanie w tle (`processing`)](COILIX-00026_background_processing.md) | wysoki | szkic do doszlifowania |
 | COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | szkic do doszlifowania |
+| COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | szkic do doszlifowania, krok 3 przed `core-v0.1.0` |
 
 Zależności między taskami:
 
@@ -57,6 +58,7 @@ Zależności między taskami:
 - COILIX-00025 wymaga COILIX-00023 (strumienie i WebSocket w silniku) i COILIX-00024 (opis typu).
 - COILIX-00026 korzysta z cyklu życia z COILIX-00004, `CoilixModule` z COILIX-00010, `TaskExecutor` z COILIX-00005 i tożsamości repliki z COILIX-00027 (operacje w całym klastrze po kroku 2 COILIX-00027). Wymaga zmiany w rdzeniu (`ComponentCollector`). Konektory Kafka, SFTP i Elasticsearch to osobne taski po nim, a `processing-web` czeka na COILIX-00023.
 - COILIX-00027 to moduł rdzenia bez zależności zewnętrznych. `ClusterCodec` trzeba uzgodnić z COILIX-00024, a `@Scheduled` z COILIX-00005 może z niego korzystać do zadań na jednej replice.
+- COILIX-00028 zastępuje `checkForbiddenCalls` wartem i dodaje moduły narzędziowe poza numeracją modułów frameworka. Zmiana `Class[T]` na `ClassTag` w publicznym API (krok 3) i szkielet reguł migracyjnych (krok 8) powinny być przed wydaniem `core-v0.1.0` z COILIX-00009.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
