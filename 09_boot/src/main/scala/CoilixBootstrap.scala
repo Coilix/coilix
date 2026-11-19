@@ -22,10 +22,29 @@ trait CoilixBootstrap {
    * @throws dev.coilix.context.CircularDependencyException
    *   if beans depend on each other in a cycle
    */
-  def start(
+  final def start(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean]
+  ): ConfigurableApplicationContext =
+    start(basePackages, extraDefinitions, singletons, BeanReplacements.none)
+
+  /**
+   * Builds the context like the other `start`, but leaves out the discovered beans that `replacements` replace, so the ready
+   * `singletons` take their place. The `extraDefinitions` are never left out.
+   *
+   * @throws dev.coilix.boot.UnmatchedBeanReplacementException
+   *   if a replaced type matches no bean discovered by scanning or in modules
+   * @throws dev.coilix.context.NoSuchBeanException
+   *   if a required dependency has no matching bean
+   * @throws dev.coilix.context.CircularDependencyException
+   *   if beans depend on each other in a cycle
+   */
+  def start(
+    basePackages:     List[String],
+    extraDefinitions: List[BeanDefinition],
+    singletons:       List[RegisteredBean],
+    replacements:     BeanReplacements
   ): ConfigurableApplicationContext
 }
 

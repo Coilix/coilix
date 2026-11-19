@@ -2,6 +2,7 @@ package dev.coilix.boot
 
 import dev.coilix.boot.fixture.Clock
 import dev.coilix.boot.fixture.FixedClock
+import dev.coilix.boot.fixture.StubClock
 import dev.coilix.boot.modules.FixedModuleLoader
 import dev.coilix.boot.modules.ReportModule
 import dev.coilix.boot.modules.ReportTitle
@@ -46,6 +47,32 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
   test("adds the components of the loaded modules, with their bean methods") {
     val context = withModules(List(ReportModule())).start(List("dev.coilix.boot.empty"), Nil, Nil)
     assertEquals(context.getBean[ReportTitle], ReportTitle("Monthly report"))
+  }
+
+  test("leaves out the replaced beans so a ready instance takes their place") {
+    val stub    = RegisteredBean("clock", classOf[Clock], isPrimary = false, StubClock(7L))
+    val context = bootstrap.start(List("dev.coilix.boot.fixture"), Nil, List(stub), BeanReplacements.of[Clock])
+    assertEquals(context.getBeansOfType[Clock].map(_.now), List(7L))
+  }
+
+  test("replaces beans added by modules") {
+    val title   = RegisteredBean("reportTitle", classOf[ReportTitle], isPrimary = false, ReportTitle("Stub report"))
+    val context =
+      withModules(List(ReportModule())).start(List("dev.coilix.boot.empty"), Nil, List(title), BeanReplacements.of[ReportTitle])
+    assertEquals(context.getBean[ReportTitle], ReportTitle("Stub report"))
+  }
+
+  test("keeps extra definitions of a replaced type") {
+    val extra   = BeanDefinitionFactory.default.create(classOf[FixedClock])
+    val context = bootstrap.start(List("dev.coilix.boot.fixture"), extra, Nil, BeanReplacements.of[Clock])
+    assertEquals(context.getBean[Clock].now, 42L)
+  }
+
+  test("fails when a replacement matches no discovered bean") {
+    val error = intercept[UnmatchedBeanReplacementException] {
+      bootstrap.start(List("dev.coilix.boot.empty"), Nil, Nil, BeanReplacements.of[Clock])
+    }
+    assert(error.getMessage.contains("dev.coilix.boot.fixture.Clock"))
   }
 
   private def withModules(modules: List[ReportModule]): CoilixBootstrap =

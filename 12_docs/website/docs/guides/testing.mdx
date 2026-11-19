@@ -1,0 +1,80 @@
+---
+id: testing
+title: Testing with a Coilix context
+description: Build the application context in a munit test, set properties and profiles for the test, and replace beans with test doubles.
+sidebar_position: 4
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import NewsletterApplication from '!!raw-loader!@examples/scala/testing/NewsletterApplication.scala';
+import Mailer from '!!raw-loader!@examples/scala/testing/Mailer.scala';
+import SmtpMailer from '!!raw-loader!@examples/scala/testing/SmtpMailer.scala';
+import WelcomeMail from '!!raw-loader!@examples/scala/testing/WelcomeMail.scala';
+import RecordingMailer from '!!raw-loader!@examples/test/testing/RecordingMailer.scala';
+import WelcomeMailTest from '!!raw-loader!@examples/test/testing/WelcomeMailTest.scala';
+import NewsletterContextTest from '!!raw-loader!@examples/test/testing/NewsletterContextTest.scala';
+
+This page shows how to test your beans together, in the same application context that Coilix builds at startup. Use it when a test should check how beans work with each other, with the configuration and with profiles, while some beans are replaced by test doubles.
+
+## Add the testkit
+
+Add `coilix-testkit` to the test dependencies, next to munit:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-testkit" % "<version>" % Test
+libraryDependencies += "org.scalameta" %% "munit" % "<version>" % Test
+```
+
+The testkit does not bring its own munit version, so your build decides which one is used.
+
+## The application under test
+
+The examples on this page test a small application that sends welcome mails:
+
+<CodeBlock language="scala" title="NewsletterApplication.scala">{NewsletterApplication}</CodeBlock>
+
+<CodeBlock language="scala" title="Mailer.scala">{Mailer}</CodeBlock>
+
+<CodeBlock language="scala" title="SmtpMailer.scala">{SmtpMailer}</CodeBlock>
+
+<CodeBlock language="scala" title="WelcomeMail.scala">{WelcomeMail}</CodeBlock>
+
+## Write a test
+
+Mix `CoilixFixtures` into a munit suite and describe the context with `CoilixTestSetup`. `coilixContext` builds a fresh context for each test and closes it after the test, which also runs the `@PreDestroy` methods.
+
+<CodeBlock language="scala" title="WelcomeMailTest.scala">{WelcomeMailTest}</CodeBlock>
+
+<CodeBlock language="scala" title="RecordingMailer.scala">{RecordingMailer}</CodeBlock>
+
+`forApplication` scans the same packages as `Coilix.run` for that application. To scan other packages, start from `CoilixTestSetup.forPackages("com.example.billing")`.
+
+A test context differs from a running application in a few ways: it prints no banner and no startup log, registers no shutdown hook, and does not call the `ApplicationRunner` beans. Call `withRunners` when a test needs them.
+
+## Set properties and profiles
+
+`withProperties` sets configuration keys for the test. They win over every other source: command-line options, system properties and configuration files, including `application.yaml` in your test resources.
+
+`withProfiles("dev", "local")` makes these profiles active for the test, in this order. It replaces `coilix.profiles.active` from every other source, so the test does not depend on how the build or the machine is set up.
+
+`withArguments("--region=eu")` passes command-line arguments. They are available as the `ApplicationArguments` bean, and options also become configuration keys, as at startup.
+
+## Replace and add beans
+
+`replaceBean[Mailer](mailer)` removes every bean that can be injected as a `Mailer`, whether it comes from scanning, from a `@Bean` method or from a module, and puts the given instance in its place. Beans that need a `Mailer` get the test double. If the application has no bean of that type, building the context fails, so a wrong type does not go unnoticed.
+
+`addBean[Uplink](uplink)` adds an instance next to the beans of the application. Use it for a bean the application does not define, for example to fill an `Option[Uplink]` dependency that is empty in production.
+
+Coilix does not create test doubles for you. Pass a small class written for the test, as in the example, or an object from the mocking library you prefer.
+
+## Share one context in a suite
+
+Building a context takes time when the application has many beans. When the tests of a suite only read from the context, build it once with `coilixSuiteContext` and register it in `munitFixtures`:
+
+<CodeBlock language="scala" title="NewsletterContextTest.scala">{NewsletterContextTest}</CodeBlock>
+
+The context is built before the first test of the suite and closed after the last one.
+
+## Build a context without munit
+
+`TestContextFactory.default.create(setup)` builds the same context without a munit fixture, for example in another test library. The caller closes the returned context.

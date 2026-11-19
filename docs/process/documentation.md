@@ -26,6 +26,7 @@ Strona powstaje wyłącznie z `12_docs/`. Nic z `docs/` ani `tasks/` nie trafia 
     next/                     przykłady dla bieżącej wersji, kompilowane przez sbt
       scala/                  pliki .scala
       resources/              pliki .yaml, .conf, .properties
+      test/                   testy munit pokazane w przewodnikach, uruchamiane przez sbt docs/testFull
     0.1/                      zamrożone przykłady wydanej linii, tylko do odczytu
   src/test/scala/             test, który wczytuje pliki konfiguracji z examples/next/resources
   website/
@@ -128,6 +129,9 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 | profile | profil |
 | active profile | aktywny profil |
 | conditional bean | bean warunkowy |
+| test context | kontekst testowy |
+| test double | atrapa |
+| replace a bean | podmienić bean |
 
 Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 

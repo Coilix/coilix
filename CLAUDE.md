@@ -21,16 +21,17 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `07_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
 | `08_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
 | `09_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
-| `10_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
+| `10_testkit` | `testkit` | `dev.coilix.testkit` | Scala | kontekst Coilix w testach munit (ADR 0016) |
+| `11_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
 | `12_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
-Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) z buildem Gradle (ADR 0014). Numer `11` jest wolny.
+Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) z buildem Gradle (ADR 0014). Numer `11` zajęło demo po dodaniu `10_testkit`.
 
 `12_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `12_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
 Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
-- `common`, `annotations`, `config`, `context` i `boot` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
+- `common`, `annotations`, `config`, `context`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
 - Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
 - Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.
@@ -79,7 +80,7 @@ Opis działania frameworka jest w `docs/architecture/overview.md` (start, budowa
 Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`) z komentarzy `/** */` w kodzie. Przewodniki po angielsku i po polsku, wersje, changelog i publikacja na `docs.coilix.dev` podlegają zasadom z `docs/process/documentation.md` (ADR 0010). Zmiana widoczna dla użytkownika aktualizuje przewodnik w obu językach w tym samym PR.
 
 - Scaladoc i Javadoc pisze się po angielsku.
-- Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`10`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]` oraz testy.
+- Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`11`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]` oraz testy.
 - Komentarz opisuje kontrakt (co robi, co zwraca, kiedy rzuca wyjątek), a nie implementację. Pierwsze zdanie to samodzielne podsumowanie, bo trafia na listę członków typu.
 - Parametry opisuje się przez `@param`, `@tparam`, `@return` i `@throws` tylko wtedy, gdy nazwa i typ nie mówią wszystkiego. Nie powtarza się sygnatury słowami.
 - Do innych typów linkuje się przez `[[dev.coilix.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
@@ -91,7 +92,7 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 
 ## Wersjonowanie
 
-Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`.
+Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot`, `testkit`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`.
 
 - Nowy moduł rdzenia dostaje w `build.sbt` `.settings(coreGroup)`, a nowy moduł funkcji `.settings(featureGroup("<id>"))` i wpis `<id>` na liście w `ReleaseGroups.buildSettings(...)`.
 

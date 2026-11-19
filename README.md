@@ -59,6 +59,7 @@ object App {
 | `coilix-config` | configuration loading and component overrides |
 | `coilix-context` | the IoC container |
 | `coilix-boot` | application startup |
+| `coilix-testkit` | Coilix contexts in munit tests (test dependency) |
 
 `data`, `web` and `security` are planned as optional modules.
 
