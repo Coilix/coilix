@@ -22,6 +22,12 @@ concurrency:
   group: docs-publish
   cancel-in-progress: false
 
+# sbt runs with --server: the sbt 2 runner defaults to the thin client, which cannot take several commands in one call
+# and gives up when the server needs more than 300 s to start. bash with pipefail keeps the exit code of sbt behind tee.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   target:
     name: Decide what to publish
@@ -62,7 +68,7 @@ jobs:
       - uses: sbt/setup-sbt@v1
       - name: Build the API site of the tag
         run: |
-          sbt docs/apiSite 2>&1 | tee doc.log
+          sbt --server docs/apiSite 2>&1 | tee doc.log
           if grep -q "Couldn't resolve a member for the given link query" doc.log; then
             echo "::error::Scaladoc contains broken links"
             exit 1
