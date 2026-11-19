@@ -31,7 +31,7 @@ ThisBuild / developers           := List(
   )
 )
 
-ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, ReleaseGroups.intellij, "data", "web", "security"))
+ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security"))
 
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
@@ -202,22 +202,6 @@ lazy val demo = slf4sModule("demo", "10_demo", "dev.coilix.demo")
     run / outputStrategy := Some(StdoutOutput)
   )
 
-lazy val installIntellijPlugin = taskKey[File]("Copies the IntelliJ plugin jar into the local IDE plugins directory")
-
-lazy val intellijPlugin = scalaModule("intellij-plugin", "11_intellij_plugin", "dev.coilix.intellij")
-  .settings(ReleaseGroups.groupSettings(ReleaseGroups.intellij))
-  .settings(unpublished)
-  .settings(
-    coverageEnabled                                    := false,
-    scalaVersion                                       := "2.13.18",
-    scalacOptions --= Seq("-no-indent", "-old-syntax") ++ javaOutputVersionOptions,
-    Compile / unmanagedJars ++= Def.uncached {
-      val converter = fileConverter.value
-      IntellijPlugin.compileJars.map(jar => Attributed.blank(converter.toVirtualFile(jar.toPath)))
-    },
-    installIntellijPlugin                              := Def.uncached(IntellijPlugin.install(fileConverter.value.toPath((Compile / packageBin).value).toFile))
-  )
-
 lazy val apiSite =
   taskKey[File]("Builds the combined Scaladoc of the published modules with the Javadoc of the annotations next to it")
 
@@ -261,8 +245,7 @@ lazy val docs = slf4sModule("docs", "12_docs", "com.example")
   )
 
 lazy val modules: Seq[ProjectReference] =
-  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, demo, docs) ++
-    Seq[ProjectReference](intellijPlugin).filter(_ => IntellijPlugin.isAvailable)
+  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, demo, docs)
 
 lazy val root = (project in file("."))
   .aggregate(modules *)

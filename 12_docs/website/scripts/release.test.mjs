@@ -70,7 +70,6 @@ test('refuses to release without entries', () => {
 
 test('checks the core line of a feature module', () => {
   assert.deepEqual(coreLineProblems('core', undefined, undefined), []);
-  assert.deepEqual(coreLineProblems('intellij', undefined, undefined), []);
   assert.deepEqual(coreLineProblems('web', '0.2', '0.2.3'), []);
   assert.deepEqual(coreLineProblems('web', '0.1', '0.2.0'), ['requires-core is "0.1", but the last core release is 0.2.0']);
   assert.deepEqual(coreLineProblems('web', '0.1', undefined), ['there is no core-v* tag before this commit, release core first']);

@@ -12,8 +12,6 @@ object ReleaseGroups {
 
   val core: String = "core"
 
-  val intellij: String = "intellij"
-
   val releaseGroups = settingKey[Seq[String]]("Release groups of the build, each with its own <group>-vX.Y.Z tags")
 
   val releaseGroupStates =
@@ -140,7 +138,7 @@ object ReleaseGroups {
 
   private def moduleChecks(group: String): List[String] = {
     val common = List("checkLicenses", "testFull", "mimaReportBinaryIssues")
-    if (group == core || group == intellij) common else "checkReleasedCore" :: common
+    if (group == core) common else "checkReleasedCore" :: common
   }
 
   private def readState(base: File, separator: String, date: Date, group: String): GroupState = {

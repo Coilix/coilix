@@ -22,10 +22,9 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `08_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
 | `09_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
 | `10_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
-| `11_intellij_plugin` | `intellij-plugin` | `dev.coilix.intellij` | Scala 2.13 | plugin IntelliJ dla `@Slf4s` |
 | `12_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
-`11_intellij_plugin` to jedyny moduł w Scali 2.13, bo działa w classloaderze pluginu Scala dla IntelliJ (opis w `11_intellij_plugin/README.md`).
+Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) z buildem Gradle (ADR 0014). Numer `11` jest wolny.
 
 `12_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `12_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
@@ -37,7 +36,7 @@ Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/m
 - Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.
 - Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
 
-Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy (`demo`, plugin IntelliJ i puste moduły funkcji do czasu pierwszej implementacji), dostaje `.settings(unpublished)`, czyli `publish / skip := true` bez bazy MiMa.
+Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy (`demo` i puste moduły funkcji do czasu pierwszej implementacji), dostaje `.settings(unpublished)`, czyli `publish / skip := true` bez bazy MiMa.
 Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/main/scala`, bez katalogów pakietu.
 Plik w podpakiecie, np. fixture testu w katalogu `wiring`, ma pakiet modułu w osobnej klauzuli: `package dev.coilix.context`, a w następnej linii `package wiring`. Tego wymaga IntelliJ przy `idePackagePrefix`, a typy z pakietu modułu są wtedy widoczne bez importu.
 Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jednym typie w linii i bez importów względnych (`import wiring.Greeter`). `*` tylko przy importach metod rozszerzających i dużych API, np. `scala.jdk.CollectionConverters.*` albo `dotty.tools.dotc.ast.untpd.*`. Tak formatuje je scalafmt (`rewrite.imports.expand`), a styl kodu IntelliJ w `.idea/codeStyles/` jest ustawiony tak samo, więc „Optimize Imports” ich nie zmienia.
@@ -80,7 +79,7 @@ Opis działania frameworka jest w `docs/architecture/overview.md` (start, budowa
 Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`) z komentarzy `/** */` w kodzie. Przewodniki po angielsku i po polsku, wersje, changelog i publikacja na `docs.coilix.dev` podlegają zasadom z `docs/process/documentation.md` (ADR 0010). Zmiana widoczna dla użytkownika aktualizuje przewodnik w obu językach w tym samym PR.
 
 - Scaladoc i Javadoc pisze się po angielsku.
-- Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`10`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]`, testy i moduł `11_intellij_plugin`.
+- Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`10`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]` oraz testy.
 - Komentarz opisuje kontrakt (co robi, co zwraca, kiedy rzuca wyjątek), a nie implementację. Pierwsze zdanie to samodzielne podsumowanie, bo trafia na listę członków typu.
 - Parametry opisuje się przez `@param`, `@tparam`, `@return` i `@throws` tylko wtedy, gdy nazwa i typ nie mówią wszystkiego. Nie powtarza się sygnatury słowami.
 - Do innych typów linkuje się przez `[[dev.coilix.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
@@ -92,13 +91,13 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 
 ## Wersjonowanie
 
-Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`, a plugin IntelliJ z `intellij-vX.Y.Z`.
+Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`.
 
 - Nowy moduł rdzenia dostaje w `build.sbt` `.settings(coreGroup)`, a nowy moduł funkcji `.settings(featureGroup("<id>"))` i wpis `<id>` na liście w `ReleaseGroups.buildSettings(...)`.
 
 - Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `coilix.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
 - Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
-- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej grupy wydań, której moduły zmienia (`core`, `intellij` albo moduł funkcji), z ID taska i oznaczeniem **BREAKING** z opisem migracji przy zmianie niezgodnej. Format opisuje `changelog/README.md`, a sprawdza `npm run check` w `12_docs/website` (ADR 0011).
+- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej grupy wydań, której moduły zmienia (`core` albo moduł funkcji), z ID taska i oznaczeniem **BREAKING** z opisem migracji przy zmianie niezgodnej. Format opisuje `changelog/README.md`, a sprawdza `npm run check` w `12_docs/website` (ADR 0011).
 
 ## Proces i gałęzie
 
@@ -127,7 +126,7 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 
 - `sbt testFull` uruchamia wszystkie testy (`sbt test` w sbt 2 to `testQuick` z cache).
 - `sbt demo/run` uruchamia demo.
-- `sbt testCoverage` uruchamia testy z pomiarem pokrycia i przerywa się poniżej progu (90% instrukcji, 80% gałęzi). Raport HTML: `target/out/jvm/scala-<wersja>/coilix/scoverage-report/index.html`. Cache dyskowy sbt 2 przywraca klasy z instrumentacją bez katalogów `scoverage-data`, więc lokalnie trzeba podać pusty katalog cache: `sbt --sbt-cache <pusty katalog> testCoverage`. `demo` i oba pluginy są wyłączone z pomiaru.
+- `sbt testCoverage` uruchamia testy z pomiarem pokrycia i przerywa się poniżej progu (90% instrukcji, 80% gałęzi). Raport HTML: `target/out/jvm/scala-<wersja>/coilix/scoverage-report/index.html`. Cache dyskowy sbt 2 przywraca klasy z instrumentacją bez katalogów `scoverage-data`, więc lokalnie trzeba podać pusty katalog cache: `sbt --sbt-cache <pusty katalog> testCoverage`. `demo` i plugin kompilatora są wyłączone z pomiaru.
 - `sbt scalafmtAll scalafmtSbt javafmtAll` formatuje cały kod i pliki buildu, a `sbt checkFormat` tylko sprawdza formatowanie (tak jak CI).
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
@@ -139,6 +138,5 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt "releaseVerify <grupa> <wersja>"` sprawdza przed wydaniem moduły grupy (wersja z tagu, testy, licencje, MiMa, `checkReleasedCore`). W `12_docs/website` `npm run prepare-release -- <grupa> <wersja>` przygotowuje PR wydania (`docs/process/development.md`).
 - Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.
 - Styl kodu IntelliJ jest w `.idea/codeStyles/`: formatowanie Scali (Ctrl+Alt+L) idzie przez scalafmt z `.scalafmt.conf`, a kod generowany przez IDE ma klamry zamiast składni wcięć.
-- `sbt intellij-plugin/installIntellijPlugin` instaluje plugin IDE (potem restart IntelliJ).
 - Gdy działa sbt uruchomione przez IntelliJ, sbt z terminala trzeba odpalać z `-Dsbt.server.autostart=false`.
 - IntelliJ buduje własnym kompilatorem (nie przez sbt shell, bo sbt 2 nie kopiuje zasobów do `classes`). Jar pluginu `@Slf4s` tworzy tylko sbt. Jar ma stałą nazwę `coilix-slf4s-plugin.jar` (niezależną od wersji z gita). Gdy IntelliJ zgłasza `No plugin in path ...coilix-slf4s-plugin.jar`, trzeba uruchomić `sbt slf4s-plugin/package`. Jeśli jar istnieje, a błąd zostaje, trzeba zrestartować serwer kompilacji Scali w IntelliJ (trzyma starą wersję jara po przebudowie przez sbt).

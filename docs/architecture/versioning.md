@@ -1,6 +1,6 @@
 # Wersjonowanie i wydania
 
-> Model grup wydań pochodzi z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md). Publikacja strony dokumentacji przy tagu i pluginu IntelliJ w Marketplace dojdą w kolejnych krokach COILIX-00009 i COILIX-00007.
+> Model grup wydań pochodzi z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md). Plugin IntelliJ ma własne wersje i wydania w repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) ([ADR 0014](../adr/0014-intellij-plugin-in-separate-repository.md)).
 
 ## Standard
 
@@ -11,14 +11,12 @@
   |---|---|---|
   | `core` | `common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot` | `core-vX.Y.Z` |
   | moduł funkcji, np. `web` | jeden moduł funkcji (`data`, `web`, `security`) | `web-vX.Y.Z` |
-  | `intellij` | `intellij-plugin` | `intellij-vX.Y.Z` |
 
   Moduły rdzenia mają zawsze tę samą wersję i wychodzą razem, nawet jeśli któryś się nie zmienił, więc użytkownik nie sprawdza, które wersje rdzenia do siebie pasują. Moduł funkcji wychodzi niezależnie od rdzenia i od innych modułów funkcji.
-- **Przynależność do grupy jest tylko w `build.sbt`:** moduł rdzenia dostaje `.settings(coreGroup)`, moduł funkcji `.settings(featureGroup("<id>"))`, a plugin IntelliJ grupę `intellij`. Lista grup jest w `ReleaseGroups.buildSettings(...)` w `build.sbt`, a logika w `project/ReleaseGroups.scala`. `sbt "show releaseGroup"` pokazuje grupę każdego modułu. Moduły niepublikowane bez grupy (`demo`, `docs`) i root mają wersję grupy `core`.
+- **Przynależność do grupy jest tylko w `build.sbt`:** moduł rdzenia dostaje `.settings(coreGroup)`, a moduł funkcji `.settings(featureGroup("<id>"))`. Lista grup jest w `ReleaseGroups.buildSettings(...)` w `build.sbt`, a logika w `project/ReleaseGroups.scala`. `sbt "show releaseGroup"` pokazuje grupę każdego modułu. Moduły niepublikowane bez grupy (`demo`, `docs`) i root mają wersję grupy `core`.
 - **`versionScheme := Some("early-semver")`** w `build.sbt`. sbt i Coursier wykrywają wtedy konflikty wersji zgodnie z tym schematem.
 - **Wersja modułu pochodzi z ostatniego tagu jego grupy** (`git describe --match '<grupa>-v[0-9]*'` przez sbt-dynver). Commit z tagiem `core-v0.1.0` daje modułom rdzenia wersję `0.1.0`, kolejne commity `0.1.0+N-<hash>-SNAPSHOT`, a grupa bez tagu ma `0.0.0+N-<hash>-SNAPSHOT`. Stan gita wszystkich grup jest czytany raz przy wczytaniu buildu, bo równoległe `git describe --dirty` blokują się na indeksie. Wersji nie wpisuje się ręcznie.
 - **Moduł funkcji zależy od wydanego rdzenia.** Gdy moduł funkcji ma wersję wydania (commit z jego tagiem), jego zależności od modułów rdzenia dostają wersję ostatniego tagu `core-v*` zamiast bieżącej wersji rdzenia, więc POM nigdy nie wskazuje snapshotu. `sbt <moduł>/checkReleasedCore` przerywa wydanie, gdy nie ma żadnego tagu `core-v*` albo kod modułów rdzenia zmienił się od ostatniego z nich. Wtedy najpierw wychodzi rdzeń.
-- Plugin IntelliJ ma własną wersję z tagów `intellij-v*`. W `plugin.xml` deklaruje zakres IDE (`since-build`/`until-build`), a nie wersję frameworka. Wersja w `plugin.xml` jest jeszcze wpisana ręcznie, do czasu publikacji w Marketplace.
 
 ## Co oznacza zmiana numeru
 
@@ -71,6 +69,6 @@ Kroki dla opiekuna są w [docs/process/development.md](../process/development.md
 - `.github/workflows/release.yml`: na każdy tag `<grupa>-v*` sprawdzenie tagu i pliku changelogu (`12_docs/website/scripts/release-tag.mjs`), `sbt "releaseVerify <grupa> <wersja>"` (testy, licencje, MiMa i `checkReleasedCore` modułów grupy), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem wersji (`-M1`, `-RC1`) daje pre-release.
 - Publikacja obejmuje tylko jedną grupę: zmienna `RELEASE_GROUP` ustawia `publish / skip` w modułach innych grup (`ThisBuild / releaseGroupFilter`). Moduły z `unpublished` nie są publikowane nigdy, więc grupa bez publikowanych modułów nie ma czego wydać i `releaseVerify` ją odrzuca.
 - PR wydania przygotowuje lokalny skrypt `npm run prepare-release -- <grupa> <wersja>` ([kroki](../process/development.md#wydanie)).
-- Do zrobienia później: publikacja pluginu IntelliJ do Marketplace i dokumentacji na GitHub Pages (COILIX-00009, COILIX-00007).
+- Do zrobienia później: publikacja dokumentacji na GitHub Pages (COILIX-00007).
 
 Sekrety repozytorium wymagane przez `release.yml`: `PGP_SECRET`, `PGP_PASSPHRASE`, `SONATYPE_USERNAME`, `SONATYPE_PASSWORD` (token z Central Portal).

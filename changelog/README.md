@@ -5,7 +5,6 @@ Each release group of Coilix has its own directory and its own versions:
 | Directory | Group | Tag |
 |---|---|---|
 | `core/` | `coilix-common`, `coilix-annotations`, `coilix-slf4s-plugin`, `coilix-config`, `coilix-context`, `coilix-boot` | `core-vX.Y.Z` |
-| `intellij/` | IntelliJ IDEA plugin | `intellij-vX.Y.Z` |
 | `<module>/`, e.g. `web/` | one feature module | `<module>-vX.Y.Z` |
 
 The released changes are listed at [docs.coilix.dev/changelog](https://docs.coilix.dev/changelog) and in the GitHub releases.
@@ -47,7 +46,7 @@ requires-core: "0.2"
 ```
 
 - `version` is the same as the file name, and `date` is the release date in the form `YYYY-MM-DD`.
-- `requires-core` is the core line that a feature module works with. Only feature modules have it, `core` and `intellij` do not.
+- `requires-core` is the core line that a feature module works with. Only feature modules have it, `core` does not.
 - A release file is not edited after the release.
 
 The `Documentation site` job checks every file in this directory (`npm run check` in `12_docs/website`).

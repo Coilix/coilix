@@ -52,11 +52,6 @@ Stan na 2026-11-03: 1281 pakietów, większość na MIT.
 
 Podatne wersje zależności przechodnich, których Docusaurus jeszcze nie podbił, nadpisuje sekcja `overrides` w `package.json` (teraz `serialize-javascript`, `tinypool`, `uuid`). Nadpisanie usuwa się, gdy Docusaurus sam wymaga poprawionej wersji.
 
-## Plugin IntelliJ (`11_intellij_plugin`)
-
-- Kompiluje się na jarach IntelliJ Platform i pluginu Scala z lokalnej instalacji IDE. Oba są na Apache-2.0 (intellij-community, intellij-scala).
-- Jarów platformy nie dystrybuujemy. Plugin w Marketplace zawiera tylko nasze klasy i deklaruje zależność od pluginu Scala w `plugin.xml`.
-
 ## Obowiązki
 
 - Publikujemy osobne jary bez wbudowanych cudzych klas (bez fat-jara i shadingu), więc nie musimy kopiować licencji ani plików `NOTICE` zależności. Użytkownik pobiera je z Maven Central z ich własnymi licencjami.

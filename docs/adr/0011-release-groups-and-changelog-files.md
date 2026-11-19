@@ -1,6 +1,6 @@
 # 0011: Grupy wydań, changelog w plikach i publikacja przy tagu
 
-- Status: przyjęta
+- Status: przyjęta, grupa `intellij` zastąpiona przez 0014
 - Data: 2026-11-03
 - Task: COILIX-00009, COILIX-00007
 - Zastępuje: zasadę „jedna wersja dla całego frameworka” z `docs/architecture/versioning.md` oraz punkty 4, 5 i 7 z [ADR 0010](0010-docusaurus-documentation-site.md)
@@ -23,11 +23,12 @@ Moduły rdzenia zależą od siebie łańcuchem (`boot` → `context` → `config
 
 ### Grupy wydań
 
+Grupa `intellij` (plugin IntelliJ, JetBrains Marketplace) była tu do [ADR 0014](0014-intellij-plugin-in-separate-repository.md), który przeniósł plugin do osobnego repozytorium.
+
 | Grupa | Moduły | Tag | Gdzie trafia |
 |---|---|---|---|
 | `core` | `common`, `annotations`, `slf4s-plugin`, `config`, `context`, `boot` | `core-vX.Y.Z` | Maven Central |
 | `<moduł funkcji>`, np. `web` | jeden moduł funkcji | `web-vX.Y.Z` | Maven Central |
-| `intellij` | `intellij-plugin` | `intellij-vX.Y.Z` | JetBrains Marketplace |
 
 1. Każda grupa ma własną wersję według SemVer i `early-semver`. Moduły w grupie mają zawsze tę samą wersję.
 2. Przynależność modułu do grupy jest zapisana tylko w `build.sbt`. Workflow, skrypty i strona czytają ją stamtąd.
@@ -45,8 +46,6 @@ changelog/
   web/
     unreleased.md
     0.1.0.md
-  intellij/
-    unreleased.md
 ```
 
 1. `CHANGELOG.md` zostaje zastąpiony katalogiem `changelog/`. Każda grupa ma swój katalog, a każde wydanie swój plik `<wersja>.md`.
@@ -69,7 +68,7 @@ changelog/
    - **BREAKING** ...
    ```
 
-   Dozwolone sekcje: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Pole `requires-core` mają tylko grupy inne niż `core` i `intellij`. Zmiana niezgodna ma oznaczenie **BREAKING** i opis migracji.
+   Dozwolone sekcje: `Added`, `Changed`, `Deprecated`, `Removed`, `Fixed`, `Security`. Pole `requires-core` mają tylko grupy inne niż `core`. Zmiana niezgodna ma oznaczenie **BREAKING** i opis migracji.
 4. Przed wydaniem PR przygotowujący (gałąź `release/<grupa>-vX.Y.Z`) zmienia nazwę `unreleased.md` na `X.Y.Z.md`, uzupełnia nagłówek i zakłada pusty `unreleased.md`. Robi to skrypt, a ręczny workflow „Prepare release” (grupa i wersja jako parametry) uruchamia ten skrypt i otwiera PR. Przy wersji `X.Y.0` ten sam PR tworzy kopię przewodników grupy dla linii `X.Y`.
 5. CI w każdym PR sprawdza format wszystkich plików w `changelog/`.
 
@@ -86,7 +85,7 @@ Opiekun robi podpisany tag `<grupa>-vX.Y.Z` na commicie z `master` (albo z `seri
 ### Strona dokumentacji
 
 1. Strona jest publikowana tylko przy tagu i ręcznie (workflow „Publish docs”), nie przy pushu na `master`. Nie pokazuje wersji `next`, tylko wydane linie.
-2. Każda grupa z przewodnikami ma własną sekcję z własnym przełącznikiem wersji (osobne instancje wtyczki docs Docusaurusa): `/core/...`, `/web/...`. Plugin IntelliJ jest opisany w przewodnikach `core`.
+2. Każda grupa z przewodnikami ma własną sekcję z własnym przełącznikiem wersji (osobne instancje wtyczki docs Docusaurusa): `/core/...`, `/web/...`.
 3. Stare wersje przewodników są kopiami na `master` (`versioned_docs` każdej instancji), jak w ADR 0010. Stronę buduje się zawsze z aktualnego `master`, więc poprawka opisu starszej linii trafia na `master`.
 4. Dokumentacja API każdej linii każdej grupy jest pod `/api/<grupa>/<linia>/`, budowana z commitu tagu i dopisywana do `gh-pages` bez kasowania starszych.
 5. Strona `/changelog` pokazuje pliki z `changelog/` pogrupowane według grup i wersji, bez `unreleased.md`.

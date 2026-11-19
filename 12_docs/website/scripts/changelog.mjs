@@ -5,8 +5,6 @@ export const changelogRoot = path.resolve(import.meta.dirname, '..', '..', '..',
 
 export const sections = ['Added', 'Changed', 'Deprecated', 'Removed', 'Fixed', 'Security'];
 
-const groupsWithoutCore = ['core', 'intellij'];
-const groupLabels = {core: 'Core', intellij: 'IntelliJ plugin'};
 const groupPattern = /^[a-z][a-z0-9-]*$/;
 const versionPattern = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;
 const corePattern = /^\d+\.\d+$/;
@@ -101,7 +99,7 @@ function isRealDate(value) {
 }
 
 function fieldProblems(group, version, fields) {
-  const needsCore = !groupsWithoutCore.includes(group);
+  const needsCore = group !== 'core';
   const allowed = needsCore ? ['version', 'date', 'requires-core'] : ['version', 'date'];
   const unknown = Object.keys(fields).filter((key) => !allowed.includes(key)).map((key) => `front matter field "${key}" is not allowed`);
   const versionProblem = fields.version === version ? [] : [`front matter version "${fields.version ?? ''}" differs from the file name ${version}`];
@@ -202,11 +200,11 @@ export function releaseNotes(group, version, root = changelogRoot) {
 }
 
 export function groupLabel(group) {
-  return groupLabels[group] ?? `coilix-${group}`;
+  return group === 'core' ? 'Core' : `coilix-${group}`;
 }
 
 function groupOrder(left, right) {
-  const rank = (group) => (group === 'core' ? 0 : group === 'intellij' ? 2 : 1);
+  const rank = (group) => (group === 'core' ? 0 : 1);
   return rank(left) - rank(right) || left.localeCompare(right);
 }
 

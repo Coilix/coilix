@@ -12,7 +12,7 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 | start | `boot` | nie (kontekst można zbudować ręcznie) | rdzenia |
 | funkcje | `data`, `web`, `security` | nie | rdzenia, nigdy od `boot` ani od innej funkcji |
 | integracje | np. `security-web` | nie | rdzenia i dokładnie tych funkcji, które łączy |
-| narzędzia | `slf4s-plugin`, `intellij-plugin` | nie (tylko przy `@Slf4s`) | niczego z frameworka w runtime |
+| narzędzia | `slf4s-plugin` | nie (tylko przy `@Slf4s`) | niczego z frameworka w runtime |
 | przykłady | `demo` | nie, niepublikowane | czegokolwiek |
 
 ## Zasady

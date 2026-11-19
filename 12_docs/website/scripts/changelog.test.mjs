@@ -129,8 +129,6 @@ test('refuses notes for a missing or invalid release', () => {
 
 test('renders released versions without unreleased changes', () => {
   const root = changelog({
-    'intellij/unreleased.md': '',
-    'intellij/0.1.0.md': coreRelease('0.1.0'),
     'web/unreleased.md': entry,
     'web/0.1.0.md': webRelease('0.1.0'),
     'core/unreleased.md': entry,
@@ -151,14 +149,6 @@ test('renders released versions without unreleased changes', () => {
       '### 0.1.0 (2026-12-02) {#web-0.1.0}',
       '',
       'Works with Core 0.1.x.',
-      '',
-      '#### Added',
-      '',
-      '- New feature (COILIX-00001).',
-      '',
-      '## IntelliJ plugin {#intellij}',
-      '',
-      '### 0.1.0 (2026-12-01) {#intellij-0.1.0}',
       '',
       '#### Added',
       '',

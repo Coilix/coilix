@@ -1,6 +1,6 @@
 # 0005: Logger `@Slf4s` przez plugin kompilatora
 
-- Status: przyjęta
+- Status: przyjęta, punkt o pluginie IntelliJ zastąpiony przez 0014
 - Data: 2026-10-30 (zapis wsteczny)
 - Task: COILIX-00001
 
@@ -11,7 +11,7 @@ Każda klasa frameworka i wiele klas aplikacji potrzebuje loggera SLF4J. Ręczne
 ## Decyzja
 
 - Adnotacja `@Slf4s` (Java, `02_annotations`) i plugin kompilatora Scali 3 (`03_slf4s_plugin`), który dodaje pole `log: org.slf4j.Logger` w trakcie kompilacji.
-- Plugin IntelliJ (`11_intellij_plugin`) dodaje to samo pole jako syntetyczny element w edytorze. Jest w Scali 2.13, bo działa w classloaderze pluginu Scala dla IntelliJ ([README](../../11_intellij_plugin/README.md)).
+- Plugin IntelliJ dodaje to samo pole jako syntetyczny element w edytorze. Od [ADR 0014](0014-intellij-plugin-in-separate-repository.md) jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij).
 
 ## Konsekwencje
 
