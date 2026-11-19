@@ -9,19 +9,19 @@ Zasada ogólna: każda informacja ma jedno miejsce. Jeśli coś trzeba napisać 
 | Rodzaj | Gdzie | Język | Na stronie |
 |---|---|---|---|
 | Dokumentacja API | Scaladoc i Javadoc w `src/main` | angielski | `/api/<grupa>/<linia>/` |
-| Przewodniki | `12_docs/website/docs/` | angielski | `/core/` |
-| Tłumaczenie przewodników | `12_docs/website/i18n/pl/` | polski | `/pl/core/` |
-| Przykłady kodu | `12_docs/examples/` | kod | wklejane do przewodników |
+| Przewodniki | `99_docs/website/docs/` | angielski | `/core/` |
+| Tłumaczenie przewodników | `99_docs/website/i18n/pl/` | polski | `/pl/core/` |
+| Przykłady kodu | `99_docs/examples/` | kod | wklejane do przewodników |
 | Changelog | `changelog/<grupa>/` | angielski | `/changelog` |
 | README | `README.md` | angielski | nie, tylko GitHub |
 | Dokumenty wewnętrzne (proces, ADR, sprawy prawne, taski) | `docs/`, `tasks/` | polski | nigdy |
 
-Strona powstaje wyłącznie z `12_docs/`. Nic z `docs/` ani `tasks/` nie trafia na stronę, nawet przez link.
+Strona powstaje wyłącznie z `99_docs/`. Nic z `docs/` ani `tasks/` nie trafia na stronę, nawet przez link.
 
-## Struktura `12_docs`
+## Struktura `99_docs`
 
 ```
-12_docs/
+99_docs/
   examples/
     next/                     przykłady dla bieżącej wersji, kompilowane przez sbt
       scala/                  pliki .scala
@@ -137,7 +137,7 @@ Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 
 ## Przykłady kodu
 
-- Każdy przykład w języku Scala, YAML, HOCON albo properties to osobny plik w `12_docs/examples/next/`. Strona wkleja cały plik:
+- Każdy przykład w języku Scala, YAML, HOCON albo properties to osobny plik w `99_docs/examples/next/`. Strona wkleja cały plik:
 
   ```mdx
   import CodeBlock from '@theme/CodeBlock';
@@ -203,7 +203,7 @@ Zasady z [ADR 0011](../adr/0011-release-groups-and-changelog-files.md).
 
 ## Sprawdzenia w CI
 
-Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym PR i przy każdym pushu na `master`, bez publikacji. Działa zawsze, a nie tylko przy zmianie `12_docs/`, bo zmiana publicznego API albo pliku w `changelog/` też może zepsuć stronę. Build przerywa się, gdy:
+Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym PR i przy każdym pushu na `master`, bez publikacji. Działa zawsze, a nie tylko przy zmianie `99_docs/`, bo zmiana publicznego API albo pliku w `changelog/` też może zepsuć stronę. Build przerywa się, gdy:
 
 | Problem | Co sprawdza |
 |---|---|
@@ -218,7 +218,7 @@ Job `Documentation site` w `.github/workflows/ci.yml` buduje stronę w każdym P
 | zależność npm ma licencję spoza `scripts/allowed-licenses.json` | `npm run check` (`scripts/check-licenses.mjs`) |
 | Scaladoc zgłasza `Couldn't resolve a member for the given link query` | `sbt docs/apiSite` i `sbt doc` w jobie `Build` |
 
-Lokalnie te same sprawdzenia uruchamia się w `12_docs/website` przez `npm ci`, `npm test`, `npm run check` i `npm run build`, a podgląd strony przez `npm start` (tylko angielski) albo `npm start -- --locale pl`.
+Lokalnie te same sprawdzenia uruchamia się w `99_docs/website` przez `npm ci`, `npm test`, `npm run check` i `npm run build`, a podgląd strony przez `npm start` (tylko angielski) albo `npm start -- --locale pl`.
 
 ## Przegląd
 

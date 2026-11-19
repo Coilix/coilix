@@ -66,7 +66,7 @@ Pełny opis formatu jest w [changelog/README.md](../../changelog/README.md). For
 Kroki dla opiekuna są w [docs/process/development.md](../process/development.md#wydanie). Automatyzacja:
 
 - `.github/workflows/ci.yml`: przy każdym pushu na `master` i `series/**` oraz w każdym PR `checkLicenses`, `testFull`, `mimaReportBinaryIssues` i `doc` (bez zepsutych linków) na JDK 17 i 25.
-- `.github/workflows/release.yml`: na każdy tag `<grupa>-v*` sprawdzenie tagu i pliku changelogu (`12_docs/website/scripts/release-tag.mjs`), `sbt "releaseVerify <grupa> <wersja>"` (testy, licencje, MiMa i `checkReleasedCore` modułów grupy), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem wersji (`-M1`, `-RC1`) daje pre-release.
+- `.github/workflows/release.yml`: na każdy tag `<grupa>-v*` sprawdzenie tagu i pliku changelogu (`99_docs/website/scripts/release-tag.mjs`), `sbt "releaseVerify <grupa> <wersja>"` (testy, licencje, MiMa i `checkReleasedCore` modułów grupy), `sbt ci-release` (podpis PGP i publikacja na Maven Central przez Central Portal) i GitHub Release z notatkami. Tag z sufiksem wersji (`-M1`, `-RC1`) daje pre-release.
 - Publikacja obejmuje tylko jedną grupę: zmienna `RELEASE_GROUP` ustawia `publish / skip` w modułach innych grup (`ThisBuild / releaseGroupFilter`). Moduły z `unpublished` nie są publikowane nigdy, więc grupa bez publikowanych modułów nie ma czego wydać i `releaseVerify` ją odrzuca.
 - PR wydania przygotowuje lokalny skrypt `npm run prepare-release -- <grupa> <wersja>` ([kroki](../process/development.md#wydanie)).
 - Do zrobienia później: publikacja dokumentacji na GitHub Pages (COILIX-00007).

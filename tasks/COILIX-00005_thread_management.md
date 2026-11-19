@@ -39,17 +39,9 @@ Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtual
 
 ## Proponowany projekt
 
-Nowy moduł `05_concurrency` (`dev.coilix.concurrency`), zależny od `05_context`. Wymaga przenumerowania pustych modułów:
+Nowy moduł rdzenia `concurrency` (`dev.coilix.concurrency`), zależny od `context`, z kolejnym wolnym numerem z zakresu `06`–`14` (ADR 0018), bez przenumerowania innych modułów.
 
-| Teraz | Po zmianie |
-|---|---|
-| `06_data` | `06_data` |
-| `07_web` | `07_web` |
-| `08_security` | `08_security` |
-| `09_boot` | `09_boot` |
-| `10_demo` | `10_demo` |
-
-Alternatywa bez przenumerowania: wątki w `05_context`. Odradzane, bo kontekst rośnie.
+Alternatywa: wątki w `05_context`. Odradzane, bo kontekst rośnie.
 
 Komponenty:
 
@@ -82,4 +74,4 @@ Adnotacje `@Async` i `@Scheduled` w `02_annotations`.
 - Pule wątków i schedulery są z natury mutowalne. Zgodnie z `CLAUDE.md` to dopuszczalny wyjątek, ale stan powinien być zamknięty w implementacjach JDK, bez własnych `var`.
 - `StructuredTaskScope` jest w JDK 25 nadal w preview. Nie używamy go, dopóki nie będzie stabilny, natomiast `ScopedValue` jest już stabilne i może zastąpić `ThreadLocal` przy przekazywaniu kontekstu.
 - Proxy JDK działa tylko na interfejsach. Wywołania `@Async` z wnętrza tego samego beana (`this.metoda()`) ominą proxy, tak jak w Springu. Trzeba to opisać i przetestować.
-- Decyzja o przenumerowaniu modułów zapada na początku taska.
+- Numer katalogu wynika z ADR 0018 (kolejny wolny w `06`–`14`).

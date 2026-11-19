@@ -8,7 +8,7 @@ Aplikacja wystawia endpointy HTTP przez trait z adnotacjami, który jest jednocz
 
 ## Stan obecny
 
-- `07_web` jest pusty, a moduł jest opcjonalny i podłącza się przez `CoilixModule` (COILIX-00010).
+- `21_web` jest pusty, a moduł jest opcjonalny i podłącza się przez `CoilixModule` (COILIX-00010).
 - Rdzeń działa przez refleksję w runtime (ADR 0002). Makra są wyjątkiem dla sprawdzeń, które bez nich przeszłyby do runtime (ADR 0013).
 - Są typy wartości (`@ValueType`), enumy (`@Enumerated`), `Validator`, `EditOption` i `Secret` (COILIX-00022).
 - Kontener jest synchroniczny. Efekty `F[_]` są w analizie (COILIX-00020).
@@ -62,7 +62,7 @@ Aplikacja wystawia endpointy HTTP przez trait z adnotacjami, który jest jednocz
 | `web` | funkcja | `Response`, `HttpEndpoints`, `BodyReader`/`BodyWriter`, `ParamDecoder`, `ResponseEffect`, routing, filtry, SPI silnika, klient |
 | `web-jetty` | integracja | silnik Jetty 12 |
 
-Numery katalogów ustala się razem z przenumerowaniem z COILIX-00010, COILIX-00013 i COILIX-00017. Decyzja o makrach jest w [ADR 0015](../docs/adr/0015-http-and-serialization-by-macros-and-givens.md).
+Numery katalogów: kolejne wolne od `20` (ADR 0018). Decyzja o makrach jest w [ADR 0015](../docs/adr/0015-http-and-serialization-by-macros-and-givens.md).
 
 ## Kryteria akceptacji
 

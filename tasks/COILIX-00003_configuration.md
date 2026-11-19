@@ -60,7 +60,7 @@ object StartupMessageFormatter {
   - `BeanDefinition` dostaje `InstanceFactory` zamiast `Constructor` (konstruktor, metoda `@Bean` albo wiązanie configu),
   - `Dependency.Value` dla parametrów `@Value`,
   - `BeanDefinitionFactory.create` zwraca listę definicji (klasa i jej metody `@Bean`).
-- `09_boot`: runner najpierw parsuje argumenty i ładuje `Environment`, a dopiero potem składa resztę startu z `ComponentProvider`.
+- `15_boot`: runner najpierw parsuje argumenty i ładuje `Environment`, a dopiero potem składa resztę startu z `ComponentProvider`.
 
 ## Kryteria akceptacji
 

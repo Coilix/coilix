@@ -40,4 +40,4 @@ Mierzyć czas startu i koszt skanowania, żeby regresje wydajności były widocz
 ## Ryzyka i otwarte pytania
 
 - `sbt-jmh` musi wspierać sbt 2. Jeśli nie wspiera, potrzebny jest osobny build JMH w Mavenie albo ręczne uruchamianie JMH przez `run`.
-- Numer katalogu modułu trzeba ustalić razem z przenumerowaniem z COILIX-00010 i COILIX-00013.
+- Numer katalogu: kolejny wolny z zakresu niepublikowanych aplikacji `90`–`98` (ADR 0018).

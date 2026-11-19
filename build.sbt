@@ -169,30 +169,30 @@ lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
     libraryDependencies += Dependencies.reflections
   )
 
-lazy val data = slf4sModule("data", "06_data", "dev.coilix.data")
+lazy val data = slf4sModule("data", "20_data", "dev.coilix.data")
   .dependsOn(context)
   .settings(featureGroup("data"))
   .settings(unpublished)
   .settings(description := "Database support for Coilix")
 
-lazy val web = slf4sModule("web", "07_web", "dev.coilix.web")
+lazy val web = slf4sModule("web", "21_web", "dev.coilix.web")
   .dependsOn(context)
   .settings(featureGroup("web"))
   .settings(unpublished)
   .settings(description := "Web endpoints for Coilix")
 
-lazy val security = slf4sModule("security", "08_security", "dev.coilix.security")
+lazy val security = slf4sModule("security", "22_security", "dev.coilix.security")
   .dependsOn(context)
   .settings(featureGroup("security"))
   .settings(unpublished)
   .settings(description := "Security for Coilix")
 
-lazy val boot = slf4sModule("boot", "09_boot", "dev.coilix.boot")
+lazy val boot = slf4sModule("boot", "15_boot", "dev.coilix.boot")
   .dependsOn(context)
   .settings(coreGroup)
   .settings(description := "Application startup for Coilix")
 
-lazy val testkit = slf4sModule("testkit", "10_testkit", "dev.coilix.testkit")
+lazy val testkit = slf4sModule("testkit", "16_testkit", "dev.coilix.testkit")
   .dependsOn(boot)
   .settings(coreGroup)
   .settings(
@@ -200,7 +200,7 @@ lazy val testkit = slf4sModule("testkit", "10_testkit", "dev.coilix.testkit")
     libraryDependencies += Dependencies.munit % Provided
   )
 
-lazy val demo = slf4sModule("demo", "11_demo", "dev.coilix.demo")
+lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
   .dependsOn(boot, testkit % Test)
   .settings(unpublished)
   .settings(
@@ -219,7 +219,7 @@ def documentationLine(version: String): String =
 def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
-lazy val docs = slf4sModule("docs", "12_docs", "com.example")
+lazy val docs = slf4sModule("docs", "99_docs", "com.example")
   .dependsOn(boot, testkit % Test)
   .settings(unpublished)
   .settings(

@@ -27,7 +27,7 @@ Pilnowane tylko przez review:
 - `[T: ClassTag]` zamiast parametru `Class[T]` w publicznym API; w kodzie jest 129 wystąpień `Class[...]`, większość w kodzie refleksyjnym i SPI (`List[Class[?]]` w `CoilixModule`), gdzie są uzasadnione,
 - `asInstanceOf` tylko w `ClassTags`; dziś są 3 wystąpienia w `src/main`: `ClassTags`, `ReflectiveEnumResolver` i `ValueTypeDefinition`,
 - komponent frameworka ma w obiekcie towarzyszącym `given ConfigPath[T]` i `default`,
-- komentarz `/** */` na każdym publicznym elemencie w `src/main` modułów `01`–`10`; `sbt doc` zgłasza zepsute linki, ale nie brak komentarza,
+- komentarz `/** */` na każdym publicznym elemencie w `src/main` publikowanych modułów (`01`–`89`); `sbt doc` zgłasza zepsute linki, ale nie brak komentarza,
 - gałąź `case`/`if` dłuższa niż linia idzie do osobnej metody.
 
 Narzędzia (sprawdzone 2026-11-19 na Maven Central):
@@ -66,8 +66,8 @@ Warty dają błąd kompilacji, więc działają też w IntelliJ przy budowaniu p
 | `coilix-scalafix` | Scala 2.13 | tak, później | reguły migracyjne dla użytkowników (punkt 5) |
 
 - Moduły narzędziowe nie są częścią frameworka. Dostają `.settings(unpublished)`, nie mają numeru poziomu, a `checkModuleLayers` ich nie sprawdza.
-- Proponowana nazwa katalogów: `tools/warts`, `tools/scalafix-rules`, `tools/scalafix-tests`. Dzięki temu w drzewie IntelliJ nie mieszają się z modułami `01`–`12`, a CLAUDE.md dostaje sekcję „Narzędzia”.
-- `warts` jest zależnością `wartremoverClasspaths` modułów `01`–`10` i `12_docs`. Warty kompilują się przed modułami, które sprawdzają.
+- Proponowana nazwa katalogów: `tools/warts`, `tools/scalafix-rules`, `tools/scalafix-tests`. Dzięki temu w drzewie IntelliJ nie mieszają się z modułami `01`–`99`, a CLAUDE.md dostaje sekcję „Narzędzia”.
+- `warts` jest zależnością `wartremoverClasspaths` publikowanych modułów (`01`–`89`) i `99_docs`. Warty kompilują się przed modułami, które sprawdzają.
 - `scalafix-rules` trafia do `scalafixDependencies` przez `dependsOn` z konfiguracją `ScalafixConfig`, bez publikowania lokalnego.
 - Wersja Scali 2.13 to wyjątek od zasady „tylko Scala 3”, tak jak kiedyś plugin IntelliJ. Opisuje go ADR.
 
@@ -87,7 +87,7 @@ Warty dają błąd kompilacji, więc działają też w IntelliJ przy budowaniu p
    - na początek rozpoznanie przez znacznik, np. adnotację `@ExtensionPoint` na traicie w `02_annotations`, zamiast zgadywania po nazwach; decyzja w pytaniu 3,
    - przy okazji `checkExtensionPoints` sprawdza, że każdy taki trait jest w tabeli w `docs/architecture/overview.md`.
 5. `MissingScaladoc`:
-   - publiczny element w `src/main` modułów `01`–`10` bez komentarza `/** */` to błąd,
+   - publiczny element w `src/main` publikowanych modułów (`01`–`89`) bez komentarza `/** */` to błąd,
    - pomija nadpisania (Scaladoc dziedziczy opis), elementy `private` i `private[...]`, syntetyczne elementy case class i enumów,
    - jeśli drzewo z TASTy nie daje komentarzy w fazie wartremovera, fallback to osobne zadanie sbt na parserze scalameta (pytanie 4).
 
@@ -135,7 +135,7 @@ Konfiguracja w `.scalafix.conf` w korzeniu repo. CI dostaje krok `Check scalafix
 2. `asInstanceOf` poza dozwolonymi miejscami kończy kompilację błędem.
 3. Publiczna metoda `def get[T](kind: Class[T]): T` w `src/main` kończy kompilację błędem z podpowiedzią o `ClassTag`, a `def components: List[Class[?]]` i metoda `private` z `Class[T]` przechodzą.
 4. Trait z `@ExtensionPoint` bez `given ConfigPath` albo bez `default` w obiekcie towarzyszącym kończy kompilację błędem, a trait spoza tabeli w `overview.md` przerywa `checkExtensionPoints`.
-5. Publiczna metoda bez `/** */` w `src/main` modułów `01`–`10` kończy kompilację błędem, a nadpisanie bez komentarza przechodzi.
+5. Publiczna metoda bez `/** */` w `src/main` publikowanych modułów (`01`–`89`) kończy kompilację błędem, a nadpisanie bez komentarza przechodzi.
 6. `sbt "scalafixAll --check"` przerywa CI dla pliku z komentarzem `//`, dla pliku z dwoma niezależnymi typami i dla klucza `coilix.spring.x`.
 7. `sbt scalafixAll` zamienia import względny na pełny, a po poprawce kod się kompiluje i przechodzi `checkFormat`.
 8. Każdy wart i każda reguła ma testy (munit dla wartów, testkit dla reguł) z przypadkiem zgłaszanym, niezgłaszanym i wyjątkiem.

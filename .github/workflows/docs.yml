@@ -43,12 +43,12 @@ jobs:
           ref: master
       - uses: actions/setup-node@v7
         with:
-          node-version-file: 12_docs/website/.nvmrc
+          node-version-file: 99_docs/website/.nvmrc
       - name: Read the tag and released lines
         id: target
         env:
           TAG: ${{ inputs.tag }}
-        run: node 12_docs/website/scripts/publish-target.mjs "$TAG" >> "$GITHUB_OUTPUT"
+        run: node 99_docs/website/scripts/publish-target.mjs "$TAG" >> "$GITHUB_OUTPUT"
 
   api:
     name: Build API documentation
@@ -92,14 +92,14 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
-          node-version-file: 12_docs/website/.nvmrc
+          node-version-file: 99_docs/website/.nvmrc
           cache: npm
-          cache-dependency-path: 12_docs/website/package-lock.json
+          cache-dependency-path: 99_docs/website/package-lock.json
       - name: Install site dependencies
-        working-directory: 12_docs/website
+        working-directory: 99_docs/website
         run: npm ci
       - name: Build the released guides
-        working-directory: 12_docs/website
+        working-directory: 99_docs/website
         env:
           COILIX_DOCS_PUBLISH: "true"
         run: npm run build
@@ -114,7 +114,7 @@ jobs:
       - name: Replace the guides and keep older API documentation
         run: |
           find gh-pages -mindepth 1 -maxdepth 1 ! -name .git ! -name api -exec rm -rf {} +
-          cp -R 12_docs/website/build/. gh-pages/
+          cp -R 99_docs/website/build/. gh-pages/
           echo "docs.coilix.dev" > gh-pages/CNAME
           touch gh-pages/.nojekyll
       - uses: actions/download-artifact@v8
@@ -132,7 +132,7 @@ jobs:
           mkdir -p "gh-pages/api/$GROUP"
           mv api-site "gh-pages/api/$GROUP/$LINE"
       - name: Check entry pages
-        run: node 12_docs/website/scripts/check-published-site.mjs gh-pages
+        run: node 99_docs/website/scripts/check-published-site.mjs gh-pages
       - name: Check links
         uses: lycheeverse/lychee-action@v2
         with:

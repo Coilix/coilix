@@ -7,7 +7,14 @@ Artefakty mają `groupId` `dev.coilix`, pakiety `dev.coilix.*`, a klucze configu
 ## Moduły
 
 Każdy moduł ma prefiks numeryczny, żeby w drzewie IntelliJ moduły bazowe były na górze.
-Numer odpowiada poziomowi zależności: moduł może zależeć tylko od modułów o niższym numerze.
+Numer odpowiada poziomowi zależności: moduł może zależeć tylko od modułów o niższym numerze. Zakresy (ADR 0018):
+
+- `01`–`14`: biblioteki rdzenia (grupa `core`), nowy moduł rdzenia dostaje kolejny wolny numer w tym zakresie,
+- `15_boot` i `16_testkit`, a `17`–`19` dla kolejnych modułów rdzenia nad `boot`,
+- `20`–`89`: moduły funkcji i integracji, numerowane w kolejności powstawania; integracja ma numer wyższy niż funkcje, które łączy,
+- `90`–`98`: niepublikowane aplikacje (`90_demo`, później benchmarki),
+- `99_docs`: przykłady i strona dokumentacji, zależne od wszystkich publikowanych modułów.
+
 Root projektu nie ma źródeł, tylko agreguje moduły.
 
 | Katalog | Projekt sbt | Pakiet | Język | Zawartość |
@@ -17,17 +24,17 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `03_slf4s_plugin` | `slf4s-plugin` | `dev.coilix.slf4s` | Scala | plugin kompilatora `@Slf4s` |
 | `04_config` | `config` | `dev.coilix.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
 | `05_context` | `context` | `dev.coilix.context` | Scala | kontener IoC |
-| `06_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
-| `07_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
-| `08_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
-| `09_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
-| `10_testkit` | `testkit` | `dev.coilix.testkit` | Scala | kontekst Coilix w testach munit (ADR 0016) |
-| `11_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
-| `12_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
+| `15_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
+| `16_testkit` | `testkit` | `dev.coilix.testkit` | Scala | kontekst Coilix w testach munit (ADR 0016) |
+| `20_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
+| `21_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
+| `22_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
+| `90_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
+| `99_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
-Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) z buildem Gradle (ADR 0014). Numer `11` zajęło demo po dodaniu `10_testkit`.
+Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium [Coilix/coilix-intellij](https://github.com/Coilix/coilix-intellij) z buildem Gradle (ADR 0014).
 
-`12_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `12_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
+`99_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `99_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
 Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
@@ -81,7 +88,7 @@ Opis działania frameworka jest w `docs/architecture/overview.md` (start, budowa
 Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`) z komentarzy `/** */` w kodzie. Przewodniki po angielsku i po polsku, wersje, changelog i publikacja na `docs.coilix.dev` podlegają zasadom z `docs/process/documentation.md` (ADR 0010). Zmiana widoczna dla użytkownika aktualizuje przewodnik w obu językach w tym samym PR.
 
 - Scaladoc i Javadoc pisze się po angielsku.
-- Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`11`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]` oraz testy.
+- Komentarz `/** */` ma każdy publiczny element w `src/main` modułów `01`–`90`: trait, klasa, case class, obiekt, enum, metoda, `val`, `given` i typ wyjątku. Bez komentarza zostają elementy `private` i `private[...]` oraz testy.
 - Komentarz opisuje kontrakt (co robi, co zwraca, kiedy rzuca wyjątek), a nie implementację. Pierwsze zdanie to samodzielne podsumowanie, bo trafia na listę członków typu.
 - Parametry opisuje się przez `@param`, `@tparam`, `@return` i `@throws` tylko wtedy, gdy nazwa i typ nie mówią wszystkiego. Nie powtarza się sygnatury słowami.
 - Do innych typów linkuje się przez `[[dev.coilix.context.BeanRegistry]]` z pełną nazwą, nie przez sam tekst w backtickach.
@@ -99,7 +106,7 @@ Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grup
 
 - Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `coilix.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
 - Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
-- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej grupy wydań, której moduły zmienia (`core` albo moduł funkcji), z ID taska i oznaczeniem **BREAKING** z opisem migracji przy zmianie niezgodnej. Format opisuje `changelog/README.md`, a sprawdza `npm run check` w `12_docs/website` (ADR 0011).
+- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej grupy wydań, której moduły zmienia (`core` albo moduł funkcji), z ID taska i oznaczeniem **BREAKING** z opisem migracji przy zmianie niezgodnej. Format opisuje `changelog/README.md`, a sprawdza `npm run check` w `99_docs/website` (ADR 0011).
 
 ## Proces i gałęzie
 
@@ -133,11 +140,11 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
 - `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
 - `sbt docs/apiSite` buduje jedną stronę Scaladoc publikowanych modułów z Javadoc adnotacji w `javadoc/` do `target/out/jvm/scala-<wersja>/coilix-docs/api-site`.
-- `sbt docs/testFull` kompiluje przykłady z `12_docs/examples/next/` i wczytuje ich pliki konfiguracji.
-- W `12_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm test` uruchamia testy skryptów strony, `npm run check` sprawdza strony, pliki `changelog/` i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
+- `sbt docs/testFull` kompiluje przykłady z `99_docs/examples/next/` i wczytuje ich pliki konfiguracji.
+- W `99_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm test` uruchamia testy skryptów strony, `npm run check` sprawdza strony, pliki `changelog/` i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
 - `sbt version` pokazuje wersję każdego modułu wyliczoną z tagów jego grupy (sbt-dynver), a `sbt "show releaseGroup"` grupę modułu. Wersji nie wpisuje się ręcznie.
 - `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
-- `sbt "releaseVerify <grupa> <wersja>"` sprawdza przed wydaniem moduły grupy (wersja z tagu, testy, licencje, MiMa, `checkReleasedCore`). W `12_docs/website` `npm run prepare-release -- <grupa> <wersja>` przygotowuje PR wydania (`docs/process/development.md`).
+- `sbt "releaseVerify <grupa> <wersja>"` sprawdza przed wydaniem moduły grupy (wersja z tagu, testy, licencje, MiMa, `checkReleasedCore`). W `99_docs/website` `npm run prepare-release -- <grupa> <wersja>` przygotowuje PR wydania (`docs/process/development.md`).
 - Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.
 - Styl kodu IntelliJ jest w `.idea/codeStyles/`: formatowanie Scali (Ctrl+Alt+L) idzie przez scalafmt z `.scalafmt.conf`, a kod generowany przez IDE ma klamry zamiast składni wcięć.
 - Gdy działa sbt uruchomione przez IntelliJ, sbt z terminala trzeba odpalać z `-Dsbt.server.autostart=false`.

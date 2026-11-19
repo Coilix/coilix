@@ -11,7 +11,7 @@
 |---|---|---|
 | `DefaultStartupMessageFormatter.started` | `<app> is up after <n> s` | Wcześniej `Started <app> in <n> seconds`, prawie tak samo jak log Spring Boota. Przeredagowane w COILIX-00008. |
 | `DefaultStartupMessageFormatter.starting` | `Launching <app>` | Wcześniej `Starting <app>`. Zmienione razem z `started`, żeby oba komunikaty były spójne. |
-| `11_demo/.../banner.txt` | ASCII-art „Coilix” | Własny napis wygenerowany fontem FIGlet „standard”. Mechanizm `banner.txt` jest funkcją, a nie utworem. Bez zmian. |
+| `90_demo/.../banner.txt` | ASCII-art „Coilix” | Własny napis wygenerowany fontem FIGlet „standard”. Mechanizm `banner.txt` jest funkcją, a nie utworem. Bez zmian. |
 | Komunikaty wyjątków (`No bean of type ...`, `Circular dependency detected among ...`, `Multiple beans of type ...`) | własne sformułowania | Opisują ten sam problem co Spring, ale innymi słowami. Bez zmian. |
 | Klucze configu (`coilix.boot.*`, `coilix.context.*`) | własna przestrzeń `coilix.*` | Bez zmian. |
 | Scaladoc i przewodniki | jeszcze nie istnieją | Zasada: pisać własnymi słowami, nie tłumaczyć ani nie parafrazować dokumentacji Springa. |

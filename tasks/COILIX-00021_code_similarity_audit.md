@@ -11,7 +11,7 @@ Wynik skanowania jest sygnałem do sprawdzenia, a nie dowodem. Dopasowanie nie o
 - Workflow: `ci.yml` (formatowanie, licencje zależności, testy, MiMa, `doc`, pokrycie) i `release.yml`. Nie ma skanera podobieństwa kodu.
 - `sbt checkLicenses` sprawdza licencje zależności. To analiza zależności, a nie treści kodu, więc nie wykrywa skopiowanych fragmentów.
 - [docs/legal/spring-similarity.md](../docs/legal/spring-similarity.md) opisuje ręczny przegląd podobieństwa do Springa (komunikaty, logi, banner, dokumentacja). Porównanie narzędziem typu PMD CPD między Javą a Scalą uznano tam za niewiarygodne.
-- Kod źródłowy: `src/main` i `src/test` modułów `01`–`11` (Scala 3, Scala 2.13 w `11_intellij_plugin`, Java w `02_annotations`), pliki buildu (`build.sbt`, `project/*.scala`). Do pominięcia: `target/`, `.bsp/`, `.idea/`, katalogi generowane przez sbt i przyszłe `12_docs/website/node_modules/`.
+- Kod źródłowy: `src/main` i `src/test` modułów `01`–`11` (Scala 3, Scala 2.13 w `11_intellij_plugin`, Java w `02_annotations`), pliki buildu (`build.sbt`, `project/*.scala`). Do pominięcia: `target/`, `.bsp/`, `.idea/`, katalogi generowane przez sbt i przyszłe `99_docs/website/node_modules/`.
 - Licencja Apache-2.0, autorstwo przez DCO (`Signed-off-by`), brak kodu vendored.
 
 ## Zakres

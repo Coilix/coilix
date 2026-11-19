@@ -23,7 +23,7 @@ Beany publikują i odbierają zdarzenia w obrębie kontekstu, a framework publik
 ## Proponowany projekt
 
 - `05_context`: `EventPublisher`, `EventListener[E]`, `SynchronousEventPublisher` (`given ConfigPath` `coilix.context.event-publisher`, `default`), `EventListenerMethodScanner`.
-- `09_boot`: publikacja `ApplicationStarted` i `ApplicationFailed` w `DefaultCoilixApplicationRunner`.
+- `15_boot`: publikacja `ApplicationStarted` i `ApplicationFailed` w `DefaultCoilixApplicationRunner`.
 - Odbiorcy są ustalani przy budowie kontekstu, więc publikacja nie skanuje rejestru za każdym razem.
 
 ## Kryteria akceptacji

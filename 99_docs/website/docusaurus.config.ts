@@ -69,7 +69,7 @@ const config: Config = {
         docs: {
           routeBasePath: 'core',
           sidebarPath: './sidebars.ts',
-          editUrl: 'https://github.com/Coilix/coilix/edit/master/12_docs/website/',
+          editUrl: 'https://github.com/Coilix/coilix/edit/master/99_docs/website/',
           versions: {current: {label: 'Next (unreleased)'}},
           ...coreDocsVersions,
         },
