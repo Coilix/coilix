@@ -193,7 +193,7 @@ final class UserLogout(cluster: Cluster) {
 
 ### Kroki (osobne PR-y)
 
-1. Tożsamość repliki (`single`, `static`, `stateful-set`) i statyczne członkostwo bez transportu. Tego potrzebuje pierwsza wersja COILIX-00026.
+1. Tożsamość repliki (`single`, `static`, `stateful-set`). Tego potrzebuje pierwsza wersja COILIX-00026. Zrobione (ADR 0021, przewodnik „Running several replicas”). Statyczne członkostwo bez transportu przechodzi do kroku 2 razem z `Cluster`.
 2. `ClusterClient`, endpointy, handlery, kodeki, transport `in-memory`, heartbeat, stany członków, koordynator i epoka.
 3. Protokół dwufazowy i odciski configu.
 4. `cluster-http` z podpisami.
