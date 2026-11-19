@@ -34,7 +34,8 @@ object BeanDefinitionFactory {
         BeanNameGenerator.default,
         BeanMethodScanner.default,
         components.environment,
-        LifecycleMethodScanner.default
+        LifecycleMethodScanner.default,
+        ConditionScanner.default
       )
     )
 }

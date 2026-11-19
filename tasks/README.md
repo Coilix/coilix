@@ -17,7 +17,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00011 | [Proces developmentu i model gałęzi](COILIX-00011_development_workflow.md) | wysoki | zrobiony |
 | COILIX-00012 | [Kolejność tworzenia przy zależnościach `Option[T]` i `List[T]`](COILIX-00012_optional_dependency_ordering.md) | wysoki | zrobiony |
 | COILIX-00013 | [Wsparcie testów (`coilix-testkit`)](COILIX-00013_testkit.md) | wysoki | do zrobienia |
-| COILIX-00014 | [Profile i warunkowe beany](COILIX-00014_profiles_and_conditions.md) | wysoki | do zrobienia |
+| COILIX-00014 | [Profile i warunkowe beany](COILIX-00014_profiles_and_conditions.md) | wysoki | zrobiony |
 | COILIX-00015 | [Zasięgi beanów i leniwe tworzenie](COILIX-00015_bean_scopes.md) | średni | do zrobienia |
 | COILIX-00016 | [Zdarzenia aplikacji](COILIX-00016_application_events.md) | średni | do zrobienia |
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |

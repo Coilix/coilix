@@ -125,6 +125,9 @@ Nowy dział, zmiana kolejności działów albo strona poza nimi wymaga zmiany te
 | inner value | wartość wewnętrzna |
 | enum case | przypadek enuma |
 | secret | sekret |
+| profile | profil |
+| active profile | aktywny profil |
+| conditional bean | bean warunkowy |
 
 Nowy termin trafia do słownika w PR, w którym pojawia się pierwszy raz.
 

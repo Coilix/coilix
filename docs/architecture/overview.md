@@ -83,6 +83,8 @@ coilix.context.bean-name-generator.class: com.example.PrefixedBeanNameGenerator
 | `coilix.context.lifecycle-method-scanner` | `LifecycleMethodScanner` | `AnnotatedLifecycleMethodScanner` |
 | `coilix.context.bean-post-processor` | `BeanPostProcessor` | `PostConstructProcessor` |
 | `coilix.context.bean-destroyer` | `BeanDestroyer` | `PreDestroyInvoker` |
+| `coilix.context.condition-scanner` | `ConditionScanner` | `AnnotatedConditionScanner` |
+| `coilix.context.definition-filter` | `DefinitionFilter` | `ConditionalDefinitionFilter` |
 
 Nowy komponent frameworka dopisuje się do tej tabeli w tym samym commicie, w którym dostaje `given ConfigPath`.
 
