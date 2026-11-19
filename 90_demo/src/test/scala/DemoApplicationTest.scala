@@ -8,6 +8,7 @@ import dev.coilix.demo.access.VehicleSystem
 import dev.coilix.demo.vehicle.Action
 import dev.coilix.demo.vehicle.ModuleKind
 import dev.coilix.demo.vehicle.VehicleRegistry
+import dev.coilix.demo.workshop.BayMonitor
 import dev.coilix.demo.workshop.TelematicsUplink
 import dev.coilix.demo.workshop.WorkshopProperties
 import dev.coilix.testkit.CoilixSuite
@@ -31,6 +32,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
       List(
         "applicationArguments",
         "applicationContext",
+        "bayMonitor",
         "brakesDriver",
         "certificationAccessPolicy",
         "clock",
@@ -45,6 +47,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "oemKeyRegistry",
         "ownerApp",
         "readOnlyAccessPolicy",
+        "scheduledMethodRegistrar",
         "securityDrills",
         "silentNotifier",
         "taskExecutor",
@@ -71,6 +74,10 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
       List(ModuleKind.Engine, ModuleKind.Brakes, ModuleKind.Immobilizer)
     )
     assertEquals(workshop.oemPortal.apiKey.toString, "*****")
+  }
+
+  shared.test("checks the bays on the scheduler") {
+    assert(LazyList.range(0, 100).exists(_ => bean[BayMonitor].checksDone > 0 || { Thread.sleep(20); false }))
   }
 
   shared.test("reads the command-line options") {

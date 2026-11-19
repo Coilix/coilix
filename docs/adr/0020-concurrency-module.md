@@ -2,7 +2,7 @@
 
 - Status: proponowana
 - Data: 2026-11-19
-- Task: COILIX-00005 (krok 1), COILIX-00020 (krok 4)
+- Task: COILIX-00005 (kroki 1 i 3), COILIX-00020 (krok 4)
 
 ## Kontekst
 
@@ -18,11 +18,13 @@ Artefakty są kompilowane dla JDK 17 (COILIX-00009), a wątki wirtualne są w JD
 - Domyślny `taskExecutor` uruchamia każde zadanie na nowym wątku wirtualnym (`coilix-task-<n>`). Wątki wirtualne są tworzone przez refleksję (`Thread.ofVirtual`), więc kod kompiluje się dla JDK 17, a na JDK 17 działa na nowych wątkach platformowych. `virtual-threads = false` daje stałą pulę wątków platformowych.
 - `taskScheduler` ma pulę wątków platformowych (`coilix-scheduler-<n>`, domyślnie jeden). Błąd jednego uruchomienia zadania okresowego jest logowany i nie zatrzymuje kolejnych.
 - Zamknięcie kontekstu zamyka oba beany przez `@PreDestroy`, po beanach, które z nich korzystają. Zamykanie czeka do `shutdown-timeout` na trwające zadania, potem je przerywa i loguje liczbę niedokończonych. Harmonogram porzuca zadania, które jeszcze nie wystartowały.
+- `@Scheduled(fixedRate | fixedDelay, initialDelay)` z `02_annotations` przyjmuje czasy jako tekst, rozwiązywany jak `@Value` (`"10s"`, `"${shop.refresh:1m}"`). Metody znajduje `ScheduledMethodRegistrar` (bean modułu), także prywatne i z nadklas, a błędna metoda to `InvalidScheduledMethodException` przy starcie.
+- Rejestrator potrzebuje wszystkich beanów, więc rdzeń kontekstu dostaje `ContextLifecycleListener`: `onContextStarted` po utworzeniu wszystkich beanów (wyjątek zamyka kontekst i przerywa start) i `onContextClosing` przed pierwszym `@PreDestroy`. Dzięki temu zadania `@Scheduled` są anulowane, zanim zniszczone zostaną beany, których metody wywołują.
 - Ustawienia (`ConcurrencySettings`) są czytane z `Option[Environment]`, więc moduł działa też w kontekście bez środowiska, z wartościami domyślnymi.
 
 ## Konsekwencje
 
 - Rdzeń ma nowy publikowany artefakt w grupie `core`.
 - Każdy kontekst z `boot` ma beany `concurrencySettings`, `taskExecutor` i `taskScheduler`. Testy, które sprawdzają pełną listę beanów, muszą je uwzględnić.
-- `@Async`, `@Scheduled` i przekazywanie MDC to kolejne kroki COILIX-00005, na tym samym module.
+- `@Async` i przekazywanie MDC to kolejne kroki COILIX-00005, na tym samym module.
 - Bean `TaskExecutor` z aplikacji bez `@Primary` jest drugim kandydatem obok domyślnego, więc wstrzyknięcie `TaskExecutor` kończy się `AmbiguousBeanException`. Komunikat podpowiada `@Primary`.

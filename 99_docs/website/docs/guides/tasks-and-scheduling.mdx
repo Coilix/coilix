@@ -1,13 +1,14 @@
 ---
 id: tasks-and-scheduling
 title: Background tasks and scheduling
-description: Run work on threads managed by Coilix with TaskExecutor, and repeat it with TaskScheduler.
+description: Run work on threads managed by Coilix with TaskExecutor, and repeat it with @Scheduled or TaskScheduler.
 sidebar_position: 6
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
+import PriceRefresher from '!!raw-loader!@examples/scala/tasks/PriceRefresher.scala';
 import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
 import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application.yaml';
 
@@ -25,9 +26,19 @@ If a task started with `execute` throws an exception, Coilix logs it as an error
 
 The executor can also be passed where a library expects an `ExecutionContext`, through `executor.executionContext`.
 
-## Repeat a task
+## Repeat a method with @Scheduled
 
-The `TaskScheduler` bean runs a task once after a delay (`schedule`), at a fixed rate (`scheduleAtFixedRate`), or with a fixed pause between runs (`scheduleWithFixedDelay`). Each method returns a `ScheduledTask` with `cancel()`.
+Annotate a method of a bean with `@Scheduled` to run it repeatedly. Set `fixedRate` for the time between the starts of two runs, or `fixedDelay` for the pause between the end of one run and the start of the next, and optionally `initialDelay`:
+
+<CodeBlock language="scala" title="PriceRefresher.scala">{PriceRefresher}</CodeBlock>
+
+Durations are written like configuration values, such as `10s` or `5 minutes`, or as a placeholder with a default, as in the example. The method takes no parameters and may be private.
+
+The runs start when every bean of the application exists, and stop when the application starts stopping, before any bean is destroyed. A method that takes parameters, sets both `fixedRate` and `fixedDelay`, sets neither, or has a duration that cannot be read stops the startup with `InvalidScheduledMethodException`, which names the bean and the method.
+
+## Repeat a task from code
+
+When the schedule is known only at runtime, use the `TaskScheduler` bean. It runs a task once after a delay (`schedule`), at a fixed rate (`scheduleAtFixedRate`), or with a fixed pause between runs (`scheduleWithFixedDelay`). Each method returns a `ScheduledTask` with `cancel()`.
 
 <CodeBlock language="scala" title="StockRefresher.scala">{StockRefresher}</CodeBlock>
 
