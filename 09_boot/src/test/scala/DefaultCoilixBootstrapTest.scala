@@ -1,8 +1,13 @@
 package dev.coilix.boot
 
+import dev.coilix.boot.collected.JobLog
+import dev.coilix.boot.collected.NightlyJob
 import dev.coilix.boot.fixture.Clock
 import dev.coilix.boot.fixture.FixedClock
 import dev.coilix.boot.fixture.StubClock
+import dev.coilix.boot.jobs.JobRunner
+import dev.coilix.boot.jobs.JobsModule
+import dev.coilix.boot.jobs.ModuleJob
 import dev.coilix.boot.modules.FixedModuleLoader
 import dev.coilix.boot.modules.ReportModule
 import dev.coilix.boot.modules.ReportTitle
@@ -10,6 +15,10 @@ import dev.coilix.config.ComponentProvider
 import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ClassPathScanner
+import dev.coilix.context.CoilixModule
+import dev.coilix.context.CollectedComponents
+import dev.coilix.context.ComponentCollector
+import dev.coilix.context.NoSuchBeanException
 import dev.coilix.context.RegisteredBean
 import munit.FunSuite
 
@@ -75,11 +84,51 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
     assert(error.getMessage.contains("dev.coilix.boot.fixture.Clock"))
   }
 
-  private def withModules(modules: List[ReportModule]): CoilixBootstrap =
+  test("does not register the collected components when no module collects annotations") {
+    assert(!withModules(List(ReportModule())).start(
+      List("dev.coilix.boot.collected"),
+      Nil,
+      Nil
+    ).beanNames.contains("collectedComponents"))
+  }
+
+  test("collects the annotated classes from scanned packages and module components instead of registering them") {
+    val context = withModules(List(JobsModule())).start(List("dev.coilix.boot.collected"), Nil, Nil)
+    assertEquals(
+      (context.getBean[CollectedComponents].classes, context.getBeanOption[NightlyJob], context.getBeanOption[ModuleJob]),
+      (List(classOf[NightlyJob], classOf[ModuleJob]).sortBy(_.getName), None, None)
+    )
+  }
+
+  test("lets a module bean create the collected classes with their dependencies") {
+    val context = withModules(List(JobsModule())).start(List("dev.coilix.boot.collected"), Nil, Nil)
+    assertEquals((context.getBean[JobRunner].names, context.getBeansOfType[JobLog].size), (List("job nightly", "module"), 1))
+  }
+
+  test("fails when a collected class also has a component annotation") {
+    val error = intercept[CollectedComponentConflictException] {
+      withModules(List(JobsModule())).start(List("dev.coilix.boot.collectedconflict"), Nil, Nil)
+    }
+    assert(error.getMessage.contains("collectedconflict.DoubleJob is marked with @JavaBean"))
+  }
+
+  test("explains that a bean cannot inject a collected class") {
+    val error = intercept[NoSuchBeanException] {
+      withModules(List(JobsModule())).start(List("dev.coilix.boot.collected", "dev.coilix.boot.collectedinjection"), Nil, Nil)
+    }
+    assert(error.getMessage.contains("Bean 'nightlyJobUser' requires 'dev.coilix.boot.collected.NightlyJob'"))
+  }
+
+  test("a module collects no annotations by default") {
+    assertEquals(ReportModule().collects, Nil)
+  }
+
+  private def withModules(modules: List[CoilixModule]): CoilixBootstrap =
     DefaultCoilixBootstrap(
       ClassPathScanner.default,
       ApplicationContextBuilder.default,
       FixedModuleLoader(modules),
-      BeanDefinitionFactory.default
+      BeanDefinitionFactory.default,
+      ComponentCollector.default
     )
 }

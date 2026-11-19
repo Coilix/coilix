@@ -6,6 +6,7 @@ import dev.coilix.annotation.ConfigurationProperties
 import dev.coilix.annotation.Repository
 import dev.coilix.annotation.Service
 import java.lang.annotation.Annotation
+import java.lang.reflect.Modifier
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ConfigurationBuilder
@@ -30,6 +31,9 @@ final class ReflectionsClassPathScanner(factory: BeanDefinitionFactory) extends 
   override def scan(basePackage: String): List[BeanDefinition] =
     componentTypes(reflectionsFor(basePackage)).flatMap(factory.create)
 
+  override def scanAnnotated(basePackage: String, annotations: List[Class[? <: Annotation]]): List[Class[?]] =
+    if (annotations.isEmpty) Nil else typesAnnotatedWith(reflectionsFor(basePackage), annotations).filter(isConcrete)
+
   private def reflectionsFor(basePackage: String): Reflections =
     Reflections(
       ConfigurationBuilder()
@@ -39,7 +43,13 @@ final class ReflectionsClassPathScanner(factory: BeanDefinitionFactory) extends 
     )
 
   private def componentTypes(reflections: Reflections): List[Class[?]] =
-    componentAnnotations.flatMap(annotatedWith(reflections)).distinct.sortBy(_.getName)
+    typesAnnotatedWith(reflections, componentAnnotations)
+
+  private def typesAnnotatedWith(reflections: Reflections, annotations: List[Class[? <: Annotation]]): List[Class[?]] =
+    annotations.flatMap(annotatedWith(reflections)).distinct.sortBy(_.getName)
+
+  private def isConcrete(candidate: Class[?]): Boolean =
+    !candidate.isInterface && !candidate.isAnnotation && !Modifier.isAbstract(candidate.getModifiers)
 
   private def annotatedWith(reflections: Reflections)(annotation: Class[? <: Annotation]): List[Class[?]] =
     reflections.getTypesAnnotatedWith(annotation).asScala.toList
