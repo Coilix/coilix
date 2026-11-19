@@ -21,35 +21,41 @@ Programista aplikacji pisze test munit, który buduje kontekst Coilix z wybranyc
    - bez banera, shutdown hooka i `ApplicationRunner`, chyba że test o to poprosi.
 3. Fixture munit (`FunFixture` i `Fixture` na cały suite), która zamyka kontekst po teście.
 4. Testy modułu na aplikacji fixture w `src/test`.
-5. Testy `10_demo` przepisane na testkit jako przykład użycia.
+5. Testy demo przepisane na testkit jako przykład użycia.
 
 ## Proponowany projekt
 
+> Zrealizowane 2026-11-19, decyzje w [ADR 0016](../docs/adr/0016-testkit-module.md).
+
 ```scala
-final class UserServiceTest extends munit.FunSuite {
-  private val context = CoilixFixture(
+final class WelcomeMailTest extends munit.FunSuite with CoilixFixtures {
+  private val mailer  = RecordingMailer()
+  private val context = coilixContext(
     CoilixTestSetup
-      .forApplication[DemoApplication.type]
-      .withProperties("mail.host" -> "localhost")
-      .withBean[UserRepository](FixedUserRepository(List("Ann")))
+      .forApplication[NewsletterApplication.type]
+      .withProperties("newsletter.smtp-host" -> "localhost")
+      .withProfiles("test")
+      .replaceBean[Mailer](mailer)
   )
 
-  context.test("lists users from the repository") { ctx =>
-    assertEquals(ctx.getBean[UserService].listUsers(), List("Ann"))
+  context.test("sends a welcome mail") { ctx =>
+    ctx.getBean[WelcomeMail].sendTo("ann@example.com")
+    assertEquals(mailer.sent.map(_._1), List("ann@example.com"))
   }
 }
 ```
 
-- `CoilixTestSetup` (case class, niemutowalny builder): pakiety, właściwości, beany, flagi runnerów.
-- `TestContextFactory` (trait, `given ConfigPath`, `default`) i `DefaultTestContextFactory`, który składa `StartupComponents` z wyłączonym banerem i hookiem.
-- Podmiana beana: definicje ze skanowania, których typ jest przypisywalny do typu podanego w `withBean`, są usuwane przed budową kontekstu.
-- `CoilixFixture` w osobnym pliku, jedyne miejsce zależne od munit.
+- `CoilixTestSetup` (case class, niemutowalny builder): pakiety (`forApplication[T]`, `forPackages`), właściwości, profile, beany, argumenty, flaga runnerów.
+- `TestContextFactory` (trait) i `DefaultTestContextFactory`, który składa start jak `Coilix.run`, bez banera, logu startu i hooka. Bez `given ConfigPath`, tak jak `CoilixApplicationRunner`, bo działa przed wczytaniem konfiguracji.
+- Podmiana beana w `boot`: `CoilixBootstrap.start(..., BeanReplacements)` usuwa definicje ze skanowania i modułów przypisywalne do podmienianego typu. `replaceBean[T]` musi coś zastąpić (inaczej `UnmatchedBeanReplacementException`), a `addBean[T]` dodaje bean, którego aplikacja nie ma.
+- Styl zwięzły (prośba opiekuna, wzór z testkitu bulldozera): `setup.use { ... }`, `CoilixSuite` z `coilixTest(name) { bean[T] ... }` i `shared.test(name) { ... }`, helpery `CoilixContextOps` na `using`.
+- `CoilixFixtures` (trait domieszany do suite'u, bo `FunFixture` w munit jest klasą wewnętrzną suite'u) z `coilixContext` i `coilixSuiteContext`, jedyne miejsca zależne od munit obok `SuiteContextFixture`.
 
 ## Kryteria akceptacji
 
-1. Test z przykładu wyżej działa w `10_demo`.
+1. Testy `11_demo` i przykład przewodnika w `12_docs/examples/next/test` działają na testkicie.
 2. Właściwości z `withProperties` wygrywają z plikami i właściwościami systemowymi.
-3. `withBean` zastępuje bean ze skanowania i jest wstrzykiwany do beanów zależnych.
+3. `replaceBean` zastępuje bean ze skanowania i jest wstrzykiwany do beanów zależnych, a `addBean` dodaje brakujący bean.
 4. Kontekst jest zamknięty po teście (po COILIX-00004 także `@PreDestroy`).
 5. Moduł działa bez innych modułów funkcji na classpath.
 
@@ -61,5 +67,5 @@ final class UserServiceTest extends munit.FunSuite {
 
 ## Ryzyka i otwarte pytania
 
-- Numer katalogu: `testkit` zależy od `boot` (`09`), więc według zasady poziomów musi mieć numer wyższy. Propozycja: `10_testkit`, przesunięcie `demo` na `11`. Numer `11` jest wolny od przeniesienia pluginu IntelliJ do osobnego repozytorium (ADR 0014), ale numery trzeba ustalić razem z przenumerowaniem z COILIX-00010.
-- Czy `withBean` ma usuwać tylko definicje tego samego typu, czy wszystkie przypisywalne? Druga opcja jest wygodniejsza, ale może usunąć więcej, niż test zakłada.
+- Numer katalogu: rozstrzygnięte, `10_testkit` i `11_demo` (ADR 0016).
+- Zakres podmiany: rozstrzygnięte, usuwane są wszystkie definicje przypisywalne do typu, a podmiana bez dopasowania jest błędem. Do dodania beana służy osobne `addBean`.

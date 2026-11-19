@@ -1,0 +1,107 @@
+---
+id: testing
+title: Testy z kontekstem Coilix
+description: Buduj kontekst aplikacji w teście munit, ustawiaj właściwości i profile dla testu i podmieniaj beany na atrapy.
+sidebar_position: 4
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import NewsletterApplication from '!!raw-loader!@examples/scala/testing/NewsletterApplication.scala';
+import Mailer from '!!raw-loader!@examples/scala/testing/Mailer.scala';
+import SmtpMailer from '!!raw-loader!@examples/scala/testing/SmtpMailer.scala';
+import WelcomeMail from '!!raw-loader!@examples/scala/testing/WelcomeMail.scala';
+import RecordingMailer from '!!raw-loader!@examples/test/testing/RecordingMailer.scala';
+import WelcomeMailTest from '!!raw-loader!@examples/test/testing/WelcomeMailTest.scala';
+import NewsletterContextTest from '!!raw-loader!@examples/test/testing/NewsletterContextTest.scala';
+import WelcomeMailFixtureTest from '!!raw-loader!@examples/test/testing/WelcomeMailFixtureTest.scala';
+import SenderNameTest from '!!raw-loader!@examples/test/testing/SenderNameTest.scala';
+
+Ta strona pokazuje, jak testować beany razem, w takim samym kontekście aplikacji, jaki Coilix buduje przy starcie. Przyda ci się, gdy test ma sprawdzić współpracę beanów ze sobą, z konfiguracją i z profilami, a część beanów ma być zastąpiona atrapami.
+
+## Dodaj testkit
+
+Dodaj `coilix-testkit` do zależności testowych, obok munit:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-testkit" % "<version>" % Test
+libraryDependencies += "org.scalameta" %% "munit" % "<version>" % Test
+```
+
+Testkit nie narzuca własnej wersji munit, więc o wersji decyduje twój build.
+
+## Testowana aplikacja
+
+Przykłady na tej stronie testują małą aplikację, która wysyła maile powitalne:
+
+<CodeBlock language="scala" title="NewsletterApplication.scala">{NewsletterApplication}</CodeBlock>
+
+<CodeBlock language="scala" title="Mailer.scala">{Mailer}</CodeBlock>
+
+<CodeBlock language="scala" title="SmtpMailer.scala">{SmtpMailer}</CodeBlock>
+
+<CodeBlock language="scala" title="WelcomeMail.scala">{WelcomeMail}</CodeBlock>
+
+## Napisz test
+
+Domieszaj `CoilixSuite` do suite'u munit i opisz kontekst przez `CoilixTestSetup`. Każdy `coilixTest` buduje nowy kontekst, uruchamia w nim ciało testu i zamyka go po teście, co uruchamia też metody `@PreDestroy`.
+
+<CodeBlock language="scala" title="WelcomeMailTest.scala">{WelcomeMailTest}</CodeBlock>
+
+<CodeBlock language="scala" title="RecordingMailer.scala">{RecordingMailer}</CodeBlock>
+
+Setup zadeklarowany jako `given` służy każdemu `coilixTest`, który nie podaje własnego. Test, który potrzebuje czegoś innego, przekazuje swój setup, zwykle zbudowany z tego z `given`, tak jak drugi test powyżej.
+
+`forApplication` skanuje te same pakiety, co `Coilix.run` dla tej aplikacji. Żeby skanować inne pakiety, zacznij od `CoilixTestSetup.forPackages("com.example.billing")`.
+
+Kontekst testowy różni się od działającej aplikacji kilkoma rzeczami: nie wypisuje banera ani logu startu, nie rejestruje shutdown hooka i nie wywołuje beanów `ApplicationRunner`. Gdy test ich potrzebuje, wywołaj `withRunners`.
+
+## Czytaj z kontekstu
+
+W ciele testu kontekst jest dostępny jako `given`, więc helpery nie potrzebują odwołania do niego:
+
+| Helper | Zwraca |
+|---|---|
+| `bean[T]` | bean typu `T` albo główny (`@Primary`), gdy jest ich kilka |
+| `beanOption[T]` | bean typu `T` albo `None` |
+| `beans[T]` | wszystkie beany typu `T` |
+| `property[T]("path")` | wartość konfiguracji zamienioną na `T` albo `None` |
+| `arguments` | argumenty linii poleceń |
+| `context` | sam kontekst aplikacji |
+
+Twoje własne helpery mogą brać kontekst tak samo, na przykład `def mailer(using ApplicationContext): Mailer = bean[Mailer]`. Poza `CoilixSuite` domieszaj `CoilixContextOps` albo zaimportuj `CoilixContextOps.*`.
+
+## Ustaw właściwości i profile
+
+`withProperties` ustawia klucze konfiguracji dla testu. Wygrywają z każdym innym źródłem: opcjami z linii poleceń, właściwościami systemowymi i plikami konfiguracji, także z `application.yaml` w zasobach testów.
+
+`withProfiles("dev", "local")` włącza te profile dla testu, w tej kolejności. Zastępuje `coilix.profiles.active` z każdego innego źródła, więc test nie zależy od ustawień builda ani komputera.
+
+`withArguments("--region=eu")` przekazuje argumenty linii poleceń. Są dostępne przez `arguments`, a opcje stają się też kluczami konfiguracji, tak jak przy starcie.
+
+## Podmień i dodaj beany
+
+`replaceBean[Mailer](mailer)` usuwa każdy bean, który da się wstrzyknąć jako `Mailer`, niezależnie od tego, czy pochodzi ze skanowania, z metody `@Bean` czy z modułu, i wstawia w jego miejsce podaną instancję. Beany, które potrzebują `Mailer`, dostają atrapę. Jeśli aplikacja nie ma beana tego typu, budowanie kontekstu kończy się błędem, więc pomyłka w typie nie przejdzie niezauważona.
+
+`addBean[Uplink](uplink)` dodaje instancję obok beanów aplikacji. Użyj go dla beana, którego aplikacja nie definiuje, na przykład żeby wypełnić zależność `Option[Uplink]`, która na produkcji jest pusta.
+
+Coilix nie tworzy atrap za ciebie. Przekaż małą klasę napisaną dla testu, jak w przykładzie, albo obiekt z wybranej biblioteki do mocków.
+
+## Jeden kontekst dla całego suite'u
+
+Budowanie kontekstu trwa, gdy aplikacja ma dużo beanów. Gdy testy suite'u tylko czytają z kontekstu, zbuduj go raz przez `coilixSuiteContext`, zarejestruj w `munitFixtures` i pisz testy przez `test` na fixture:
+
+<CodeBlock language="scala" title="NewsletterContextTest.scala">{NewsletterContextTest}</CodeBlock>
+
+Kontekst powstaje przed pierwszym testem suite'u i jest zamykany po ostatnim.
+
+## Kontekst w dowolnym bloku
+
+`setup.use { ... }` buduje kontekst, uruchamia blok z kontekstem jako `given` i zamyka go, także gdy blok rzuci wyjątek. Działa w każdej bibliotece testów i zwraca wartość bloku:
+
+<CodeBlock language="scala" title="SenderNameTest.scala">{SenderNameTest}</CodeBlock>
+
+## Wersja jawna
+
+Każdy helper powyżej ma jawny odpowiednik. `CoilixFixtures` daje fixture munit, które przekazują kontekst jako parametr, a `TestContextFactory.default.create(setup)` zwraca otwarty kontekst, który zamyka wywołujący:
+
+<CodeBlock language="scala" title="WelcomeMailFixtureTest.scala">{WelcomeMailFixtureTest}</CodeBlock>
