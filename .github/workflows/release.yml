@@ -7,6 +7,12 @@ on:
 permissions:
   contents: write
 
+# sbt runs with --server: the sbt 2 runner defaults to the thin client, which cannot take several commands in one call
+# and gives up when the server needs more than 300 s to start. bash with pipefail keeps the exit code of sbt behind tee.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   publish:
     name: Release ${{ github.ref_name }}
@@ -28,9 +34,9 @@ jobs:
           cache: sbt
       - uses: sbt/setup-sbt@v1
       - name: Verify the modules of the group
-        run: sbt "releaseVerify ${{ steps.tag.outputs.group }} ${{ steps.tag.outputs.version }}"
+        run: sbt --server "releaseVerify ${{ steps.tag.outputs.group }} ${{ steps.tag.outputs.version }}"
       - name: Publish the modules of the group
-        run: sbt ci-release
+        run: sbt --server ci-release
         env:
           RELEASE_GROUP: ${{ steps.tag.outputs.group }}
           PGP_PASSPHRASE: ${{ secrets.PGP_PASSPHRASE }}

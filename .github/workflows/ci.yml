@@ -12,6 +12,12 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# sbt runs with --server: the sbt 2 runner defaults to the thin client, which cannot take several commands in one call
+# and gives up when the server needs more than 300 s to start. bash with pipefail keeps the exit code of sbt behind tee.
+defaults:
+  run:
+    shell: bash
+
 jobs:
   build:
     name: Build on JDK ${{ matrix.java }}
@@ -31,16 +37,16 @@ jobs:
           cache: sbt
       - uses: sbt/setup-sbt@v1
       - name: Check formatting
-        run: sbt checkFormat
+        run: sbt --server checkFormat
       - name: Check dependency licenses
-        run: sbt checkLicenses
+        run: sbt --server checkLicenses
       - name: Test
-        run: sbt testFull
+        run: sbt --server testFull
       - name: Check binary compatibility
-        run: sbt mimaReportBinaryIssues
+        run: sbt --server mimaReportBinaryIssues
       - name: Generate API documentation
         run: |
-          sbt doc 2>&1 | tee doc.log
+          sbt --server doc 2>&1 | tee doc.log
           if grep -q "Couldn't resolve a member for the given link query" doc.log; then
             echo "::error::Scaladoc contains broken links"
             exit 1
@@ -55,6 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
+        shell: bash
         working-directory: 12_docs/website
     steps:
       - uses: actions/checkout@v7
@@ -69,7 +76,7 @@ jobs:
       - name: Compile examples and build API documentation
         working-directory: .
         run: |
-          sbt docs/testFull docs/apiSite 2>&1 | tee doc.log
+          sbt --server docs/testFull docs/apiSite 2>&1 | tee doc.log
           if grep -q "Couldn't resolve a member for the given link query" doc.log; then
             echo "::error::Scaladoc contains broken links"
             exit 1
@@ -101,7 +108,7 @@ jobs:
         with:
           disk-cache: false
       - name: Test with coverage
-        run: sbt --sbt-cache "$RUNNER_TEMP/sbt-cache-coverage" testCoverage
+        run: sbt --server --sbt-cache "$RUNNER_TEMP/sbt-cache-coverage" testCoverage
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v7
