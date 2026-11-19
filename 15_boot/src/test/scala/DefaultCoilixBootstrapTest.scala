@@ -11,6 +11,7 @@ import dev.coilix.boot.jobs.ModuleJob
 import dev.coilix.boot.modules.FixedModuleLoader
 import dev.coilix.boot.modules.ReportModule
 import dev.coilix.boot.modules.ReportTitle
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
@@ -45,7 +46,7 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
   }
 
   test("registers ready singletons") {
-    val singleton = RegisteredBean("clock", classOf[FixedClock], isPrimary = false, FixedClock())
+    val singleton = RegisteredBean("clock", GenericType.of(classOf[FixedClock]), isPrimary = false, FixedClock())
     assertEquals(bootstrap.start(List("dev.coilix.boot.empty"), Nil, List(singleton)).getBean[Clock].now, 42L)
   }
 
@@ -59,13 +60,13 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
   }
 
   test("leaves out the replaced beans so a ready instance takes their place") {
-    val stub    = RegisteredBean("clock", classOf[Clock], isPrimary = false, StubClock(7L))
+    val stub    = RegisteredBean("clock", GenericType.of(classOf[Clock]), isPrimary = false, StubClock(7L))
     val context = bootstrap.start(List("dev.coilix.boot.fixture"), Nil, List(stub), BeanReplacements.of[Clock])
     assertEquals(context.getBeansOfType[Clock].map(_.now), List(7L))
   }
 
   test("replaces beans added by modules") {
-    val title   = RegisteredBean("reportTitle", classOf[ReportTitle], isPrimary = false, ReportTitle("Stub report"))
+    val title   = RegisteredBean("reportTitle", GenericType.of(classOf[ReportTitle]), isPrimary = false, ReportTitle("Stub report"))
     val context =
       withModules(List(ReportModule())).start(List("dev.coilix.boot.empty"), Nil, List(title), BeanReplacements.of[ReportTitle])
     assertEquals(context.getBean[ReportTitle], ReportTitle("Stub report"))

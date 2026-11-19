@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.TypeInfo
 import java.lang.annotation.Annotation
 import scala.reflect.ClassTag
 
@@ -40,5 +41,5 @@ trait CollectedComponents {
    * @throws dev.coilix.context.BeanCreationException
    *   if `componentClass` is not collected, is not a `T`, or cannot be created or initialized
    */
-  def create[T: ClassTag](componentClass: Class[?]): ManagedComponent[T]
+  def create[T: TypeInfo](componentClass: Class[?]): ManagedComponent[T]
 }

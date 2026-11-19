@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ValueExpression
 import dev.coilix.context.configured.ValueBean
 import dev.coilix.context.wiring.DefaultGreetingService
@@ -16,6 +17,6 @@ final class AnnotatedParameterDependencyMapperTest extends FunSuite {
 
   test("maps other parameters by type") {
     val parameter = classOf[DefaultGreetingService].getConstructors.head.getParameters.head
-    assertEquals(mapper.map(parameter), Dependency.Required(classOf[Greeter]))
+    assertEquals(mapper.map(parameter), Dependency.Required(GenericType.of(classOf[Greeter])))
   }
 }

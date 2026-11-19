@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.Environment
 import dev.coilix.context.wiring.DefaultGreetingService
 import dev.coilix.context.wiring.EnglishGreeter
@@ -9,7 +10,8 @@ import munit.FunSuite
 final class ReflectiveBeanInstantiatorTest extends FunSuite {
   private val instantiator  = ReflectiveBeanInstantiator(Environment.empty, PostConstructProcessor())
   private val emptyRegistry = ImmutableBeanRegistry.empty(PrimaryCandidateSelector())
-  private val english       = RegisteredBean("englishGreeter", classOf[EnglishGreeter], isPrimary = false, EnglishGreeter())
+  private val english       =
+    RegisteredBean("englishGreeter", GenericType.of(classOf[EnglishGreeter]), isPrimary = false, EnglishGreeter())
   private val service       = Definitions.of(classOf[DefaultGreetingService])
 
   test("creates a bean with its dependencies") {

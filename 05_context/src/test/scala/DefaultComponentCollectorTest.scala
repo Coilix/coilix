@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.collected.CleanupTask
 import dev.coilix.context.collected.ReportTask
@@ -14,7 +15,7 @@ final class DefaultComponentCollectorTest extends FunSuite {
     val definition = ComponentCollector.default.collect(List(classOf[CleanupTask]))
     assertEquals(
       (definition.beanName, definition.beanClass, definition.dependencies.headOption),
-      ("collectedComponents", classOf[CollectedComponents], Some(Dependency.Required(classOf[Journal])))
+      ("collectedComponents", classOf[CollectedComponents], Some(Dependency.Required(GenericType.of(classOf[Journal]))))
     )
   }
 

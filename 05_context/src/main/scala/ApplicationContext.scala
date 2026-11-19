@@ -1,9 +1,11 @@
 package dev.coilix.context
 
-import scala.reflect.ClassTag
+import dev.coilix.common.TypeInfo
 
 /**
  * Read access to the beans of a running application.
+ *
+ * Beans are looked up by their full type, so `getBean[Repository[IO]]` and `getBean[Repository[Option]]` find different beans.
  *
  * The context is itself a bean named `applicationContext`, so a component can inject it to look up beans that are not
  * known in advance. Prefer constructor parameters for dependencies known at compile time.
@@ -25,7 +27,7 @@ trait ApplicationContext {
    * @throws dev.coilix.context.AmbiguousBeanException
    *   if several beans have type `T` and none is marked with `@Primary`
    */
-  def getBean[T: ClassTag]: T
+  def getBean[T: TypeInfo]: T
 
   /**
    * The bean of type `T`, or `None` when there is none.
@@ -33,10 +35,10 @@ trait ApplicationContext {
    * @throws dev.coilix.context.AmbiguousBeanException
    *   if several beans have type `T` and none is marked with `@Primary`
    */
-  def getBeanOption[T: ClassTag]: Option[T]
+  def getBeanOption[T: TypeInfo]: Option[T]
 
   /** All beans of type `T` in creation order, or an empty list. */
-  def getBeansOfType[T: ClassTag]: List[T]
+  def getBeansOfType[T: TypeInfo]: List[T]
 
   /** The bean named `beanName`, or `None` when there is none. */
   def getBeanByName(beanName: String): Option[AnyRef]

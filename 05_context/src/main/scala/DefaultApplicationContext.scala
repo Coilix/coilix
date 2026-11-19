@@ -1,9 +1,8 @@
 package dev.coilix.context
 
 import dev.coilix.annotation.Slf4s
-import dev.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.common.TypeInfo
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.reflect.ClassTag
 
 /**
  * An application context backed by a [[dev.coilix.context.BeanRegistry]].
@@ -22,14 +21,14 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
 
   private val active = AtomicBoolean(true)
 
-  override def getBean[T: ClassTag]: T =
+  override def getBean[T: TypeInfo]: T =
     getBeanOption[T].getOrElse(throw NoSuchBeanException[T])
 
-  override def getBeanOption[T: ClassTag]: Option[T] =
-    registry.find(runtimeTypeOf[T]).map(bean => runtimeTypeOf[T].cast(bean.instance))
+  override def getBeanOption[T: TypeInfo]: Option[T] =
+    registry.find(TypeInfo[T].genericType).map(bean => TypeInfo[T].runtimeClass.cast(bean.instance))
 
-  override def getBeansOfType[T: ClassTag]: List[T] =
-    registry.findAll(runtimeTypeOf[T]).map(bean => runtimeTypeOf[T].cast(bean.instance))
+  override def getBeansOfType[T: TypeInfo]: List[T] =
+    registry.findAll(TypeInfo[T].genericType).map(bean => TypeInfo[T].runtimeClass.cast(bean.instance))
 
   override def getBeanByName(beanName: String): Option[AnyRef] =
     registry.findByName(beanName).map(_.instance)

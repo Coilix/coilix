@@ -1,6 +1,7 @@
 package dev.coilix.context
 
 import dev.coilix.annotation.Slf4s
+import dev.coilix.common.GenericType
 import dev.coilix.config.Environment
 
 /**
@@ -23,7 +24,7 @@ final class ReflectiveBeanInstantiator(environment: Environment, postProcessor: 
     log.info(s"Creating bean ${definition.beanName} (${definition.beanClass.getSimpleName})")
     RegisteredBean(
       beanName  = definition.beanName,
-      beanClass = definition.beanClass,
+      beanType  = definition.beanType,
       isPrimary = definition.isPrimary,
       instance  = postProcessor.postProcess(definition, newInstance(definition, registry)),
       lifecycle = definition.lifecycle
@@ -41,9 +42,9 @@ final class ReflectiveBeanInstantiator(environment: Environment, postProcessor: 
       case Dependency.Value(expression, valueType) => environment.resolve(expression, valueType)
     }
 
-  private def required(definition: BeanDefinition, registry: BeanRegistry, beanType: Class[?]): AnyRef =
+  private def required(definition: BeanDefinition, registry: BeanRegistry, beanType: GenericType): AnyRef =
     registry.find(beanType).map(_.instance).getOrElse(throw unsatisfied(definition, beanType))
 
-  private def unsatisfied(definition: BeanDefinition, beanType: Class[?]): NoSuchBeanException =
-    new NoSuchBeanException(s"Cannot satisfy dependency '${beanType.getName}' while creating '${definition.beanName}'")
+  private def unsatisfied(definition: BeanDefinition, beanType: GenericType): NoSuchBeanException =
+    new NoSuchBeanException(s"Cannot satisfy dependency '$beanType' while creating '${definition.beanName}'")
 }

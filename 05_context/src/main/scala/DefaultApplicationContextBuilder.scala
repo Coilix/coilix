@@ -40,11 +40,11 @@ final class DefaultApplicationContextBuilder(
     singletons.foldLeft(contextRegistry(context))(_.register(_))
 
   private def contextRegistry(context: ApplicationContext): BeanRegistry =
-    ImmutableBeanRegistry.empty(selector).register(RegisteredBean(contextBeanName, context.getClass, isPrimary = false, context))
+    ImmutableBeanRegistry.empty(selector).register(RegisteredBean.ofClass(contextBeanName, context.getClass, context))
 
   private def instantiateAll(definitions: List[BeanDefinition], initial: BeanRegistry): BeanRegistry =
     resolver
-      .resolve(filter.filter(definitions, initial.beans.map(_.beanClass)), initial.beans.map(_.beanClass))
+      .resolve(filter.filter(definitions, initial.beans.map(_.beanClass)), initial.beans.map(_.beanType))
       .foldLeft(initial)(instantiate)
 
   private def instantiate(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =

@@ -1,6 +1,7 @@
 package dev.coilix.context
 
 import dev.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.common.TypeInfo
 import java.lang.annotation.Annotation
 import scala.reflect.ClassTag
 
@@ -32,26 +33,26 @@ final class DefaultCollectedComponents(
   override def annotatedWith[A <: Annotation: ClassTag]: List[Class[?]] =
     classes.filter(_.isAnnotationPresent(runtimeTypeOf[A]))
 
-  override def create[T: ClassTag](componentClass: Class[?]): ManagedComponent[T] =
+  override def create[T: TypeInfo](componentClass: Class[?]): ManagedComponent[T] =
     managed[T](assignable[T](definitionOf(componentClass)))
 
   private def definitionOf(componentClass: Class[?]): BeanDefinition =
     definitions.find(_.beanClass == componentClass).getOrElse(throw notCollected(componentClass))
 
-  private def assignable[T: ClassTag](definition: BeanDefinition): BeanDefinition =
-    if (runtimeTypeOf[T].isAssignableFrom(definition.beanClass)) definition else throw notOfType[T](definition)
+  private def assignable[T: TypeInfo](definition: BeanDefinition): BeanDefinition =
+    if (TypeInfo[T].genericType.isAssignableFrom(definition.beanType)) definition else throw notOfType[T](definition)
 
-  private def managed[T: ClassTag](definition: BeanDefinition): ManagedComponent[T] = {
+  private def managed[T: TypeInfo](definition: BeanDefinition): ManagedComponent[T] = {
     val instance = postProcessor.postProcess(definition, definition.factory.create(definition.dependencies.map(arguments)))
-    ManagedComponent(runtimeTypeOf[T].cast(instance), registered(definition, instance), destroyer)
+    ManagedComponent(TypeInfo[T].runtimeClass.cast(instance), registered(definition, instance), destroyer)
   }
 
   private def registered(definition: BeanDefinition, instance: AnyRef): RegisteredBean =
-    RegisteredBean(definition.beanName, definition.beanClass, isPrimary = false, instance, definition.lifecycle)
+    RegisteredBean(definition.beanName, definition.beanType, isPrimary = false, instance, definition.lifecycle)
 
   private def notCollected(componentClass: Class[?]): BeanCreationException =
     BeanCreationException(s"Class ${componentClass.getName} is not a collected component")
 
-  private def notOfType[T: ClassTag](definition: BeanDefinition): BeanCreationException =
-    BeanCreationException(s"Collected component ${definition.beanClass.getName} is not a ${runtimeTypeOf[T].getName}")
+  private def notOfType[T: TypeInfo](definition: BeanDefinition): BeanCreationException =
+    BeanCreationException(s"Collected component ${definition.beanClass.getName} is not a ${TypeInfo[T].genericType}")
 }

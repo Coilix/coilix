@@ -1,6 +1,7 @@
 package dev.coilix.testkit
 
 import dev.coilix.boot.ApplicationArguments
+import dev.coilix.common.TypeInfo
 import dev.coilix.config.Environment
 import dev.coilix.context.ApplicationContext
 import scala.reflect.ClassTag
@@ -31,13 +32,13 @@ trait CoilixContextOps {
    * @throws dev.coilix.context.AmbiguousBeanException
    *   if there are several beans of type `T` and none is primary
    */
-  def bean[T: ClassTag](using current: ApplicationContext): T = current.getBean[T]
+  def bean[T: TypeInfo](using current: ApplicationContext): T = current.getBean[T]
 
   /** The bean of type `T`, or `None` when the context has none. */
-  def beanOption[T: ClassTag](using current: ApplicationContext): Option[T] = current.getBeanOption[T]
+  def beanOption[T: TypeInfo](using current: ApplicationContext): Option[T] = current.getBeanOption[T]
 
   /** Every bean of type `T`, in registration order. */
-  def beans[T: ClassTag](using current: ApplicationContext): List[T] = current.getBeansOfType[T]
+  def beans[T: TypeInfo](using current: ApplicationContext): List[T] = current.getBeansOfType[T]
 
   /** The configuration value at `path` converted to `T`, or `None` when the key is not set. */
   def property[T: ClassTag](path: String)(using current: ApplicationContext): Option[T] =

@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.ordering.AlphaService
 import dev.coilix.context.ordering.ItemCatalog
@@ -44,7 +45,7 @@ final class DefaultApplicationContextBuilderTest extends FunSuite {
   }
 
   test("injects a ready singleton") {
-    val singleton = RegisteredBean("englishGreeter", classOf[EnglishGreeter], isPrimary = false, EnglishGreeter())
+    val singleton = RegisteredBean("englishGreeter", GenericType.of(classOf[EnglishGreeter]), isPrimary = false, EnglishGreeter())
     val built     = ApplicationContextBuilder.default.build(Definitions.of(classOf[DefaultGreetingService]), List(singleton))
     assertEquals(built.getBean[GreetingService].greet("Ann"), "Hello Ann")
   }

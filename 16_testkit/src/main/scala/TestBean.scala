@@ -1,5 +1,7 @@
 package dev.coilix.testkit
 
+import dev.coilix.common.GenericType
+
 /**
  * A ready instance that a test puts into its context.
  *
@@ -12,4 +14,4 @@ package dev.coilix.testkit
  * @param replaces
  *   whether the instance replaces the beans of `beanType` found by scanning, or is added next to them
  */
-final case class TestBean(beanName: String, beanType: Class[?], instance: AnyRef, replaces: Boolean)
+final case class TestBean(beanName: String, beanType: GenericType, instance: AnyRef, replaces: Boolean)

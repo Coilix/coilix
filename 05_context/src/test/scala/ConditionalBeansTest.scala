@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.conditions.AuditLog
 import dev.coilix.context.conditions.Clock
@@ -58,7 +59,7 @@ final class ConditionalBeansTest extends FunSuite {
 
   test("a bean marked as missing-only gives way to a ready singleton") {
     given ComponentProvider = ComponentProvider.builtIn
-    val singleton           = RegisteredBean("clock", classOf[FixedClock], isPrimary = false, FixedClock())
+    val singleton           = RegisteredBean("clock", GenericType.of(classOf[FixedClock]), isPrimary = false, FixedClock())
     val context             =
       ApplicationContextBuilder.default.build(BeanDefinitionFactory.default.create(classOf[ClockDefaults]), List(singleton))
     assertEquals(context.getBeansOfType[Clock].size, 1)

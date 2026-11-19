@@ -132,8 +132,8 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 
 ## Kroki (osobne PR-y)
 
-1. ADR „Model efektów”: styl bezpośredni w rdzeniu, punkty wpięcia, tylko `IO`, wynik eksperymentu z typami, właściciel `IORuntime`, brak przekładania `IO` na `Future` poza mostem do Pekko.
-2. Rdzeń: pełne typy w definicjach i dopasowanie po typach sparametryzowanych, `TypeInfo`, błędy dla lambd typów i niezwiązanych zmiennych.
+1. ADR „Model efektów”: styl bezpośredni w rdzeniu, punkty wpięcia, tylko `IO`, wynik eksperymentu z typami, właściciel `IORuntime`, brak przekładania `IO` na `Future` poza mostem do Pekko. Zrobione w ADR 0019.
+2. Rdzeń: pełne typy w definicjach i dopasowanie po typach sparametryzowanych, `TypeInfo`, błędy dla lambd typów i niezwiązanych zmiennych. Zrobione (`GenericType`, `TypeInfo`, ADR 0019); wiązanie `coilix.effect.type` przechodzi do kroku 5.
 3. Rdzeń: `ContextPlan`, `ContextPlanner` i `EffectfulResultRecognizer`, `DefaultApplicationContextBuilder` na planie.
 4. Zasoby wykonania (albo COILIX-00005).
 5. `cats-effect`: `IORuntime` jako bean, beany `IO[A]` i `Resource[IO, A]`, cykl życia i runnery w `IO`, `CoilixIOApp`.

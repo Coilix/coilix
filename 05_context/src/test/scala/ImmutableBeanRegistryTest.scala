@@ -1,13 +1,15 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.context.wiring.EnglishGreeter
 import dev.coilix.context.wiring.Greeter
 import dev.coilix.context.wiring.PolishGreeter
 import munit.FunSuite
 
 final class ImmutableBeanRegistryTest extends FunSuite {
-  private val english  = RegisteredBean("englishGreeter", classOf[EnglishGreeter], isPrimary = false, EnglishGreeter())
-  private val polish   = RegisteredBean("polishGreeter", classOf[PolishGreeter], isPrimary = true, PolishGreeter())
+  private val english  =
+    RegisteredBean("englishGreeter", GenericType.of(classOf[EnglishGreeter]), isPrimary = false, EnglishGreeter())
+  private val polish   = RegisteredBean("polishGreeter", GenericType.of(classOf[PolishGreeter]), isPrimary = true, PolishGreeter())
   private val empty    = ImmutableBeanRegistry.empty(PrimaryCandidateSelector())
   private val registry = empty.register(english).register(polish)
 
@@ -16,11 +18,11 @@ final class ImmutableBeanRegistryTest extends FunSuite {
   }
 
   test("finds a bean by type") {
-    assertEquals(registry.find(classOf[Greeter]), Some(polish))
+    assertEquals(registry.find(GenericType.of(classOf[Greeter])), Some(polish))
   }
 
   test("finds all beans of a type") {
-    assertEquals(registry.findAll(classOf[Greeter]), List(english, polish))
+    assertEquals(registry.findAll(GenericType.of(classOf[Greeter])), List(english, polish))
   }
 
   test("finds a bean by name") {

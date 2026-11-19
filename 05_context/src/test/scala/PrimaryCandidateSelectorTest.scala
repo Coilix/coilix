@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.context.wiring.EnglishGreeter
 import dev.coilix.context.wiring.Farewell
 import dev.coilix.context.wiring.Greeter
@@ -13,26 +14,32 @@ final class PrimaryCandidateSelectorTest extends FunSuite {
   private val greeters = english ++ polish
 
   test("returns nothing when no candidate matches") {
-    assertEquals(selector.select(classOf[Farewell], greeters), None)
+    assertEquals(selector.select(GenericType.of(classOf[Farewell]), greeters), None)
   }
 
   test("prefers the exact class") {
-    assertEquals(selector.select(classOf[EnglishGreeter], greeters).map(_.beanName), Some("englishGreeter"))
+    assertEquals(selector.select(GenericType.of(classOf[EnglishGreeter]), greeters).map(_.beanName), Some("englishGreeter"))
   }
 
   test("returns the single assignable candidate") {
-    assertEquals(selector.select(classOf[Greeter], english).map(_.beanName), Some("englishGreeter"))
+    assertEquals(selector.select(GenericType.of(classOf[Greeter]), english).map(_.beanName), Some("englishGreeter"))
   }
 
   test("prefers the primary candidate among many") {
-    assertEquals(selector.select(classOf[Greeter], greeters).map(_.beanName), Some("polishGreeter"))
+    assertEquals(selector.select(GenericType.of(classOf[Greeter]), greeters).map(_.beanName), Some("polishGreeter"))
   }
 
   test("fails when many candidates match and none is primary") {
-    intercept[AmbiguousBeanException](selector.select(classOf[Greeter], english ++ english.map(_.copy(beanName = "other"))))
+    intercept[AmbiguousBeanException](selector.select(
+      GenericType.of(classOf[Greeter]),
+      english ++ english.map(_.copy(beanName = "other"))
+    ))
   }
 
   test("fails when many candidates are primary") {
-    intercept[AmbiguousBeanException](selector.select(classOf[Greeter], polish ++ polish.map(_.copy(beanName = "other"))))
+    intercept[AmbiguousBeanException](selector.select(
+      GenericType.of(classOf[Greeter]),
+      polish ++ polish.map(_.copy(beanName = "other"))
+    ))
   }
 }

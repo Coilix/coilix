@@ -1,6 +1,7 @@
 package dev.coilix.context
 
 import dev.coilix.common.CoilixException
+import dev.coilix.common.GenericType
 
 /**
  * Thrown when a single bean of a type is requested and several beans match, none of them marked with `@Primary`.
@@ -13,7 +14,7 @@ import dev.coilix.common.CoilixException
  * @param candidates
  *   names of the matching beans
  */
-final class AmbiguousBeanException(requested: Class[?], candidates: List[String])
+final class AmbiguousBeanException(requested: GenericType, candidates: List[String])
     extends CoilixException(
-      s"Multiple beans of type ${requested.getName}: ${candidates.mkString(", ")}. Use @Primary or @Qualifier."
+      s"Multiple beans of type $requested: ${candidates.mkString(", ")}. Use @Primary or @Qualifier."
     )

@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.ConfigPath
 
@@ -16,7 +17,7 @@ trait DependencyResolver {
    * @throws dev.coilix.context.CircularDependencyException
    *   if the definitions depend on each other in a cycle
    */
-  def resolve(definitions: List[BeanDefinition], provided: List[Class[?]]): List[BeanDefinition]
+  def resolve(definitions: List[BeanDefinition], provided: List[GenericType]): List[BeanDefinition]
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.DependencyResolver]]. */
