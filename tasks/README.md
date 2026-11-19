@@ -23,7 +23,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
-| COILIX-00020 | [Wsparcie efektów `F[_]` (cats-effect, ZIO)](COILIX-00020_effect_types.md) | średni | do analizy, przed `1.0` |
+| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | szkic do doszlifowania, zmiany w rdzeniu przed `core-v0.1.0` |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
 | COILIX-00022 | [Typy wartości, enumy, walidacja i `EditOption` z biblioteki implicits](COILIX-00022_implicits_port.md) | wysoki | zrobiony w rdzeniu, mapowanie kolumn czeka na moduł `data` |
 | COILIX-00023 | [Moduł HTTP (`web`)](COILIX-00023_http.md) | wysoki | szkic do doszlifowania |
@@ -32,6 +32,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00026 | [Przetwarzanie w tle (`processing`)](COILIX-00026_background_processing.md) | wysoki | szkic do doszlifowania |
 | COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | szkic do doszlifowania |
 | COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | szkic do doszlifowania, krok 3 przed `core-v0.1.0` |
+| COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | szkic do doszlifowania |
 
 Zależności między taskami:
 
@@ -50,7 +51,7 @@ Zależności między taskami:
 - COILIX-00015 zmienia `RegisteredBean`, z którego korzysta `@PreDestroy` z COILIX-00004, więc idzie po nim.
 - COILIX-00016 potrzebuje `close()` i `@PreDestroy` z COILIX-00004 dla zdarzenia `ContextClosing`.
 - COILIX-00018 wymaga pierwszego wydania z COILIX-00009.
-- COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów) i z modułów z COILIX-00010. Zmiany w rdzeniu, których wymaga, powinny trafić przed `1.0`.
+- COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów), z modułów z COILIX-00010, z zasobów wykonania z COILIX-00005 (albo dodaje minimalne) i z testkitu z COILIX-00013. Pełne typy w definicjach beanów i `ContextPlan` zmieniają API rdzenia, więc powinny trafić przed `core-v0.1.0`. Daje `IORuntime` modułom `processing-cats-effect`, `web-cats-effect` i `pekko-cats-effect`.
 - COILIX-00021 uzupełnia ręczny przegląd z `docs/legal/spring-similarity.md` (COILIX-00006). Warto go zrobić przed pierwszym wydaniem z COILIX-00009.
 - COILIX-00022 rozszerza `ReflectiveConfigBinder` z COILIX-00003. Mapowanie kolumn czeka na specyfikację modułu `data`, a `Registry` z implicits trafia do COILIX-00010.
 - COILIX-00023 korzysta z `CoilixModule` z COILIX-00010 i typów z COILIX-00022. Numery katalogów nowych modułów ustala się razem z przenumerowaniem z COILIX-00010, COILIX-00013 i COILIX-00017. Instancje `ResponseEffect` dla `IO` i `ZIO` czekają na COILIX-00020.
@@ -59,6 +60,7 @@ Zależności między taskami:
 - COILIX-00026 korzysta z cyklu życia z COILIX-00004, `CoilixModule` z COILIX-00010, `TaskExecutor` z COILIX-00005 i tożsamości repliki z COILIX-00027 (operacje w całym klastrze po kroku 2 COILIX-00027). Wymaga zmiany w rdzeniu (`ComponentCollector`). Konektory Kafka, SFTP i Elasticsearch to osobne taski po nim, a `processing-web` czeka na COILIX-00023.
 - COILIX-00027 to moduł rdzenia bez zależności zewnętrznych. `ClusterCodec` trzeba uzgodnić z COILIX-00024, a `@Scheduled` z COILIX-00005 może z niego korzystać do zadań na jednej replice.
 - COILIX-00028 zastępuje `checkForbiddenCalls` wartem i dodaje moduły narzędziowe poza numeracją modułów frameworka. Zmiana `Class[T]` na `ClassTag` w publicznym API (krok 3) i szkielet reguł migracyjnych (krok 8) powinny być przed wydaniem `core-v0.1.0` z COILIX-00009.
+- COILIX-00029 wymaga COILIX-00020 dla mostów `IO` ↔ Pekko i silnika procesorów z COILIX-00026 (kroki 4–8) dla `processing-pekko`. Moduł `kafka-pekko` powstaje razem z taskiem konektora Kafki.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
