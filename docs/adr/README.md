@@ -20,6 +20,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0012](0012-value-types-and-enums-by-annotations.md) | Typy wartości i enumy przez adnotacje | przyjęta, punkt o kodzie naruszeń zastąpiony przez 0013 |
 | [0013](0013-compile-time-checked-violations.md) | Naruszenia walidacji sprawdzane w czasie kompilacji | proponowana |
 | [0014](0014-intellij-plugin-in-separate-repository.md) | Plugin IntelliJ w osobnym repozytorium | przyjęta |
+| [0015](0015-http-and-serialization-by-macros-and-givens.md) | HTTP i serializacja przez makra i givens | proponowana, szkic |
 
 ## Nowa decyzja
 
