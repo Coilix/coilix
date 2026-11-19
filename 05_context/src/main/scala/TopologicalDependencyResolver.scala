@@ -9,6 +9,7 @@ import scala.annotation.tailrec
  * A bean waits for:
  *
  *  - the bean chosen by the [[dev.coilix.context.CandidateSelector]] for each required dependency,
+ *  - the bean with the given name for each `@Qualifier` dependency,
  *  - the bean chosen for each `Option[T]` dependency, when there is one,
  *  - every bean that matches a `List[T]` dependency, so the list is complete when the bean is created.
  *
@@ -50,10 +51,11 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
     dependency: Dependency
   ): List[BeanDefinition] =
     dependency match {
-      case Dependency.Required(beanType)   => required(definition, definitions, provided, beanType)
-      case Dependency.Optional(beanType)   => optional(definition, definitions, provided, beanType)
-      case Dependency.Collection(beanType) => matching(beanType, others(definition, definitions))
-      case Dependency.Value(_, _)          => Nil
+      case Dependency.Required(beanType)    => required(definition, definitions, provided, beanType)
+      case Dependency.Named(name, beanType) => named(definition, definitions, provided, name, beanType)
+      case Dependency.Optional(beanType)    => optional(definition, definitions, provided, beanType)
+      case Dependency.Collection(beanType)  => matching(beanType, others(definition, definitions))
+      case Dependency.Value(_, _)           => Nil
     }
 
   private def required(
@@ -64,6 +66,20 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
   ): List[BeanDefinition] =
     if (isProvided(provided)(beanType)) Nil
     else List(selector.select(beanType, definitions).getOrElse(throw unsatisfied(definition, beanType)))
+
+  private def named(
+    definition:  BeanDefinition,
+    definitions: List[BeanDefinition],
+    provided:    List[GenericType],
+    beanName:    String,
+    beanType:    GenericType
+  ): List[BeanDefinition] =
+    definitions.filter(candidate => candidate.beanName == beanName && beanType.isAssignableFrom(candidate.beanType)) match {
+      case Nil if isProvided(provided)(beanType) => Nil
+      case Nil                                   =>
+        throw new NoSuchBeanException(s"No bean named '$beanName' of type '$beanType' required by '${definition.beanName}'")
+      case found                                 => found
+    }
 
   private def optional(
     definition:  BeanDefinition,

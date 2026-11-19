@@ -1,0 +1,40 @@
+---
+id: choosing-beans
+title: Wybór między beanami
+description: Zdecyduj, który bean dostaje zależność, gdy kilka beanów implementuje ten sam trait, przez @Primary, @Qualifier, Option i List.
+sidebar_position: 2
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import CardGateway from '!!raw-loader!@examples/scala/choosing/CardGateway.scala';
+import TransferGateway from '!!raw-loader!@examples/scala/choosing/TransferGateway.scala';
+import Checkout from '!!raw-loader!@examples/scala/choosing/Checkout.scala';
+import CheckoutTest from '!!raw-loader!@examples/test/choosing/CheckoutTest.scala';
+
+Ta strona pokazuje, jak bean prosi o jeden z kilku beanów tego samego typu. Przydaje się, gdy dwa lub więcej beanów implementuje jeden trait, np. dwie bramki płatności.
+
+## Domyślny bean z @Primary
+
+Gdy do parametru pasuje kilka beanów, wstrzykiwany jest ten oznaczony `@Primary`:
+
+<CodeBlock language="scala" title="CardGateway.scala">{CardGateway}</CodeBlock>
+
+<CodeBlock language="scala" title="TransferGateway.scala">{TransferGateway}</CodeBlock>
+
+Bez `@Primary` parametr pasujący do kilku beanów zatrzymuje start wyjątkiem `AmbiguousBeanException` z listą pasujących beanów.
+
+## Bean po nazwie z @Qualifier
+
+Oznacz parametr adnotacją `@Qualifier`, żeby dostać bean o tej nazwie, niezależnie od tego, czy jest główny. Nazwa beana to nazwa jego klasy zaczynająca się małą literą albo nazwa metody `@Bean`:
+
+<CodeBlock language="scala" title="Checkout.scala">{Checkout}</CodeBlock>
+
+Bean o tej nazwie musi istnieć i mieć typ parametru, inaczej start zatrzymuje się wyjątkiem `NoSuchBeanException`. `@Qualifier` wybiera jeden bean, więc nie wolno go użyć przy parametrach `Option[T]` ani `List[T]`.
+
+## Wszystkie beany albo żaden
+
+Parametr `List[T]` dostaje wszystkie beany typu `T`, także pustą listę, a parametr `Option[T]` wybrany bean, jeśli istnieje. W przykładzie `allGateways` zawiera obie bramki.
+
+## Sprawdzenie w teście
+
+<CodeBlock language="scala" title="CheckoutTest.scala">{CheckoutTest}</CodeBlock>
