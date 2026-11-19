@@ -6,7 +6,8 @@ import dev.coilix.annotation.Slf4s
 import dev.coilix.config.Environment
 
 /**
- * The beans of the concurrency module: `concurrencySettings`, `taskExecutor` and `taskScheduler`.
+ * The beans of the concurrency module: `concurrencySettings`, `taskExecutor`, `taskScheduler` and
+ * `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods.
  *
  * The executor and the scheduler are closed with the context, after the beans that depend on them.
  */
@@ -31,4 +32,9 @@ final class ConcurrencyConfiguration {
   @Bean
   def taskScheduler(settings: ConcurrencySettings): ScheduledExecutorTaskScheduler =
     ScheduledExecutorTaskScheduler(settings.scheduler)
+
+  /** Runs the methods annotated with [[dev.coilix.annotation.Scheduled]] on the task scheduler. */
+  @Bean
+  def scheduledMethodRegistrar(scheduler: TaskScheduler, environment: Option[Environment]): ScheduledMethodRegistrar =
+    ScheduledMethodRegistrar(scheduler, environment)
 }

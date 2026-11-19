@@ -58,7 +58,7 @@ Adnotacje `@Async` i `@Scheduled` w `02_annotations`.
 
 1. Moduł `06_concurrency`: `TaskExecutor` na wątkach wirtualnych i na stałej puli, `TaskScheduler` z `fixedRate`, `fixedDelay` i `initialDelay`, ustawienia `coilix.concurrency`, zamykanie z limitem czasu, własny wykonawca przez `@Primary`. Zrobione (ADR 0020). Kryteria 3 i 4.
 2. `@Async` przez proxy JDK (`AsyncBeanPostProcessor`) z błędem startu dla beana bez traitu. Kryteria 1 i 5.
-3. `@Scheduled` (`ScheduledMethodRegistrar`) i demo z nazwami wątków w logach. Kryteria 2 i 6.
+3. `@Scheduled` (`ScheduledMethodRegistrar`) i demo z nazwami wątków w logach. Kryteria 2 i 6. Zrobione przed krokiem 2, razem z `ContextLifecycleListener` w rdzeniu kontekstu (ADR 0020).
 4. Przekazywanie MDC do zadań.
 
 ## Kryteria akceptacji

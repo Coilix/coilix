@@ -1,13 +1,14 @@
 ---
 id: tasks-and-scheduling
 title: Zadania w tle i harmonogram
-description: Uruchamiaj pracę na wątkach zarządzanych przez Coilix przez TaskExecutor i powtarzaj ją przez TaskScheduler.
+description: Uruchamiaj pracę na wątkach zarządzanych przez Coilix przez TaskExecutor i powtarzaj ją przez @Scheduled albo TaskScheduler.
 sidebar_position: 6
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
+import PriceRefresher from '!!raw-loader!@examples/scala/tasks/PriceRefresher.scala';
 import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
 import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application.yaml';
 
@@ -25,9 +26,19 @@ Jeśli zadanie uruchomione przez `execute` rzuci wyjątek, Coilix zapisze go w l
 
 Wykonawcę można też przekazać tam, gdzie biblioteka oczekuje `ExecutionContext`, przez `executor.executionContext`.
 
-## Zadanie powtarzane
+## Metoda powtarzana przez @Scheduled
 
-Bean `TaskScheduler` uruchamia zadanie raz po opóźnieniu (`schedule`), ze stałą częstotliwością (`scheduleAtFixedRate`) albo ze stałą przerwą między uruchomieniami (`scheduleWithFixedDelay`). Każda z tych metod zwraca `ScheduledTask` z metodą `cancel()`.
+Oznacz metodę beana adnotacją `@Scheduled`, żeby uruchamiać ją cyklicznie. Ustaw `fixedRate`, czyli czas między początkami dwóch uruchomień, albo `fixedDelay`, czyli przerwę między końcem jednego uruchomienia a początkiem następnego, i opcjonalnie `initialDelay`:
+
+<CodeBlock language="scala" title="PriceRefresher.scala">{PriceRefresher}</CodeBlock>
+
+Czasy zapisuje się jak wartości konfiguracji, np. `10s` albo `5 minutes`, albo jako placeholder z wartością domyślną, jak w przykładzie. Metoda nie przyjmuje parametrów i może być prywatna.
+
+Uruchomienia zaczynają się, gdy istnieją już wszystkie beany aplikacji, i kończą, gdy aplikacja zaczyna się zatrzymywać, przed zniszczeniem pierwszego beana. Metoda z parametrami, z ustawionym jednocześnie `fixedRate` i `fixedDelay`, bez żadnego z nich albo z czasem, którego nie da się odczytać, zatrzymuje start wyjątkiem `InvalidScheduledMethodException` z nazwą beana i metody.
+
+## Zadanie powtarzane z kodu
+
+Gdy harmonogram jest znany dopiero w trakcie działania, użyj beana `TaskScheduler`. Uruchamia on zadanie raz po opóźnieniu (`schedule`), ze stałą częstotliwością (`scheduleAtFixedRate`) albo ze stałą przerwą między uruchomieniami (`scheduleWithFixedDelay`). Każda z tych metod zwraca `ScheduledTask` z metodą `cancel()`.
 
 <CodeBlock language="scala" title="StockRefresher.scala">{StockRefresher}</CodeBlock>
 

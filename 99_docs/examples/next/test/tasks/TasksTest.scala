@@ -15,6 +15,13 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
     }
   }
 
+  test("a @Scheduled method runs on its own") {
+    setup.use {
+      val refresher = bean[PriceRefresher]
+      assert(LazyList.range(0, 100).exists(_ => refresher.refreshes >= 2 || { Thread.sleep(50); false }))
+    }
+  }
+
   test("the scheduler keeps refreshing until the context closes") {
     setup.use {
       val refresher = bean[StockRefresher]

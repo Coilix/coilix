@@ -3,12 +3,14 @@ package dev.coilix.context
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.TypeInfo
 import java.util.concurrent.atomic.AtomicBoolean
+import scala.util.Try
 
 /**
  * An application context backed by a [[dev.coilix.context.BeanRegistry]].
  *
  * The registry is passed by name, so the context can exist before its beans and be injected into them. Closing the context
- * logs a message at `INFO` level and destroys the beans with the [[dev.coilix.context.BeanDestroyer]].
+ * logs a message at `INFO` level, calls [[dev.coilix.context.ContextLifecycleListener.onContextClosing]] on the listener
+ * beans and destroys the beans with the [[dev.coilix.context.BeanDestroyer]].
  *
  * @param registry
  *   the beans of the context, evaluated on first access
@@ -43,6 +45,12 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
 
   private def destroyBeans(): Unit = {
     log.info("Closing application context")
+    getBeansOfType[ContextLifecycleListener].reverse.foreach(notifyClosing)
     destroyer.destroy(registry.beans)
   }
+
+  private def notifyClosing(listener: ContextLifecycleListener): Unit =
+    Try(listener.onContextClosing()).failed.foreach(failure =>
+      log.warn(s"Context listener ${listener.getClass.getName} failed while the context was closing", failure)
+    )
 }

@@ -1,12 +1,16 @@
 package dev.coilix.context
 
+import scala.util.control.NonFatal
+
 /**
  * Builds a [[dev.coilix.context.DefaultApplicationContext]] by running a [[dev.coilix.context.ContextPlan]] synchronously.
  *
  * The context itself is provided as `applicationContext`, before the given singletons. The plan from the
  * [[dev.coilix.context.ContextPlanner]] is checked before any bean is created: a bean whose factory returns an effect stops the
  * build with an [[dev.coilix.context.EffectfulBeanException]], because this builder does not run effects. Each other bean is
- * created with the [[dev.coilix.context.BeanInstantiator]].
+ * created with the [[dev.coilix.context.BeanInstantiator]]. When every bean exists, the
+ * [[dev.coilix.context.ContextLifecycleListener]] beans are notified in creation order. A failing listener closes the context
+ * and its exception stops the build.
  *
  * This is the default [[dev.coilix.context.ApplicationContextBuilder]].
  *
@@ -32,8 +36,18 @@ final class DefaultApplicationContextBuilder(
     lazy val context:  ConfigurableApplicationContext = DefaultApplicationContext(registry, destroyer)
     lazy val registry: BeanRegistry                   = execute(planner.plan(definitions, contextBean(context) :: singletons))
     val _ = registry
-    context
+    started(context)
   }
+
+  private def started(context: ConfigurableApplicationContext): ConfigurableApplicationContext =
+    try {
+      context.getBeansOfType[ContextLifecycleListener].foreach(_.onContextStarted(context))
+      context
+    } catch {
+      case NonFatal(failure) =>
+        context.close()
+        throw failure
+    }
 
   private def contextBean(context: ApplicationContext): RegisteredBean =
     RegisteredBean.ofClass(contextBeanName, context.getClass, context)
