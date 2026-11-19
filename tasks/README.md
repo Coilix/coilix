@@ -29,6 +29,8 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00023 | [Moduł HTTP (`web`)](COILIX-00023_http.md) | wysoki | szkic do doszlifowania |
 | COILIX-00024 | [Serializacja: opis typu, circe i most do HTTP](COILIX-00024_serialization.md) | wysoki | szkic do doszlifowania |
 | COILIX-00025 | [GraphQL na Sangrii](COILIX-00025_graphql.md) | średni | szkic do doszlifowania, po COILIX-00023 i COILIX-00024 |
+| COILIX-00026 | [Przetwarzanie w tle (`processing`)](COILIX-00026_background_processing.md) | wysoki | szkic do doszlifowania |
+| COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | szkic do doszlifowania |
 
 Zależności między taskami:
 
@@ -53,6 +55,8 @@ Zależności między taskami:
 - COILIX-00023 korzysta z `CoilixModule` z COILIX-00010 i typów z COILIX-00022. Numery katalogów nowych modułów ustala się razem z przenumerowaniem z COILIX-00010, COILIX-00013 i COILIX-00017. Instancje `ResponseEffect` dla `IO` i `ZIO` czekają na COILIX-00020.
 - COILIX-00024 dostarcza `BodyReader`/`BodyWriter` dla JSON do COILIX-00023 i opis typu, z którego korzysta COILIX-00025.
 - COILIX-00025 wymaga COILIX-00023 (strumienie i WebSocket w silniku) i COILIX-00024 (opis typu).
+- COILIX-00026 korzysta z cyklu życia z COILIX-00004, `CoilixModule` z COILIX-00010, `TaskExecutor` z COILIX-00005 i tożsamości repliki z COILIX-00027 (operacje w całym klastrze po kroku 2 COILIX-00027). Wymaga zmiany w rdzeniu (`ComponentCollector`). Konektory Kafka, SFTP i Elasticsearch to osobne taski po nim, a `processing-web` czeka na COILIX-00023.
+- COILIX-00027 to moduł rdzenia bez zależności zewnętrznych. `ClusterCodec` trzeba uzgodnić z COILIX-00024, a `@Scheduled` z COILIX-00005 może z niego korzystać do zadań na jednej replice.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
