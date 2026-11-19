@@ -1,0 +1,5 @@
+coilix:
+  cluster:
+    identity: stateful-set
+    replicas: 3
+    version: 1.4.0

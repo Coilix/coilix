@@ -8,7 +8,7 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 
 | Warstwa | Moduły | Wymagane | Może zależeć od |
 |---|---|---|---|
-| rdzeń | `common`, `annotations`, `config`, `context`, `concurrency` | tak | tylko rdzenia |
+| rdzeń | `common`, `annotations`, `config`, `context`, `concurrency`, `cluster` | tak | tylko rdzenia |
 | start | `boot` | nie (kontekst można zbudować ręcznie) | rdzenia |
 | testy | `testkit` | nie (tylko w zależnościach testowych) | rdzenia i `boot` |
 | funkcje | `data`, `web`, `security` | nie | rdzenia, nigdy od `boot` ani od innej funkcji |

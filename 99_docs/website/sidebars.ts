@@ -12,7 +12,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Guides',
       collapsed: false,
-      items: ['guides/bean-lifecycle', 'guides/value-types', 'guides/profiles-and-conditions', 'guides/testing', 'guides/generic-types', 'guides/tasks-and-scheduling'],
+      items: ['guides/bean-lifecycle', 'guides/value-types', 'guides/profiles-and-conditions', 'guides/testing', 'guides/generic-types', 'guides/tasks-and-scheduling', 'guides/replicas'],
     },
   ],
 };

@@ -30,7 +30,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00024 | [Serializacja: opis typu, circe i most do HTTP](COILIX-00024_serialization.md) | wysoki | szkic do doszlifowania |
 | COILIX-00025 | [GraphQL na Sangrii](COILIX-00025_graphql.md) | średni | szkic do doszlifowania, po COILIX-00023 i COILIX-00024 |
 | COILIX-00026 | [Przetwarzanie w tle (`processing`)](COILIX-00026_background_processing.md) | wysoki | szkic do doszlifowania, krok 2 (`ComponentCollector`) zrobiony (ADR 0017) |
-| COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | szkic do doszlifowania |
+| COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | w trakcie: krok 1 zrobiony (`07_cluster`, tożsamość repliki, ADR 0021) |
 | COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | szkic do doszlifowania, krok 3 przed `core-v0.1.0` |
 | COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | szkic do doszlifowania |
 

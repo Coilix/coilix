@@ -1,0 +1,45 @@
+---
+id: replicas
+title: Running several replicas
+description: Let each replica of the application know its number and the number of replicas, to split work between them.
+sidebar_position: 7
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import InvoiceBatches from '!!raw-loader!@examples/scala/replicas/InvoiceBatches.scala';
+import ReplicasYaml from '!!raw-loader!@examples/resources/guides/replicas/application.yaml';
+import InvoiceBatchesTest from '!!raw-loader!@examples/test/replicas/InvoiceBatchesTest.scala';
+
+This page shows how each copy of the application, for example each pod in Kubernetes, finds out which replica it is and how many replicas run. Use it to split work between replicas, such as giving each replica its own part of the customers.
+
+## Add the cluster module
+
+Add `coilix-cluster` to the dependencies. It adds a `ReplicaIdentity` bean with `self.index`, the number of this replica counted from 0, and `replicaCount`.
+
+<CodeBlock language="scala" title="InvoiceBatches.scala">{InvoiceBatches}</CodeBlock>
+
+Without configuration, the application is replica 0 of 1, so a local run and a test do all the work.
+
+## Run as a Kubernetes StatefulSet
+
+Pods of a StatefulSet have stable numbers. Select the `stateful-set` identity and give the number of replicas, the same value as `replicas` of the StatefulSet:
+
+<CodeBlock language="yaml" title="application.yaml">{ReplicasYaml}</CodeBlock>
+
+The replica reads its number from the `COILIX_POD_INDEX` variable. Fill it from the `apps.kubernetes.io/pod-index` label through the downward API, available from Kubernetes 1.28. Without that variable, the number is taken from the end of the pod name, such as `2` in `invoices-2`. The name of the replica is the pod name from the `HOSTNAME` variable, or `coilix.cluster.replica-id`.
+
+The number of replicas can also come from the `COILIX_REPLICAS` variable, for example set by a Helm chart from the same value as the StatefulSet.
+
+## Give the numbers yourself
+
+With `identity: static`, the replica takes its number from `coilix.cluster.replica-index` and the count from `coilix.cluster.replicas`, or from the `COILIX_REPLICA_INDEX` and `COILIX_REPLICAS` variables.
+
+## When the identity is wrong
+
+The application does not start when it cannot find its number, when the count is below 1, or when the number is not below the count. The error says which key or variable to set. Each replica logs its number at startup, for example `Running as replica 2 of 3 (invoices-2)`.
+
+## Test with several replicas
+
+Set the identity in the test properties to check the share of one replica:
+
+<CodeBlock language="scala" title="InvoiceBatchesTest.scala">{InvoiceBatchesTest}</CodeBlock>

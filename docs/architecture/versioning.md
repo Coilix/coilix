@@ -9,7 +9,7 @@
 
   | Grupa | Moduły | Tag |
   |---|---|---|
-  | `core` | `common`, `annotations`, `slf4s-plugin`, `config`, `context`, `concurrency`, `boot`, `testkit` | `core-vX.Y.Z` |
+  | `core` | `common`, `annotations`, `slf4s-plugin`, `config`, `context`, `concurrency`, `cluster`, `boot`, `testkit` | `core-vX.Y.Z` |
   | moduł funkcji, np. `web` | jeden moduł funkcji (`data`, `web`, `security`) | `web-vX.Y.Z` |
 
   Moduły rdzenia mają zawsze tę samą wersję i wychodzą razem, nawet jeśli któryś się nie zmienił, więc użytkownik nie sprawdza, które wersje rdzenia do siebie pasują. Moduł funkcji wychodzi niezależnie od rdzenia i od innych modułów funkcji.

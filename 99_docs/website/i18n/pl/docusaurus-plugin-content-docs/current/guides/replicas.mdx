@@ -1,0 +1,45 @@
+---
+id: replicas
+title: Kilka replik aplikacji
+description: Każda replika aplikacji zna swój numer i liczbę replik, więc mogą podzielić się pracą.
+sidebar_position: 7
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import InvoiceBatches from '!!raw-loader!@examples/scala/replicas/InvoiceBatches.scala';
+import ReplicasYaml from '!!raw-loader!@examples/resources/guides/replicas/application.yaml';
+import InvoiceBatchesTest from '!!raw-loader!@examples/test/replicas/InvoiceBatchesTest.scala';
+
+Ta strona pokazuje, jak każda kopia aplikacji, np. każdy pod w Kubernetesie, dowiaduje się, którą jest repliką i ile replik działa. Przydaje się to do podziału pracy, np. gdy każda replika obsługuje swoją część klientów.
+
+## Moduł klastra
+
+Dodaj `coilix-cluster` do zależności. Moduł dodaje bean `ReplicaIdentity` z `self.index`, czyli numerem tej repliki liczonym od 0, i `replicaCount`.
+
+<CodeBlock language="scala" title="InvoiceBatches.scala">{InvoiceBatches}</CodeBlock>
+
+Bez konfiguracji aplikacja jest repliką 0 z 1, więc lokalne uruchomienie i test wykonują całą pracę.
+
+## StatefulSet w Kubernetesie
+
+Pody StatefulSetu mają stałe numery. Wybierz tożsamość `stateful-set` i podaj liczbę replik, taką samą jak `replicas` StatefulSetu:
+
+<CodeBlock language="yaml" title="application.yaml">{ReplicasYaml}</CodeBlock>
+
+Replika czyta swój numer ze zmiennej `COILIX_POD_INDEX`. Wypełnij ją etykietą `apps.kubernetes.io/pod-index` przez downward API, dostępne od Kubernetesa 1.28. Bez tej zmiennej numer jest brany z końcówki nazwy poda, np. `2` z `invoices-2`. Nazwa repliki to nazwa poda ze zmiennej `HOSTNAME` albo `coilix.cluster.replica-id`.
+
+Liczba replik może też przyjść ze zmiennej `COILIX_REPLICAS`, np. ustawianej przez chart Helma z tej samej wartości co w StatefulSecie.
+
+## Numery podane ręcznie
+
+Przy `identity: static` replika bierze numer z `coilix.cluster.replica-index`, a liczbę replik z `coilix.cluster.replicas` albo ze zmiennych `COILIX_REPLICA_INDEX` i `COILIX_REPLICAS`.
+
+## Gdy tożsamość jest błędna
+
+Aplikacja nie startuje, gdy nie może ustalić swojego numeru, gdy liczba replik jest mniejsza niż 1 albo gdy numer nie jest mniejszy od liczby replik. Błąd mówi, który klucz albo zmienną ustawić. Każda replika zapisuje swój numer w logu przy starcie, np. `Running as replica 2 of 3 (invoices-2)`.
+
+## Test z kilkoma replikami
+
+Ustaw tożsamość we właściwościach testu, żeby sprawdzić część pracy jednej repliki:
+
+<CodeBlock language="scala" title="InvoiceBatchesTest.scala">{InvoiceBatchesTest}</CodeBlock>
