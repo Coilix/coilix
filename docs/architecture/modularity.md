@@ -49,6 +49,8 @@ trait CoilixModule {
   def name: String
 
   def components: List[Class[?]]
+
+  def collects: List[Class[? <: Annotation]] = Nil
 }
 
 trait ModuleLoader {
@@ -59,6 +61,7 @@ trait ModuleLoader {
 - Moduł podaje klasy komponentów, a nie gotowe definicje. `DefaultCoilixBootstrap` tworzy z nich definicje tym samym `BeanDefinitionFactory` co dla klas ze skanowania, więc działają adnotacje komponentów, `@Bean` w klasach `@Configuration` i metody cyklu życia.
 - `ServiceLoaderModuleLoader` (w `context`) wczytuje moduły przez `ServiceLoader` z classloadera kontekstowego wątku, sortuje je po nazwie i pomija te z `coilix.modules.<nazwa>.enabled = false`. Każdy wczytany i pominięty moduł trafia do logu.
 - `ModuleLoader` ma `given ConfigPath` (`coilix.context.module-loader`) i `default`, więc można go podmienić, np. w testach.
+- Moduł może zbierać klasy z własną adnotacją zamiast robić z nich beany (`collects`, ADR 0017). Dostaje je przez bean `CollectedComponents` i sam decyduje, kiedy je tworzy. Adnotację trzyma moduł adnotacji tej funkcji (np. `processing-annotations`), więc rdzeń jej nie zna.
 - Definicje z modułów idą razem z definicjami ze skanowania, bez usuwania duplikatów. Konflikt (ten sam typ z modułu i z aplikacji) rozstrzygają istniejące reguły `@Primary` i `CandidateSelector`, a nie kolejność.
 
 ## Weryfikacja w buildzie

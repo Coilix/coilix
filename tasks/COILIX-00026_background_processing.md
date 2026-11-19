@@ -653,7 +653,7 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 ### Kroki (osobne PR-y)
 
 1. Ten szkic i COILIX-00027, potem ADR z decyzjami: nazwa, procesory poza rejestrem beanów, identyfikatory, moduły, model wykonania, sloty, shardy i repliki, model błędów.
-2. Rdzeń: `ComponentCollector` i instancjonowanie klas spoza rejestru beanów z cyklem życia.
+2. Rdzeń: `ComponentCollector` i instancjonowanie klas spoza rejestru beanów z cyklem życia — zrobione: `CoilixModule.collects`, `CollectedComponents`, `ManagedComponent` (ADR 0017).
 3. COILIX-00027 krok 1: tożsamość repliki i statyczne członkostwo.
 4. `processing-annotations` i szkielet `processing`: `ProcessorId`, zbieranie i tworzenie procesorów, wątek sterujący managera, sloty, `Shard`, `ShardAssignment` (strategie statyczne), `ShardKeys`, wspólny model nadzoru (maszyna stanów jako czyste przejścia, `RestartPolicy`, `Backoff`), SPI `ProcessorEngine` i silnik na wątkach wirtualnych, `CustomProcessor`, `BlockingProcessor`, lokalne operacje managera, konfiguracja, cykl życia.
 5. `StatelessProcessor`, `InputSource`, `Input`, `Acknowledgement`, `Output`, implementacje w pamięci, statystyki i zdarzenia.
@@ -705,7 +705,7 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 
 ## Ryzyka i otwarte pytania
 
-1. `ComponentCollector` zmienia skaner w rdzeniu. Trzeba go zaprojektować ogólnie, bo przyda się też innym modułom (np. kontrolery HTTP w COILIX-00023 mogą chcieć tego samego zamiast beanów).
+1. `ComponentCollector` zmienia skaner w rdzeniu. Rozwiązane ogólnie w ADR 0017: moduł podaje adnotacje w `collects`, a dostaje klasy przez bean `CollectedComponents`, z którego mogą korzystać też inne moduły (np. kontrolery HTTP w COILIX-00023).
 2. Procesor spoza rejestru nie może być zależnością `@Bean`-ów ani `ApplicationRunner`. To zamierzone, ale trzeba to jasno opisać i dać czytelny błąd.
 3. Sloty dla źródeł bez partycji (domyślnie 256) ograniczają maksymalną liczbę shardów. Zmiana `slots` to migracja stanu, więc wartość domyślną trzeba dobrać z zapasem.
 4. Przy przydziale statycznym rozjazd configu w trakcie rolling update daje chwilowe podwójne albo brakujące shardy. Odcisk configu, epoka i at-least-once to łagodzą, a pełne rozwiązanie daje przydział `coordinated`.

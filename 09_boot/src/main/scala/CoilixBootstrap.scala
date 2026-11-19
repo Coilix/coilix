@@ -6,6 +6,7 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinition
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ClassPathScanner
+import dev.coilix.context.ComponentCollector
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.ModuleLoader
 import dev.coilix.context.RegisteredBean
@@ -35,6 +36,8 @@ trait CoilixBootstrap {
    *
    * @throws dev.coilix.boot.UnmatchedBeanReplacementException
    *   if a replaced type matches no bean discovered by scanning or in modules
+   * @throws dev.coilix.boot.CollectedComponentConflictException
+   *   if a class has a component annotation and an annotation collected by a module
    * @throws dev.coilix.context.NoSuchBeanException
    *   if a required dependency has no matching bean
    * @throws dev.coilix.context.CircularDependencyException
@@ -61,7 +64,8 @@ object CoilixBootstrap {
         ClassPathScanner.default,
         ApplicationContextBuilder.default,
         ModuleLoader.default,
-        BeanDefinitionFactory.default
+        BeanDefinitionFactory.default,
+        ComponentCollector.default
       )
     )
 }

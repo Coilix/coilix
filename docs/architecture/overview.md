@@ -49,6 +49,7 @@ flowchart LR
 - **Tworzenie.** `DefaultApplicationContextBuilder` składa rejestr przez `foldLeft` po uporządkowanych definicjach. Każdy krok dodaje nowy `RegisteredBean` do niemutowalnego `ImmutableBeanRegistry`.
 - **Inicjalizacja.** `ReflectiveBeanInstantiator` przepuszcza nową instancję przez `BeanPostProcessor` przed rejestracją. Domyślny `PostConstructProcessor` wywołuje metody `@PostConstruct`, więc beany zależne dostają już zainicjalizowany obiekt. Wyjątek z takiej metody to `BeanCreationException` z nazwą beana i metody.
 - **Zamykanie.** `close()` kontekstu przekazuje beany do `BeanDestroyer`. Domyślny `PreDestroyInvoker` wywołuje metody `@PreDestroy` od beana utworzonego jako ostatni. Wyjątek jest logowany jako `WARN` i nie przerywa niszczenia pozostałych beanów.
+- **Komponenty zbierane przez moduły.** Moduł może w `CoilixModule.collects` podać adnotacje, których klasy nie mają być beanami (np. procesory tła z COILIX-00026). `DefaultCoilixBootstrap` szuka ich przez `ClassPathScanner.scanAnnotated` w skanowanych pakietach i wśród komponentów modułów, a `ComponentCollector` robi z nich jeden bean `collectedComponents` (`CollectedComponents`). Jego definicja zależy od wszystkich zależności zebranych klas, więc brakujący bean albo cykl wychodzi przy starcie. Moduł tworzy instancje przez `CollectedComponents.create` (zależności, `@Value`, `@PostConstruct`) i zamyka je przez `ManagedComponent.close` (`@PreDestroy`). Klasa z adnotacją komponentu i adnotacją zbieraną to `CollectedComponentConflictException`, a bean, który chce wstrzyknąć zebraną klasę, dostaje `NoSuchBeanException` z wyjaśnieniem (ADR 0017).
 - **Beany wbudowane.** Przed beanami aplikacji rejestr zawiera `applicationContext`, `applicationArguments` i `environment`, więc można je wstrzykiwać.
 
 ## Punkty rozszerzeń
@@ -71,6 +72,7 @@ coilix.context.bean-name-generator.class: com.example.PrefixedBeanNameGenerator
 | `coilix.context.application-context-builder` | `ApplicationContextBuilder` | `DefaultApplicationContextBuilder` |
 | `coilix.context.class-path-scanner` | `ClassPathScanner` | `ReflectionsClassPathScanner` |
 | `coilix.context.module-loader` | `ModuleLoader` | `ServiceLoaderModuleLoader` |
+| `coilix.context.component-collector` | `ComponentCollector` | `DefaultComponentCollector` |
 | `coilix.context.bean-definition-factory` | `BeanDefinitionFactory` | `ReflectiveBeanDefinitionFactory` |
 | `coilix.context.bean-method-scanner` | `BeanMethodScanner` | `ReflectiveBeanMethodScanner` |
 | `coilix.context.bean-name-generator` | `BeanNameGenerator` | `SimpleBeanNameGenerator` |
