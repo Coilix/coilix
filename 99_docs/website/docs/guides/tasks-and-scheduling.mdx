@@ -7,6 +7,8 @@ sidebar_position: 6
 
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
+import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scala';
+import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
 import PriceRefresher from '!!raw-loader!@examples/scala/tasks/PriceRefresher.scala';
 import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
@@ -25,6 +27,18 @@ By default each task runs on a new virtual thread named `coilix-task-<number>`. 
 If a task started with `execute` throws an exception, Coilix logs it as an error. A task started with `submit` returns the exception in its `Future`.
 
 The executor can also be passed where a library expects an `ExecutionContext`, through `executor.executionContext`.
+
+## Run a method asynchronously with @Async
+
+Annotate a method with `@Async` to run it on the executor whenever another bean calls it. The method must be declared in a trait of the bean:
+
+<CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
+
+<CodeBlock language="scala" title="SmtpInvoiceMailer.scala">{SmtpInvoiceMailer}</CodeBlock>
+
+A method returning `Future[T]` returns the result of the run on the executor, and a method returning `Unit` is started without waiting; its failure is logged. Methods without `@Async` run on the calling thread.
+
+Coilix registers such a bean as a proxy of the trait, so other beans inject `InvoiceMailer`, not `SmtpInvoiceMailer`. A call from inside the bean itself does not pass the proxy and runs on the calling thread. An `@Async` method that no trait declares, or that returns something other than `Unit` or `Future`, stops the startup with `InvalidAsyncMethodException`.
 
 ## Repeat a method with @Scheduled
 

@@ -8,7 +8,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00002 | [Uruchamianie aplikacji w stylu Spring Boot](COILIX-00002_spring_like_startup.md) | wysoki | zrobiony |
 | COILIX-00003 | [Konfiguracja: pliki, `@Value`, `@Configuration` i nadpisywanie komponentów](COILIX-00003_configuration.md) | wysoki | zrobiony |
 | COILIX-00004 | [Cykl życia beanów: `@PostConstruct` i `@PreDestroy`](COILIX-00004_bean_lifecycle.md) | wysoki | zrobiony |
-| COILIX-00005 | [Zarządzanie wątkami](COILIX-00005_thread_management.md) | średni | w trakcie: kroki 1 i 3 zrobione (`06_concurrency`, `@Scheduled`, ADR 0020), dalej `@Async` |
+| COILIX-00005 | [Zarządzanie wątkami](COILIX-00005_thread_management.md) | średni | w trakcie: kroki 1–3 zrobione (`06_concurrency`, `@Scheduled`, `@Async`, ADR 0020 i 0022), dalej MDC |
 | COILIX-00006 | [Legalność, licencjonowanie i publikacja](COILIX-00006_legal_and_publication.md) | wysoki | zrobiony ([docs/legal](../docs/legal/README.md)) |
 | COILIX-00007 | [Dokumentacja API i strona na GitHub Pages z wersjami](COILIX-00007_documentation_site.md) | wysoki | w trakcie: Scaladoc, Javadoc, szkielet `99_docs` i workflow publikacji gotowe, dalej przewodniki; strona wyjdzie z `core-v0.1.0` |
 | COILIX-00008 | [Nazwa Coilix, licencja, przestrzeń nazw i metadane publikacji](COILIX-00008_license_and_publication_setup.md) | wysoki | zrobiony |

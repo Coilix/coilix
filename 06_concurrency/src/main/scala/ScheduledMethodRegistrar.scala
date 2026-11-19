@@ -6,6 +6,7 @@ import dev.coilix.config.Environment
 import dev.coilix.config.ValueExpression
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.ContextLifecycleListener
+import dev.coilix.context.ProxiedBean
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
@@ -37,7 +38,9 @@ final class ScheduledMethodRegistrar(scheduler: TaskScheduler, environment: Opti
    *   if a method takes parameters, is static, cannot be made accessible, or has a missing or invalid duration
    */
   override def onContextStarted(context: ApplicationContext): Unit = {
-    val scheduled = context.beanNames.flatMap(name => context.getBeanByName(name).toList.flatMap(methodsOf(name, _)))
+    val scheduled = context.beanNames.flatMap(name =>
+      context.getBeanByName(name).toList.flatMap(bean => methodsOf(name, ProxiedBean.unwrap(bean)))
+    )
     val _         = tasks.updateAndGet(_ ++ scheduled.map(schedule))
   }
 
