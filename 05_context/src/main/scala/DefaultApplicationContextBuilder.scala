@@ -1,52 +1,50 @@
 package dev.coilix.context
 
 /**
- * Builds a [[dev.coilix.context.DefaultApplicationContext]]: registers the context itself as `applicationContext` and the given
- * singletons, leaves out the definitions rejected by the [[dev.coilix.context.DefinitionFilter]], orders the rest with the
- * [[dev.coilix.context.DependencyResolver]] and creates each bean with the
- * [[dev.coilix.context.BeanInstantiator]].
+ * Builds a [[dev.coilix.context.DefaultApplicationContext]] by running a [[dev.coilix.context.ContextPlan]] synchronously.
+ *
+ * The context itself is provided as `applicationContext`, before the given singletons. The plan from the
+ * [[dev.coilix.context.ContextPlanner]] is checked before any bean is created: a bean whose factory returns an effect stops the
+ * build with an [[dev.coilix.context.EffectfulBeanException]], because this builder does not run effects. Each other bean is
+ * created with the [[dev.coilix.context.BeanInstantiator]].
  *
  * This is the default [[dev.coilix.context.ApplicationContextBuilder]].
  *
- * @param resolver
- *   orders bean definitions by their dependencies
+ * @param planner
+ *   leaves out definitions whose conditions do not hold and orders the rest by their dependencies
  * @param instantiator
  *   creates each bean
  * @param selector
  *   chooses a bean when several match a requested type
  * @param destroyer
  *   destroys the beans when the built context closes
- * @param filter
- *   leaves out definitions whose conditions do not hold
  */
 final class DefaultApplicationContextBuilder(
-  resolver:     DependencyResolver,
+  planner:      ContextPlanner,
   instantiator: BeanInstantiator,
   selector:     CandidateSelector,
-  destroyer:    BeanDestroyer,
-  filter:       DefinitionFilter
+  destroyer:    BeanDestroyer
 ) extends ApplicationContextBuilder {
 
   private val contextBeanName = "applicationContext"
 
   override def build(definitions: List[BeanDefinition], singletons: List[RegisteredBean]): ConfigurableApplicationContext = {
     lazy val context:  ConfigurableApplicationContext = DefaultApplicationContext(registry, destroyer)
-    lazy val registry: BeanRegistry                   = instantiateAll(definitions, initialRegistry(context, singletons))
+    lazy val registry: BeanRegistry                   = execute(planner.plan(definitions, contextBean(context) :: singletons))
     val _ = registry
     context
   }
 
-  private def initialRegistry(context: ApplicationContext, singletons: List[RegisteredBean]): BeanRegistry =
-    singletons.foldLeft(contextRegistry(context))(_.register(_))
+  private def contextBean(context: ApplicationContext): RegisteredBean =
+    RegisteredBean.ofClass(contextBeanName, context.getClass, context)
 
-  private def contextRegistry(context: ApplicationContext): BeanRegistry =
-    ImmutableBeanRegistry.empty(selector).register(RegisteredBean.ofClass(contextBeanName, context.getClass, context))
+  private def execute(plan: ContextPlan): BeanRegistry =
+    if (plan.effectful.nonEmpty) throw EffectfulBeanException(plan.effectful)
+    else plan.steps.foldLeft(ImmutableBeanRegistry.empty(selector))(execute)
 
-  private def instantiateAll(definitions: List[BeanDefinition], initial: BeanRegistry): BeanRegistry =
-    resolver
-      .resolve(filter.filter(definitions, initial.beans.map(_.beanClass)), initial.beans.map(_.beanType))
-      .foldLeft(initial)(instantiate)
-
-  private def instantiate(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =
-    registry.register(instantiator.instantiate(definition, registry))
+  private def execute(registry: BeanRegistry, step: PlanStep): BeanRegistry =
+    step match {
+      case PlanStep.Provide(bean)      => registry.register(bean)
+      case PlanStep.Create(definition) => registry.register(instantiator.instantiate(definition, registry))
+    }
 }

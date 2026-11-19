@@ -2,7 +2,7 @@
 
 - Status: proponowana
 - Data: 2026-11-19
-- Task: COILIX-00020 (kroki 1 i 2)
+- Task: COILIX-00020 (kroki 1–3)
 
 ## Kontekst
 
@@ -16,6 +16,12 @@ Model efektów:
 
 - Rdzeń nie zna `IO` ani żadnej biblioteki efektów. Kontener jest synchroniczny, a moduł `cats-effect` dostanie interpreter planu kontekstu w `IO` (COILIX-00020, krok 3 i 5).
 - `IORuntime` będzie beanem modułu `cats-effect`, zbudowanym z pul Coilix. `IO` nie jest przekładane na `Future` poza mostem do Pekko (COILIX-00029).
+
+Plan kontekstu:
+
+- `ContextPlanner` zamienia definicje i gotowe instancje w `ContextPlan`, czyli listę kroków `PlanStep.Provide` (gotowa instancja) i `PlanStep.Create` (definicja) w kolejności zależności. Filtr warunków i sortowanie topologiczne są częścią planowania, więc każdy interpreter dostaje ten sam wynik.
+- Rodzaj wyniku fabryki jest w `BeanDefinition.result`: `BeanResult.Plain`, `Deferred` (efekt dający instancję, np. `IO[A]`) albo `Managed` (zasób z finalizatorem, np. `Resource[IO, A]`). Rozpoznaje go `EffectfulResultRecognizer` przy skanowaniu metod `@Bean`, a bean jest rejestrowany pod typem wartości `A`. Dzięki temu warunki, zamiany beanów w testach i rozwiązywanie zależności widzą `A`, a nie efekt.
+- Domyślny `ClassNameEffectfulResultRecognizer.knownEffects` rozpoznaje `cats.effect.IO` i `cats.effect.kernel.Resource` po nazwie klasy, bez zależności od cats-effect. Synchroniczny `DefaultApplicationContextBuilder` odrzuca plan z takimi beanami wyjątkiem `EffectfulBeanException` przed utworzeniem pierwszego beana, zamiast po cichu zarejestrować efekt jako bean.
 
 Dopasowanie po typach:
 
@@ -31,3 +37,5 @@ Dopasowanie po typach:
 - Klasa generyczna skanowana bez wiązania zmiennej nie może mieć zależności od tej zmiennej. Wiąże ją metoda `@Bean` z konkretnym typem. Wiązanie efektu dla całej aplikacji (`coilix.effect.type`) przyjdzie z modułem `cats-effect`.
 - Heurystyka dla lambd typów odrzuca też poprawny konstruktor typu z dwoma parametrami użyty jako argument (np. dla traitu z `F[_, _]`). To rzadkie, a komunikat wyjaśnia powód. Dokładne sprawdzenie wymagałoby czytania TASTy.
 - Wariancja argumentów (`Repo[+A]`) nie jest brana pod uwagę: argumenty muszą być równe.
+- `DefaultApplicationContextBuilder` przyjmuje `ContextPlanner` zamiast `DependencyResolver` i `DefinitionFilter`, a `ReflectiveBeanMethodScanner` dodatkowo `EffectfulResultRecognizer`. Własne fabryki definicji, które chcą beanów efektowych, ustawiają `BeanDefinition.result` same.
+- Rozpoznawanie po nazwie klasy nie widzi aliasów i podklas efektu. Moduł `cats-effect` może podmienić recognizer kluczem `coilix.context.effectful-result-recognizer.class`.

@@ -23,7 +23,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
-| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | w trakcie: kroki 1–2 zrobione (ADR 0019), dalej `ContextPlan` przed `core-v0.1.0` |
+| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | w trakcie: kroki 1–3 zrobione (ADR 0019, `ContextPlan`), dalej zasoby wykonania |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
 | COILIX-00022 | [Typy wartości, enumy, walidacja i `EditOption` z biblioteki implicits](COILIX-00022_implicits_port.md) | wysoki | zrobiony w rdzeniu, mapowanie kolumn czeka na moduł `data` |
 | COILIX-00023 | [Moduł HTTP (`web`)](COILIX-00023_http.md) | wysoki | szkic do doszlifowania |
