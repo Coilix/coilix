@@ -3,7 +3,7 @@
 > Szkic do doszlifowania. Wzorem jest moduł `flow` z bulldozera (`OptimusFlow`, shardy, `StatefulFlow`), ale API piszemy od nowa pod zasady Coilix. Decyzje opiekuna z 2026-11-18 i 2026-11-19:
 >
 > - nazwa to „procesor”,
-> - rdzeń jest blokujący i działa na wątkach wirtualnych, Pekko dochodzi później jako integracja,
+> - rdzeń jest blokujący i działa na wątkach wirtualnych, a `IO` (COILIX-00020) i Pekko Streams (COILIX-00029) wpinają się jako osobne silniki wykonania na wspólnym modelu,
 > - obsługę błędów projektujemy od razu docelowo,
 > - jeden procesor ma wiele shardów i wiele równoległych workerów,
 > - shardy rozkładają się na repliki aplikacji (pody w Kubernetesie), które znają liczbę replik i swój numer,
@@ -529,6 +529,41 @@ Przy rolling update z nową konfiguracją dwie repliki mogą przez chwilę obsł
 - Procesory z `coilix.processors.autostart = true` startują po zbudowaniu kontekstu i po `ApplicationRunner`. Przy przydziale `coordinated` dopiero po dołączeniu repliki do klastra.
 - Zamknięcie kontekstu (SIGTERM z Kubernetesa) oddaje wszystkie shardy równolegle (`onReleased(Shutdown)`) w `shutdown-timeout`, ogłasza odejście repliki w klastrze i loguje workery, które nie zdążyły. Przewodnik każe ustawić `terminationGracePeriodSeconds` większe niż `shutdown-timeout`.
 
+### 15. Wspólny model i silniki wykonania
+
+Moduł `processing` dzieli się na dwie warstwy, żeby `IO` i Pekko Streams nie wymagały przekładania na `Future` ani osobnej logiki nadzoru:
+
+- **Wspólny model** (czyste dane i funkcje, bez wykonywania): identyfikatory, sloty, shardy i przydział, maszyna stanów workera jako przejścia `(stan, zdarzenie) => (stan, polecenia)`, `RestartPolicy`, `CompletionPolicy`, `Backoff`, `FailureHandling` zwracające decyzje, statystyki, zdarzenia, konfiguracja, dead letter, `ProcessorManager` i operacje w klastrze.
+- **Silnik wykonania** (SPI `ProcessorEngine`): uruchamia workera sharda w swoim modelu współbieżności, wykonuje polecenia modelu (start, czekanie, backoff, zatrzymanie) i raportuje zdarzenia (element przetworzony, błąd, zakończenie).
+
+```scala
+trait ProcessorEngine {
+  def supports(definition: ProcessorDefinition): Boolean
+
+  def start(definition: ProcessorDefinition, shard: Shard, events: WorkerEvents): RunningWorker
+}
+
+trait RunningWorker {
+  def stop(timeout: FiniteDuration): StopOutcome
+
+  def pause(): Unit
+
+  def resume(): Unit
+}
+```
+
+- Silnik dobierany jest automatycznie po traicie procesora. Aplikacja nic nie konfiguruje, a moduły integracyjne rejestrują silniki przez `CoilixModule`. Dwa silniki dla tego samego procesora albo brak silnika to błąd startu z nazwą procesora i brakującym modułem.
+
+| Procesor | Silnik | Moduł |
+|---|---|---|
+| `StatelessProcessor`, `BatchProcessor`, `StatefulProcessor`, `CustomProcessor`, `BlockingProcessor` | wątki wirtualne | `processing` |
+| `IOStatelessProcessor`, `IOBatchProcessor`, `IOStatefulProcessor` | fibery `IO` (backoff `IO.sleep`, zatrzymanie przez anulowanie, nadzór na `Supervisor`) | `processing-cats-effect` (COILIX-00020) |
+| `PekkoProcessor` | graf Pekko per shard, sterowany wartością materializowaną przez `Stoppable[M]` | `processing-pekko` (COILIX-00029) |
+
+- Warianty `IO*` mają te same metody co styl bezpośredni, ale zwracają `IO`: `process(element, context): IO[Unit]`, `step(...): IO[Step[S, R]]`, `InputSource`/`Output`/`StateStore` w wersjach `IOInputSource` itd. Model (`Step`, decyzje, statystyki) jest wspólny.
+- Runtime'y (`IORuntime`, `ActorSystem`) są beanami modułów `cats-effect` i `pekko`, jednymi na aplikację. Silniki je wstrzykują, więc zamykają się przed nimi.
+- Silnik zastępuje się kluczem `class` w `coilix.processors.engines.<nazwa>`, jak inne komponenty frameworka.
+
 ## Proponowany projekt
 
 | Moduł | Rodzaj | Zależności | Zawartość |
@@ -536,8 +571,9 @@ Przy rolling update z nową konfiguracją dwie repliki mogą przez chwilę obsł
 | `context` | rdzeń (zmiana) | — | `ComponentCollector` i instancjonowanie klas spoza rejestru beanów z cyklem życia |
 | `cluster` | rdzeń | `context` | COILIX-00027: członkostwo, tożsamość repliki, koordynator, API między replikami |
 | `processing-annotations` | Java | brak | `@Processor` |
-| `processing` | funkcja | `context`, `cluster`, `processing-annotations` | API z punktów 1–14, `ShardAssignment`, `ShardKeys`, endpointy klastra procesorów, implementacje w pamięci, `CoilixModule` |
-| `processing-pekko` | integracja (później) | `processing`, Pekko Streams | `PekkoProcessor` z `source(shard): pekko.Source[?, M]` i `given Stoppable[M]` dla `NotUsed` (kill switch) i `Cancellable` zamiast konwersji niejawnych |
+| `processing` | funkcja | `context`, `cluster`, `processing-annotations` | API z punktów 1–15, wspólny model, `ProcessorEngine` i silnik na wątkach wirtualnych, `ShardAssignment`, `ShardKeys`, endpointy klastra procesorów, implementacje w pamięci, `CoilixModule` |
+| `processing-cats-effect` | integracja | `processing`, `cats-effect` (COILIX-00020) | silnik fiberów `IO`, procesory `IO*`, `IOInputSource`, `IOOutput`, `IOStateStore` |
+| `processing-pekko` | integracja | `processing`, `pekko` (COILIX-00029) | `PekkoProcessor`, `Stoppable[M]`, `PekkoShardContext`, silnik grafów |
 | `processing-web` | integracja | `processing`, `web` | publiczne endpointy administracyjne: topologia klastra, status, statystyki, zdrowie, sterowanie, przegląd i `replay` dead letter |
 | `processing-micrometer` | integracja | `processing`, Micrometer | `ProcessorListener` publikujący metryki z etykietami `processor`, `shard`, `replica` |
 
@@ -619,7 +655,7 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 1. Ten szkic i COILIX-00027, potem ADR z decyzjami: nazwa, procesory poza rejestrem beanów, identyfikatory, moduły, model wykonania, sloty, shardy i repliki, model błędów.
 2. Rdzeń: `ComponentCollector` i instancjonowanie klas spoza rejestru beanów z cyklem życia.
 3. COILIX-00027 krok 1: tożsamość repliki i statyczne członkostwo.
-4. `processing-annotations` i szkielet `processing`: `ProcessorId`, zbieranie i tworzenie procesorów, wątek sterujący managera, sloty, `Shard`, `ShardAssignment` (strategie statyczne), `ShardKeys`, `CustomProcessor`, `BlockingProcessor`, `ShardSupervisor`, `RestartPolicy`, `Backoff`, lokalne operacje managera, konfiguracja, cykl życia.
+4. `processing-annotations` i szkielet `processing`: `ProcessorId`, zbieranie i tworzenie procesorów, wątek sterujący managera, sloty, `Shard`, `ShardAssignment` (strategie statyczne), `ShardKeys`, wspólny model nadzoru (maszyna stanów jako czyste przejścia, `RestartPolicy`, `Backoff`), SPI `ProcessorEngine` i silnik na wątkach wirtualnych, `CustomProcessor`, `BlockingProcessor`, lokalne operacje managera, konfiguracja, cykl życia.
 5. `StatelessProcessor`, `InputSource`, `Input`, `Acknowledgement`, `Output`, implementacje w pamięci, statystyki i zdarzenia.
 6. `FailureHandling` z etapami, decyzjami, eskalacją, `poisonAfter`, `ErrorClassifier`, walidacją przy starcie i regułami z configu. `DeadLetterQueue` w pamięci z `DeadLetterBrowser`.
 7. `Concurrency` (równoległość z potwierdzeniami w kolejności) i `BatchProcessor`.
@@ -627,7 +663,8 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 9. `pause`, `resume`, lokalne `reshard`, `ProcessingHealth`, przekazanie sharda (`Releasing`).
 10. Po COILIX-00027 (API między replikami): `cluster` w managerze, endpointy procesorów, porównanie odcisku configu, przydział `coordinated`, `reshard` w klastrze, `replay` na właściwej replice.
 11. Przewodnik w obu językach (z manifestem StatefulSetu) i procesory w demo.
-12. Konektory, `processing-web`, `processing-micrometer` i `processing-pekko`.
+12. `processing-cats-effect` (po COILIX-00020) i `processing-pekko` (COILIX-00029).
+13. Konektory, `processing-web` i `processing-micrometer`.
 
 ## Kryteria akceptacji
 
@@ -654,6 +691,7 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 21. Zamknięcie kontekstu oddaje wszystkie shardy, a te, które nie zdążyły w `shutdown-timeout`, są zalogowane.
 22. `processing` nie zależy od Pekko, cats-effect, klientów Kafki ani Kubernetesa, co sprawdza `checkModuleLayers`.
 23. Demo ma procesor bezstanowy z dead letter i procesor stanowy na źródłach w pamięci ze slotami, sterowane z beana przez `ProcessorManager`. Logi pokazują shardy, sloty i statystyki.
+24. Ten sam procesor bezstanowy napisany jako `StatelessProcessor` i jako `IOStatelessProcessor` ma te same statystyki, restarty i decyzje `FailureHandling` w teście na tym samym źródle w pamięci, a model nadzoru ma testy bez żadnego silnika (czyste przejścia).
 
 ## Poza zakresem
 
