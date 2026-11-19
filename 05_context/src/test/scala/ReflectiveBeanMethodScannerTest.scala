@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.context.configured.Salutation
 import dev.coilix.context.configured.SalutationConfiguration
 import dev.coilix.context.configured.ServerSettings
@@ -21,9 +22,9 @@ final class ReflectiveBeanMethodScannerTest extends FunSuite {
     assertEquals(
       scanner.scan(classOf[SalutationConfiguration]).last.dependencies,
       List(
-        Dependency.Required(classOf[SalutationConfiguration]),
-        Dependency.Required(classOf[Salutation]),
-        Dependency.Required(classOf[ServerSettings])
+        Dependency.Required(GenericType.of(classOf[SalutationConfiguration])),
+        Dependency.Required(GenericType.of(classOf[Salutation])),
+        Dependency.Required(GenericType.of(classOf[ServerSettings]))
       )
     )
   }

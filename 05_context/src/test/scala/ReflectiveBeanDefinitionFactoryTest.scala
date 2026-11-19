@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.wiring.AbstractBean
 import dev.coilix.context.wiring.DefaultGreetingService
@@ -32,9 +33,9 @@ final class ReflectiveBeanDefinitionFactoryTest extends FunSuite {
     assertEquals(
       factory.create(classOf[DefaultGreetingService]).map(_.dependencies),
       List(List(
-        Dependency.Required(classOf[Greeter]),
-        Dependency.Optional(classOf[Farewell]),
-        Dependency.Collection(classOf[Greeter])
+        Dependency.Required(GenericType.of(classOf[Greeter])),
+        Dependency.Optional(GenericType.of(classOf[Farewell])),
+        Dependency.Collection(GenericType.of(classOf[Greeter]))
       ))
     )
   }

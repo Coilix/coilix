@@ -1,7 +1,7 @@
 package dev.coilix.testkit
 
 import dev.coilix.boot.BasePackageResolver
-import dev.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.common.TypeInfo
 import dev.coilix.config.Profiles
 import dev.coilix.context.ConfigurableApplicationContext
 import scala.reflect.ClassTag
@@ -63,12 +63,12 @@ final case class CoilixTestSetup(
    * Building the context fails with [[dev.coilix.boot.UnmatchedBeanReplacementException]] when the application has no bean of
    * type `T`; use [[dev.coilix.testkit.CoilixTestSetup.addBean]] to add a bean the application does not define.
    */
-  def replaceBean[T <: AnyRef: ClassTag](instance: T): CoilixTestSetup =
-    withBean(TestBean(defaultName[T], runtimeTypeOf[T], instance, replaces = true))
+  def replaceBean[T <: AnyRef: TypeInfo](instance: T): CoilixTestSetup =
+    withBean(TestBean(defaultName[T], TypeInfo[T].genericType, instance, replaces = true))
 
   /** Adds `instance` as a bean of type `T` next to the beans of the application. */
-  def addBean[T <: AnyRef: ClassTag](instance: T): CoilixTestSetup =
-    withBean(TestBean(defaultName[T], runtimeTypeOf[T], instance, replaces = false))
+  def addBean[T <: AnyRef: TypeInfo](instance: T): CoilixTestSetup =
+    withBean(TestBean(defaultName[T], TypeInfo[T].genericType, instance, replaces = false))
 
   /** Adds a ready bean with a chosen name and mode. */
   def withBean(bean: TestBean): CoilixTestSetup =
@@ -101,8 +101,8 @@ final case class CoilixTestSetup(
   def configurationOverrides: Map[String, String] =
     if (profiles.isEmpty) properties else properties + (Profiles.ActivePath -> profiles.mkString(","))
 
-  private def defaultName[T: ClassTag]: String = {
-    val simpleName = runtimeTypeOf[T].getSimpleName.stripSuffix("$")
+  private def defaultName[T: TypeInfo]: String = {
+    val simpleName = TypeInfo[T].runtimeClass.getSimpleName.stripSuffix("$")
     simpleName.take(1).toLowerCase + simpleName.drop(1)
   }
 }

@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ValueExpression
 import java.lang.reflect.Type
 
@@ -7,13 +8,13 @@ import java.lang.reflect.Type
 enum Dependency {
 
   /** A parameter of a bean type. The bean must exist. */
-  case Required(beanType: Class[?])
+  case Required(beanType: GenericType)
 
   /** An `Option[T]` parameter: the bean of type `T` when there is one, otherwise `None`. */
-  case Optional(beanType: Class[?])
+  case Optional(beanType: GenericType)
 
   /** A collection parameter such as `List[T]`: all beans of type `T`, possibly none. */
-  case Collection(beanType: Class[?])
+  case Collection(beanType: GenericType)
 
   /**
    * A parameter annotated with `@Value`, filled from the configuration.

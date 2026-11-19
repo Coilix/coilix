@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.ConfigPath
 
@@ -12,7 +13,7 @@ trait CandidateSelector {
    * @throws dev.coilix.context.AmbiguousBeanException
    *   if several candidates match and none can be chosen
    */
-  def select[A <: BeanDescriptor](requested: Class[?], candidates: List[A]): Option[A]
+  def select[A <: BeanDescriptor](requested: GenericType, candidates: List[A]): Option[A]
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.CandidateSelector]]. */

@@ -1,0 +1,48 @@
+---
+id: generic-types
+title: Beany z argumentami typów
+description: Wstrzykuj beany, które implementują ten sam trait i różnią się tylko argumentami typów, np. źródło dla Option i dla List.
+sidebar_position: 5
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import PriceSource from '!!raw-loader!@examples/scala/generics/PriceSource.scala';
+import CachedPrices from '!!raw-loader!@examples/scala/generics/CachedPrices.scala';
+import PriceHistory from '!!raw-loader!@examples/scala/generics/PriceHistory.scala';
+import PriceReport from '!!raw-loader!@examples/scala/generics/PriceReport.scala';
+import PriceReportTest from '!!raw-loader!@examples/test/generics/PriceReportTest.scala';
+
+Ta strona pokazuje, jak Coilix rozróżnia beany tego samego traitu generycznego, np. repozytorium dla jednego typu efektu i repozytorium dla innego. Przyda się, gdy dwa beany implementują jeden trait z różnymi argumentami typów, a każda zależność potrzebuje konkretnego z nich.
+
+## Deklarowanie beanów z argumentami typów
+
+Każda implementacja rozszerza trait z własnym argumentem typu:
+
+<CodeBlock language="scala" title="PriceSource.scala">{PriceSource}</CodeBlock>
+
+<CodeBlock language="scala" title="CachedPrices.scala">{CachedPrices}</CodeBlock>
+
+<CodeBlock language="scala" title="PriceHistory.scala">{PriceHistory}</CodeBlock>
+
+## Wstrzykiwanie po pełnym typie
+
+Parametr konstruktora typu `PriceSource[Option]` dostaje tylko bean, który rozszerza `PriceSource[Option]`, więc `@Primary` ani `@Qualifier` nie są potrzebne:
+
+<CodeBlock language="scala" title="PriceReport.scala">{PriceReport}</CodeBlock>
+
+Tak samo działa `Option[PriceSource[List]]` i `List[PriceSource[Option]]`. Wildcard, jak w `List[PriceSource[?]]`, pasuje do każdego argumentu typu. `ApplicationContext.getBean[PriceSource[Option]]` i `bean[PriceSource[Option]]` z testkitu też szukają beanów po pełnym typie.
+
+## Podmiana jednego z nich w teście
+
+`replaceBean` i `addBean` zachowują argumenty typów, więc test może podmienić jedno źródło i zostawić drugie:
+
+<CodeBlock language="scala" title="PriceReportTest.scala">{PriceReportTest}</CodeBlock>
+
+## Ograniczenia
+
+Coilix czyta argumenty typów z sygnatur generycznych, które zapisuje kompilator, więc niektórych typów nie da się dopasować. Start kończy się wtedy błędem z nazwą parametru:
+
+- Zmienna typu, której nic nie wiąże, jak w `final class SqlPrices[F[_]](source: PriceSource[F])`. Taką klasę tworzy się w metodzie `@Bean` z konkretnym typem, np. `def prices: PriceSource[Option] = SqlPrices[Option]()`.
+- Lambda typu albo typ częściowo zastosowany, np. `PriceSource[[A] =>> Either[String, A]]`, bo JVM zachowuje z niego tylko `Either`. Zamiast tego zadeklaruj nazwaną klasę dla efektu.
+
+Gotowa instancja zarejestrowana tylko z klasą, bez argumentów typów, nie pasuje do zależności z argumentami typów. Zarejestruj ją z pełnym typem, tak jak robi to `RegisteredBean.of[PriceSource[Option]](...)`.

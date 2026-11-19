@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import scala.annotation.tailrec
 
 /**
@@ -21,7 +22,7 @@ import scala.annotation.tailrec
  */
 final class TopologicalDependencyResolver(selector: CandidateSelector) extends DependencyResolver {
 
-  override def resolve(definitions: List[BeanDefinition], provided: List[Class[?]]): List[BeanDefinition] =
+  override def resolve(definitions: List[BeanDefinition], provided: List[GenericType]): List[BeanDefinition] =
     order(definitions.map(pendingBean(definitions, provided)), Nil)
 
   @tailrec
@@ -35,17 +36,17 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
   private def isReady(resolved: List[BeanDefinition])(pending: PendingBean): Boolean =
     pending.prerequisites.forall(resolved.contains)
 
-  private def pendingBean(definitions: List[BeanDefinition], provided: List[Class[?]])(definition: BeanDefinition): PendingBean =
+  private def pendingBean(definitions: List[BeanDefinition], provided: List[GenericType])(definition: BeanDefinition): PendingBean =
     PendingBean(definition, prerequisites(definition, definitions, provided))
 
   private def prerequisites(
     definition:  BeanDefinition,
     definitions: List[BeanDefinition],
-    provided:    List[Class[?]]
+    provided:    List[GenericType]
   ): List[BeanDefinition] =
     definition.dependencies.flatMap(prerequisitesOf(definition, definitions, provided)).distinct
 
-  private def prerequisitesOf(definition: BeanDefinition, definitions: List[BeanDefinition], provided: List[Class[?]])(
+  private def prerequisitesOf(definition: BeanDefinition, definitions: List[BeanDefinition], provided: List[GenericType])(
     dependency: Dependency
   ): List[BeanDefinition] =
     dependency match {
@@ -58,8 +59,8 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
   private def required(
     definition:  BeanDefinition,
     definitions: List[BeanDefinition],
-    provided:    List[Class[?]],
-    beanType:    Class[?]
+    provided:    List[GenericType],
+    beanType:    GenericType
   ): List[BeanDefinition] =
     if (isProvided(provided)(beanType)) Nil
     else List(selector.select(beanType, definitions).getOrElse(throw unsatisfied(definition, beanType)))
@@ -67,21 +68,21 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
   private def optional(
     definition:  BeanDefinition,
     definitions: List[BeanDefinition],
-    provided:    List[Class[?]],
-    beanType:    Class[?]
+    provided:    List[GenericType],
+    beanType:    GenericType
   ): List[BeanDefinition] =
     if (isProvided(provided)(beanType)) Nil
     else selector.select(beanType, others(definition, definitions)).toList
 
-  private def matching(beanType: Class[?], definitions: List[BeanDefinition]): List[BeanDefinition] =
-    definitions.filter(candidate => beanType.isAssignableFrom(candidate.beanClass))
+  private def matching(beanType: GenericType, definitions: List[BeanDefinition]): List[BeanDefinition] =
+    definitions.filter(candidate => beanType.isAssignableFrom(candidate.beanType))
 
   private def others(definition: BeanDefinition, definitions: List[BeanDefinition]): List[BeanDefinition] =
     definitions.filterNot(_ eq definition)
 
-  private def isProvided(provided: List[Class[?]])(beanType: Class[?]): Boolean =
+  private def isProvided(provided: List[GenericType])(beanType: GenericType): Boolean =
     provided.exists(beanType.isAssignableFrom)
 
-  private def unsatisfied(definition: BeanDefinition, beanType: Class[?]): NoSuchBeanException =
-    new NoSuchBeanException(s"No bean satisfies dependency '${beanType.getName}' required by '${definition.beanName}'")
+  private def unsatisfied(definition: BeanDefinition, beanType: GenericType): NoSuchBeanException =
+    new NoSuchBeanException(s"No bean satisfies dependency '$beanType' required by '${definition.beanName}'")
 }

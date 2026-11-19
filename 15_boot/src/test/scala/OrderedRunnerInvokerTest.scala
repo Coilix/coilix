@@ -4,6 +4,7 @@ import dev.coilix.boot.application.FirstRunner
 import dev.coilix.boot.application.RunJournal
 import dev.coilix.boot.application.SecondRunner
 import dev.coilix.boot.application.UnorderedRunner
+import dev.coilix.common.GenericType
 import dev.coilix.context.DefaultApplicationContext
 import dev.coilix.context.ImmutableBeanRegistry
 import dev.coilix.context.PrimaryCandidateSelector
@@ -32,5 +33,5 @@ final class OrderedRunnerInvokerTest extends FunSuite {
   }
 
   private def bean(name: String, instance: AnyRef): RegisteredBean =
-    RegisteredBean(name, instance.getClass, isPrimary = false, instance)
+    RegisteredBean(name, GenericType.of(instance.getClass), isPrimary = false, instance)
 }

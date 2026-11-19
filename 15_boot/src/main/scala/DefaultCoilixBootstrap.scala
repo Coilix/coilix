@@ -1,6 +1,7 @@
 package dev.coilix.boot
 
 import dev.coilix.annotation.Slf4s
+import dev.coilix.common.GenericType
 import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinition
 import dev.coilix.context.BeanDefinitionFactory
@@ -101,16 +102,16 @@ final class DefaultCoilixBootstrap(
     annotations: List[Class[? <: Annotation]]
   ): Unit = {
     beans.find(bean => collected.contains(bean.beanClass)).foreach(bean => throw conflict(bean.beanClass, annotations))
-    beans.foreach(checkDependencies(beans.map(_.beanClass) ++ singletons.map(_.beanClass), collected, annotations))
+    beans.foreach(checkDependencies(beans.map(_.beanType) ++ singletons.map(_.beanType), collected, annotations))
   }
 
   private def checkDependencies(
-    beanClasses: List[Class[?]],
+    beanTypes:   List[GenericType],
     collected:   List[Class[?]],
     annotations: List[Class[? <: Annotation]]
   )(bean: BeanDefinition): Unit =
-    bean.dependencies.collect { case Dependency.Required(beanType) if !beanClasses.exists(beanType.isAssignableFrom) => beanType }
-      .flatMap(beanType => collected.find(beanType.isAssignableFrom))
+    bean.dependencies.collect { case Dependency.Required(beanType) if !beanTypes.exists(beanType.isAssignableFrom) => beanType }
+      .flatMap(beanType => collected.find(componentClass => beanType.isAssignableFrom(GenericType.of(componentClass))))
       .foreach(componentClass => throw notABean(bean, componentClass, annotations))
 
   private def conflict(componentClass: Class[?], annotations: List[Class[? <: Annotation]]): CollectedComponentConflictException =

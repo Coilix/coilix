@@ -1,5 +1,7 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
+
 /**
  * An immutable collection of created beans.
  *
@@ -19,10 +21,10 @@ trait BeanRegistry {
    * @throws dev.coilix.context.AmbiguousBeanException
    *   if several beans match and the selector cannot choose one
    */
-  def find(beanType: Class[?]): Option[RegisteredBean]
+  def find(beanType: GenericType): Option[RegisteredBean]
 
   /** All beans assignable to `beanType`, in registration order. */
-  def findAll(beanType: Class[?]): List[RegisteredBean]
+  def findAll(beanType: GenericType): List[RegisteredBean]
 
   /** The bean named `beanName`, or `None` when there is none. */
   def findByName(beanName: String): Option[RegisteredBean]

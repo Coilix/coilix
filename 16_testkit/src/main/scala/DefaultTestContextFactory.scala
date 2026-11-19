@@ -67,8 +67,8 @@ final class DefaultTestContextFactory(
 
   private def singletons(arguments: ApplicationArguments, environment: Environment): List[RegisteredBean] =
     List(
-      RegisteredBean("applicationArguments", classOf[ApplicationArguments], isPrimary = false, arguments),
-      RegisteredBean("environment", environment.getClass, isPrimary                   = false, environment)
+      RegisteredBean.of[ApplicationArguments]("applicationArguments", arguments),
+      RegisteredBean.ofClass("environment", environment.getClass, environment)
     )
 
   private def registered(bean: TestBean): RegisteredBean =

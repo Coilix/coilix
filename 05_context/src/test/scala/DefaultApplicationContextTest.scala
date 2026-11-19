@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.context.wiring.EnglishGreeter
 import dev.coilix.context.wiring.Farewell
 import dev.coilix.context.wiring.Greeter
@@ -11,8 +12,8 @@ final class DefaultApplicationContextTest extends FunSuite {
   private val polish  = PolishGreeter()
   private val context = DefaultApplicationContext(
     ImmutableBeanRegistry.empty(PrimaryCandidateSelector())
-      .register(RegisteredBean("englishGreeter", classOf[EnglishGreeter], isPrimary = false, english))
-      .register(RegisteredBean("polishGreeter", classOf[PolishGreeter], isPrimary = true, polish))
+      .register(RegisteredBean("englishGreeter", GenericType.of(classOf[EnglishGreeter]), isPrimary = false, english))
+      .register(RegisteredBean("polishGreeter", GenericType.of(classOf[PolishGreeter]), isPrimary = true, polish))
   )
 
   test("returns the primary bean of a type") {

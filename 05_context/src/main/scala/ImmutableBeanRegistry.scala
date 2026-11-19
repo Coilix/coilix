@@ -1,5 +1,7 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
+
 /**
  * A [[dev.coilix.context.BeanRegistry]] backed by an immutable list.
  *
@@ -13,11 +15,11 @@ final class ImmutableBeanRegistry(override val beans: List[RegisteredBean], sele
   override def register(bean: RegisteredBean): BeanRegistry =
     ImmutableBeanRegistry(beans :+ bean, selector)
 
-  override def find(beanType: Class[?]): Option[RegisteredBean] =
+  override def find(beanType: GenericType): Option[RegisteredBean] =
     selector.select(beanType, beans)
 
-  override def findAll(beanType: Class[?]): List[RegisteredBean] =
-    beans.filter(bean => beanType.isAssignableFrom(bean.beanClass))
+  override def findAll(beanType: GenericType): List[RegisteredBean] =
+    beans.filter(bean => beanType.isAssignableFrom(bean.beanType))
 
   override def findByName(beanName: String): Option[RegisteredBean] =
     beans.find(_.beanName == beanName)

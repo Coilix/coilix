@@ -1,6 +1,7 @@
 package dev.coilix.context
 
 import dev.coilix.annotation.Slf4s
+import dev.coilix.common.GenericType
 
 /**
  * Creates the definitions of the collected classes, leaves out those whose conditions do not hold, and returns a definition of
@@ -34,7 +35,13 @@ final class DefaultComponentCollector(
     val definitions  = filter.filter(classes.flatMap(definitionOf), Nil)
     val dependencies = definitions.flatMap(_.dependencies).distinct
     definitions.foreach(definition => log.info(s"Collected component ${definition.beanClass.getName}"))
-    BeanDefinition(beanName, classOf[CollectedComponents], holder(definitions, dependencies), dependencies, isPrimary = false)
+    BeanDefinition(
+      beanName,
+      GenericType.of(classOf[CollectedComponents]),
+      holder(definitions, dependencies),
+      dependencies,
+      isPrimary = false
+    )
   }
 
   private def definitionOf(componentClass: Class[?]): List[BeanDefinition] =

@@ -51,8 +51,8 @@ final class DefaultCoilixApplicationRunner(
 
   private def singletons(arguments: ApplicationArguments, environment: Environment): List[RegisteredBean] =
     List(
-      RegisteredBean(argumentsBeanName, classOf[ApplicationArguments], isPrimary = false, arguments),
-      RegisteredBean(environmentBeanName, environment.getClass, isPrimary        = false, environment)
+      RegisteredBean.of[ApplicationArguments](argumentsBeanName, arguments),
+      RegisteredBean.ofClass(environmentBeanName, environment.getClass, environment)
     )
 
   private def applicationName[T: ClassTag]: String =

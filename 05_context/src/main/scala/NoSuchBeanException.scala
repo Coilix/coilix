@@ -1,8 +1,7 @@
 package dev.coilix.context
 
-import dev.coilix.common.ClassTags.runtimeTypeOf
 import dev.coilix.common.CoilixException
-import scala.reflect.ClassTag
+import dev.coilix.common.TypeInfo
 
 /**
  * Thrown when a requested bean, or a required dependency of a bean, does not exist.
@@ -15,5 +14,5 @@ final class NoSuchBeanException(message: String) extends CoilixException(message
 object NoSuchBeanException {
 
   /** Creates the exception reported when the context has no bean of type `T`. */
-  def apply[T: ClassTag]: NoSuchBeanException = new NoSuchBeanException(s"No bean of type ${runtimeTypeOf[T].getName}")
+  def apply[T: TypeInfo]: NoSuchBeanException = new NoSuchBeanException(s"No bean of type ${TypeInfo[T].genericType}")
 }

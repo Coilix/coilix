@@ -3,6 +3,7 @@ package dev.coilix.context
 import dev.coilix.annotation.Bean
 import dev.coilix.annotation.Configuration
 import dev.coilix.annotation.Primary
+import dev.coilix.common.GenericType
 import java.lang.reflect.Method
 
 /**
@@ -27,9 +28,9 @@ final class ReflectiveBeanMethodScanner(parameterMapper: ParameterDependencyMapp
   private def definitionOf(owner: Class[?])(method: Method): BeanDefinition =
     BeanDefinition(
       beanName     = beanNameOf(method),
-      beanClass    = method.getReturnType,
+      beanType     = GenericType.of(method.getGenericReturnType),
       factory      = MethodInstanceFactory(method),
-      dependencies = Dependency.Required(owner) :: method.getParameters.toList.map(parameterMapper.map),
+      dependencies = Dependency.Required(GenericType.of(owner)) :: method.getParameters.toList.map(parameterMapper.map),
       isPrimary    = method.isAnnotationPresent(classOf[Primary])
     )
 

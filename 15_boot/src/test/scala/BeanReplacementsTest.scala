@@ -3,6 +3,7 @@ package dev.coilix.boot
 import dev.coilix.boot.fixture.Clock
 import dev.coilix.boot.fixture.FixedClock
 import dev.coilix.boot.modules.ReportTitle
+import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.BeanDefinition
 import dev.coilix.context.BeanDefinitionFactory
@@ -26,6 +27,6 @@ final class BeanReplacementsTest extends FunSuite {
   }
 
   test("lists the types that match no definition") {
-    assertEquals(BeanReplacements.of[Clock].and[ReportTitle].unmatched(fixedClock), List(classOf[ReportTitle]))
+    assertEquals(BeanReplacements.of[Clock].and[ReportTitle].unmatched(fixedClock), List(GenericType.of(classOf[ReportTitle])))
   }
 }

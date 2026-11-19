@@ -2,6 +2,7 @@ package dev.coilix.context
 
 import dev.coilix.annotation.ConfigurationProperties
 import dev.coilix.annotation.Primary
+import dev.coilix.common.GenericType
 import dev.coilix.config.Environment
 import java.lang.reflect.Modifier
 
@@ -71,7 +72,7 @@ final class ReflectiveBeanDefinitionFactory(
   private def definitionOf(beanClass: Class[?], factory: InstanceFactory, dependencies: List[Dependency]): BeanDefinition =
     BeanDefinition(
       beanName     = nameGenerator.generate(beanClass),
-      beanClass    = beanClass,
+      beanType     = GenericType.of(beanClass),
       factory      = factory,
       dependencies = dependencies,
       isPrimary    = beanClass.isAnnotationPresent(classOf[Primary])

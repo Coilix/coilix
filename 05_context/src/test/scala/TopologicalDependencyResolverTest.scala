@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.common.GenericType
 import dev.coilix.context.cycle.Chicken
 import dev.coilix.context.cycle.Egg
 import dev.coilix.context.ordering.AlphaService
@@ -38,7 +39,10 @@ final class TopologicalDependencyResolverTest extends FunSuite {
   }
 
   test("accepts dependencies satisfied by provided types") {
-    assertEquals(resolver.resolve(Definitions.of(classOf[ContextAwareBean]), List(classOf[DefaultApplicationContext])).size, 1)
+    assertEquals(
+      resolver.resolve(Definitions.of(classOf[ContextAwareBean]), List(GenericType.of(classOf[DefaultApplicationContext]))).size,
+      1
+    )
   }
 
   test("fails on circular dependencies") {
