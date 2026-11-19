@@ -10,6 +10,7 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 |---|---|---|---|
 | rdzeń | `common`, `annotations`, `config`, `context` | tak | tylko rdzenia |
 | start | `boot` | nie (kontekst można zbudować ręcznie) | rdzenia |
+| testy | `testkit` | nie (tylko w zależnościach testowych) | rdzenia i `boot` |
 | funkcje | `data`, `web`, `security` | nie | rdzenia, nigdy od `boot` ani od innej funkcji |
 | integracje | np. `security-web` | nie | rdzenia i dokładnie tych funkcji, które łączy |
 | narzędzia | `slf4s-plugin` | nie (tylko przy `@Slf4s`) | niczego z frameworka w runtime |
@@ -28,7 +29,8 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 ## Stan obecny
 
 ```
-common ← config ← context ← boot ← demo
+common ← config ← context ← boot ← testkit ← demo (testy)
+                              boot ← demo
 annotations ↗        ↖ data
                      ↖ web
                      ↖ security
@@ -36,7 +38,7 @@ slf4s-plugin (plugin kompilatora dla modułów z @Slf4s)
 ```
 
 - `boot` zależy tylko od `context`, a `data`, `web` i `security` tylko od `context` (COILIX-00010). Pilnuje tego `checkModuleLayers` w buildzie.
-- `security-web` (integracja security z HTTP) powstanie razem z pierwszym kodem, który go potrzebuje. Numer jego katalogu ustali się wtedy razem z przenumerowaniem dla `testkit` (COILIX-00013) i benchmarków (COILIX-00017), bo musi być wyższy niż `07_web` i `08_security`.
+- `security-web` (integracja security z HTTP) powstanie razem z pierwszym kodem, który go potrzebuje. Numer jego katalogu ustali się wtedy razem z przenumerowaniem dla benchmarków (COILIX-00017); `testkit` ma już `10_testkit`, a demo `11_demo` (ADR 0016), bo musi być wyższy niż `07_web` i `08_security`.
 - `data`, `web` i `security` są jeszcze puste.
 - `config` zawiera trzy formaty (HOCON, properties, YAML). YAML ciągnie `snakeyaml-engine` do rdzenia. Opcjonalnie: wydzielić `config-yaml` jako moduł funkcji. Niski priorytet, bo biblioteka jest mała.
 

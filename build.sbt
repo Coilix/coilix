@@ -125,7 +125,7 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
 
 lazy val coreGroup: Seq[Setting[?]] = ReleaseGroups.groupSettings(ReleaseGroups.core)
 
-lazy val coreModules: Seq[Project] = Seq(common, annotations, slf4sPlugin, config, context, boot)
+lazy val coreModules: Seq[Project] = Seq(common, annotations, slf4sPlugin, config, context, boot, testkit)
 
 def featureGroup(id: String): Seq[Setting[?]] =
   ReleaseGroups.groupSettings(id) ++
@@ -192,8 +192,16 @@ lazy val boot = slf4sModule("boot", "09_boot", "dev.coilix.boot")
   .settings(coreGroup)
   .settings(description := "Application startup for Coilix")
 
-lazy val demo = slf4sModule("demo", "10_demo", "dev.coilix.demo")
+lazy val testkit = slf4sModule("testkit", "10_testkit", "dev.coilix.testkit")
   .dependsOn(boot)
+  .settings(coreGroup)
+  .settings(
+    description                              := "Test support for Coilix applications: test contexts with properties, profiles and replaced beans",
+    libraryDependencies += Dependencies.munit % Provided
+  )
+
+lazy val demo = slf4sModule("demo", "11_demo", "dev.coilix.demo")
+  .dependsOn(boot, testkit % Test)
   .settings(unpublished)
   .settings(
     coverageEnabled      := false,
@@ -212,13 +220,14 @@ def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
 lazy val docs = slf4sModule("docs", "12_docs", "com.example")
-  .dependsOn(boot)
+  .dependsOn(boot, testkit % Test)
   .settings(unpublished)
   .settings(
     description                            := "Compiled examples and the combined API documentation of the Coilix documentation site",
     coverageEnabled                        := false,
     Compile / unmanagedSourceDirectories   := Seq(baseDirectory.value / "examples" / "next" / "scala"),
     Compile / unmanagedResourceDirectories := Seq(baseDirectory.value / "examples" / "next" / "resources"),
+    Test / unmanagedSourceDirectories += baseDirectory.value / "examples" / "next" / "test",
     libraryDependencies += Dependencies.slf4jSimple,
     run / fork                             := true,
     run / outputStrategy                   := Some(StdoutOutput),
@@ -230,10 +239,12 @@ lazy val docs = slf4sModule("docs", "12_docs", "com.example")
         (slf4sPlugin / Compile / tastyFiles).value,
         (config / Compile / tastyFiles).value,
         (context / Compile / tastyFiles).value,
-        (boot / Compile / tastyFiles).value
+        (boot / Compile / tastyFiles).value,
+        (testkit / Compile / tastyFiles).value
       ).flatten
     ),
     Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
+    Compile / doc / dependencyClasspath ++= (testkit / Compile / dependencyClasspath).value,
     Compile / doc / scalacOptions += javadocMapping(documentationLine(version.value)),
     apiSite                                := Def.uncached(
       ApiSite.assemble(
@@ -245,7 +256,7 @@ lazy val docs = slf4sModule("docs", "12_docs", "com.example")
   )
 
 lazy val modules: Seq[ProjectReference] =
-  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, demo, docs)
+  Seq[ProjectReference](common, annotations, slf4sPlugin, config, context, data, web, security, boot, testkit, demo, docs)
 
 lazy val root = (project in file("."))
   .aggregate(modules *)
