@@ -13,6 +13,8 @@ import WelcomeMail from '!!raw-loader!@examples/scala/testing/WelcomeMail.scala'
 import RecordingMailer from '!!raw-loader!@examples/test/testing/RecordingMailer.scala';
 import WelcomeMailTest from '!!raw-loader!@examples/test/testing/WelcomeMailTest.scala';
 import NewsletterContextTest from '!!raw-loader!@examples/test/testing/NewsletterContextTest.scala';
+import WelcomeMailFixtureTest from '!!raw-loader!@examples/test/testing/WelcomeMailFixtureTest.scala';
+import SenderNameTest from '!!raw-loader!@examples/test/testing/SenderNameTest.scala';
 
 This page shows how to test your beans together, in the same application context that Coilix builds at startup. Use it when a test should check how beans work with each other, with the configuration and with profiles, while some beans are replaced by test doubles.
 
@@ -41,15 +43,32 @@ The examples on this page test a small application that sends welcome mails:
 
 ## Write a test
 
-Mix `CoilixFixtures` into a munit suite and describe the context with `CoilixTestSetup`. `coilixContext` builds a fresh context for each test and closes it after the test, which also runs the `@PreDestroy` methods.
+Mix `CoilixSuite` into a munit suite and describe the context with `CoilixTestSetup`. Each `coilixTest` builds a fresh context, runs the test body inside it and closes it afterwards, which also runs the `@PreDestroy` methods.
 
 <CodeBlock language="scala" title="WelcomeMailTest.scala">{WelcomeMailTest}</CodeBlock>
 
 <CodeBlock language="scala" title="RecordingMailer.scala">{RecordingMailer}</CodeBlock>
 
+The setup declared as a `given` is used by every `coilixTest` that names no setup. A test that needs something else passes its own, usually built from the given one, as the second test above does.
+
 `forApplication` scans the same packages as `Coilix.run` for that application. To scan other packages, start from `CoilixTestSetup.forPackages("com.example.billing")`.
 
 A test context differs from a running application in a few ways: it prints no banner and no startup log, registers no shutdown hook, and does not call the `ApplicationRunner` beans. Call `withRunners` when a test needs them.
+
+## Read from the context
+
+Inside a test body the context is given, so the helpers need no reference to it:
+
+| Helper | Returns |
+|---|---|
+| `bean[T]` | the bean of type `T`, or the primary one when there are several |
+| `beanOption[T]` | the bean of type `T`, or `None` |
+| `beans[T]` | every bean of type `T` |
+| `property[T]("path")` | the configuration value converted to `T`, or `None` |
+| `arguments` | the command-line arguments |
+| `context` | the application context itself |
+
+Your own helpers can take the context the same way, for example `def mailer(using ApplicationContext): Mailer = bean[Mailer]`. Outside `CoilixSuite`, mix in `CoilixContextOps` or import `CoilixContextOps.*`.
 
 ## Set properties and profiles
 
@@ -57,7 +76,7 @@ A test context differs from a running application in a few ways: it prints no ba
 
 `withProfiles("dev", "local")` makes these profiles active for the test, in this order. It replaces `coilix.profiles.active` from every other source, so the test does not depend on how the build or the machine is set up.
 
-`withArguments("--region=eu")` passes command-line arguments. They are available as the `ApplicationArguments` bean, and options also become configuration keys, as at startup.
+`withArguments("--region=eu")` passes command-line arguments. They are available as `arguments`, and options also become configuration keys, as at startup.
 
 ## Replace and add beans
 
@@ -69,12 +88,20 @@ Coilix does not create test doubles for you. Pass a small class written for the 
 
 ## Share one context in a suite
 
-Building a context takes time when the application has many beans. When the tests of a suite only read from the context, build it once with `coilixSuiteContext` and register it in `munitFixtures`:
+Building a context takes time when the application has many beans. When the tests of a suite only read from the context, build it once with `coilixSuiteContext`, register it in `munitFixtures` and write the tests with `test` on the fixture:
 
 <CodeBlock language="scala" title="NewsletterContextTest.scala">{NewsletterContextTest}</CodeBlock>
 
 The context is built before the first test of the suite and closed after the last one.
 
-## Build a context without munit
+## Use a context in any block
 
-`TestContextFactory.default.create(setup)` builds the same context without a munit fixture, for example in another test library. The caller closes the returned context.
+`setup.use { ... }` builds a context, runs the block with the context given to it and closes it, also when the block fails. It works in any test library and returns the value of the block:
+
+<CodeBlock language="scala" title="SenderNameTest.scala">{SenderNameTest}</CodeBlock>
+
+## The explicit form
+
+Every helper above has an explicit counterpart. `CoilixFixtures` gives munit fixtures that pass the context as a parameter, and `TestContextFactory.default.create(setup)` returns an open context that the caller closes:
+
+<CodeBlock language="scala" title="WelcomeMailFixtureTest.scala">{WelcomeMailFixtureTest}</CodeBlock>

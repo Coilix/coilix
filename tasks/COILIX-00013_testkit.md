@@ -48,6 +48,7 @@ final class WelcomeMailTest extends munit.FunSuite with CoilixFixtures {
 - `CoilixTestSetup` (case class, niemutowalny builder): pakiety (`forApplication[T]`, `forPackages`), właściwości, profile, beany, argumenty, flaga runnerów.
 - `TestContextFactory` (trait) i `DefaultTestContextFactory`, który składa start jak `Coilix.run`, bez banera, logu startu i hooka. Bez `given ConfigPath`, tak jak `CoilixApplicationRunner`, bo działa przed wczytaniem konfiguracji.
 - Podmiana beana w `boot`: `CoilixBootstrap.start(..., BeanReplacements)` usuwa definicje ze skanowania i modułów przypisywalne do podmienianego typu. `replaceBean[T]` musi coś zastąpić (inaczej `UnmatchedBeanReplacementException`), a `addBean[T]` dodaje bean, którego aplikacja nie ma.
+- Styl zwięzły (prośba opiekuna, wzór z testkitu bulldozera): `setup.use { ... }`, `CoilixSuite` z `coilixTest(name) { bean[T] ... }` i `shared.test(name) { ... }`, helpery `CoilixContextOps` na `using`.
 - `CoilixFixtures` (trait domieszany do suite'u, bo `FunFixture` w munit jest klasą wewnętrzną suite'u) z `coilixContext` i `coilixSuiteContext`, jedyne miejsca zależne od munit obok `SuiteContextFixture`.
 
 ## Kryteria akceptacji

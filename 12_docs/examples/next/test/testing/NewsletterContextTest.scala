@@ -1,23 +1,23 @@
 package com.example
 package testing
 
-import dev.coilix.testkit.CoilixFixtures
+import dev.coilix.testkit.CoilixSuite
 import dev.coilix.testkit.CoilixTestSetup
 
-final class NewsletterContextTest extends munit.FunSuite with CoilixFixtures {
-  private val context = coilixSuiteContext(
+final class NewsletterContextTest extends munit.FunSuite with CoilixSuite {
+  private val newsletter = coilixSuiteContext(
     CoilixTestSetup
       .forApplication[NewsletterApplication.type]
       .withProperties("newsletter.smtp-host" -> "localhost", "newsletter.sender-name" -> "The Team")
   )
 
-  override def munitFixtures = List(context)
+  override def munitFixtures = List(newsletter)
 
-  test("uses the SMTP mailer") {
-    assertEquals(context().getBean[Mailer].getClass, classOf[SmtpMailer])
+  newsletter.test("reads the sender name") {
+    assertEquals(property[String]("newsletter.sender-name"), Some("The Team"))
   }
 
-  test("creates the welcome mail") {
-    assertEquals(context().getBeansOfType[WelcomeMail].size, 1)
+  newsletter.test("creates one welcome mail") {
+    assertEquals(beans[WelcomeMail].size, 1)
   }
 }

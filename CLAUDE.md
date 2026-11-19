@@ -63,6 +63,7 @@ Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jedny
 - Małe metody z jedną odpowiedzialnością. Gałąź `case`, `if` albo `for`/`yield` dłuższa niż jedna linia idzie do osobnej metody, nie do bloku.
 - Delegowanie zamiast rozbudowanych metod. Kod rozdrobniony, ale czysty.
 - Bez zwykłych komentarzy (`//`, `/* */`). Jedyne dozwolone komentarze to Scaladoc i Javadoc według sekcji „Dokumentacja”.
+- API ma być zwięzłe i wygodne w użyciu: tam, gdzie to upraszcza kod wywołujący, używa się `given`, `using`, funkcji kontekstowych (`A ?=> B`), metod rozszerzających i metod generycznych wołanych samym typem, np. `setup.use { bean[Reception].welcome("Ann") }` zamiast przekazywania kontekstu w każdym wywołaniu. Obok zostaje wersja jawna (parametr zamiast `using`), z której korzysta wersja zwięzła. Wzorem jest testkit (`CoilixSuite`, `CoilixContextOps`).
 - Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `dev.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
 - Java i Scala w osobnych modułach. Java tylko tam, gdzie jest wymagana (adnotacje runtime).
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.

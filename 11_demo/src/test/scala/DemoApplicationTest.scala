@@ -10,26 +10,22 @@ import dev.coilix.demo.vehicle.ModuleKind
 import dev.coilix.demo.vehicle.VehicleRegistry
 import dev.coilix.demo.workshop.TelematicsUplink
 import dev.coilix.demo.workshop.WorkshopProperties
-import dev.coilix.testkit.CoilixFixtures
+import dev.coilix.testkit.CoilixSuite
 import dev.coilix.testkit.CoilixTestSetup
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import munit.FunSuite
 
-final class DemoApplicationTest extends FunSuite with CoilixFixtures {
-  private val workshop = CoilixTestSetup.forApplication[DemoApplication.type]
-  private val shared   = coilixSuiteContext(workshop.withArguments("--mechanic=M-002", "--workshop.max-grants=7"))
-  private val now      = Instant.parse("2026-11-16T10:00:00Z")
-  private val inShift  = coilixContext(
-    workshop.replaceBean[Clock](Clock.fixed(now, ZoneOffset.UTC)).addBean[TelematicsUplink](RecordingUplink()).withRunners
-  )
+final class DemoApplicationTest extends FunSuite with CoilixSuite {
+  private given workshop: CoilixTestSetup = CoilixTestSetup.forApplication[DemoApplication.type]
+
+  private val now    = Instant.parse("2026-11-16T10:00:00Z")
+  private val shared = coilixSuiteContext(workshop.withArguments("--mechanic=M-002", "--workshop.max-grants=7"))
 
   override def munitFixtures = List(shared)
 
-  private def context = shared()
-
-  test("registers every demo component") {
+  shared.test("registers every demo component") {
     assertEquals(
       context.beanNames.sorted,
       List(
@@ -59,8 +55,8 @@ final class DemoApplicationTest extends FunSuite with CoilixFixtures {
     )
   }
 
-  test("binds the workshop from application.yaml") {
-    val workshop = context.getBean[WorkshopProperties]
+  shared.test("binds the workshop from application.yaml") {
+    val workshop = bean[WorkshopProperties]
     assertEquals(
       workshop.mechanics.map(_.certification),
       List(Certification.Master, Certification.Technician, Certification.Apprentice)
@@ -73,15 +69,18 @@ final class DemoApplicationTest extends FunSuite with CoilixFixtures {
     assertEquals(workshop.oemPortal.apiKey.toString, "*****")
   }
 
-  test("injects the primary access policy") {
-    assertEquals(context.getBean[AccessPolicy].getClass, classOf[CertificationAccessPolicy])
+  shared.test("reads the command-line options") {
+    assertEquals((arguments.optionValue("mechanic"), property[Int]("workshop.max-grants")), (Some("M-002"), Some(7)))
   }
 
-  test("issues tokens valid for the configured time") {
-    val registry = context.getBean[VehicleRegistry]
-    val token    = registry.all.headOption.toRight("no vehicle").flatMap { vehicle =>
-      context.getBean[VehicleSystem].authorize(
-        context.getBean[WorkshopProperties].mechanics.head,
+  shared.test("injects the primary access policy") {
+    assertEquals(bean[AccessPolicy].getClass, classOf[CertificationAccessPolicy])
+  }
+
+  shared.test("issues tokens valid for the configured time") {
+    val token = bean[VehicleRegistry].all.headOption.toRight("no vehicle").flatMap { vehicle =>
+      bean[VehicleSystem].authorize(
+        bean[WorkshopProperties].mechanics.head,
         vehicle,
         Set(Grant(TestWorkshop.engine, Action.ReadFaults)),
         now
@@ -90,10 +89,17 @@ final class DemoApplicationTest extends FunSuite with CoilixFixtures {
     assertEquals(token.map(_.claims.expiresAt), Right(now.plusSeconds(300)))
   }
 
-  inShift.test("the shift uses the fixed clock and reports through the added uplink") { context =>
-    assertEquals(context.getBean[Clock].instant(), now)
+  coilixTest("starts without a telematics uplink") {
+    assertEquals(beanOption[TelematicsUplink], None)
+  }
+
+  coilixTest(
+    "the shift uses the fixed clock and reports through the added uplink",
+    workshop.replaceBean[Clock](Clock.fixed(now, ZoneOffset.UTC)).addBean[TelematicsUplink](RecordingUplink()).withRunners
+  ) {
+    assertEquals(bean[Clock].instant(), now)
     assertEquals(
-      context.getBeansOfType[TelematicsUplink].collect { case uplink: RecordingUplink => uplink.reports },
+      beans[TelematicsUplink].collect { case uplink: RecordingUplink => uplink.reports },
       List(List("Inspection of WVWZZZ1KZ6W000001 done"))
     )
   }

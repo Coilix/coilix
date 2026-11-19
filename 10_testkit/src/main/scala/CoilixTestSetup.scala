@@ -3,7 +3,9 @@ package dev.coilix.testkit
 import dev.coilix.boot.BasePackageResolver
 import dev.coilix.common.ClassTags.runtimeTypeOf
 import dev.coilix.config.Profiles
+import dev.coilix.context.ConfigurableApplicationContext
 import scala.reflect.ClassTag
+import scala.util.Using
 
 /**
  * What a test context contains: the scanned packages, configuration properties, active profiles, ready beans, command-line
@@ -18,6 +20,8 @@ import scala.reflect.ClassTag
  *   .withProfiles("test")
  *   .replaceBean[Clock](Clock.fixed(Instant.parse("2026-11-19T10:00:00Z"), ZoneOffset.UTC))
  * ```
+ *
+ * `use` runs a block inside the context, and [[dev.coilix.testkit.CoilixSuite]] registers munit tests that do the same.
  *
  * A test context has no banner, no startup log and no shutdown hook. The runners do not run unless
  * [[dev.coilix.testkit.CoilixTestSetup.withRunners]] is called.
@@ -77,6 +81,21 @@ final case class CoilixTestSetup(
   /** Calls the [[dev.coilix.boot.ApplicationRunner]] beans after the context is built, as `Coilix.run` does. */
   def withRunners: CoilixTestSetup =
     copy(runners = true)
+
+  /**
+   * Builds the context, runs `body` with the context given to it and closes the context afterwards, also when `body` fails.
+   *
+   * ```scala
+   * setup.withProfiles("loud").use {
+   *   assertEquals(bean[Notifier].channel, "loud")
+   * }
+   * ```
+   *
+   * @return
+   *   the result of `body`
+   */
+  def use[A](body: ConfigurableApplicationContext ?=> A)(using factory: TestContextFactory = TestContextFactory.default): A =
+    Using.resource(factory.create(this))(context => body(using context))
 
   /** The properties to load the configuration with, including the active profiles. */
   def configurationOverrides: Map[String, String] =
