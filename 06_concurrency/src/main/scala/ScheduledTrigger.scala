@@ -14,7 +14,10 @@ enum ScheduledTrigger {
   /** A description for log messages, such as `with a fixed delay of 1 minute after 10 seconds`. */
   override def toString: String =
     this match {
-      case FixedRate(initialDelay, period) => s"at a fixed rate of $period after $initialDelay"
-      case FixedDelay(initialDelay, delay) => s"with a fixed delay of $delay after $initialDelay"
+      case FixedRate(initialDelay, period) => s"at a fixed rate of $period${after(initialDelay)}"
+      case FixedDelay(initialDelay, delay) => s"with a fixed delay of $delay${after(initialDelay)}"
     }
+
+  private def after(initialDelay: FiniteDuration): String =
+    if (initialDelay.length == 0) "" else s" after $initialDelay"
 }
