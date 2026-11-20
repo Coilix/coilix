@@ -19,6 +19,10 @@ concurrency:
 # changes nothing but files no build step reads (.github/scripts/needs-build.sh). Each job still runs and reports its check,
 # so the required checks stay the same. The sbt 2 disk cache holds compiled classes keyed by the hash of their inputs; it is
 # saved after every push to master and restored by pull requests (ADR 0023).
+#
+# Downloads from Maven Central are rate limited (HTTP 429), so the downloaded dependencies and sbt itself are cached under a key
+# from the build files, and a changed build restores the newest older cache and downloads only what is new. sbt runs through
+# .github/scripts/sbt-retry.sh, which runs the whole command again only when it failed on a download.
 defaults:
   run:
     shell: bash
@@ -27,6 +31,7 @@ jobs:
   build:
     name: Build on JDK ${{ matrix.java }}
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -48,11 +53,20 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
-          cache: sbt
       - uses: sbt/setup-sbt@v1
         if: steps.changes.outputs.run == 'true'
         with:
           disk-cache: false
+      - name: Restore and save the dependency cache
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.ivy2/cache
+            ~/.sbt/boot
+          key: sbt-deps-${{ runner.os }}-${{ hashFiles('build.sbt', 'project/*.scala', 'project/*.sbt', 'project/build.properties') }}
+          restore-keys: sbt-deps-${{ runner.os }}-
       - name: Restore the sbt disk cache
         if: steps.changes.outputs.run == 'true'
         uses: actions/cache/restore@v6
@@ -63,7 +77,7 @@ jobs:
       - name: Check, test and generate API documentation
         if: steps.changes.outputs.run == 'true'
         run: |
-          sbt --server "${{ matrix.tasks }}" 2>&1 | tee build.log
+          .github/scripts/sbt-retry.sh build.log --server "${{ matrix.tasks }}"
           if grep -q "Couldn't resolve a member for the given link query" build.log; then
             echo "::error::Scaladoc contains broken links"
             exit 1
@@ -82,6 +96,7 @@ jobs:
   docs:
     name: Documentation site
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     defaults:
       run:
         shell: bash
@@ -99,11 +114,20 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: sbt
       - uses: sbt/setup-sbt@v1
         if: steps.changes.outputs.run == 'true'
         with:
           disk-cache: false
+      - name: Restore and save the dependency cache
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.ivy2/cache
+            ~/.sbt/boot
+          key: sbt-deps-${{ runner.os }}-${{ hashFiles('build.sbt', 'project/*.scala', 'project/*.sbt', 'project/build.properties') }}
+          restore-keys: sbt-deps-${{ runner.os }}-
       - name: Restore the sbt disk cache
         if: steps.changes.outputs.run == 'true'
         uses: actions/cache/restore@v6
@@ -115,7 +139,7 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         working-directory: .
         run: |
-          sbt --server docs/testFull docs/apiSite 2>&1 | tee doc.log
+          .github/scripts/sbt-retry.sh doc.log --server docs/testFull docs/apiSite
           if grep -q "Couldn't resolve a member for the given link query" doc.log; then
             echo "::error::Scaladoc contains broken links"
             exit 1
@@ -142,6 +166,7 @@ jobs:
   coverage:
     name: Test coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -158,10 +183,20 @@ jobs:
         if: steps.changes.outputs.run == 'true'
         with:
           disk-cache: false
+      - name: Restore and save the dependency cache
+        if: steps.changes.outputs.run == 'true'
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.ivy2/cache
+            ~/.sbt/boot
+          key: sbt-deps-${{ runner.os }}-${{ hashFiles('build.sbt', 'project/*.scala', 'project/*.sbt', 'project/build.properties') }}
+          restore-keys: sbt-deps-${{ runner.os }}-
       # No disk cache here: it restores instrumented classes without their scoverage-data directories.
       - name: Test with coverage
         if: steps.changes.outputs.run == 'true'
-        run: sbt --server --sbt-cache "$RUNNER_TEMP/sbt-cache-coverage" testCoverage
+        run: .github/scripts/sbt-retry.sh coverage.log --server --sbt-cache "$RUNNER_TEMP/sbt-cache-coverage" testCoverage
       - name: Upload coverage report
         if: always() && steps.changes.outputs.run == 'true'
         uses: actions/upload-artifact@v7
