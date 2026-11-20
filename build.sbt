@@ -275,6 +275,7 @@ lazy val modules: Seq[ProjectReference] =
     config,
     context,
     concurrency,
+    cluster,
     data,
     web,
     security,
