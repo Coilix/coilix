@@ -42,6 +42,13 @@ workshop:
           kind: brakes
 
 coilix:
+  events:
+    listeners:
+      staffNotifications:
+        onInspectionFinished:
+          retry:
+            max-attempts: 3
+            initial-delay: 200ms
   boot:
     startup-message-formatter:
       class: dev.coilix.demo.PrefixedStartupMessageFormatter

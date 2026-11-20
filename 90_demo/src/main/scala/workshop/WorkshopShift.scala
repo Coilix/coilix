@@ -14,6 +14,7 @@ import dev.coilix.demo.vehicle.RequestId
 import dev.coilix.demo.vehicle.Vehicle
 import dev.coilix.demo.vehicle.VehicleRegistry
 import dev.coilix.demo.vehicle.Vin
+import dev.coilix.events.EventPublisher
 import java.time.Clock
 import scala.util.Try
 
@@ -23,6 +24,8 @@ import scala.util.Try
  * `--mechanic=M-003` picks another mechanic and `--vin=...` another vehicle. Runs first because of `@Order(1)`. The
  * optional [[dev.coilix.demo.workshop.TelematicsUplink]] has no bean, so it is injected as `None`. The
  * [[dev.coilix.demo.workshop.Notifier]] depends on the active profile: `--coilix.profiles.active=dev` logs notifications.
+ * At the end it publishes [[dev.coilix.demo.workshop.InspectionFinished]], which
+ * [[dev.coilix.demo.workshop.ShiftStatistics]] counts and [[dev.coilix.demo.workshop.StaffNotifications]] sends to the staff.
  */
 @Component
 @Order(1)
@@ -33,7 +36,8 @@ final class WorkshopShift(
   system:     VehicleSystem,
   clock:      Clock,
   uplink:     Option[TelematicsUplink],
-  notifier:   Notifier
+  notifier:   Notifier,
+  events:     EventPublisher
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit =
@@ -63,7 +67,7 @@ final class WorkshopShift(
       log.info("No telematics uplink, the job report stays in the workshop")
     )(_.send(s"Inspection of ${vehicle.vin.value} done"))
     log.info(s"Notifications: ${notifier.description}")
-    notifier.send(s"${mechanic.name} finished the inspection of ${vehicle.vin.value}")
+    events.publish(InspectionFinished(mechanic.name, vehicle.vin, steps.size))
   }
 
   private def work(vehicle: Vehicle, token: AuthToken, steps: List[ServiceStep]): Unit = {
