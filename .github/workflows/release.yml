@@ -31,10 +31,18 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: sbt
       - uses: sbt/setup-sbt@v1
+      - name: Restore and save the dependency cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.ivy2/cache
+            ~/.sbt/boot
+          key: sbt-deps-${{ runner.os }}-${{ hashFiles('build.sbt', 'project/*.scala', 'project/*.sbt', 'project/build.properties') }}
+          restore-keys: sbt-deps-${{ runner.os }}-
       - name: Verify the modules of the group
-        run: sbt --server "releaseVerify ${{ steps.tag.outputs.group }} ${{ steps.tag.outputs.version }}"
+        run: .github/scripts/sbt-retry.sh verify.log --server "releaseVerify ${{ steps.tag.outputs.group }} ${{ steps.tag.outputs.version }}"
       - name: Publish the modules of the group
         run: sbt --server ci-release
         env:

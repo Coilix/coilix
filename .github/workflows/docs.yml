@@ -64,11 +64,19 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-          cache: sbt
       - uses: sbt/setup-sbt@v1
+      - name: Restore and save the dependency cache
+        uses: actions/cache@v6
+        with:
+          path: |
+            ~/.cache/coursier
+            ~/.ivy2/cache
+            ~/.sbt/boot
+          key: sbt-deps-${{ runner.os }}-${{ hashFiles('build.sbt', 'project/*.scala', 'project/*.sbt', 'project/build.properties') }}
+          restore-keys: sbt-deps-${{ runner.os }}-
       - name: Build the API site of the tag
         run: |
-          sbt --server docs/apiSite 2>&1 | tee doc.log
+          .github/scripts/sbt-retry.sh doc.log --server docs/apiSite
           if grep -q "Couldn't resolve a member for the given link query" doc.log; then
             echo "::error::Scaladoc contains broken links"
             exit 1
