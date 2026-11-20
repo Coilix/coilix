@@ -9,10 +9,13 @@ import dev.coilix.demo.workshop.FileJobArchive
 import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
+import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
 import dev.coilix.demo.workshop.ServiceDesk
+import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
 import dev.coilix.demo.workshop.WorkshopOpening
+import dev.coilix.events.EventBus
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
 import java.time.Clock
@@ -96,6 +99,17 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       .use {
         assertEquals(bean[BayMonitor].myBays, List(1, 3))
       }
+  }
+
+  test("counts a finished inspection at once and notifies the staff asynchronously") {
+    val notifier = RecordingNotifier()
+    workshop.replaceBean[Notifier](notifier).withRunners.use {
+      assert(bean[EventBus].awaitIdle(5.seconds))
+      assertEquals(
+        (bean[ShiftStatistics].inspectionsDone, notifier.messages),
+        (1, List("Anna Nowak finished the inspection of WVWZZZ1KZ6W000001"))
+      )
+    }
   }
 
   test("a clock added by the test replaces the default one") {

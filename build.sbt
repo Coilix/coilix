@@ -125,7 +125,8 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
 
 lazy val coreGroup: Seq[Setting[?]] = ReleaseGroups.groupSettings(ReleaseGroups.core)
 
-lazy val coreModules: Seq[Project] = Seq(common, annotations, slf4sPlugin, config, context, concurrency, cluster, boot, testkit)
+lazy val coreModules: Seq[Project] =
+  Seq(common, annotations, slf4sPlugin, config, context, concurrency, cluster, applicationEvents, boot, testkit)
 
 def featureGroup(id: String): Seq[Setting[?]] =
   ReleaseGroups.groupSettings(id) ++
@@ -179,6 +180,11 @@ lazy val cluster = slf4sModule("cluster", "07_cluster", "dev.coilix.cluster")
   .settings(coreGroup)
   .settings(description := "Replica identity and membership of Coilix applications that run as several replicas")
 
+lazy val applicationEvents = slf4sModule("events", "08_events", "dev.coilix.events")
+  .dependsOn(concurrency)
+  .settings(coreGroup)
+  .settings(description := "In-memory application events for Coilix, with synchronous and asynchronous listeners")
+
 lazy val data = slf4sModule("data", "20_data", "dev.coilix.data")
   .dependsOn(context)
   .settings(featureGroup("data"))
@@ -198,7 +204,7 @@ lazy val security = slf4sModule("security", "22_security", "dev.coilix.security"
   .settings(description := "Security for Coilix")
 
 lazy val boot = slf4sModule("boot", "15_boot", "dev.coilix.boot")
-  .dependsOn(context, concurrency)
+  .dependsOn(context, concurrency, applicationEvents)
   .settings(coreGroup)
   .settings(description := "Application startup for Coilix")
 
@@ -251,6 +257,7 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (context / Compile / tastyFiles).value,
         (concurrency / Compile / tastyFiles).value,
         (cluster / Compile / tastyFiles).value,
+        (applicationEvents / Compile / tastyFiles).value,
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value
       ).flatten
@@ -276,6 +283,7 @@ lazy val modules: Seq[ProjectReference] =
     context,
     concurrency,
     cluster,
+    applicationEvents,
     data,
     web,
     security,
