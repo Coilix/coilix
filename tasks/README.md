@@ -19,7 +19,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00013 | [Wsparcie testów (`coilix-testkit`)](COILIX-00013_testkit.md) | wysoki | zrobiony (`16_testkit`, demo w `90_demo`, ADR 0016) |
 | COILIX-00014 | [Profile i warunkowe beany](COILIX-00014_profiles_and_conditions.md) | wysoki | zrobiony |
 | COILIX-00015 | [Zasięgi beanów i leniwe tworzenie](COILIX-00015_bean_scopes.md) | średni | do zrobienia |
-| COILIX-00016 | [Zdarzenia aplikacji (`events`)](COILIX-00016_application_events.md) | wysoki | w toku (krok 1 z 6: fazy zamykania i `RetryPolicy`) |
+| COILIX-00016 | [Zdarzenia aplikacji (`events`)](COILIX-00016_application_events.md) | wysoki | w toku (krok 1 z 3: fazy zamykania i `RetryPolicy`) |
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
@@ -49,7 +49,7 @@ Zależności między taskami:
 - Numery katalogów nowych modułów wynikają z zakresów z ADR 0018, bez przenumerowania istniejących.
 - COILIX-00014 korzysta z `CoilixModule` z COILIX-00010 (`@ConditionalOnMissingBean` dla beanów z modułów).
 - COILIX-00015 zmienia `RegisteredBean`, z którego korzysta `@PreDestroy` z COILIX-00004, więc idzie po nim.
-- COILIX-00016 korzysta z `TaskExecutor` i `ContextLifecycleListener` z COILIX-00005 (fazy zamykania dodaje w kroku 1), z `GenericType` z COILIX-00020 i opcjonalnie z `ReplicaIdentity` z COILIX-00027. `RetryPolicy` z kroku 1 współdzieli z COILIX-00026. Transport `events-jdbc` czeka na moduł `data`, a `events-kafka` na konektor Kafki z COILIX-00026. `EventCodec` trzeba uzgodnić z COILIX-00024.
+- COILIX-00016 korzysta z `TaskExecutor`, `TaskScheduler` i faz zamykania z COILIX-00005 (fazy i `RetryPolicy` dodaje w kroku 1) oraz z `GenericType` z COILIX-00020. Zdarzenia są tylko w pamięci jednego procesu, a trwałe przetwarzanie, outbox i Kafka należą do COILIX-00026. `RetryPolicy` współdzieli z COILIX-00026.
 - COILIX-00018 wymaga pierwszego wydania z COILIX-00009.
 - COILIX-00020 korzysta z zamykania kontekstu z COILIX-00004 (finalizery zasobów), z modułów z COILIX-00010, z zasobów wykonania z COILIX-00005 (albo dodaje minimalne) i z testkitu z COILIX-00013. Pełne typy w definicjach beanów i `ContextPlan` zmieniają API rdzenia, więc powinny trafić przed `core-v0.1.0`. Daje `IORuntime` modułom `processing-cats-effect`, `web-cats-effect` i `pekko-cats-effect`.
 - COILIX-00021 uzupełnia ręczny przegląd z `docs/legal/spring-similarity.md` (COILIX-00006). Warto go zrobić przed pierwszym wydaniem z COILIX-00009.
