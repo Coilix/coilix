@@ -5,6 +5,7 @@ import dev.coilix.annotation.Slf4s
 import dev.coilix.config.Environment
 import dev.coilix.config.ValueExpression
 import dev.coilix.context.ApplicationContext
+import dev.coilix.context.ClosingPhase
 import dev.coilix.context.ContextLifecycleListener
 import dev.coilix.context.ProxiedBean
 import java.lang.reflect.InvocationTargetException
@@ -19,7 +20,8 @@ import scala.util.control.NonFatal
  *
  * When the context has created every bean, it finds the annotated methods of each bean, including private methods and methods
  * of superclasses, and schedules them. Durations are resolved like `@Value` expressions. Each scheduled method is logged at
- * `INFO` level. When the context starts closing, every task is cancelled before any bean is destroyed.
+ * `INFO` level. Scheduled methods bring new work in, so every task is cancelled in the
+ * [[dev.coilix.context.ClosingPhase.Producers]] phase, before queued events are delivered and before any bean is destroyed.
  *
  * @param scheduler
  *   runs the methods
@@ -43,6 +45,8 @@ final class ScheduledMethodRegistrar(scheduler: TaskScheduler, environment: Opti
     )
     val _         = tasks.updateAndGet(_ ++ scheduled.map(schedule))
   }
+
+  override def closingPhase: ClosingPhase = ClosingPhase.Producers
 
   override def onContextClosing(): Unit =
     tasks.getAndSet(Nil).foreach(_.cancel())

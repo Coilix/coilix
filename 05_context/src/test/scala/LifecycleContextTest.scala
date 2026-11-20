@@ -3,12 +3,14 @@ package dev.coilix.context
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.lifecycle.BrokenShutdown
 import dev.coilix.context.lifecycle.Connection
+import dev.coilix.context.lifecycle.EventDrainer
 import dev.coilix.context.lifecycle.FailingInit
 import dev.coilix.context.lifecycle.FailingStart
 import dev.coilix.context.lifecycle.InitWithArgument
 import dev.coilix.context.lifecycle.Journal
 import dev.coilix.context.lifecycle.OrderedInit
 import dev.coilix.context.lifecycle.Repository
+import dev.coilix.context.lifecycle.ResourceCloser
 import dev.coilix.context.lifecycle.StartWatcher
 import dev.coilix.context.lifecycle.Worker
 import munit.FunSuite
@@ -64,6 +66,15 @@ final class LifecycleContextTest extends FunSuite {
     assertEquals(
       context.getBean[Journal].all.filterNot(_.startsWith("connection")),
       List("started with applicationContext, connection, journal, startWatcher", "closing", "watcher destroyed")
+    )
+  }
+
+  test("notifies listeners phase by phase whatever the order of creation") {
+    val context = contextOf(classOf[ResourceCloser], classOf[EventDrainer], classOf[StartWatcher])
+    context.close()
+    assertEquals(
+      context.getBean[Journal].all.drop(1),
+      List("closing", "events drained", "resources released", "watcher destroyed")
     )
   }
 

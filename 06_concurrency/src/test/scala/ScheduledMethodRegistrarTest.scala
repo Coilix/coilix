@@ -5,6 +5,7 @@ import dev.coilix.concurrency.invalid.BadDuration
 import dev.coilix.concurrency.invalid.BothTriggers
 import dev.coilix.concurrency.invalid.NoTrigger
 import dev.coilix.concurrency.invalid.WithArgument
+import dev.coilix.concurrency.scheduled.EventDrainWatcher
 import dev.coilix.concurrency.scheduled.FlakyRefresher
 import dev.coilix.concurrency.scheduled.Ticker
 import dev.coilix.config.ComponentProvider
@@ -42,6 +43,12 @@ final class ScheduledMethodRegistrarTest extends FunSuite {
     assertEquals(registrar.activeTasks, 0)
   }
 
+  test("cancels the tasks in the producers phase, before the events phase") {
+    val context = contextOf(classOf[EventDrainWatcher], classOf[Ticker])
+    context.close()
+    assertEquals(context.getBean[EventDrainWatcher].activeTasksWhenDraining, Some(0))
+  }
+
   test("rejects methods that cannot be scheduled") {
     val messages = List(classOf[BothTriggers], classOf[NoTrigger], classOf[WithArgument], classOf[BadDuration])
       .map(beanClass => intercept[InvalidScheduledMethodException](contextOf(beanClass)).getMessage)
@@ -65,10 +72,10 @@ final class ScheduledMethodRegistrarTest extends FunSuite {
     }
   }
 
-  private def contextOf(beanClass: Class[?]): ConfigurableApplicationContext = {
+  private def contextOf(beanClasses: Class[?]*): ConfigurableApplicationContext = {
     val environment = Environment.of(TypesafeConfigTree(ConfigFactory.parseString("refresher.delay = 5ms")))
     ApplicationContextBuilder.default.build(
-      (ConcurrencyModule().components :+ beanClass).flatMap(BeanDefinitionFactory.default.create),
+      (ConcurrencyModule().components ++ beanClasses).flatMap(BeanDefinitionFactory.default.create),
       List(RegisteredBean.of[Environment]("environment", environment))
     )
   }

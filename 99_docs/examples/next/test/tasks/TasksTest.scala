@@ -3,11 +3,13 @@ package tasks
 
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
+import java.util.concurrent.TimeUnit
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
 final class TasksTest extends munit.FunSuite with CoilixContextOps {
-  private val setup = CoilixTestSetup.forApplication[TasksApplication.type]
+  private val mailSender = FlakyMailSender()
+  private val setup      = CoilixTestSetup.forApplication[TasksApplication.type].addBean[MailSender](mailSender)
 
   test("a task runs on a thread of the Coilix executor") {
     setup.use {
@@ -32,6 +34,13 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
     setup.use {
       val refresher = bean[StockRefresher]
       assert(LazyList.range(0, 100).exists(_ => refresher.refreshes >= 2 || { Thread.sleep(50); false }))
+    }
+  }
+
+  test("a failed mail is sent again after the wait of the retry policy") {
+    setup.use {
+      bean[RetryingMailer].send("ann@example.com", "Your order has shipped")
+      assert(mailSender.delivered.await(5, TimeUnit.SECONDS))
     }
   }
 }

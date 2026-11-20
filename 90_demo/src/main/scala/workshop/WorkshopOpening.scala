@@ -4,10 +4,16 @@ package workshop
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Slf4s
 import dev.coilix.context.ApplicationContext
+import dev.coilix.context.ClosingPhase
 import dev.coilix.context.ContextLifecycleListener
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** Opens the workshop when every bean exists and announces the closing before any bean is destroyed. */
+/**
+ * Opens the workshop when every bean exists and closes it before any bean is destroyed.
+ *
+ * The workshop stays open in the [[dev.coilix.context.ClosingPhase.Resources]] phase, so it closes only after the sources of
+ * new work, such as the [[dev.coilix.demo.access.ClaimSweeper]], have stopped and the accepted work is finished.
+ */
 @Component
 @Slf4s
 final class WorkshopOpening(properties: WorkshopProperties) extends ContextLifecycleListener {
@@ -20,6 +26,8 @@ final class WorkshopOpening(properties: WorkshopProperties) extends ContextLifec
     open.set(true)
     log.info(s"${properties.name} is open with ${context.beanNames.size} beans")
   }
+
+  override def closingPhase: ClosingPhase = ClosingPhase.Resources
 
   override def onContextClosing(): Unit = {
     open.set(false)

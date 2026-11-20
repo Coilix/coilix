@@ -1,6 +1,7 @@
 package dev.coilix.demo
 
 import dev.coilix.context.ProxiedBean
+import dev.coilix.demo.access.ClaimSweeper
 import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vin
 import dev.coilix.demo.workshop.BayMonitor
@@ -67,6 +68,13 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     workshop.use {
       assert(bean[WorkshopOpening].isOpen)
     }
+  }
+
+  test("stops the sweeping before the accepted work and closes the workshop last") {
+    val probe              = DrainProbe()
+    val (opening, sweeper) = workshop.addBean(probe).use((bean[WorkshopOpening], bean[ClaimSweeper]))
+    assertEquals(probe.sweepingAndOpenWhileDraining, Some((false, true)))
+    assertEquals((opening.isOpen, sweeper.isSweeping), (false, false))
   }
 
   test("has no telematics uplink unless it is enabled") {

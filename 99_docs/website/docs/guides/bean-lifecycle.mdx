@@ -7,6 +7,7 @@ sidebar_position: 1
 
 import CodeBlock from '@theme/CodeBlock';
 import ReportScheduler from '!!raw-loader!@examples/scala/ReportScheduler.scala';
+import OrderOutbox from '!!raw-loader!@examples/scala/lifecycle/OrderOutbox.scala';
 
 This page shows how a bean runs its own code right after Coilix creates it and again when the application stops. Use it when a bean has to check its settings, open a resource or start a thread pool, and release it later.
 
@@ -29,3 +30,19 @@ If a `@PostConstruct` method throws an exception, the startup stops with `BeanCr
 The application context closes when the JVM stops, for example after Ctrl+C, or when you call `close()` on the context returned by `Coilix.run`. Coilix then runs the `@PreDestroy` methods, starting with the bean that was created last. A bean is therefore destroyed before the beans it depends on, so it can still use them while it stops.
 
 If a `@PreDestroy` method throws an exception, Coilix logs it as a warning and goes on with the remaining methods and beans.
+
+## React to the whole context
+
+A bean that needs every other bean, or that must stop its work before any bean is destroyed, implements `ContextLifecycleListener`. Coilix calls `onContextStarted` once all beans exist, and `onContextClosing` when the context closes, before the first `@PreDestroy` method.
+
+The closing goes through three phases, whatever the order in which the beans were created:
+
+1. `ClosingPhase.Producers` stops whatever brings new work in, such as `@Scheduled` methods, message consumers and servers. A listener is in this phase unless it says otherwise.
+2. `ClosingPhase.Events` finishes the work that was already accepted, such as queued messages.
+3. `ClosingPhase.Resources` releases what the work needed, such as connections.
+
+Only then do the `@PreDestroy` methods run. Within one phase, the listener created last is called first. The outbox below sends its queued orders in the `Events` phase. By then no scheduled task adds new orders, and the mail sender is still available:
+
+<CodeBlock language="scala" title="lifecycle/OrderOutbox.scala">{OrderOutbox}</CodeBlock>
+
+If `onContextStarted` throws an exception, Coilix closes the context and the startup stops. If `onContextClosing` throws, Coilix logs it as a warning and goes on with the closing.

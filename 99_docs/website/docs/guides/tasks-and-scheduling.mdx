@@ -11,6 +11,7 @@ import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scal
 import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
 import PriceRefresher from '!!raw-loader!@examples/scala/tasks/PriceRefresher.scala';
+import RetryingMailer from '!!raw-loader!@examples/scala/tasks/RetryingMailer.scala';
 import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
 import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application.yaml';
 
@@ -58,6 +59,14 @@ When the schedule is known only at runtime, use the `TaskScheduler` bean. It run
 
 Scheduled tasks run on a separate pool, `coilix-scheduler-<number>`, with one thread by default. If one run throws an exception, Coilix logs it and the task still runs next time. Runs of the same task never overlap.
 
+## Retry failed work
+
+`RetryPolicy` says how many times to try failed work and how long to wait between the tries. The wait starts at `initialDelay`, grows by `multiplier` after each failed try and never exceeds `maxDelay`. `jitter` spreads each wait randomly, here by up to 20% in both directions, so replicas that failed together do not retry at the same moment. `delayAfter(attempts)` returns the wait after that many failed tries, or `None` when no tries are left:
+
+<CodeBlock language="scala" title="tasks/RetryingMailer.scala">{RetryingMailer}</CodeBlock>
+
+The policy keeps no state, so one instance can serve every call. `RetryPolicy.default` makes five tries with waits from 1 second to 1 minute, `RetryPolicy.fixed(3, 2.seconds)` waits the same time between three tries, and `RetryPolicy.none` does not retry.
+
 ## Configure the threads
 
 All keys under `coilix.concurrency` are optional. This configuration runs tasks on four platform threads named `report-<number>` and gives the scheduler two threads:
@@ -68,7 +77,7 @@ Without configuration, the executor uses virtual threads named `coilix-task-<num
 
 ## What happens when the application stops
 
-The executor and the scheduler are closed like other beans when the application context closes, after the beans that use them. The scheduler drops the tasks that are still waiting for their time. Each of them then waits up to its `shutdown-timeout` for running tasks, interrupts those still running, and logs a warning with the number of tasks that did not finish.
+`@Scheduled` methods stop first, in the `Producers` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context). The executor and the scheduler are closed like other beans when the application context closes, after the beans that use them. The scheduler drops the tasks that are still waiting for their time. Each of them then waits up to its `shutdown-timeout` for running tasks, interrupts those still running, and logs a warning with the number of tasks that did not finish.
 
 ## Use your own executor
 

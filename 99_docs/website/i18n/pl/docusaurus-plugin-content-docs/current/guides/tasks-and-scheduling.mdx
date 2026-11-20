@@ -11,6 +11,7 @@ import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scal
 import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
 import PriceRefresher from '!!raw-loader!@examples/scala/tasks/PriceRefresher.scala';
+import RetryingMailer from '!!raw-loader!@examples/scala/tasks/RetryingMailer.scala';
 import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
 import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application.yaml';
 
@@ -58,6 +59,14 @@ Gdy harmonogram jest znany dopiero w trakcie działania, użyj beana `TaskSchedu
 
 Zadania z harmonogramu działają na osobnej puli `coilix-scheduler-<numer>`, domyślnie z jednym wątkiem. Jeśli jedno uruchomienie rzuci wyjątek, Coilix zapisze go w logu, a zadanie uruchomi się następnym razem. Uruchomienia tego samego zadania nigdy na siebie nie nachodzą.
 
+## Ponawianie nieudanej pracy
+
+`RetryPolicy` określa, ile razy próbować nieudanej pracy i jak długo czekać między próbami. Czekanie zaczyna się od `initialDelay`, rośnie `multiplier` razy po każdej nieudanej próbie i nigdy nie przekracza `maxDelay`. `jitter` losowo rozrzuca każde czekanie, tutaj o najwyżej 20% w obie strony, żeby repliki, którym praca nie wyszła jednocześnie, nie ponawiały jej w tej samej chwili. `delayAfter(attempts)` zwraca czas czekania po tylu nieudanych próbach albo `None`, gdy prób już nie ma:
+
+<CodeBlock language="scala" title="tasks/RetryingMailer.scala">{RetryingMailer}</CodeBlock>
+
+Polityka nie ma stanu, więc jedna instancja obsłuży każde wywołanie. `RetryPolicy.default` robi pięć prób z czekaniem od 1 sekundy do 1 minuty, `RetryPolicy.fixed(3, 2.seconds)` czeka tyle samo między trzema próbami, a `RetryPolicy.none` nie ponawia.
+
 ## Konfiguracja wątków
 
 Wszystkie klucze pod `coilix.concurrency` są opcjonalne. Ta konfiguracja uruchamia zadania na czterech wątkach platformowych o nazwach `report-<numer>` i daje harmonogramowi dwa wątki:
@@ -68,7 +77,7 @@ Bez konfiguracji wykonawca używa wątków wirtualnych o nazwach `coilix-task-<n
 
 ## Co się dzieje przy zatrzymaniu aplikacji
 
-Wykonawca i harmonogram są zamykane jak inne beany przy zamykaniu kontekstu aplikacji, po beanach, które z nich korzystają. Harmonogram porzuca zadania, które jeszcze czekają na swój czas. Potem każdy z nich czeka do `shutdown-timeout` na trwające zadania, przerywa te, które nadal działają, i zapisuje w logu ostrzeżenie z liczbą niedokończonych zadań.
+Metody `@Scheduled` zatrzymują się najpierw, w fazie zamykania `Producers` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst). Wykonawca i harmonogram są zamykane jak inne beany przy zamykaniu kontekstu aplikacji, po beanach, które z nich korzystają. Harmonogram porzuca zadania, które jeszcze czekają na swój czas. Potem każdy z nich czeka do `shutdown-timeout` na trwające zadania, przerywa te, które nadal działają, i zapisuje w logu ostrzeżenie z liczbą niedokończonych zadań.
 
 ## Własny wykonawca
 

@@ -19,7 +19,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00013 | [Wsparcie testów (`coilix-testkit`)](COILIX-00013_testkit.md) | wysoki | zrobiony (`16_testkit`, demo w `90_demo`, ADR 0016) |
 | COILIX-00014 | [Profile i warunkowe beany](COILIX-00014_profiles_and_conditions.md) | wysoki | zrobiony |
 | COILIX-00015 | [Zasięgi beanów i leniwe tworzenie](COILIX-00015_bean_scopes.md) | średni | do zrobienia |
-| COILIX-00016 | [Zdarzenia aplikacji (`events`)](COILIX-00016_application_events.md) | wysoki | do zrobienia (specyfikacja 2026-11-19) |
+| COILIX-00016 | [Zdarzenia aplikacji (`events`)](COILIX-00016_application_events.md) | wysoki | w toku (krok 1 z 6: fazy zamykania i `RetryPolicy`) |
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
