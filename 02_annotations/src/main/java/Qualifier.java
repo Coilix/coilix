@@ -3,13 +3,20 @@ package dev.coilix.annotation;
 import java.lang.annotation.*;
 
 /**
- * Selects a bean by name when several beans match a dependency.
+ * Selects a bean by name for a constructor or {@code @Bean} method parameter, when several beans
+ * match its type.
  *
- * <p>Reserved for a future version: Coilix does not read this annotation yet. Use {@link Primary}
- * to resolve ambiguous dependencies.
+ * <p>The bean with this name must exist and have the type of the parameter. The annotation works on
+ * a parameter of a single bean, not on {@code Option[T]} or collection parameters. A bean name is
+ * its {@code @Bean} method name or {@code @Bean} value, or the class name starting with a lower
+ * case letter.
+ *
+ * <pre>
+ * {@literal @}Component
+ * final class Checkout({@literal @}Qualifier("cardPayments") payments: PaymentGateway)</pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.PARAMETER, ElementType.FIELD})
+@Target({ElementType.PARAMETER})
 @Documented
 public @interface Qualifier {
     /**

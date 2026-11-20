@@ -1,5 +1,6 @@
 package dev.coilix.context
 
+import dev.coilix.annotation.Qualifier
 import dev.coilix.annotation.Value
 import dev.coilix.common.GenericType
 import dev.coilix.config.ValueExpression
@@ -7,8 +8,9 @@ import java.lang.reflect.Parameter
 
 /**
  * Maps a parameter annotated with `@Value` to a [[dev.coilix.context.Dependency.Value]], and any other parameter by its type with
- * the
- * [[dev.coilix.context.DependencyTypeMapper]].
+ * the [[dev.coilix.context.DependencyTypeMapper]]. A required bean parameter annotated with `@Qualifier` becomes a
+ * [[dev.coilix.context.Dependency.Named]]; on an `Option[T]` or collection parameter `@Qualifier` is rejected with
+ * [[dev.coilix.context.UnsupportedDependencyTypeException]].
  *
  * A bean type must be fully known: a type variable that the declaring class or method leaves unbound, such as `F` in
  * `SqlRepository[F[_]](sync: Sync[F])`, and a type argument that is a class with several type parameters, which is how the JVM
@@ -21,7 +23,18 @@ final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper)
   override def map(parameter: Parameter): Dependency =
     Option(parameter.getAnnotation(classOf[Value]))
       .map(value => Dependency.Value(ValueExpression.parse(value.value), parameter.getParameterizedType))
-      .getOrElse(checked(parameter, typeMapper.map(parameter.getParameterizedType)))
+      .getOrElse(qualified(parameter, checked(parameter, typeMapper.map(parameter.getParameterizedType))))
+
+  private def qualified(parameter: Parameter, dependency: Dependency): Dependency =
+    (Option(parameter.getAnnotation(classOf[Qualifier])), dependency) match {
+      case (None, _)                                        => dependency
+      case (Some(qualifier), Dependency.Required(beanType)) => Dependency.Named(qualifier.value, beanType)
+      case (Some(_), _)                                     =>
+        throw UnsupportedDependencyTypeException(
+          s"${describe(parameter)} has @Qualifier, which selects one bean, but its type is not a single bean. " +
+            "Remove @Qualifier or inject the bean directly"
+        )
+    }
 
   private def checked(parameter: Parameter, dependency: Dependency): Dependency = {
     beanTypeOf(dependency).foreach(beanType => check(parameter, beanType))
@@ -31,6 +44,7 @@ final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper)
   private def beanTypeOf(dependency: Dependency): Option[GenericType] =
     dependency match {
       case Dependency.Required(beanType)   => Some(beanType)
+      case Dependency.Named(_, beanType)   => Some(beanType)
       case Dependency.Optional(beanType)   => Some(beanType)
       case Dependency.Collection(beanType) => Some(beanType)
       case Dependency.Value(_, _)          => None

@@ -10,6 +10,16 @@ enum Dependency {
   /** A parameter of a bean type. The bean must exist. */
   case Required(beanType: GenericType)
 
+  /**
+   * A parameter of a bean type annotated with `@Qualifier`: the bean with this name, which must exist and have a matching type.
+   *
+   * @param beanName
+   *   the name from the annotation
+   * @param beanType
+   *   the parameter type
+   */
+  case Named(beanName: String, beanType: GenericType)
+
   /** An `Option[T]` parameter: the bean of type `T` when there is one, otherwise `None`. */
   case Optional(beanType: GenericType)
 

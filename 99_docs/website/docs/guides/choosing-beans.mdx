@@ -1,0 +1,40 @@
+---
+id: choosing-beans
+title: Choosing between beans
+description: Decide which bean a dependency gets when several beans implement the same trait, with @Primary, @Qualifier, Option and List.
+sidebar_position: 2
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import CardGateway from '!!raw-loader!@examples/scala/choosing/CardGateway.scala';
+import TransferGateway from '!!raw-loader!@examples/scala/choosing/TransferGateway.scala';
+import Checkout from '!!raw-loader!@examples/scala/choosing/Checkout.scala';
+import CheckoutTest from '!!raw-loader!@examples/test/choosing/CheckoutTest.scala';
+
+This page shows how a bean asks for one of several beans of the same type. Use it when two or more beans implement one trait, such as two payment gateways.
+
+## Mark the default bean with @Primary
+
+When several beans match a parameter, the bean marked `@Primary` is injected:
+
+<CodeBlock language="scala" title="CardGateway.scala">{CardGateway}</CodeBlock>
+
+<CodeBlock language="scala" title="TransferGateway.scala">{TransferGateway}</CodeBlock>
+
+Without `@Primary`, a parameter that matches several beans stops the startup with `AmbiguousBeanException`, which lists the matching beans.
+
+## Ask for a bean by name with @Qualifier
+
+Annotate a parameter with `@Qualifier` to get the bean with that name, whether it is primary or not. A bean is named after its class, starting with a lower-case letter, or after its `@Bean` method:
+
+<CodeBlock language="scala" title="Checkout.scala">{Checkout}</CodeBlock>
+
+The bean with the name must exist and have the type of the parameter, otherwise the startup stops with `NoSuchBeanException`. `@Qualifier` selects one bean, so it is not allowed on `Option[T]` or `List[T]` parameters.
+
+## Take every bean, or none
+
+A `List[T]` parameter gets every bean of type `T`, possibly none, and an `Option[T]` parameter gets the chosen bean when there is one. In the example, `allGateways` contains both gateways.
+
+## Check it in a test
+
+<CodeBlock language="scala" title="CheckoutTest.scala">{CheckoutTest}</CodeBlock>

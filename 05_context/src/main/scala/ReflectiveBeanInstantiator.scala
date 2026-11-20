@@ -37,6 +37,7 @@ final class ReflectiveBeanInstantiator(environment: Environment, postProcessor: 
   private def argument(definition: BeanDefinition, registry: BeanRegistry)(dependency: Dependency): AnyRef =
     dependency match {
       case Dependency.Required(beanType)           => required(definition, registry, beanType)
+      case Dependency.Named(beanName, beanType)    => named(definition, registry, beanName, beanType)
       case Dependency.Optional(beanType)           => registry.find(beanType).map(_.instance)
       case Dependency.Collection(beanType)         => registry.findAll(beanType).map(_.instance)
       case Dependency.Value(expression, valueType) => environment.resolve(expression, valueType)
@@ -44,6 +45,13 @@ final class ReflectiveBeanInstantiator(environment: Environment, postProcessor: 
 
   private def required(definition: BeanDefinition, registry: BeanRegistry, beanType: GenericType): AnyRef =
     registry.find(beanType).map(_.instance).getOrElse(throw unsatisfied(definition, beanType))
+
+  private def named(definition: BeanDefinition, registry: BeanRegistry, beanName: String, beanType: GenericType): AnyRef =
+    registry
+      .findByName(beanName)
+      .filter(bean => beanType.isAssignableFrom(bean.beanType))
+      .map(_.instance)
+      .getOrElse(throw new NoSuchBeanException(s"No bean named '$beanName' of type '$beanType' for '${definition.beanName}'"))
 
   private def unsatisfied(definition: BeanDefinition, beanType: GenericType): NoSuchBeanException =
     new NoSuchBeanException(s"Cannot satisfy dependency '$beanType' while creating '${definition.beanName}'")
