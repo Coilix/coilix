@@ -4,7 +4,8 @@ package dev.coilix.context
  * A bean that reacts when the context has created all its beans and when the context starts closing.
  *
  * Modules use it for work that needs every bean, such as finding annotated methods of other beans, and to stop that work
- * before any bean is destroyed:
+ * before any bean is destroyed. A listener that stops new work keeps the default
+ * [[dev.coilix.context.ContextLifecycleListener.closingPhase]], so it is notified before the queued work is finished:
  *
  * ```scala
  * @Component
@@ -24,8 +25,16 @@ trait ContextLifecycleListener {
   def onContextStarted(context: ApplicationContext): Unit
 
   /**
-   * Called once when the context starts closing, before any `@PreDestroy` method runs, in the reverse order of creation. An
-   * exception is logged and does not stop the closing. Does nothing by default.
+   * Called once when the context closes, in the [[dev.coilix.context.ContextLifecycleListener.closingPhase]] of this listener
+   * and before any `@PreDestroy` method runs. Listeners of one phase are called in the reverse order of creation. An exception
+   * is logged and does not stop the closing. Does nothing by default.
    */
   def onContextClosing(): Unit = ()
+
+  /**
+   * The phase in which [[dev.coilix.context.ContextLifecycleListener.onContextClosing]] is called. The default is
+   * [[dev.coilix.context.ClosingPhase.Producers]], because a listener usually stops work it started, and that work must stop
+   * before the queued work is finished and the resources are released.
+   */
+  def closingPhase: ClosingPhase = ClosingPhase.Producers
 }

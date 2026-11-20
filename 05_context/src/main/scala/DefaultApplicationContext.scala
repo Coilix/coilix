@@ -10,7 +10,8 @@ import scala.util.Try
  *
  * The registry is passed by name, so the context can exist before its beans and be injected into them. Closing the context
  * logs a message at `INFO` level, calls [[dev.coilix.context.ContextLifecycleListener.onContextClosing]] on the listener
- * beans and destroys the beans with the [[dev.coilix.context.BeanDestroyer]].
+ * beans phase by phase in the order of [[dev.coilix.context.ClosingPhase]], and then destroys the beans with the
+ * [[dev.coilix.context.BeanDestroyer]].
  *
  * @param registry
  *   the beans of the context, evaluated on first access
@@ -45,7 +46,8 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
 
   private def destroyBeans(): Unit = {
     log.info("Closing application context")
-    getBeansOfType[ContextLifecycleListener].reverse.foreach(notifyClosing)
+    val listeners = getBeansOfType[ContextLifecycleListener].reverse
+    ClosingPhase.values.toList.foreach(phase => listeners.filter(_.closingPhase == phase).foreach(notifyClosing))
     destroyer.destroy(registry.beans)
   }
 

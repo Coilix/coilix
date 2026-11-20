@@ -29,6 +29,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0021](0021-cluster-replica-identity.md) | Moduł `cluster` i tożsamość repliki | proponowana |
 | [0022](0022-definition-processors-and-async-proxies.md) | Procesory definicji z modułów i proxy dla `@Async` | proponowana |
 | [0023](0023-ci-caching.md) | Cache i pomijanie kroków w CI bez pomijania testów | proponowana |
+| [0024](0024-closing-phases-and-retry-policy.md) | Fazy zamykania kontekstu i wspólna polityka ponowień | proponowana |
 
 ## Nowa decyzja
 

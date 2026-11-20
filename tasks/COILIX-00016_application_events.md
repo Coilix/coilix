@@ -177,7 +177,7 @@ trait EventTransport {
 
 ## Kroki (osobne PR-y)
 
-1. **Rdzeń.** Fazy zamykania w `ContextLifecycleListener` i `RetryPolicy` w `concurrency`, z migracją `ScheduledMethodRegistrar` do fazy producentów. ADR „Model zdarzeń i fazy zamykania”.
+1. **Rdzeń** (zrobione, ADR 0024). Fazy zamykania w `ContextLifecycleListener` i `RetryPolicy` w `concurrency`, z migracją `ScheduledMethodRegistrar` do fazy producentów. ADR 0024 „Fazy zamykania kontekstu i wspólna polityka ponowień”.
 2. **Moduł `08_events` z transportem pamięciowym.** `EventPublisher`, `@EventListener` i `EventListener[E]`, dopasowanie po `GenericType`, subskrypcje z kolejnością per klucz, ponowienia, dead letter w pamięci, ograniczone kolejki, zamykanie z opróżnianiem, statystyki. Przewodnik w obu językach i użycie w demo.
 3. **Zdarzenia frameworka i testkit.** `ContextReady`, `ApplicationStarted`, `ContextClosing`, `ApplicationFailed`, zdarzenia synchroniczne, `awaitIdle`, `recordedEvents`.
 4. **SPI i kontrakt.** Routing transportów, `EventCodec` i `@EventName`, zestaw testów `EventTransportContract`.
