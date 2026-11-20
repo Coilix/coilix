@@ -7,12 +7,13 @@ import java.lang.reflect.Method
  * Invokes the `@PostConstruct` methods from [[dev.coilix.context.BeanDefinition.lifecycle]] and returns the same instance.
  *
  * An exception thrown by a method becomes a [[dev.coilix.context.BeanCreationException]] naming the bean and the method, with the
- * original exception as its cause. This is the default [[dev.coilix.context.BeanPostProcessor]].
+ * original exception as its cause. For a [[dev.coilix.context.ProxiedBean]] the methods run on the instance behind the proxy,
+ * and the proxy is returned. This is the default [[dev.coilix.context.BeanPostProcessor]].
  */
 final class PostConstructProcessor extends BeanPostProcessor {
 
   override def postProcess(definition: BeanDefinition, instance: AnyRef): AnyRef = {
-    definition.lifecycle.init.foreach(invoke(definition, instance))
+    definition.lifecycle.init.foreach(invoke(definition, ProxiedBean.unwrap(instance)))
     instance
   }
 

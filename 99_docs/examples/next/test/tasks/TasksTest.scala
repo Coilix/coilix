@@ -15,6 +15,12 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
     }
   }
 
+  test("an @Async method runs on the executor and the bean is injected through its trait") {
+    setup.use {
+      assert(Await.result(bean[InvoiceMailer].send("INV-7"), 5.seconds).startsWith("INV-7 sent from coilix-task-"))
+    }
+  }
+
   test("a @Scheduled method runs on its own") {
     setup.use {
       val refresher = bean[PriceRefresher]

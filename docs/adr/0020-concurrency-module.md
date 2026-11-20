@@ -26,5 +26,5 @@ Artefakty są kompilowane dla JDK 17 (COILIX-00009), a wątki wirtualne są w JD
 
 - Rdzeń ma nowy publikowany artefakt w grupie `core`.
 - Każdy kontekst z `boot` ma beany `concurrencySettings`, `taskExecutor` i `taskScheduler`. Testy, które sprawdzają pełną listę beanów, muszą je uwzględnić.
-- `@Async` i przekazywanie MDC to kolejne kroki COILIX-00005, na tym samym module.
+- `@Async` jest opisane w ADR 0022, a przekazywanie MDC to ostatni krok COILIX-00005.
 - Bean `TaskExecutor` z aplikacji bez `@Primary` jest drugim kandydatem obok domyślnego, więc wstrzyknięcie `TaskExecutor` kończy się `AmbiguousBeanException`. Komunikat podpowiada `@Primary`.

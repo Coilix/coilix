@@ -49,4 +49,12 @@ trait CoilixModule {
    * A class with one of these annotations must not have a component annotation too.
    */
   def collects: List[Class[? <: Annotation]] = Nil
+
+  /**
+   * Processors that change the definitions of discovered beans before the context is planned, empty by default.
+   *
+   * They apply to the beans of the application and of every module, for example to create beans with annotated methods as
+   * proxies.
+   */
+  def definitionProcessors: List[DefinitionProcessor] = Nil
 }

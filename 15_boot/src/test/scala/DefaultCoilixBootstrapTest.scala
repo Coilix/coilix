@@ -9,6 +9,7 @@ import dev.coilix.boot.jobs.JobRunner
 import dev.coilix.boot.jobs.JobsModule
 import dev.coilix.boot.jobs.ModuleJob
 import dev.coilix.boot.modules.FixedModuleLoader
+import dev.coilix.boot.modules.RenamingModule
 import dev.coilix.boot.modules.ReportModule
 import dev.coilix.boot.modules.ReportTitle
 import dev.coilix.common.GenericType
@@ -122,6 +123,18 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
 
   test("a module collects no annotations by default") {
     assertEquals(ReportModule().collects, Nil)
+  }
+
+  test("applies the definition processors of modules to the beans of every module") {
+    val context = withModules(List(ReportModule(), RenamingModule())).start(List("dev.coilix.boot.empty"), Nil, Nil)
+    assertEquals(
+      (context.beanNames.contains("monthlyTitle"), context.beanNames.contains("reportTitle")),
+      (true, false)
+    )
+  }
+
+  test("a module has no definition processors by default") {
+    assertEquals(ReportModule().definitionProcessors, Nil)
   }
 
   private def withModules(modules: List[CoilixModule]): CoilixBootstrap =

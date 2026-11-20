@@ -16,8 +16,9 @@ import dev.coilix.context.RegisteredBean
 import java.lang.annotation.Annotation
 
 /**
- * Scans each base package, drops classes found in more than one package, adds the components of the enabled modules, leaves out
- * the replaced beans, adds the extra definitions, and builds the context.
+ * Scans each base package, drops classes found in more than one package, adds the components of the enabled modules, applies
+ * the [[dev.coilix.context.DefinitionProcessor]]s of the modules, leaves out the replaced beans, adds the extra definitions, and
+ * builds the context.
  *
  * When the modules collect annotations, the classes marked with them, found in the base packages or among the module
  * components, become the `collectedComponents` bean made by the [[dev.coilix.context.ComponentCollector]] instead of beans. Each
@@ -53,10 +54,14 @@ final class DefaultCoilixBootstrap(
     val loaded      = modules.load()
     val annotations = loaded.flatMap(_.collects).distinct
     val collected   = collectedClasses(basePackages, loaded, annotations)
-    val beans       = kept(discovered(basePackages) ++ fromModules(loaded, annotations), replacements) ++ extraDefinitions
+    val processed   = processedBy(loaded)(discovered(basePackages) ++ fromModules(loaded, annotations))
+    val beans       = kept(processed, replacements) ++ extraDefinitions
     checkCollected(beans, singletons, collected, annotations)
     ready(builder.build(beans ++ collectedDefinition(collected, annotations), singletons))
   }
+
+  private def processedBy(loaded: List[CoilixModule])(definitions: List[BeanDefinition]): List[BeanDefinition] =
+    loaded.flatMap(_.definitionProcessors).foldLeft(definitions)((current, processor) => current.map(processor.process))
 
   private def kept(definitions: List[BeanDefinition], replacements: BeanReplacements): List[BeanDefinition] =
     replacements.unmatched(definitions) match {

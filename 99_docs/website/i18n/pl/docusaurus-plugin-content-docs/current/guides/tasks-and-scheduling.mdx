@@ -7,6 +7,8 @@ sidebar_position: 6
 
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
+import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scala';
+import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
 import PriceRefresher from '!!raw-loader!@examples/scala/tasks/PriceRefresher.scala';
 import TasksTest from '!!raw-loader!@examples/test/tasks/TasksTest.scala';
@@ -25,6 +27,18 @@ Domyślnie każde zadanie działa na nowym wątku wirtualnym o nazwie `coilix-ta
 Jeśli zadanie uruchomione przez `execute` rzuci wyjątek, Coilix zapisze go w logu jako błąd. Zadanie uruchomione przez `submit` zwraca wyjątek w swoim `Future`.
 
 Wykonawcę można też przekazać tam, gdzie biblioteka oczekuje `ExecutionContext`, przez `executor.executionContext`.
+
+## Metoda asynchroniczna z @Async
+
+Oznacz metodę adnotacją `@Async`, żeby wykonywała się na wykonawcy przy każdym wywołaniu przez inny bean. Metoda musi być zadeklarowana w traicie beana:
+
+<CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
+
+<CodeBlock language="scala" title="SmtpInvoiceMailer.scala">{SmtpInvoiceMailer}</CodeBlock>
+
+Metoda zwracająca `Future[T]` zwraca wynik wykonania na wykonawcy, a metoda zwracająca `Unit` jest uruchamiana bez czekania; jej błąd trafia do logu. Metody bez `@Async` działają na wątku wywołującym.
+
+Coilix rejestruje taki bean jako proxy traitu, więc inne beany wstrzykują `InvoiceMailer`, a nie `SmtpInvoiceMailer`. Wywołanie z wnętrza samego beana omija proxy i działa na wątku wywołującym. Metoda `@Async`, której nie deklaruje żaden trait albo która zwraca coś innego niż `Unit` lub `Future`, zatrzymuje start wyjątkiem `InvalidAsyncMethodException`.
 
 ## Metoda powtarzana przez @Scheduled
 
