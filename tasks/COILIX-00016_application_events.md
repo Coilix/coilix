@@ -55,10 +55,12 @@ final class ConfirmationMailer(mail: MailSender) {
 - `EventPublisher` jest beanem wbudowanym: `publish[E: TypeInfo](event: E): Unit`. Obok jest wersja zwięzła z `using EventPublisher` (`Events.publish(event)`), zgodnie z zasadą API z CLAUDE.md.
 - Zdarzenie to dowolna wartość aplikacji (zwykle case class z sealed traitu). Nie rozszerza typu frameworka i nie potrzebuje serializacji.
 - Zdarzenie bez odbiorcy jest logowane na `DEBUG` i nic więcej się nie dzieje.
+- Zdarzenie opublikowane, zanim kontekst skończy start (np. w konstruktorze beana), czeka w buforze i jest dostarczane zaraz po znalezieniu odbiorców. Wyjątek odbiorcy synchronicznego jest wtedy logowany, bo publikujący już wrócił.
 
 ### Odbiorcy
 
-- Metoda z `@EventListener`, która przyjmuje jeden parametr typu zdarzenia, albo bean implementujący `EventListener[E]` z `onEvent(event: E)`.
+- Metoda z `@EventListener`, która przyjmuje jeden parametr typu zdarzenia, albo bean implementujący `ApplicationEventListener[E]` z `onEvent(event: E)`.
+- Trait nazywa się `ApplicationEventListener`, a nie `EventListener`, żeby nie zderzał się z adnotacją przy imporcie. Jego argument typu musi być zapisany w klasie (klasa albo klasa anonimowa, nie lambda).
 - Dopasowanie po pełnym typie z dziedziczeniem: odbiorca `OrderEvent` dostaje każde zdarzenie z sealed traitu, a `Changed[Customer]` jest innym typem niż `Changed[Order]`.
 - **Synchroniczny** (domyślnie): działa w wątku publikującego, przed powrotem z `publish`. Odbiorcy synchroniczni są wywoływani po kolei. Kolejność między nimi nie jest częścią kontraktu.
 - **Asynchroniczny** (`@EventListener(async = true)`): każde dostarczenie to osobne zadanie na `TaskExecutor`. `publish` nie czeka na jego koniec. Kolejność dostarczeń nie jest gwarantowana, także dla jednego odbiorcy. Kto potrzebuje kolejności, używa odbiorcy synchronicznego albo procesora.
@@ -101,7 +103,7 @@ final class ConfirmationMailer(mail: MailSender) {
 | Moduł | Rodzaj | Zależności | Zawartość |
 |---|---|---|---|
 | `concurrency`, `context` | rdzeń (zmiana) | — | `RetryPolicy` i fazy zamykania (krok 1, zrobione) |
-| `events` (`08_events`) | rdzeń | `concurrency` | `EventPublisher`, `Events`, `@EventListener`, `EventListener[E]`, `EventBus`, zdarzenia frameworka, zamykanie |
+| `events` (`08_events`) | rdzeń | `concurrency` | `EventPublisher`, `Events`, `@EventListener`, `ApplicationEventListener[E]`, `EventBus`, zdarzenia frameworka, zamykanie |
 | `boot` | rdzeń (zmiana) | `events` | publikacja `ApplicationStarted` i `ApplicationFailed` |
 | `testkit` | rdzeń (zmiana) | `events` | `withSynchronousEvents`, `awaitIdle`, `recordedEvents` |
 
@@ -110,12 +112,12 @@ final class ConfirmationMailer(mail: MailSender) {
 ## Kroki (osobne PR-y)
 
 1. **Rdzeń** (zrobione, ADR 0024). Fazy zamykania w `ContextLifecycleListener` i `RetryPolicy` w `concurrency`, z migracją `ScheduledMethodRegistrar` do fazy producentów. ADR 0024 „Fazy zamykania kontekstu i wspólna polityka ponowień”.
-2. **Moduł `08_events`.** `EventPublisher` i `Events`, `@EventListener` i `EventListener[E]`, dopasowanie po `GenericType`, odbiorcy synchroniczni i asynchroniczni, ponowienia, zamykanie w fazie `Events`. ADR o modelu zdarzeń, przewodnik w obu językach i użycie w demo.
+2. **Moduł `08_events`.** `EventPublisher` i `Events`, `@EventListener` i `ApplicationEventListener[E]`, dopasowanie po `GenericType`, odbiorcy synchroniczni i asynchroniczni, ponowienia, zamykanie w fazie `Events`. ADR o modelu zdarzeń, przewodnik w obu językach i użycie w demo.
 3. **Zdarzenia frameworka i testkit.** `ContextReady`, `ApplicationStarted`, `ContextClosing`, `ApplicationFailed`, `withSynchronousEvents`, `awaitIdle`, `recordedEvents`.
 
 ## Kryteria akceptacji
 
-1. Zdarzenie opublikowane przez bean trafia do odbiorcy `@EventListener` i do beana `EventListener[E]`, a odbiorca typu nadrzędnego z sealed traitu też je dostaje. Odbiorca `Changed[Customer]` nie dostaje `Changed[Order]`.
+1. Zdarzenie opublikowane przez bean trafia do odbiorcy `@EventListener` i do beana `ApplicationEventListener[E]`, a odbiorca typu nadrzędnego z sealed traitu też je dostaje. Odbiorca `Changed[Customer]` nie dostaje `Changed[Order]`.
 2. Odbiorca synchroniczny kończy pracę przed powrotem z `publish`, a jego wyjątek trafia do publikującego. Gdy rzucają dwaj odbiorcy, drugi wyjątek jest w `suppressed`, a odbiorcy asynchroniczni nie są uruchamiani.
 3. `publish` wraca, zanim odbiorca asynchroniczny skończy (test z odbiorcą czekającym na zatrzask). Wyjątek odbiorcy asynchronicznego nie dociera do publikującego i jest zalogowany.
 4. Odbiorca asynchroniczny z `retry` i dwoma wyjątkami dostaje zdarzenie za trzecim razem. Bez `retry` jest jedna próba.
