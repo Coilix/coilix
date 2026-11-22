@@ -223,6 +223,7 @@ lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
     coverageEnabled      := false,
     libraryDependencies += Dependencies.slf4jSimple,
     run / fork           := true,
+    run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
     run / outputStrategy := Some(StdoutOutput)
   )
 
