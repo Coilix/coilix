@@ -3,6 +3,7 @@ package dev.coilix.events
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.GenericType
 import dev.coilix.common.TypeInfo
+import dev.coilix.concurrency.FatalErrors
 import dev.coilix.concurrency.RetryPolicy
 import dev.coilix.concurrency.ScheduledTask
 import dev.coilix.concurrency.TaskExecutor
@@ -25,7 +26,8 @@ import scala.util.control.NonFatal
  * the [[dev.coilix.concurrency.TaskExecutor]], and a retry waits on the [[dev.coilix.concurrency.TaskScheduler]]. Events published
  * before the context has started wait and are delivered when the listeners are found. When the context closes, waiting retries
  * are cancelled, and the bus waits for the running deliveries up to `shutdownTimeout`, then interrupts them and logs at `ERROR`
- * level how many deliveries of each listener were abandoned. With `coilix.events.synchronous = true` asynchronous listeners run in
+ * level how many deliveries of each listener were abandoned. A fatal error of an asynchronous listener ends its delivery without
+ * retries and goes to the [[dev.coilix.concurrency.FatalErrorHandler]] of the executor. With `coilix.events.synchronous = true` asynchronous listeners run in
  * the thread of the publisher too, after the synchronous ones, and their retries follow at once.
  *
  * @param executor
@@ -193,10 +195,16 @@ final class DefaultEventBus(executor: TaskExecutor, scheduler: TaskScheduler, se
           thread.interrupt()
           log.warn(s"Event listener ${listener.info.name} was interrupted", interrupted)
           false
+        case fatal if FatalErrors.isFatal(fatal) => abandoned(listener, fatal)
       } finally {
         val _ = running.updateAndGet(_ - thread)
       }
     if (!retry) decrement(listener.info.name)
+  }
+
+  private def abandoned(listener: RegisteredListener, fatal: Throwable): Nothing = {
+    decrement(listener.info.name)
+    throw fatal
   }
 
   private def retried(listener: RegisteredListener, event: AnyRef, attempt: Int, failure: Throwable): Boolean =

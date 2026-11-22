@@ -5,6 +5,7 @@ import dev.coilix.boot.ArgumentsParser
 import dev.coilix.boot.BeanReplacements
 import dev.coilix.boot.StartupComponents
 import dev.coilix.boot.StartupEvents
+import dev.coilix.concurrency.FatalErrorSettings
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
@@ -15,7 +16,8 @@ import dev.coilix.context.RegisteredBean
  * Builds a test context the way `Coilix.run` builds an application, without the banner, the startup log and the shutdown hook.
  *
  * The configuration is loaded with the setup properties and profiles over the command-line options, so they win over every
- * other source. The arguments and the configuration are registered as `applicationArguments` and `environment`, and the beans of
+ * other source. Fatal errors are only logged (`coilix.fatal-errors.action = log`), so a test does not end the JVM, unless the
+ * setup sets the action. The arguments and the configuration are registered as `applicationArguments` and `environment`, and the beans of
  * the setup are registered under their names, next to an [[dev.coilix.testkit.EventRecorder]] named `eventRecorder`. The context
  * publishes [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] like an application, with the runners
  * between them when the setup asks for them. When the runners or the listeners of these events fail, the context is closed
@@ -36,7 +38,7 @@ final class DefaultTestContextFactory(
 
   override def create(setup: CoilixTestSetup): ConfigurableApplicationContext = {
     val arguments   = parser.parse(setup.arguments)
-    val environment = environmentLoader.load(commandLineProperties(arguments) ++ setup.configurationOverrides)
+    val environment = environmentLoader.load(safeDefaults ++ commandLineProperties(arguments) ++ setup.configurationOverrides)
     val startup     = assemble(ComponentProvider.from(environment))
     val context     = startup.bootstrap.start(
       setup.packages(startup.resolver),
@@ -46,6 +48,8 @@ final class DefaultTestContextFactory(
     )
     StartupEvents.around(context)(if (setup.runners) startup.invoker.invoke(context, arguments))
   }
+
+  private val safeDefaults: Map[String, String] = Map(FatalErrorSettings.path + ".action" -> "log")
 
   private def commandLineProperties(arguments: ApplicationArguments): Map[String, String] =
     arguments.options.collect { case (name, value :: _) => name -> value }

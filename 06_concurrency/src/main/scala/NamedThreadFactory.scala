@@ -10,14 +10,17 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * @param prefix
  *   the beginning of each thread name
+ * @param uncaught
+ *   receives the exceptions that end a thread, such as fatal errors; without it the JVM default applies
  */
-final class NamedThreadFactory(prefix: String) extends ThreadFactory {
+final class NamedThreadFactory(prefix: String, uncaught: Option[Thread.UncaughtExceptionHandler] = None) extends ThreadFactory {
 
   private val counter = AtomicLong()
 
   override def newThread(task: Runnable): Thread = {
     val thread = Thread(task, s"$prefix${counter.incrementAndGet()}")
     thread.setDaemon(true)
+    uncaught.foreach(thread.setUncaughtExceptionHandler)
     thread
   }
 }

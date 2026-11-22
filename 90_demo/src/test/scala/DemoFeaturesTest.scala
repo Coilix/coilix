@@ -1,5 +1,6 @@
 package dev.coilix.demo
 
+import dev.coilix.concurrency.ProcessTerminator
 import dev.coilix.context.ProxiedBean
 import dev.coilix.demo.access.ClaimSweeper
 import dev.coilix.demo.diagnostics.FleetScan
@@ -24,6 +25,7 @@ import dev.coilix.testkit.CoilixTestSetup
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
+import java.util.concurrent.TimeUnit
 import munit.FunSuite
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
@@ -128,6 +130,19 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       )
       assertEquals((recordedEvents[ContextReady].size, recordedEvents[ApplicationStarted].size), (1, 1))
     }
+  }
+
+  test("a tester that runs out of memory shuts the workshop down with exit code 70") {
+    val terminator = RecordingTerminator()
+    workshop
+      .replaceBean[ProcessTerminator](terminator)
+      .withProperties("coilix.fatal-errors.action" -> "shutdown")
+      .withArguments("--simulate-fatal-error")
+      .withRunners
+      .use {
+        assert(terminator.exited.await(10, TimeUnit.SECONDS))
+        assertEquals((terminator.recorded, bean[WorkshopOpening].isOpen), (List("exit 70"), false))
+      }
   }
 
   test("a clock added by the test replaces the default one") {

@@ -4,9 +4,8 @@ import dev.coilix.annotation.Slf4s
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.FiniteDuration
-import scala.util.control.NonFatal
 
-/** Stops executor services without losing tasks silently, and keeps one failed task from stopping the others. */
+/** Stops executor services without losing tasks silently. */
 @Slf4s
 object GracefulShutdown {
 
@@ -21,14 +20,6 @@ object GracefulShutdown {
     if (!service.isShutdown) {
       service.shutdown()
       if (!service.awaitTermination(timeout.toMillis, TimeUnit.MILLISECONDS)) interrupt(name, service, timeout)
-    }
-
-  /** Runs `task` and logs its failure at `ERROR` level instead of passing it to the thread. */
-  def logFailure(name: String)(task: => Unit): Unit =
-    try {
-      task
-    } catch {
-      case NonFatal(failure) => log.error(s"Task on $name failed", failure)
     }
 
   private def interrupt(name: String, service: ExecutorService, timeout: FiniteDuration): Unit = {

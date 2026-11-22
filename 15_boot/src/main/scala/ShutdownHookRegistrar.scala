@@ -4,11 +4,12 @@ import dev.coilix.config.ComponentProvider
 import dev.coilix.config.ConfigPath
 import dev.coilix.context.ConfigurableApplicationContext
 
-/** Makes sure the application context is closed when the JVM stops. */
+/** Connects the application context to the JVM process: the context is closed when the JVM stops. */
 trait ShutdownHookRegistrar {
 
   /**
-   * Registers a hook that closes `context`.
+   * Registers a hook that closes `context`, and may install process-wide handlers that need the context, such as the handler of
+   * fatal errors.
    *
    * @return
    *   the hook thread, which can be removed with `Runtime.removeShutdownHook`

@@ -1,0 +1,5 @@
+coilix:
+  fatal-errors:
+    action: shutdown
+    exit-code: 70
+    shutdown-timeout: 20s
