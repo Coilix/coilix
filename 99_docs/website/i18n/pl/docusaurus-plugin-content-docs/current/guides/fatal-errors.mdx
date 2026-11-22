@@ -46,7 +46,7 @@ Coilix obsługuje wątki, którymi zarządza. Biblioteki, które uruchamiają w�
 java -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -XX:MaxRAMPercentage=75 -jar shop.jar
 ```
 
-W kontenerze JVM domyślnie daje stercie tylko 25% limitu pamięci. `-XX:MaxRAMPercentage=75` daje jej większość limitu, a resztę zostawia na wątki, metaspace i bufory. `Coilix.run` ostrzega przy starcie, gdy brakuje obu opcji `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` albo gdy maksymalna sterta to mniej niż połowa pamięci dostępnej dla JVM.
+W kontenerze JVM domyślnie daje stercie tylko 25% limitu pamięci. `-XX:MaxRAMPercentage=75` daje jej większość limitu, a resztę zostawia na wątki, metaspace i bufory. `Coilix.run` ostrzega przy starcie, gdy brakuje obu opcji `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` albo, w kontenerze, gdy maksymalna sterta to mniej niż połowa limitu pamięci. Poza kontenerem pamięć jest dzielona z innymi programami, więc sterta nie jest sprawdzana.
 
 W Kubernetesie pod, który ciągle pada w ten sam sposób, przechodzi w `CrashLoopBackOff`. To zamierzony sygnał: aplikacja nie udaje, że działa, a logi i zrzut pamięci pokazują dlaczego.
 

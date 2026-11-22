@@ -17,7 +17,7 @@
 - `ProcessTerminator` jest beanem (`processTerminator`), żeby testy podmieniały wyjście z procesu przez `replaceBean`.
 - Asynchroniczny odbiorca zdarzeń z błędem fatalnym zwalnia licznik trwających dostarczeń, bez ponowień, i przepuszcza błąd do wykonawcy. Inaczej zamykanie po błędzie czekałoby na dostarczenie, które się nie skończy.
 - `RuntimeShutdownHookRegistrar` w `boot` ustawia handler kontekstu jako domyślny handler nieobsłużonych wyjątków procesu (`Thread.setDefaultUncaughtExceptionHandler`). Testkit nie rejestruje hooków, więc tego nie robi. Dodatkowo kontekst testkitu ma domyślnie `coilix.fatal-errors.action = log`, żeby błąd fatalny w teście nie kończył JVM. Test zamykania ustawia `shutdown` przez `withProperties` i podmienia `ProcessTerminator`.
-- `Coilix.run` loguje na `WARN` opcje JVM, które osłabiają aplikację (`JvmMemoryOptions`): brak `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` oraz maksymalną stertę mniejszą niż połowa pamięci dostępnej dla JVM.
+- `Coilix.run` loguje na `WARN` opcje JVM, które osłabiają aplikację (`JvmMemoryOptions`): brak `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` oraz, tylko w kontenerze, maksymalną stertę mniejszą niż połowa limitu pamięci. Kontener rozpoznaje po `KUBERNETES_SERVICE_HOST`, zmiennej `container`, plikach `/.dockerenv` i `/run/.containerenv` oraz cgroup procesu. Poza kontenerem pamięć jest współdzielona, więc domyślne 25% nie jest błędem. Demo startuje z `-XX:+ExitOnOutOfMemoryError` (`run / javaOptions` i konfiguracja `Demo` w `.run/`).
 
 ## Konsekwencje
 

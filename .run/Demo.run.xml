@@ -2,6 +2,7 @@
   <configuration default="false" name="Demo" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="dev.coilix.demo.DemoApplication" />
     <module name="coilix.demo.main" />
+    <option name="VM_PARAMETERS" value="-XX:+ExitOnOutOfMemoryError" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>
