@@ -38,6 +38,10 @@ final class RetryPolicyTest extends FunSuite {
     assertEquals(RetryPolicy.default.maxAttempts, 5)
   }
 
+  test("keeps the default of every parameter that is not given") {
+    assertEquals(RetryPolicy(maxAttempts = 2), RetryPolicy(2, 1.second, 1.minute, 2.0, 0.2))
+  }
+
   test("rejects parameters out of range") {
     val invalid = List(
       () => RetryPolicy(0, 1.second, 1.second, 1.0, 0.0),

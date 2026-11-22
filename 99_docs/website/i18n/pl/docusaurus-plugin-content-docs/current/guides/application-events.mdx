@@ -1,0 +1,81 @@
+---
+id: application-events
+title: Zdarzenia aplikacji
+description: Pozwól beanom reagować na to, co robią inne beany, przez EventPublisher i @EventListener, synchronicznie albo na wykonawcy zadań.
+sidebar_position: 8
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import OrderPlaced from '!!raw-loader!@examples/scala/events/OrderPlaced.scala';
+import Checkout from '!!raw-loader!@examples/scala/events/Checkout.scala';
+import ExpressCheckout from '!!raw-loader!@examples/scala/events/ExpressCheckout.scala';
+import SalesStatistics from '!!raw-loader!@examples/scala/events/SalesStatistics.scala';
+import LoyaltyProgram from '!!raw-loader!@examples/scala/events/LoyaltyProgram.scala';
+import ConfirmationMailer from '!!raw-loader!@examples/scala/events/ConfirmationMailer.scala';
+import EventsTest from '!!raw-loader!@examples/test/events/EventsTest.scala';
+import EventsYaml from '!!raw-loader!@examples/resources/guides/events/application.yaml';
+
+Ta strona pokazuje, jak bean informuje inne beany, że coś się stało, bez zależności od nich. Kasa publikuje, że złożono zamówienie, a statystyki, program lojalnościowy i wysyłka maili na to reagują. Kasa nie zna żadnego z nich, więc dodanie kolejnej reakcji jej nie zmienia.
+
+Zdarzenia żyją tylko w pamięci działającej aplikacji. Zdarzenie, które czeka jeszcze na odbiorcę asynchronicznego, przepada przy awarii procesu, nie jest dostarczane ponownie po restarcie i nie trafia do innych replik. Gdy praca musi się wykonać na pewno, także po awarii, użyj trwałego przetwarzania zamiast zdarzeń.
+
+## Publikacja zdarzenia
+
+Zdarzenie to dowolna wartość, zwykle case class. Wstrzyknij `EventPublisher` i przekaż mu zdarzenie:
+
+<CodeBlock language="scala" title="OrderPlaced.scala">{OrderPlaced}</CodeBlock>
+
+<CodeBlock language="scala" title="Checkout.scala">{Checkout}</CodeBlock>
+
+Bean, który trzyma publikującego jako parametr `using`, woła zamiast tego `Events.publish`:
+
+<CodeBlock language="scala" title="ExpressCheckout.scala">{ExpressCheckout}</CodeBlock>
+
+## Odbieranie zdarzeń
+
+Oznacz przez `@EventListener` metodę, która przyjmuje zdarzenie jako jedyny parametr. Metoda może być prywatna i musi zwracać `Unit`:
+
+<CodeBlock language="scala" title="SalesStatistics.scala">{SalesStatistics}</CodeBlock>
+
+Bean może też rozszerzać `ApplicationEventListener` z typem zdarzenia. Argument typu musi być zapisany w klasie, więc lambda tu nie zadziała:
+
+<CodeBlock language="scala" title="LoyaltyProgram.scala">{LoyaltyProgram}</CodeBlock>
+
+Odbiorca dostaje zdarzenia swojego typu i każdego podtypu, więc odbiorca sealed traitu dostaje każdy jego przypadek. Liczą się też argumenty typu: odbiorca `Changed[Customer]` nie dostaje `Changed[Product]`.
+
+Coilix znajduje odbiorców, gdy istnieją już wszystkie beany aplikacji. Zdarzenie opublikowane wcześniej, na przykład w konstruktorze, czeka i jest dostarczane zaraz po starcie. Metoda odbiorcy, która przyjmuje więcej albo mniej niż jeden parametr, zwraca wartość albo ma tę samą nazwę co inna metoda odbiorcy w tym beanie, zatrzymuje start wyjątkiem `InvalidEventListenerException`.
+
+## Odbiorcy synchroniczni i asynchroniczni
+
+Domyślnie odbiorca działa w wątku publikującego, zanim `publish` wróci. Gdy kasa odzyskuje sterowanie, statystyki i punkty są już zaktualizowane. Jeśli odbiorca rzuci wyjątek, pozostali odbiorcy synchroniczni i tak działają, a `publish` rzuca potem pierwszy wyjątek z pozostałymi dołączonymi jako `suppressed`.
+
+Ustaw `async = true`, gdy publikujący nie powinien czekać, na przykład na wysłanie maila:
+
+<CodeBlock language="scala" title="ConfirmationMailer.scala">{ConfirmationMailer}</CodeBlock>
+
+Odbiorca asynchroniczny działa później na wątku `TaskExecutor`, opisanym w przewodniku [Zadania w tle i harmonogram](tasks-and-scheduling.mdx). Odbiorcy asynchroniczni startują dopiero wtedy, gdy wszyscy odbiorcy synchroniczni zakończyli się powodzeniem. Ich wyjątki nie trafiają do publikującego, Coilix zapisuje je w logu jako błędy. Dostarczenia asynchroniczne nie mają określonej kolejności, nawet dla jednego odbiorcy. Gdy kolejność jest ważna, użyj odbiorcy synchronicznego.
+
+## Ponowienia odbiorcy asynchronicznego
+
+Odbiorca asynchroniczny ma domyślnie jedną próbę. Daj mu politykę ponowień w `coilix.events.listeners.<bean>.<metoda>.retry`, z kluczami `RetryPolicy` opisanymi w sekcji [Ponawianie nieudanej pracy](tasks-and-scheduling.mdx#ponawianie-nieudanej-pracy). Nieustawione klucze zachowują wartości domyślne:
+
+<CodeBlock language="yaml" title="application.yaml">{EventsYaml}</CodeBlock>
+
+Odbiorca, który implementuje `ApplicationEventListener`, ma nazwę metody `onEvent`. Po ostatniej próbie zdarzenie jest zapisywane w logu i porzucane dla tego odbiorcy. Odbiorcy synchroniczni nie ponawiają, a Coilix ostrzega przy starcie, gdy któryś z nich ma politykę ponowień.
+
+## Co się dzieje przy zatrzymaniu aplikacji
+
+Najpierw zatrzymują się metody `@Scheduled` i inne źródła nowej pracy. Potem, w fazie zamykania `Events` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst), szyna zdarzeń:
+
+1. odrzuca zdarzenia publikowane spoza odbiorców wyjątkiem `EventBusClosedException`, żeby żaden kod nie liczył na dostarczenie, które się nie odbędzie,
+2. anuluje ponowienia, które jeszcze czekają,
+3. czeka na działających odbiorców asynchronicznych, także tych, którzy dostają zdarzenia opublikowane w tym czasie przez innych odbiorców,
+4. po `coilix.events.shutdown-timeout` (domyślnie 10 sekund) przerywa odbiorców, którzy nadal działają, i zapisuje w logu, ile dostarczeń każdego odbiorcy porzucono.
+
+Dopiero wtedy beany są niszczone, więc odbiorca nigdy nie korzysta z zamkniętego beana. W Kubernetesie ustaw `terminationGracePeriodSeconds` dłuższe niż suma limitów zamykania zdarzeń i wykonawcy.
+
+## Testowanie kodu ze zdarzeniami
+
+Szyna zdarzeń działa w testach tak samo jak w aplikacji. Test czeka na odbiorców asynchronicznych przez `awaitIdle` beana `EventBus`:
+
+<CodeBlock language="scala" title="EventsTest.scala">{EventsTest}</CodeBlock>
