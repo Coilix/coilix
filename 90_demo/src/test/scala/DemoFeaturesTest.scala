@@ -52,11 +52,11 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     }
   }
 
-  test("archives a report on a task thread through the @Async proxy") {
+  test("archives a report on the blocking executor through the @Async proxy") {
     workshop.use {
       val archive = bean[JobArchive]
       assert(ProxiedBean.unwrap(archive).isInstanceOf[FileJobArchive])
-      assert(Await.result(archive.archive("test"), 5.seconds).contains("archived on coilix-task-"))
+      assert(Await.result(archive.archive("test"), 5.seconds).contains("archived on coilix-blocking-"))
     }
   }
 

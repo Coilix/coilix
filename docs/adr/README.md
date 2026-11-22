@@ -25,7 +25,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0017](0017-components-collected-by-modules.md) | Komponenty zbierane przez moduły | proponowana |
 | [0018](0018-module-directory-number-ranges.md) | Zakresy numerów katalogów modułów | proponowana |
 | [0019](0019-effect-model-and-parameterized-bean-types.md) | Model efektów i beany rozróżniane po argumentach typów | proponowana |
-| [0020](0020-concurrency-module.md) | Moduł `concurrency` z wykonawcą na wątkach wirtualnych | proponowana |
+| [0020](0020-concurrency-module.md) | Moduł `concurrency` z wykonawcą na wątkach wirtualnych | proponowana, częściowo zastąpiona przez 0028 |
 | [0021](0021-cluster-replica-identity.md) | Moduł `cluster` i tożsamość repliki | proponowana |
 | [0022](0022-definition-processors-and-async-proxies.md) | Procesory definicji z modułów i proxy dla `@Async` | proponowana |
 | [0023](0023-ci-caching.md) | Cache i pomijanie kroków w CI bez pomijania testów | proponowana |
@@ -33,6 +33,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0025](0025-in-memory-application-events.md) | Lekkie zdarzenia aplikacji tylko w pamięci | proponowana |
 | [0026](0026-framework-events-and-testkit.md) | Zdarzenia frameworka i zdarzenia w testkicie | proponowana |
 | [0027](0027-fatal-errors-shut-down.md) | Błąd fatalny wyłącza aplikację | proponowana |
+| [0028](0028-one-compute-pool.md) | Jedna pula obliczeniowa i osobny wykonawca blokujący | proponowana |
 
 ## Nowa decyzja
 

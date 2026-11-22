@@ -13,7 +13,9 @@ import java.lang.annotation.*;
  * <p>By default the method runs in the thread of the publisher before the publication returns, and
  * its exception reaches the publisher. With {@link #async()} it runs later on the task executor,
  * and its exception is logged, optionally after retries configured under {@code
- * coilix.events.listeners.<bean>.<method>.retry}.
+ * coilix.events.listeners.<bean>.<method>.retry}. An asynchronous listener that waits, for example
+ * for a mail server, also sets {@link #blocking()}, so it runs on the blocking executor instead of
+ * the compute pool.
  *
  * <pre>
  * {@literal @}Component
@@ -33,4 +35,12 @@ public @interface EventListener {
      * @return {@code true} for an asynchronous listener, {@code false} by default
      */
     boolean async() default false;
+
+    /**
+     * Whether an asynchronous listener waits, for example for I/O, and runs on the blocking
+     * executor instead of the task executor. It has no effect on a synchronous listener.
+     *
+     * @return {@code true} for an asynchronous listener that blocks, {@code false} by default
+     */
+    boolean blocking() default false;
 }

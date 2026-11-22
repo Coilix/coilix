@@ -24,7 +24,7 @@ final class ConcurrencyModuleTest extends FunSuite {
     try {
       val user = context.getBean[ExecutorUser]
       assertEquals(
-        (user.executor eq context.getBean[ExecutorServiceTaskExecutor], user.scheduler eq context.getBean[TaskScheduler]),
+        (user.executor eq context.getBean[TaskExecutor], user.scheduler eq context.getBean[TaskScheduler]),
         (true, true)
       )
     } finally {
@@ -35,9 +35,10 @@ final class ConcurrencyModuleTest extends FunSuite {
   test("closes the executor and the scheduler with the context") {
     val context   = contextOf()
     val executor  = context.getBean[ExecutorServiceTaskExecutor]
+    val blocking  = context.getBean[ExecutorServiceBlockingExecutor]
     val scheduler = context.getBean[ScheduledExecutorTaskScheduler]
     context.close()
-    assertEquals((executor.isClosed, scheduler.isClosed), (true, true))
+    assertEquals((executor.isClosed, blocking.isClosed, scheduler.isClosed), (true, true, true))
   }
 
   test("uses the default settings in a context without an environment") {
@@ -50,10 +51,13 @@ final class ConcurrencyModuleTest extends FunSuite {
     }
   }
 
-  test("injects an application executor marked @Primary instead of the default one") {
+  test("leaves the default executors out, without creating their pools, when the application provides its own") {
     val context = contextOf(classOf[CustomExecutorConfiguration], classOf[ExecutorUser])
     try {
-      assert(context.getBean[ExecutorUser].executor.isInstanceOf[CallerRunsExecutor])
+      assertEquals(
+        (context.getBean[ExecutorUser].executor.isInstanceOf[CallerRunsExecutor], context.getBeansOfType[TaskExecutor].size),
+        (true, 1)
+      )
     } finally {
       context.close()
     }

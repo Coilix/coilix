@@ -30,7 +30,8 @@ final class AnnotatedConditionScanner(classLoader: ClassLoader) extends Conditio
   private def conditionsOf(element: AnnotatedElement): BeanConditions =
     BeanConditions(
       List(profile(element), property(element), classes(element)).flatten,
-      element.isAnnotationPresent(classOf[ConditionalOnMissingBean])
+      element.isAnnotationPresent(classOf[ConditionalOnMissingBean]),
+      Option(element.getAnnotation(classOf[ConditionalOnMissingBean])).toList.flatMap(_.value.toList)
     )
 
   private def profile(element: AnnotatedElement): Option[BeanCondition] =
@@ -45,5 +46,9 @@ final class AnnotatedConditionScanner(classLoader: ClassLoader) extends Conditio
       .map(annotation => ClassCondition(annotation.value.toList, classLoader))
 
   private def combined(left: BeanConditions, right: BeanConditions): BeanConditions =
-    BeanConditions(left.conditions ++ right.conditions, left.onlyIfMissing || right.onlyIfMissing)
+    BeanConditions(
+      left.conditions   ++ right.conditions,
+      left.onlyIfMissing || right.onlyIfMissing,
+      left.missingTypes ++ right.missingTypes
+    )
 }

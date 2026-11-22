@@ -10,5 +10,7 @@ trait ReportRenderer {
 
   def fail(): Future[String]
 
+  def archive(name: String): Future[String]
+
   def callerThread(): String
 }

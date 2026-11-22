@@ -34,6 +34,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "applicationArguments",
         "applicationContext",
         "bayMonitor",
+        "blockingExecutor",
         "brakesDriver",
         "certificationAccessPolicy",
         "claimSweeper",

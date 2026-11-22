@@ -7,33 +7,36 @@ import java.lang.reflect.Proxy
 
 /**
  * Creates a bean with the original factory and returns it wrapped in a proxy that runs its
- * [[dev.coilix.annotation.Async]] methods on the [[dev.coilix.concurrency.TaskExecutor]].
+ * [[dev.coilix.annotation.Async]] methods on the [[dev.coilix.concurrency.TaskExecutor]] or the
+ * [[dev.coilix.concurrency.BlockingExecutor]].
  *
- * The executor is the last argument, after the arguments of the original factory.
+ * The two executors are the last arguments, after the arguments of the original factory.
  *
  * @param original
  *   creates the bean behind the proxy
  * @param interfaces
  *   the traits the proxy implements
  * @param asyncMethods
- *   the name and parameter types of each asynchronous method
+ *   whether each asynchronous method, by name and parameter types, blocks
  */
 final class AsyncProxyFactory(
   original:     InstanceFactory,
   interfaces:   List[Class[?]],
-  asyncMethods: Set[(String, List[Class[?]])]
+  asyncMethods: Map[(String, List[Class[?]]), Boolean]
 ) extends InstanceFactory {
 
   override def create(arguments: List[AnyRef]): AnyRef =
-    arguments.lastOption match {
-      case Some(executor: TaskExecutor) => proxy(original.create(arguments.dropRight(1)), executor)
-      case _                            => throw BeanCreationException("An @Async bean was created without a TaskExecutor argument")
+    arguments.takeRight(2) match {
+      case List(compute: TaskExecutor, blocking: BlockingExecutor) =>
+        proxy(original.create(arguments.dropRight(2)), compute, blocking)
+      case _                                                       =>
+        throw BeanCreationException("An @Async bean was created without the TaskExecutor and BlockingExecutor arguments")
     }
 
-  private def proxy(target: AnyRef, executor: TaskExecutor): AnyRef =
+  private def proxy(target: AnyRef, compute: TaskExecutor, blocking: BlockingExecutor): AnyRef =
     Proxy.newProxyInstance(
       target.getClass.getClassLoader,
       (interfaces :+ classOf[ProxiedBean]).toArray,
-      AsyncInvocationHandler(target, executor, asyncMethods)
+      AsyncInvocationHandler(target, compute, blocking, asyncMethods)
     )
 }

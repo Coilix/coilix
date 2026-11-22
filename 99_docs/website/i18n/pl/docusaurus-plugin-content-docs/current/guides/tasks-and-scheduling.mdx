@@ -1,12 +1,13 @@
 ---
 id: tasks-and-scheduling
 title: Zadania w tle i harmonogram
-description: Uruchamiaj pracę na wątkach zarządzanych przez Coilix przez TaskExecutor i powtarzaj ją przez @Scheduled albo TaskScheduler.
+description: Obliczenia na TaskExecutor, wywołania blokujące na BlockingExecutor i praca powtarzana przez @Scheduled albo TaskScheduler.
 sidebar_position: 6
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
+import InvoiceArchive from '!!raw-loader!@examples/scala/tasks/InvoiceArchive.scala';
 import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scala';
 import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
@@ -17,21 +18,30 @@ import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application
 
 Ta strona pokazuje, jak bean wykonuje pracę w tle albo według harmonogramu bez tworzenia własnych wątków. Wątki należą do Coilix, więc Coilix zatrzymuje je razem z aplikacją. Używaj tych beanów zawsze, gdy bean musiałby wywołać `Executors.newFixedThreadPool` albo uruchomić `Thread`.
 
+## Dwa wykonawcy: obliczenia i czekanie
+
+Każda aplikacja ma dwóch wykonawców, bo praca, która liczy, i praca, która czeka, potrzebują innych wątków:
+
+- `TaskExecutor` to pula obliczeniowa: pula fork-join z jednym wątkiem platformowym na procesor, o nazwach `coilix-compute-<numer>`. Działają na niej obliczenia, metody `@Async` i asynchroniczni odbiorcy zdarzeń. Zadanie przekazane z jednego z jej wątków zwykle zostaje na tym samym wątku, co utrzymuje cache procesora.
+- `BlockingExecutor` służy do wywołań, które czekają, np. zapytań JDBC, żądań HTTP i dostępu do plików. Każde zadanie dostaje nowy wątek wirtualny o nazwie `coilix-blocking-<numer>`, który podczas czekania prawie nic nie kosztuje. Na JDK 17, które nie ma wątków wirtualnych, używa puli najwyżej 64 wątków platformowych.
+
+Nie mieszaj ich. Wywołanie blokujące na puli obliczeniowej zajmuje jeden z jej nielicznych wątków, a z nim rdzeń procesora, przez cały czas czekania. Obliczenia na wykonawcy blokującym też nie pomagają: wątki wirtualne dzielą wątki nośne, po jednym na rdzeń, a zadanie, które liczy, zajmuje swój nośnik.
+
 ## Zadanie w tle
 
-Każda aplikacja ma bean `TaskExecutor`. Wstrzyknij go i przekaż mu pracę: `submit` zwraca wynik jako `Future`, a `execute` uruchamia pracę bez czekania na nią.
+Wstrzyknij wykonawcę pasującego do pracy i przekaż mu ją: `submit` zwraca wynik jako `Future`, a `execute` uruchamia pracę bez czekania na nią.
 
 <CodeBlock language="scala" title="ThumbnailService.scala">{ThumbnailService}</CodeBlock>
 
-Domyślnie każde zadanie działa na nowym wątku wirtualnym o nazwie `coilix-task-<numer>`. Wątki wirtualne są tanie, więc zadanie może czekać na bazę danych albo zapytanie HTTP bez wstrzymywania innych zadań. Na JDK 17, które nie ma wątków wirtualnych, każde zadanie dostaje zamiast tego nowy wątek platformowy.
+<CodeBlock language="scala" title="InvoiceArchive.scala">{InvoiceArchive}</CodeBlock>
 
-Jeśli zadanie uruchomione przez `execute` rzuci wyjątek, Coilix zapisze go w logu jako błąd. Zadanie uruchomione przez `submit` zwraca wyjątek w swoim `Future`.
+Jeśli zadanie uruchomione przez `execute` rzuci wyjątek, Coilix zapisze go w logu jako błąd. Zadanie uruchomione przez `submit` zwraca wyjątek w swoim `Future`. Błąd fatalny, np. `OutOfMemoryError`, jest obsługiwany tak, jak opisuje przewodnik [Błędy fatalne](fatal-errors.mdx).
 
-Wykonawcę można też przekazać tam, gdzie biblioteka oczekuje `ExecutionContext`, przez `executor.executionContext`.
+Obu wykonawców można też przekazać tam, gdzie biblioteka oczekuje `ExecutionContext`, przez `executionContext`.
 
 ## Metoda asynchroniczna z @Async
 
-Oznacz metodę adnotacją `@Async`, żeby wykonywała się na wykonawcy przy każdym wywołaniu przez inny bean. Metoda musi być zadeklarowana w traicie beana:
+Oznacz metodę adnotacją `@Async`, żeby wykonywała się na puli obliczeniowej przy każdym wywołaniu przez inny bean, albo `@Async(blocking = true)`, żeby wykonywała się na wykonawcy blokującym. Wysłanie maila czeka na serwer pocztowy, więc poniższy mailer blokuje. Metoda musi być zadeklarowana w traicie beana:
 
 <CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
 
@@ -69,11 +79,13 @@ Polityka nie ma stanu, więc jedna instancja obsłuży każde wywołanie. `Retry
 
 ## Konfiguracja wątków
 
-Wszystkie klucze pod `coilix.concurrency` są opcjonalne. Ta konfiguracja uruchamia zadania na czterech wątkach platformowych o nazwach `report-<numer>` i daje harmonogramowi dwa wątki:
+Wszystkie klucze pod `coilix.concurrency` są opcjonalne. Ta konfiguracja daje puli obliczeniowej cztery wątki, pozwala na najwyżej 20 równoczesnych wywołań blokujących, np. tyle, ile połączeń ma pula do bazy, i daje harmonogramowi dwa wątki:
 
 <CodeBlock language="yaml" title="application.yaml">{TasksYaml}</CodeBlock>
 
-Bez konfiguracji wykonawca używa wątków wirtualnych o nazwach `coilix-task-<numer>` i przy zatrzymaniu aplikacji czeka 30 sekund na trwające zadania. Przy `virtual-threads: false` używa stałej puli `pool-size` wątków platformowych, domyślnie jednego na procesor, np. dla pracy obciążającej procesor. Harmonogram ma jeden wątek `coilix-scheduler-<numer>` i domyślnie czeka 10 sekund.
+Bez konfiguracji pula obliczeniowa ma `compute.threads` równe liczbie procesorów dostępnych dla JVM, czyli w kontenerze jego limitowi CPU. Wykonawca blokujący nie ma limitu, używa wątków wirtualnych, a przy `blocking.virtual-threads: false` używa najwyżej `blocking.platform-threads` wątków platformowych (domyślnie 64). Obaj przy zatrzymaniu aplikacji czekają 30 sekund na trwające zadania. Harmonogram ma jeden wątek `coilix-scheduler-<numer>` i domyślnie czeka 10 sekund. Metoda `@Scheduled` działa na tym wątku, więc metoda, która długo liczy albo czeka, przekazuje pracę jednemu z wykonawców.
+
+Trzymaj mniej więcej jeden wątek obliczeniowy na procesor. Więcej równocześnie liczących wątków niż procesorów sprawia tylko, że system przełącza się między nimi.
 
 ## Co się dzieje przy zatrzymaniu aplikacji
 
@@ -81,7 +93,7 @@ Metody `@Scheduled` zatrzymują się najpierw, w fazie zamykania `Producers` opi
 
 ## Własny wykonawca
 
-Żeby wykonywać zadania po swojemu, zadeklaruj bean `TaskExecutor` i oznacz go `@Primary`. Beany, które wymagają `TaskExecutor`, dostaną wtedy Twój.
+Żeby wykonywać zadania po swojemu, zadeklaruj bean `TaskExecutor` albo `BlockingExecutor`. Domyślny bean tego typu jest wtedy pomijany, a jego wątki w ogóle nie powstają, więc beany, które wymagają wykonawcy, dostaną Twój.
 
 ## Testy kodu z zadaniami
 
