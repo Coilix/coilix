@@ -37,7 +37,8 @@ Nie są dystrybuowane z naszymi artefaktami, więc nie nakładają obowiązków 
 | Zależność | Licencja |
 |---|---|
 | `org.scalameta:munit` | Apache-2.0 |
-| `org.slf4j:slf4j-simple` (testy, demo) | MIT |
+| `org.slf4j:slf4j-simple` (testy) | MIT |
+| `org.apache.logging.log4j:log4j-slf4j2-impl`, `log4j-core`, `log4j-api` (demo, testy `concurrency`, bo `slf4j-simple` ma MDC, które niczego nie przechowuje) | Apache-2.0 |
 | sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage, sbt-java-formatter, google-java-format | Apache-2.0 |
 
 ## Strona dokumentacji (`99_docs/website`)

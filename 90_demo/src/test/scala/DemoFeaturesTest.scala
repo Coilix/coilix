@@ -145,6 +145,14 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       }
   }
 
+  test("the asynchronous notification keeps the job of the inspection in the MDC") {
+    val notifier = RecordingNotifier()
+    workshop.replaceBean[Notifier](notifier).withRunners.use {
+      assert(awaitEvents())
+      assertEquals(notifier.jobs, List(Some("inspection-WVWZZZ1KZ6W000001")))
+    }
+  }
+
   test("a clock added by the test replaces the default one") {
     val fixed = Clock.fixed(Instant.parse("2026-11-16T10:00:00Z"), ZoneOffset.UTC)
     workshop.addBean[Clock](fixed).use {

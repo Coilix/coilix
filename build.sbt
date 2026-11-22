@@ -173,7 +173,11 @@ lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
 lazy val concurrency = slf4sModule("concurrency", "06_concurrency", "dev.coilix.concurrency")
   .dependsOn(context)
   .settings(coreGroup)
-  .settings(description := "Task executors on virtual threads and a task scheduler for Coilix, closed with the context")
+  .settings(
+    description := "Compute and blocking executors and a task scheduler for Coilix, closed with the context",
+    libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
+    libraryDependencies ++= Dependencies.log4jSlf4j.map(_ % Test)
+  )
 
 lazy val cluster = slf4sModule("cluster", "07_cluster", "dev.coilix.cluster")
   .dependsOn(concurrency)
@@ -221,7 +225,8 @@ lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
   .settings(unpublished)
   .settings(
     coverageEnabled      := false,
-    libraryDependencies += Dependencies.slf4jSimple,
+    libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
+    libraryDependencies ++= Dependencies.log4jSlf4j,
     run / fork           := true,
     run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
     run / outputStrategy := Some(StdoutOutput)
