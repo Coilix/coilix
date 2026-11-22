@@ -35,11 +35,12 @@ Jeśli metoda `@PreDestroy` rzuci wyjątek, Coilix zapisuje go w logu jako ostrz
 
 Bean, który potrzebuje wszystkich pozostałych beanów albo musi zatrzymać swoją pracę przed zniszczeniem jakiegokolwiek beana, implementuje `ContextLifecycleListener`. Coilix wywołuje `onContextStarted`, gdy istnieją już wszystkie beany, a `onContextClosing` przy zamykaniu kontekstu, przed pierwszą metodą `@PreDestroy`.
 
-Zamykanie przechodzi przez trzy fazy, niezależnie od kolejności tworzenia beanów:
+Zamykanie przechodzi przez cztery fazy, niezależnie od kolejności tworzenia beanów:
 
-1. `ClosingPhase.Producers` zatrzymuje to, co przynosi nową pracę, na przykład metody `@Scheduled`, konsumentów wiadomości i serwery. Słuchacz jest w tej fazie, jeśli nie wskaże innej.
-2. `ClosingPhase.Events` kończy pracę już przyjętą, na przykład wiadomości w kolejce.
-3. `ClosingPhase.Resources` zwalnia to, czego ta praca potrzebowała, na przykład połączenia.
+1. `ClosingPhase.Announcement` mówi aplikacji, że się zamyka, zanim cokolwiek się zatrzyma. Tu moduł zdarzeń publikuje `ContextClosing`.
+2. `ClosingPhase.Producers` zatrzymuje to, co przynosi nową pracę, na przykład metody `@Scheduled`, konsumentów wiadomości i serwery. Słuchacz jest w tej fazie, jeśli nie wskaże innej.
+3. `ClosingPhase.Events` kończy pracę już przyjętą, na przykład wiadomości w kolejce.
+4. `ClosingPhase.Resources` zwalnia to, czego ta praca potrzebowała, na przykład połączenia.
 
 Dopiero potem działają metody `@PreDestroy`. W obrębie jednej fazy pierwszy jest wywoływany słuchacz utworzony jako ostatni. Poniższy outbox wysyła zamówienia z kolejki w fazie `Events`. W tym momencie żadne zadanie z harmonogramu nie dodaje już nowych zamówień, a wysyłka maili nadal działa:
 

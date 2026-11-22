@@ -12,6 +12,7 @@ import ExpressCheckout from '!!raw-loader!@examples/scala/events/ExpressCheckout
 import SalesStatistics from '!!raw-loader!@examples/scala/events/SalesStatistics.scala';
 import LoyaltyProgram from '!!raw-loader!@examples/scala/events/LoyaltyProgram.scala';
 import ConfirmationMailer from '!!raw-loader!@examples/scala/events/ConfirmationMailer.scala';
+import ShopStatus from '!!raw-loader!@examples/scala/events/ShopStatus.scala';
 import EventsTest from '!!raw-loader!@examples/test/events/EventsTest.scala';
 import EventsYaml from '!!raw-loader!@examples/resources/guides/events/application.yaml';
 
@@ -65,7 +66,7 @@ Odbiorca, który implementuje `ApplicationEventListener`, ma nazwę metody `onEv
 
 ## Co się dzieje przy zatrzymaniu aplikacji
 
-Najpierw zatrzymują się metody `@Scheduled` i inne źródła nowej pracy. Potem, w fazie zamykania `Events` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst), szyna zdarzeń:
+Najpierw Coilix publikuje `ContextClosing`, opisane niżej. Potem zatrzymują się metody `@Scheduled` i inne źródła nowej pracy. Następnie, w fazie zamykania `Events` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst), szyna zdarzeń:
 
 1. odrzuca zdarzenia publikowane spoza odbiorców wyjątkiem `EventBusClosedException`, żeby żaden kod nie liczył na dostarczenie, które się nie odbędzie,
 2. anuluje ponowienia, które jeszcze czekają,
@@ -74,8 +75,29 @@ Najpierw zatrzymują się metody `@Scheduled` i inne źródła nowej pracy. Pote
 
 Dopiero wtedy beany są niszczone, więc odbiorca nigdy nie korzysta z zamkniętego beana. W Kubernetesie ustaw `terminationGracePeriodSeconds` dłuższe niż suma limitów zamykania zdarzeń i wykonawcy.
 
+## Zdarzenia frameworka
+
+Coilix publikuje własne zdarzenia, które każdy odbiorca dostaje tak samo jak zdarzenia aplikacji:
+
+| Zdarzenie | Kiedy |
+|---|---|
+| `ContextReady` | istnieją wszystkie beany i wystartowały wszystkie `ContextLifecycleListener`, przed pierwszym `ApplicationRunner` |
+| `ApplicationStarted` | wszystkie `ApplicationRunner` skończyły pracę |
+| `ContextClosing` | aplikacja zaczyna się zamykać, zanim zatrzymają się metody `@Scheduled` i zanim zostanie zniszczony jakikolwiek bean |
+| `ApplicationFailed` | runner albo odbiorca `ContextReady` lub `ApplicationStarted` rzucił wyjątek; zdarzenie go niesie, a aplikacja zaraz potem się zamyka |
+
+Sklep poniżej otwiera się, gdy aplikacja wystartowała, i zamyka, gdy tylko zaczyna się zatrzymywać:
+
+<CodeBlock language="scala" title="ShopStatus.scala">{ShopStatus}</CodeBlock>
+
+Wyjątek odbiorcy `ContextReady` albo `ApplicationStarted` zatrzymuje start tak jak wyjątek runnera. Wyjątek odbiorcy `ContextClosing` albo `ApplicationFailed` jest tylko zapisywany w logu, więc zamykanie trwa dalej. Aplikacja czeka na asynchronicznych odbiorców `ContextClosing` tak jak na każde inne dostarczenie asynchroniczne. Błąd przy tworzeniu beanów nie jest publikowany jako `ApplicationFailed`, bo nie ma jeszcze żadnego odbiorcy.
+
 ## Testowanie kodu ze zdarzeniami
 
-Szyna zdarzeń działa w testach tak samo jak w aplikacji. Test czeka na odbiorców asynchronicznych przez `awaitIdle` beana `EventBus`:
+Szyna zdarzeń działa w testach tak samo jak w aplikacji, a kontekst testowy też publikuje zdarzenia frameworka. Testkit dodaje trzy pomocnicze metody:
+
+- `recordedEvents[E]` zwraca zdarzenia typu `E` opublikowane dotąd w teście, także zdarzenia frameworka,
+- `awaitEvents()` czeka, aż nie będzie działał żaden odbiorca asynchroniczny, domyślnie najwyżej 5 sekund, i zwraca `false`, gdy czas minie,
+- `withSynchronousEvents` w ustawieniach testu uruchamia odbiorców asynchronicznych w wątku testu, więc ich skutki widać zaraz po `publish`. Ich wyjątki nadal są tylko zapisywane w logu, a ponowienia następują od razu, bez czekania.
 
 <CodeBlock language="scala" title="EventsTest.scala">{EventsTest}</CodeBlock>

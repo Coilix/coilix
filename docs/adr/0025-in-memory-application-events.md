@@ -23,4 +23,4 @@ Beany potrzebują sposobu, żeby reagować na to, co robią inne beany, bez zale
 - Dostarczenia asynchroniczne nie mają kolejności. Kto jej potrzebuje, używa odbiorcy synchronicznego albo procesora z COILIX-00026.
 - Odbiorca `ApplicationEventListener` utworzony z lambdy nie ma typu zdarzenia w runtime i zatrzymuje start wyjątkiem `InvalidEventListenerException`. Musi to być klasa albo klasa anonimowa.
 - Odbiorca wywoływany jest bezpośrednio na obiekcie za proxy, więc metoda `@EventListener` w beanie z `@Async` nie przechodzi przez proxy wykonawcy. O asynchroniczności decyduje tylko `async` w adnotacji.
-- Zdarzenia frameworka (`ContextReady`, `ApplicationStarted`, `ContextClosing`, `ApplicationFailed`) i pomoce testkitu dochodzą w kroku 3.
+- Zdarzenia frameworka (`ContextReady`, `ApplicationStarted`, `ContextClosing`, `ApplicationFailed`) i pomoce testkitu dochodzą w kroku 3 (ADR 0026).

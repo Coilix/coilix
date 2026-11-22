@@ -12,7 +12,10 @@ import scala.reflect.ClassTag
 
 /**
  * Runs the startup sequence: parses the arguments, loads the configuration with command-line options as overrides, logs the
- * start, builds the context, registers the shutdown hook, logs the startup time and calls the runners.
+ * start, builds the context, registers the shutdown hook, logs the startup time and calls the runners between the
+ * [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] events. When the runners or the listeners of
+ * these events fail, [[dev.coilix.events.ApplicationFailed]] is published and the context is closed before the exception is
+ * rethrown.
  *
  * The arguments and the configuration are registered as beans named `applicationArguments` and `environment`. This is the
  * implementation returned by [[dev.coilix.boot.CoilixApplicationRunner.default]].
@@ -42,8 +45,7 @@ final class DefaultCoilixApplicationRunner(
     val context     = startup.bootstrap.start(startup.resolver.resolve[T], Nil, singletons(arguments, environment))
     val _           = startup.shutdownHooks.register(context)
     startup.startupLogger.started(applicationName[T], elapsedSince(startedAt))
-    startup.invoker.invoke(context, arguments)
-    context
+    StartupEvents.around(context)(startup.invoker.invoke(context, arguments))
   }
 
   private def commandLineProperties(arguments: ApplicationArguments): Map[String, String] =

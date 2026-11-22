@@ -4,8 +4,8 @@ package dev.coilix.context
  * The phase of closing in which a [[dev.coilix.context.ContextLifecycleListener]] is notified.
  *
  * The context goes through the phases in the order they are declared and runs `@PreDestroy` methods only after the last one.
- * The phases make the order of closing independent of the order in which beans were created: whatever brings new work in stops
- * first, the work already accepted finishes next, and the shared resources go last.
+ * The phases make the order of closing independent of the order in which beans were created: the application learns about the
+ * closing first, whatever brings new work in stops next, the work already accepted finishes next, and the shared resources go last.
  *
  * ```scala
  * @Component
@@ -19,6 +19,12 @@ package dev.coilix.context
  * ```
  */
 enum ClosingPhase {
+
+  /**
+   * Tells the application that the context is closing, before anything stops, for example by publishing the `ContextClosing`
+   * application event.
+   */
+  case Announcement
 
   /** Stops the sources of new work, such as `@Scheduled` methods, message consumers and servers. */
   case Producers

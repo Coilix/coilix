@@ -2,6 +2,7 @@ package dev.coilix.context
 
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.lifecycle.BrokenShutdown
+import dev.coilix.context.lifecycle.ClosingAnnouncer
 import dev.coilix.context.lifecycle.Connection
 import dev.coilix.context.lifecycle.EventDrainer
 import dev.coilix.context.lifecycle.FailingInit
@@ -70,11 +71,11 @@ final class LifecycleContextTest extends FunSuite {
   }
 
   test("notifies listeners phase by phase whatever the order of creation") {
-    val context = contextOf(classOf[ResourceCloser], classOf[EventDrainer], classOf[StartWatcher])
+    val context = contextOf(classOf[ResourceCloser], classOf[EventDrainer], classOf[StartWatcher], classOf[ClosingAnnouncer])
     context.close()
     assertEquals(
       context.getBean[Journal].all.drop(1),
-      List("closing", "events drained", "resources released", "watcher destroyed")
+      List("closing announced", "closing", "events drained", "resources released", "watcher destroyed")
     )
   }
 

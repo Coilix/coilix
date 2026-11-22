@@ -6,6 +6,7 @@ import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vin
 import dev.coilix.demo.workshop.BayMonitor
 import dev.coilix.demo.workshop.FileJobArchive
+import dev.coilix.demo.workshop.InspectionFinished
 import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
@@ -15,6 +16,8 @@ import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
 import dev.coilix.demo.workshop.WorkshopOpening
+import dev.coilix.events.ApplicationStarted
+import dev.coilix.events.ContextReady
 import dev.coilix.events.EventBus
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
@@ -109,6 +112,21 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
         (bean[ShiftStatistics].inspectionsDone, notifier.messages),
         (1, List("Anna Nowak finished the inspection of WVWZZZ1KZ6W000001"))
       )
+    }
+  }
+
+  test("runs the inspection between the startup events and notifies the staff in the thread of the test") {
+    val notifier = RecordingNotifier()
+    workshop.replaceBean[Notifier](notifier).withRunners.withSynchronousEvents.use {
+      assertEquals(
+        (
+          recordedEvents[AnyRef].map(_.getClass.getSimpleName),
+          recordedEvents[InspectionFinished].map(_.steps),
+          notifier.messages.size
+        ),
+        (List("ContextReady", "InspectionFinished", "ApplicationStarted"), List(6), 1)
+      )
+      assertEquals((recordedEvents[ContextReady].size, recordedEvents[ApplicationStarted].size), (1, 1))
     }
   }
 

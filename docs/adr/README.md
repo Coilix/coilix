@@ -31,6 +31,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0023](0023-ci-caching.md) | Cache i pomijanie kroków w CI bez pomijania testów | proponowana |
 | [0024](0024-closing-phases-and-retry-policy.md) | Fazy zamykania kontekstu i wspólna polityka ponowień | proponowana |
 | [0025](0025-in-memory-application-events.md) | Lekkie zdarzenia aplikacji tylko w pamięci | proponowana |
+| [0026](0026-framework-events-and-testkit.md) | Zdarzenia frameworka i zdarzenia w testkicie | proponowana |
 
 ## Nowa decyzja
 

@@ -10,6 +10,7 @@ import scala.concurrent.duration.FiniteDuration
  * ```yaml
  * coilix.events:
  *   shutdown-timeout: 20s
+ *   synchronous: false
  *   listeners:
  *     confirmationMailer:
  *       onOrderPlaced:
@@ -20,11 +21,16 @@ import scala.concurrent.duration.FiniteDuration
  *
  * @param shutdownTimeout
  *   how long closing the context waits for running asynchronous deliveries before interrupting them
+ * @param synchronous
+ *   whether asynchronous listeners also run in the thread of the publisher, which tests use to check the effects of events
+ *   without waiting; their exceptions are still only logged, and their retries follow at once, without the delays of the
+ *   policy
  * @param listeners
  *   settings of listeners by bean name and then by method name
  */
 final case class EventsSettings(
   shutdownTimeout: FiniteDuration                                  = 10.seconds,
+  synchronous:     Boolean                                         = false,
   listeners:       Map[String, Map[String, EventListenerSettings]] = Map.empty
 ) {
 

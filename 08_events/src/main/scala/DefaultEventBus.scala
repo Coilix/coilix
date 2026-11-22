@@ -25,7 +25,8 @@ import scala.util.control.NonFatal
  * the [[dev.coilix.concurrency.TaskExecutor]], and a retry waits on the [[dev.coilix.concurrency.TaskScheduler]]. Events published
  * before the context has started wait and are delivered when the listeners are found. When the context closes, waiting retries
  * are cancelled, and the bus waits for the running deliveries up to `shutdownTimeout`, then interrupts them and logs at `ERROR`
- * level how many deliveries of each listener were abandoned.
+ * level how many deliveries of each listener were abandoned. With `coilix.events.synchronous = true` asynchronous listeners run in
+ * the thread of the publisher too, after the synchronous ones, and their retries follow at once.
  *
  * @param executor
  *   runs the asynchronous deliveries
@@ -121,9 +122,23 @@ final class DefaultEventBus(executor: TaskExecutor, scheduler: TaskScheduler, se
     if (async.isEmpty && sync.isEmpty) log.debug(s"No listener receives events of type $eventType")
     combined(sync.flatMap(listener => failureOf(listener, event))) match {
       case Some(failure) => onFailure(failure)
-      case None          => async.foreach(listener => startAsync(listener, event, 1))
+      case None          => async.foreach(listener => startAsyncListener(listener, event))
     }
   }
+
+  private def startAsyncListener(listener: RegisteredListener, event: AnyRef): Unit =
+    if (settings.synchronous) runInline(listener, event, 1) else startAsync(listener, event, 1)
+
+  private def runInline(listener: RegisteredListener, event: AnyRef, attempt: Int): Unit =
+    failureOf(listener, event).foreach(failure => retriedInline(listener, event, attempt, failure))
+
+  private def retriedInline(listener: RegisteredListener, event: AnyRef, attempt: Int, failure: Throwable): Unit =
+    if (listener.info.retry.delayAfter(attempt).isDefined) {
+      log.warn(s"Event listener ${listener.info.name} failed on attempt $attempt, retrying at once", failure)
+      runInline(listener, event, attempt + 1)
+    } else {
+      log.error(s"Event listener ${listener.info.name} failed after $attempt attempt(s), dropping ${describe(event)}", failure)
+    }
 
   private def failureOf(listener: RegisteredListener, event: AnyRef): Option[Throwable] =
     try {

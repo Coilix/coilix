@@ -12,6 +12,7 @@ import ExpressCheckout from '!!raw-loader!@examples/scala/events/ExpressCheckout
 import SalesStatistics from '!!raw-loader!@examples/scala/events/SalesStatistics.scala';
 import LoyaltyProgram from '!!raw-loader!@examples/scala/events/LoyaltyProgram.scala';
 import ConfirmationMailer from '!!raw-loader!@examples/scala/events/ConfirmationMailer.scala';
+import ShopStatus from '!!raw-loader!@examples/scala/events/ShopStatus.scala';
 import EventsTest from '!!raw-loader!@examples/test/events/EventsTest.scala';
 import EventsYaml from '!!raw-loader!@examples/resources/guides/events/application.yaml';
 
@@ -65,7 +66,7 @@ A listener that implements `ApplicationEventListener` uses `onEvent` as its meth
 
 ## What happens when the application stops
 
-`@Scheduled` methods and other sources of new work stop first. Then, in the `Events` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context), the event bus:
+Coilix first publishes `ContextClosing`, described below. Then `@Scheduled` methods and other sources of new work stop. After that, in the `Events` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context), the event bus:
 
 1. refuses events published from outside listeners with `EventBusClosedException`, so no code counts on a delivery that would not happen,
 2. cancels retries that are still waiting,
@@ -74,8 +75,29 @@ A listener that implements `ApplicationEventListener` uses `onEvent` as its meth
 
 Only then are the beans destroyed, so a listener never uses a closed bean. In Kubernetes, keep `terminationGracePeriodSeconds` longer than the shutdown timeouts of the events and of the executor together.
 
+## Events of the framework
+
+Coilix publishes its own events, which any listener can receive like the events of the application:
+
+| Event | When |
+|---|---|
+| `ContextReady` | every bean exists and every `ContextLifecycleListener` has started, before the first `ApplicationRunner` |
+| `ApplicationStarted` | every `ApplicationRunner` has finished |
+| `ContextClosing` | the application starts closing, before `@Scheduled` methods stop and before any bean is destroyed |
+| `ApplicationFailed` | a runner or a listener of `ContextReady` or `ApplicationStarted` has thrown an exception; the event carries it, and the application closes right after |
+
+The shop below opens when the application has started and closes as soon as it starts stopping:
+
+<CodeBlock language="scala" title="ShopStatus.scala">{ShopStatus}</CodeBlock>
+
+An exception of a listener of `ContextReady` or `ApplicationStarted` stops the startup like an exception of a runner. An exception of a listener of `ContextClosing` or `ApplicationFailed` is only logged, so the closing goes on. The application waits for asynchronous listeners of `ContextClosing` like for every other asynchronous delivery. A failure while the beans are created is not published as `ApplicationFailed`, because no listener exists yet.
+
 ## Test code that uses events
 
-The event bus works in tests as in the application. A test waits for asynchronous listeners with `awaitIdle` of the `EventBus` bean:
+The event bus works in tests as in the application, and a test context publishes the events of the framework too. The testkit adds three helpers:
+
+- `recordedEvents[E]` returns the events of type `E` published in the test so far, including the events of the framework,
+- `awaitEvents()` waits until no asynchronous listener runs, by default for at most 5 seconds, and returns `false` when the time runs out,
+- `withSynchronousEvents` on the setup runs asynchronous listeners in the thread of the test, so their effects are visible right after `publish`. Their exceptions are still only logged, and retries follow at once, without waiting.
 
 <CodeBlock language="scala" title="EventsTest.scala">{EventsTest}</CodeBlock>
