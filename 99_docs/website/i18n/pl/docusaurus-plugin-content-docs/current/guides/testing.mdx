@@ -72,6 +72,8 @@ Twoje własne helpery mogą brać kontekst tak samo, na przykład `def mailer(us
 
 ## Ustaw właściwości i profile
 
+Kontekst testowy tylko zapisuje błędy fatalne w logu (`coilix.fatal-errors.action = log`), więc test nie kończy JVM. Przewodnik [Błędy fatalne](fatal-errors.mdx) pokazuje, jak przetestować zamykanie.
+
 `withProperties` ustawia klucze konfiguracji dla testu. Wygrywają z każdym innym źródłem: opcjami z linii poleceń, właściwościami systemowymi i plikami konfiguracji, także z `application.yaml` w zasobach testów.
 
 `withProfiles("dev", "local")` włącza te profile dla testu, w tej kolejności. Zastępuje `coilix.profiles.active` z każdego innego źródła, więc test nie zależy od ustawień builda ani komputera.

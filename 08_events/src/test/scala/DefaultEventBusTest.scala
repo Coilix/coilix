@@ -16,6 +16,7 @@ import dev.coilix.events.listeners.CancellingListener
 import dev.coilix.events.listeners.ClosingWatcher
 import dev.coilix.events.listeners.CustomerWatcher
 import dev.coilix.events.listeners.EarlyPublisher
+import dev.coilix.events.listeners.ExhaustedListener
 import dev.coilix.events.listeners.FailingClosingListener
 import dev.coilix.events.listeners.FailingNotifier
 import dev.coilix.events.listeners.FlakyNotifier
@@ -135,6 +136,16 @@ final class DefaultEventBusTest extends FunSuite {
     val context = contextOf("", classOf[FailingClosingListener], classOf[SlowMailer])
     context.close()
     assert(!context.getBean[MailServer].isOpen)
+  }
+
+  test("ends an asynchronous delivery without retries after a fatal error, so closing does not wait for it") {
+    val config = "coilix.fatal-errors.action = log, coilix.events.listeners.exhaustedListener.onPlaced.retry.max-attempts = 3"
+    withContext(config, classOf[ExhaustedListener]) { context =>
+      val bus = context.getBean[EventBus]
+      bus.publish(OrderEvent.Placed(1))
+      assert(bus.awaitIdle(5.seconds))
+      assertEquals((context.getBean[ExhaustedListener].attempts.get, bus.pendingDeliveries), (1, 0))
+    }
   }
 
   test("delivers events published before the context started") {

@@ -1,5 +1,6 @@
 package dev.coilix.boot
 
+import dev.coilix.annotation.Slf4s
 import dev.coilix.common.ClassTags.runtimeTypeOf
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.Environment
@@ -15,7 +16,8 @@ import scala.reflect.ClassTag
  * start, builds the context, registers the shutdown hook, logs the startup time and calls the runners between the
  * [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] events. When the runners or the listeners of
  * these events fail, [[dev.coilix.events.ApplicationFailed]] is published and the context is closed before the exception is
- * rethrown.
+ * rethrown. Options of the JVM that make the application fragile when memory runs out, described in
+ * [[dev.coilix.boot.JvmMemoryOptions]], are logged at `WARN` level at the start.
  *
  * The arguments and the configuration are registered as beans named `applicationArguments` and `environment`. This is the
  * implementation returned by [[dev.coilix.boot.CoilixApplicationRunner.default]].
@@ -27,6 +29,7 @@ import scala.reflect.ClassTag
  * @param assemble
  *   creates the other startup components from the loaded configuration, so they can be replaced there
  */
+@Slf4s
 final class DefaultCoilixApplicationRunner(
   parser:            ArgumentsParser,
   environmentLoader: EnvironmentLoader,
@@ -42,6 +45,7 @@ final class DefaultCoilixApplicationRunner(
     val environment = environmentLoader.load(commandLineProperties(arguments))
     val startup     = assemble(ComponentProvider.from(environment))
     startup.startupLogger.starting(applicationName[T])
+    JvmMemoryOptions.current.warnings.foreach(warning => log.warn(warning))
     val context     = startup.bootstrap.start(startup.resolver.resolve[T], Nil, singletons(arguments, environment))
     val _           = startup.shutdownHooks.register(context)
     startup.startupLogger.started(applicationName[T], elapsedSince(startedAt))

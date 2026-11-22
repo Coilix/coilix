@@ -82,7 +82,7 @@
 
 ## Kroki (osobne PR-y)
 
-1. **Błędy fatalne.** Klasyfikacja, `FatalErrorHandler` z wyłączeniem, strażnik z `halt`, `ProcessTerminator`, handler w wątkach `concurrency` i `events`, domyślny handler w `boot`, ostrzeżenia o flagach JVM. ADR, przewodnik w obu językach, demo (opcja uruchomienia, która wywołuje błąd fatalny w zadaniu).
+1. **Błędy fatalne** (zrobione, ADR 0027). Klasyfikacja, `FatalErrorHandler` z wyłączeniem, strażnik z `halt`, `ProcessTerminator`, handler w wątkach `concurrency` i `events`, domyślny handler w `boot`, ostrzeżenia o flagach JVM. ADR, przewodnik w obu językach, demo (opcja uruchomienia, która wywołuje błąd fatalny w zadaniu).
 2. **Moduł `09_diagnostics`: zdrowie i monitor wątków.** Najpierw eksperyment na JDK 17 i 25, co z zakleszczeń widać przy wątkach wirtualnych (`synchronized` i `ReentrantLock`), i wynik w ADR. Potem `HealthStatus`, `HealthIndicator`, `Health`, `HealthChanged`, kontrole wątków, `FindingReporter`, `on-deadlock`. Przewodnik, demo.
 3. **Monitor pamięci.** Progi po GC, czas GC, wskaźnik `memory` z histerezą, okresowe statystyki. Przewodnik z zaleceniami flag JVM dla kontenera, demo.
 

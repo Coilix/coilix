@@ -1,0 +1,59 @@
+---
+id: fatal-errors
+title: Fatal errors
+description: What Coilix does after an OutOfMemoryError or another fatal error, and which JVM options to run the application with.
+sidebar_position: 9
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import FatalErrorsYaml from '!!raw-loader!@examples/resources/guides/fatal-errors/application.yaml';
+import FatalErrorsTest from '!!raw-loader!@examples/test/fatal/FatalErrorsTest.scala';
+import RecordingTerminator from '!!raw-loader!@examples/test/fatal/RecordingTerminator.scala';
+
+This page explains what happens when a thread of the application runs into an error it cannot recover from, such as running out of memory. A JVM on its own prints the error, the thread dies, and the rest of the application keeps running with a missing worker. It answers health checks, but does part of its work no more. Coilix ends such an application instead, so the orchestrator starts a new one.
+
+## Which errors are fatal
+
+Coilix treats two kinds of errors as fatal:
+
+- `VirtualMachineError`, such as `OutOfMemoryError`, `StackOverflowError` and `InternalError`,
+- `LinkageError`, such as `NoClassDefFoundError`, which means the classpath is broken.
+
+Every other exception is a failure the application survives. A task, a scheduled method or an asynchronous event listener that throws it is logged and the application goes on, as described in [Background tasks and scheduling](tasks-and-scheduling.mdx).
+
+## What happens after a fatal error
+
+A fatal error thrown in a task of the `TaskExecutor`, in a task of the `TaskScheduler` (including `@Scheduled` methods) or in an asynchronous event listener goes to the `FatalErrorHandler` bean. In an application started with `Coilix.run`, the handler also receives fatal errors of every other thread. By default it:
+
+1. logs the error,
+2. closes the context on a new thread, so `@PreDestroy` methods run and asynchronous listeners get the usual time to finish,
+3. ends the process with exit code 70,
+4. halts the process at once, without the shutdown hooks, when closing takes longer than `shutdown-timeout`, for example because threads are deadlocked.
+
+Fatal errors that follow the first one are only logged, so closing starts only once.
+
+<CodeBlock language="yaml" title="application.yaml">{FatalErrorsYaml}</CodeBlock>
+
+`action: log` only logs fatal errors and lets the application go on. Use it only when something else watches the application, because after an `OutOfMemoryError` its state cannot be trusted.
+
+To react in your own way, for example to send an alert first, register a bean that implements `FatalErrorHandler` and mark it `@Primary`. It is called in the failing thread, so it must not wait for that thread's executor.
+
+## Run the JVM with the right options
+
+Coilix handles the threads it manages. Libraries that start their own threads, or code that catches `Throwable`, can still hide an `OutOfMemoryError`. Let the JVM end itself in that case and keep a heap dump for later:
+
+```bash
+java -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -XX:MaxRAMPercentage=75 -jar shop.jar
+```
+
+In a container, the JVM gives the heap only 25% of the memory limit by default. `-XX:MaxRAMPercentage=75` gives it most of the limit and leaves the rest for threads, metaspace and buffers. `Coilix.run` logs a warning at startup when `-XX:+ExitOnOutOfMemoryError` and `-XX:+CrashOnOutOfMemoryError` are both missing, or when the maximum heap is less than half of the memory available to the JVM.
+
+In Kubernetes, a pod that keeps failing the same way goes into `CrashLoopBackOff`. That is the intended signal: the application does not pretend to work, and the logs and the heap dump show why.
+
+## Test the reaction to fatal errors
+
+A test context only logs fatal errors, so a test that triggers one does not end the JVM. To check the shutdown, set the action back to `shutdown` and replace the `ProcessTerminator` bean, which ends the process, with one that records the exit:
+
+<CodeBlock language="scala" title="RecordingTerminator.scala">{RecordingTerminator}</CodeBlock>
+
+<CodeBlock language="scala" title="FatalErrorsTest.scala">{FatalErrorsTest}</CodeBlock>

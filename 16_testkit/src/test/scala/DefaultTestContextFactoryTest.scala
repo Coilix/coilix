@@ -2,6 +2,9 @@ package dev.coilix.testkit
 
 import dev.coilix.boot.UnmatchedBeanReplacementException
 import dev.coilix.common.GenericType
+import dev.coilix.concurrency.FatalErrorHandler
+import dev.coilix.concurrency.LoggingFatalErrorHandler
+import dev.coilix.concurrency.ShutdownFatalErrorHandler
 import dev.coilix.context.ApplicationContext
 import dev.coilix.events.ApplicationFailed
 import dev.coilix.events.ApplicationStarted
@@ -121,6 +124,16 @@ final class DefaultTestContextFactoryTest extends FunSuite with CoilixContextOps
       bean[EventPublisher].publish(Visit("Ann"))
       assertEquals(bean[GuestBook].threads, List(Thread.currentThread.getName))
     }
+  }
+
+  test("only logs fatal errors unless the setup asks for the shutdown") {
+    assertEquals(
+      (
+        base.use(bean[FatalErrorHandler].getClass),
+        base.withProperties("coilix.fatal-errors.action" -> "shutdown").use(bean[FatalErrorHandler].getClass)
+      ),
+      (classOf[LoggingFatalErrorHandler], classOf[ShutdownFatalErrorHandler])
+    )
   }
 
   test("use closes the context after the block") {

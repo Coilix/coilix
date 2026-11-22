@@ -1,0 +1,59 @@
+---
+id: fatal-errors
+title: Błędy fatalne
+description: Co Coilix robi po OutOfMemoryError i innych błędach fatalnych oraz z jakimi opcjami JVM uruchamiać aplikację.
+sidebar_position: 9
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import FatalErrorsYaml from '!!raw-loader!@examples/resources/guides/fatal-errors/application.yaml';
+import FatalErrorsTest from '!!raw-loader!@examples/test/fatal/FatalErrorsTest.scala';
+import RecordingTerminator from '!!raw-loader!@examples/test/fatal/RecordingTerminator.scala';
+
+Ta strona wyjaśnia, co się dzieje, gdy wątek aplikacji trafi na błąd, po którym nie da się wrócić do normalnej pracy, na przykład na brak pamięci. Sama JVM wypisuje błąd, wątek umiera, a reszta aplikacji działa dalej bez jednego pracownika. Odpowiada na sondy zdrowia, ale części pracy już nie wykonuje. Coilix zamiast tego kończy taką aplikację, żeby orkiestrator uruchomił nową.
+
+## Które błędy są fatalne
+
+Coilix uznaje za fatalne dwa rodzaje błędów:
+
+- `VirtualMachineError`, na przykład `OutOfMemoryError`, `StackOverflowError` i `InternalError`,
+- `LinkageError`, na przykład `NoClassDefFoundError`, który oznacza zepsuty classpath.
+
+Każdy inny wyjątek to porażka, którą aplikacja przeżywa. Zadanie, metoda `@Scheduled` albo asynchroniczny odbiorca zdarzeń, które go rzucą, trafiają do logu, a aplikacja działa dalej, jak opisano w przewodniku [Zadania w tle i harmonogram](tasks-and-scheduling.mdx).
+
+## Co się dzieje po błędzie fatalnym
+
+Błąd fatalny rzucony w zadaniu `TaskExecutor`, w zadaniu `TaskScheduler` (także w metodzie `@Scheduled`) albo w asynchronicznym odbiorcy zdarzeń trafia do beana `FatalErrorHandler`. W aplikacji uruchomionej przez `Coilix.run` handler dostaje też błędy fatalne wszystkich innych wątków. Domyślnie:
+
+1. zapisuje błąd w logu,
+2. zamyka kontekst w nowym wątku, więc działają metody `@PreDestroy`, a odbiorcy asynchroniczni dostają zwykły czas na dokończenie pracy,
+3. kończy proces z kodem wyjścia 70,
+4. natychmiast zatrzymuje proces, bez hooków zamykania, gdy zamykanie trwa dłużej niż `shutdown-timeout`, na przykład z powodu zakleszczonych wątków.
+
+Kolejne błędy fatalne są tylko zapisywane w logu, więc zamykanie rusza raz.
+
+<CodeBlock language="yaml" title="application.yaml">{FatalErrorsYaml}</CodeBlock>
+
+`action: log` tylko zapisuje błędy fatalne w logu i pozwala aplikacji działać dalej. Używaj tego tylko wtedy, gdy aplikację pilnuje coś innego, bo po `OutOfMemoryError` jej stanowi nie można ufać.
+
+Żeby zareagować po swojemu, na przykład najpierw wysłać alert, zarejestruj bean implementujący `FatalErrorHandler` i oznacz go `@Primary`. Jest wywoływany w wątku, który padł, więc nie może czekać na wykonawcę tego wątku.
+
+## Uruchamiaj JVM z właściwymi opcjami
+
+Coilix obsługuje wątki, którymi zarządza. Biblioteki, które uruchamiają własne wątki, albo kod łapiący `Throwable` mogą nadal ukryć `OutOfMemoryError`. Pozwól wtedy JVM zakończyć się samej i zachowaj zrzut pamięci na później:
+
+```bash
+java -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -XX:MaxRAMPercentage=75 -jar shop.jar
+```
+
+W kontenerze JVM domyślnie daje stercie tylko 25% limitu pamięci. `-XX:MaxRAMPercentage=75` daje jej większość limitu, a resztę zostawia na wątki, metaspace i bufory. `Coilix.run` ostrzega przy starcie, gdy brakuje obu opcji `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` albo gdy maksymalna sterta to mniej niż połowa pamięci dostępnej dla JVM.
+
+W Kubernetesie pod, który ciągle pada w ten sam sposób, przechodzi w `CrashLoopBackOff`. To zamierzony sygnał: aplikacja nie udaje, że działa, a logi i zrzut pamięci pokazują dlaczego.
+
+## Testowanie reakcji na błędy fatalne
+
+Kontekst testowy tylko zapisuje błędy fatalne w logu, więc test, który taki błąd wywoła, nie kończy JVM. Żeby sprawdzić zamykanie, ustaw z powrotem akcję `shutdown` i podmień bean `ProcessTerminator`, który kończy proces, na taki, który zapamiętuje wyjście:
+
+<CodeBlock language="scala" title="RecordingTerminator.scala">{RecordingTerminator}</CodeBlock>
+
+<CodeBlock language="scala" title="FatalErrorsTest.scala">{FatalErrorsTest}</CodeBlock>

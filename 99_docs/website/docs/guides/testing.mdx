@@ -72,6 +72,8 @@ Your own helpers can take the context the same way, for example `def mailer(usin
 
 ## Set properties and profiles
 
+A test context only logs fatal errors (`coilix.fatal-errors.action = log`), so a test does not end the JVM. [Fatal errors](fatal-errors.mdx) shows how to test the shutdown.
+
 `withProperties` sets configuration keys for the test. They win over every other source: command-line options, system properties and configuration files, including `application.yaml` in your test resources.
 
 `withProfiles("dev", "local")` makes these profiles active for the test, in this order. It replaces `coilix.profiles.active` from every other source, so the test does not depend on how the build or the machine is set up.
