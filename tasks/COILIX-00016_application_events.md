@@ -112,7 +112,7 @@ final class ConfirmationMailer(mail: MailSender) {
 ## Kroki (osobne PR-y)
 
 1. **Rdzeń** (zrobione, ADR 0024). Fazy zamykania w `ContextLifecycleListener` i `RetryPolicy` w `concurrency`, z migracją `ScheduledMethodRegistrar` do fazy producentów. ADR 0024 „Fazy zamykania kontekstu i wspólna polityka ponowień”.
-2. **Moduł `08_events`.** `EventPublisher` i `Events`, `@EventListener` i `ApplicationEventListener[E]`, dopasowanie po `GenericType`, odbiorcy synchroniczni i asynchroniczni, ponowienia, zamykanie w fazie `Events`. ADR o modelu zdarzeń, przewodnik w obu językach i użycie w demo.
+2. **Moduł `08_events`** (zrobione, ADR 0025). `EventPublisher` i `Events`, `@EventListener` i `ApplicationEventListener[E]`, dopasowanie po `GenericType`, odbiorcy synchroniczni i asynchroniczni, ponowienia, zamykanie w fazie `Events`. ADR o modelu zdarzeń, przewodnik w obu językach i użycie w demo.
 3. **Zdarzenia frameworka i testkit.** `ContextReady`, `ApplicationStarted`, `ContextClosing`, `ApplicationFailed`, `withSynchronousEvents`, `awaitIdle`, `recordedEvents`.
 
 ## Kryteria akceptacji

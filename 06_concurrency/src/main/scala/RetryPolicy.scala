@@ -11,7 +11,8 @@ import scala.concurrent.duration.FiniteDuration
  * The wait grows exponentially from `initialDelay` by `multiplier` after each failed try and never exceeds `maxDelay`. Each
  * wait is spread randomly by up to `jitter` of its length in both directions, so replicas that failed together do not retry
  * together. The policy only computes delays and keeps no state, so one instance serves every task that shares it. Application
- * events and processors use the same model for their retries.
+ * events and processors use the same model for their retries. Every parameter has a default, so the configuration sets only the
+ * keys it changes, such as `retry.max-attempts = 3`.
  *
  * ```scala
  * val policy = RetryPolicy(maxAttempts = 3, initialDelay = 100.millis, maxDelay = 1.second, multiplier = 2.0, jitter = 0.0)
@@ -21,24 +22,24 @@ import scala.concurrent.duration.FiniteDuration
  * ```
  *
  * @param maxAttempts
- *   the number of tries including the first one, at least 1
+ *   the number of tries including the first one, at least 1, by default 5
  * @param initialDelay
- *   the wait after the first failed try
+ *   the wait after the first failed try, by default 1 second
  * @param maxDelay
- *   the upper limit of every wait, not less than `initialDelay`
+ *   the upper limit of every wait, not less than `initialDelay`, by default 1 minute
  * @param multiplier
- *   how much each wait grows over the previous one, at least 1
+ *   how much each wait grows over the previous one, at least 1, by default 2
  * @param jitter
- *   the part of a wait by which it is spread randomly, from 0 to 1
+ *   the part of a wait by which it is spread randomly, from 0 to 1, by default 0.2
  * @throws java.lang.IllegalArgumentException
  *   if a parameter is out of its range
  */
 final case class RetryPolicy(
-  maxAttempts:  Int,
-  initialDelay: FiniteDuration,
-  maxDelay:     FiniteDuration,
-  multiplier:   Double,
-  jitter:       Double
+  maxAttempts:  Int            = 5,
+  initialDelay: FiniteDuration = 1.second,
+  maxDelay:     FiniteDuration = 1.minute,
+  multiplier:   Double         = 2.0,
+  jitter:       Double         = 0.2
 ) {
   require(maxAttempts >= 1, s"maxAttempts must be at least 1, got $maxAttempts")
   require(initialDelay >= Duration.Zero, s"initialDelay must not be negative, got $initialDelay")
@@ -75,7 +76,7 @@ final case class RetryPolicy(
 object RetryPolicy {
 
   /** Five tries with waits from 1 second up to 1 minute, doubled each time and spread by 20%. */
-  val default: RetryPolicy = RetryPolicy(5, 1.second, 1.minute, 2.0, 0.2)
+  val default: RetryPolicy = RetryPolicy()
 
   /** A single try without retries. */
   val none: RetryPolicy = RetryPolicy(1, Duration.Zero, Duration.Zero, 1.0, 0.0)
