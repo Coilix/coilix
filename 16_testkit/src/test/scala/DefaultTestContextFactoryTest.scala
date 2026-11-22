@@ -1,12 +1,19 @@
 package dev.coilix.testkit
 
 import dev.coilix.boot.UnmatchedBeanReplacementException
+import dev.coilix.common.GenericType
 import dev.coilix.context.ApplicationContext
+import dev.coilix.events.ApplicationFailed
+import dev.coilix.events.ApplicationStarted
+import dev.coilix.events.ContextReady
+import dev.coilix.events.EventPublisher
 import dev.coilix.testkit.fixture.FixtureApplication
 import dev.coilix.testkit.fixture.Greeter
+import dev.coilix.testkit.fixture.GuestBook
 import dev.coilix.testkit.fixture.Journal
 import dev.coilix.testkit.fixture.Reception
 import dev.coilix.testkit.fixture.Uplink
+import dev.coilix.testkit.fixture.Visit
 import munit.FunSuite
 
 final class DefaultTestContextFactoryTest extends FunSuite with CoilixContextOps {
@@ -79,6 +86,41 @@ final class DefaultTestContextFactoryTest extends FunSuite with CoilixContextOps
     val setup   = base.addBean[Journal](journal).withProperties("fixture.fail-runner" -> "true").withRunners
     intercept[IllegalStateException](TestContextFactory.default.create(setup))
     assertEquals(journal.recorded, List("runner", "closed"))
+  }
+
+  test("publishes the startup events and records every event") {
+    base.use {
+      bean[EventPublisher].publish(Visit("Ann"))
+      assertEquals(
+        (recordedEvents[ContextReady].size, recordedEvents[ApplicationStarted].size, recordedEvents[Visit]),
+        (1, 1, List(Visit("Ann")))
+      )
+    }
+  }
+
+  test("publishes ApplicationFailed when a runner fails") {
+    val recorder = EventRecorder()
+    val setup    = base
+      .withBean(TestBean("failureRecorder", GenericType.of(classOf[EventRecorder]), recorder, replaces = false))
+      .withProperties("fixture.fail-runner" -> "true")
+      .withRunners
+    intercept[IllegalStateException](TestContextFactory.default.create(setup))
+    assertEquals(recorder.eventsOf[ApplicationFailed].map(_.failure.getMessage), List("runner failed"))
+  }
+
+  test("awaitEvents waits for asynchronous listeners") {
+    base.use {
+      bean[EventPublisher].publish(Visit("Ann"))
+      assert(awaitEvents())
+      assertEquals(bean[GuestBook].guests, List("Ann"))
+    }
+  }
+
+  test("withSynchronousEvents runs asynchronous listeners in the thread of the test") {
+    base.withSynchronousEvents.use {
+      bean[EventPublisher].publish(Visit("Ann"))
+      assertEquals(bean[GuestBook].threads, List(Thread.currentThread.getName))
+    }
   }
 
   test("use closes the context after the block") {

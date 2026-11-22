@@ -5,8 +5,12 @@ import dev.coilix.annotation.Configuration
 import dev.coilix.concurrency.TaskExecutor
 import dev.coilix.concurrency.TaskScheduler
 import dev.coilix.config.Environment
+import dev.coilix.context.ApplicationContext
 
-/** The beans of the events module: `eventsSettings` and `eventBus`, which publishes events and delivers them to listeners. */
+/**
+ * The beans of the events module: `eventsSettings`, `eventBus`, which publishes events and delivers them to listeners, and
+ * `contextClosingPublisher`, which publishes [[dev.coilix.events.ContextClosing]].
+ */
 @Configuration
 final class EventsConfiguration {
 
@@ -19,4 +23,9 @@ final class EventsConfiguration {
   @Bean
   def eventBus(executor: TaskExecutor, scheduler: TaskScheduler, settings: EventsSettings): DefaultEventBus =
     DefaultEventBus(executor, scheduler, settings)
+
+  /** Publishes [[dev.coilix.events.ContextClosing]] when the context starts closing. */
+  @Bean
+  def contextClosingPublisher(publisher: EventPublisher, context: ApplicationContext): ContextClosingPublisher =
+    ContextClosingPublisher(publisher, context)
 }

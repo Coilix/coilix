@@ -12,22 +12,28 @@ final class EventsSettingsTest extends FunSuite {
   test("uses the defaults when nothing is configured") {
     val settings = EventsSettings.from(Environment.empty)
     assertEquals(
-      (settings.shutdownTimeout, settings.listener("mailer", "onPlaced")),
-      (10.seconds, EventListenerSettings(RetryPolicy.none))
+      (settings.shutdownTimeout, settings.synchronous, settings.listener("mailer", "onPlaced")),
+      (10.seconds, false, EventListenerSettings(RetryPolicy.none))
     )
   }
 
-  test("reads the shutdown timeout and a partial retry policy of one listener") {
+  test("reads the shutdown timeout, the synchronous mode and a partial retry policy of one listener") {
     val config   = """
       coilix.events {
         shutdown-timeout = 3s
+        synchronous = true
         listeners.mailer.onPlaced.retry { max-attempts = 4, initial-delay = 200ms }
       }
     """
     val settings = EventsSettings.from(Environment.of(TypesafeConfigTree(ConfigFactory.parseString(config))))
     assertEquals(
-      (settings.shutdownTimeout, settings.listener("mailer", "onPlaced"), settings.listener("mailer", "onCancelled")),
-      (3.seconds, EventListenerSettings(RetryPolicy(maxAttempts = 4, initialDelay = 200.millis)), EventListenerSettings())
+      (
+        settings.shutdownTimeout,
+        settings.synchronous,
+        settings.listener("mailer", "onPlaced"),
+        settings.listener("mailer", "onCancelled")
+      ),
+      (3.seconds, true, EventListenerSettings(RetryPolicy(maxAttempts = 4, initialDelay = 200.millis)), EventListenerSettings())
     )
   }
 }

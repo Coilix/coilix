@@ -4,6 +4,9 @@ import dev.coilix.boot.ApplicationArguments
 import dev.coilix.common.TypeInfo
 import dev.coilix.config.Environment
 import dev.coilix.context.ApplicationContext
+import dev.coilix.events.EventBus
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
 /**
@@ -46,6 +49,28 @@ trait CoilixContextOps {
 
   /** The command-line arguments of the context. */
   def arguments(using current: ApplicationContext): ApplicationArguments = current.getBean[ApplicationArguments]
+
+  /**
+   * The application events of class `E` published in the context so far, oldest first, as recorded by the
+   * [[dev.coilix.testkit.EventRecorder]] of a context built by the testkit.
+   *
+   * ```scala
+   * setup.use {
+   *   bean[Checkout].place(order)
+   *   assertEquals(recordedEvents[OrderPlaced].map(_.orderId), List(order.id))
+   * }
+   * ```
+   */
+  def recordedEvents[E: TypeInfo](using current: ApplicationContext): List[E] = current.getBean[EventRecorder].eventsOf[E]
+
+  /**
+   * Waits until no asynchronous event listener runs or waits for a retry, like [[dev.coilix.events.EventBus.awaitIdle]].
+   *
+   * @return
+   *   `true` when the listeners finished, `false` when `timeout` passed first
+   */
+  def awaitEvents(timeout: FiniteDuration = 5.seconds)(using current: ApplicationContext): Boolean =
+    current.getBean[EventBus].awaitIdle(timeout)
 }
 
 /** The helpers of [[dev.coilix.testkit.CoilixContextOps]] for import, outside a suite that mixes the trait in. */

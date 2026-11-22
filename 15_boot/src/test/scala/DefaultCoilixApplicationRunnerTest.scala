@@ -48,8 +48,8 @@ final class DefaultCoilixApplicationRunnerTest extends FunSuite {
     assertEquals(context.getBean[Environment].get[String]("name"), Some("Ann"))
   }
 
-  test("runs the runners after startup") {
-    assertEquals(context.getBean[RunJournal].recorded, List("first", "second", "unordered:Ann"))
+  test("runs the runners between the ContextReady and ApplicationStarted events") {
+    assertEquals(context.getBean[RunJournal].recorded, List("ready", "first", "second", "unordered:Ann", "started"))
   }
 
   test("registers a shutdown hook for the started context") {

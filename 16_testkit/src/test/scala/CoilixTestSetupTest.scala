@@ -49,6 +49,10 @@ final class CoilixTestSetupTest extends FunSuite {
     assertEquals((base.runners, base.arguments, changed.runners, changed.arguments), (false, Nil, true, List("--a=1")))
   }
 
+  test("withSynchronousEvents switches the events to synchronous delivery") {
+    assertEquals(base.withSynchronousEvents.properties, Map("coilix.events.synchronous" -> "true"))
+  }
+
   test("scans the given packages") {
     assertEquals(CoilixTestSetup.forPackages("a.b", "c.d").packages(NoPackages), List("a.b", "c.d"))
   }

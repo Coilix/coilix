@@ -11,9 +11,12 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.events.listeners.AsyncJournal
 import dev.coilix.events.listeners.CancellingListener
+import dev.coilix.events.listeners.ClosingWatcher
 import dev.coilix.events.listeners.CustomerWatcher
 import dev.coilix.events.listeners.EarlyPublisher
+import dev.coilix.events.listeners.FailingClosingListener
 import dev.coilix.events.listeners.FailingNotifier
 import dev.coilix.events.listeners.FlakyNotifier
 import dev.coilix.events.listeners.MailServer
@@ -100,6 +103,38 @@ final class DefaultEventBusTest extends FunSuite {
       assert(bus.awaitIdle(5.seconds))
       assertEquals(context.getBean[FailingNotifier].attempts.get, 1)
     }
+  }
+
+  test("runs asynchronous listeners in the publishing thread in synchronous mode") {
+    withContext("coilix.events.synchronous = true", classOf[AsyncJournal], classOf[FailingNotifier]) { context =>
+      val bus = context.getBean[EventBus]
+      bus.publish(OrderEvent.Placed(1))
+      assertEquals(
+        (context.getBean[AsyncJournal].threads.recorded, context.getBean[FailingNotifier].attempts.get, bus.pendingDeliveries),
+        (List(Thread.currentThread.getName), 1, 0)
+      )
+    }
+  }
+
+  test("retries at once without waiting in synchronous mode") {
+    val config =
+      "coilix.events { synchronous = true, listeners.flakyNotifier.onPlaced.retry { max-attempts = 3, initial-delay = 1m } }"
+    withContext(config, classOf[FlakyNotifier]) { context =>
+      context.getBean[EventBus].publish(OrderEvent.Placed(1))
+      assertEquals(context.getBean[FlakyNotifier].attempts.get, 3)
+    }
+  }
+
+  test("publishes ContextClosing on closing and waits for its asynchronous listeners") {
+    val context = contextOf("", classOf[ClosingWatcher])
+    context.close()
+    assertEquals(context.getBean[ClosingWatcher].sawBean.recorded, List(true))
+  }
+
+  test("closes the context when a listener of ContextClosing fails") {
+    val context = contextOf("", classOf[FailingClosingListener], classOf[SlowMailer])
+    context.close()
+    assert(!context.getBean[MailServer].isOpen)
   }
 
   test("delivers events published before the context started") {

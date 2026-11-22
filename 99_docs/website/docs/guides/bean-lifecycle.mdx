@@ -35,11 +35,12 @@ If a `@PreDestroy` method throws an exception, Coilix logs it as a warning and g
 
 A bean that needs every other bean, or that must stop its work before any bean is destroyed, implements `ContextLifecycleListener`. Coilix calls `onContextStarted` once all beans exist, and `onContextClosing` when the context closes, before the first `@PreDestroy` method.
 
-The closing goes through three phases, whatever the order in which the beans were created:
+The closing goes through four phases, whatever the order in which the beans were created:
 
-1. `ClosingPhase.Producers` stops whatever brings new work in, such as `@Scheduled` methods, message consumers and servers. A listener is in this phase unless it says otherwise.
-2. `ClosingPhase.Events` finishes the work that was already accepted, such as queued messages.
-3. `ClosingPhase.Resources` releases what the work needed, such as connections.
+1. `ClosingPhase.Announcement` tells the application that it is closing, before anything stops. The events module publishes `ContextClosing` here.
+2. `ClosingPhase.Producers` stops whatever brings new work in, such as `@Scheduled` methods, message consumers and servers. A listener is in this phase unless it says otherwise.
+3. `ClosingPhase.Events` finishes the work that was already accepted, such as queued messages.
+4. `ClosingPhase.Resources` releases what the work needed, such as connections.
 
 Only then do the `@PreDestroy` methods run. Within one phase, the listener created last is called first. The outbox below sends its queued orders in the `Events` phase. By then no scheduled task adds new orders, and the mail sender is still available:
 

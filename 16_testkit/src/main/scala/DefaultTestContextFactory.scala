@@ -4,22 +4,22 @@ import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ArgumentsParser
 import dev.coilix.boot.BeanReplacements
 import dev.coilix.boot.StartupComponents
+import dev.coilix.boot.StartupEvents
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
 
 /**
  * Builds a test context the way `Coilix.run` builds an application, without the banner, the startup log and the shutdown hook.
  *
  * The configuration is loaded with the setup properties and profiles over the command-line options, so they win over every
  * other source. The arguments and the configuration are registered as `applicationArguments` and `environment`, and the beans of
- * the setup are registered under their names. When the runners fail, the context is closed before the error is rethrown. This is
- * the implementation returned by [[dev.coilix.testkit.TestContextFactory.default]].
+ * the setup are registered under their names, next to an [[dev.coilix.testkit.EventRecorder]] named `eventRecorder`. The context
+ * publishes [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] like an application, with the runners
+ * between them when the setup asks for them. When the runners or the listeners of these events fail, the context is closed
+ * before the error is rethrown. This is the implementation returned by [[dev.coilix.testkit.TestContextFactory.default]].
  *
  * @param parser
  *   splits the command-line arguments
@@ -44,22 +44,7 @@ final class DefaultTestContextFactory(
       singletons(arguments, environment) ++ setup.beans.map(registered),
       BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
     )
-    if (setup.runners) withRunners(startup, context, arguments) else context
-  }
-
-  private def withRunners(
-    startup:   StartupComponents,
-    context:   ConfigurableApplicationContext,
-    arguments: ApplicationArguments
-  ): ConfigurableApplicationContext =
-    Try(startup.invoker.invoke(context, arguments)) match {
-      case Success(_)     => context
-      case Failure(error) => closedAfter(context, error)
-    }
-
-  private def closedAfter(context: ConfigurableApplicationContext, error: Throwable): Nothing = {
-    context.close()
-    throw error
+    StartupEvents.around(context)(if (setup.runners) startup.invoker.invoke(context, arguments))
   }
 
   private def commandLineProperties(arguments: ApplicationArguments): Map[String, String] =
@@ -68,7 +53,8 @@ final class DefaultTestContextFactory(
   private def singletons(arguments: ApplicationArguments, environment: Environment): List[RegisteredBean] =
     List(
       RegisteredBean.of[ApplicationArguments]("applicationArguments", arguments),
-      RegisteredBean.ofClass("environment", environment.getClass, environment)
+      RegisteredBean.ofClass("environment", environment.getClass, environment),
+      RegisteredBean.of[EventRecorder]("eventRecorder", EventRecorder())
     )
 
   private def registered(bean: TestBean): RegisteredBean =
