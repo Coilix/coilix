@@ -7,6 +7,7 @@ import dev.coilix.context.lifecycle.Connection
 import dev.coilix.context.lifecycle.EventDrainer
 import dev.coilix.context.lifecycle.FailingInit
 import dev.coilix.context.lifecycle.FailingStart
+import dev.coilix.context.lifecycle.GatewayConfiguration
 import dev.coilix.context.lifecycle.InitWithArgument
 import dev.coilix.context.lifecycle.Journal
 import dev.coilix.context.lifecycle.OrderedInit
@@ -68,6 +69,14 @@ final class LifecycleContextTest extends FunSuite {
       context.getBean[Journal].all.filterNot(_.startsWith("connection")),
       List("started with applicationContext, connection, journal, startWatcher", "closing", "watcher destroyed")
     )
+  }
+
+  test("runs the lifecycle methods of the class a @Bean method returns, also when it declares a trait") {
+    val context = contextOf(classOf[GatewayConfiguration])
+    val journal = context.getBean[Journal]
+    val opened  = journal.all
+    context.close()
+    assertEquals((opened, journal.all.drop(opened.size)), (List("gateway connected"), List("gateway disconnected")))
   }
 
   test("notifies listeners phase by phase whatever the order of creation") {

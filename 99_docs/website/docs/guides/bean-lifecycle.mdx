@@ -17,7 +17,7 @@ Annotate a method with `@PostConstruct` to run it once after the bean is created
 
 <CodeBlock language="scala" title="ReportScheduler.scala">{ReportScheduler}</CodeBlock>
 
-A lifecycle method takes no parameters and returns `Unit`. It can be private, as in the example, and it can be declared in a superclass of the bean. If a bean has several methods with the same annotation, Coilix runs them in order of their names.
+A lifecycle method takes no parameters and returns `Unit`. It can be private, as in the example, and it can be declared in a superclass of the bean. If a bean has several methods with the same annotation, Coilix runs them in order of their names. For a bean made by a `@Bean` method, Coilix looks at the class of the returned object, so a method declared as `def gateway: Gateway = HttpGateway()` still runs the lifecycle methods of `HttpGateway`.
 
 A method with parameters or with a result other than `Unit` stops the startup with `InvalidLifecycleMethodException`. The message names the bean and the method.
 
