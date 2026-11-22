@@ -16,7 +16,9 @@ import dev.coilix.demo.vehicle.VehicleRegistry
 import dev.coilix.demo.vehicle.Vin
 import dev.coilix.events.EventPublisher
 import java.time.Clock
+import org.slf4j.MDC
 import scala.util.Try
+import scala.util.Using
 
 /**
  * Runs the inspection job: a mechanic asks for access, gets a signed token and works through the steps on the vehicle.
@@ -26,6 +28,8 @@ import scala.util.Try
  * [[dev.coilix.demo.workshop.Notifier]] depends on the active profile: `--coilix.profiles.active=dev` logs notifications.
  * At the end it publishes [[dev.coilix.demo.workshop.InspectionFinished]], which
  * [[dev.coilix.demo.workshop.ShiftStatistics]] counts and [[dev.coilix.demo.workshop.StaffNotifications]] sends to the staff.
+ * The inspection runs with the vehicle under the `job` key of the MDC, which Coilix carries to the asynchronous notification,
+ * so its log lines show the job too.
  */
 @Component
 @Order(1)
@@ -52,7 +56,10 @@ final class WorkshopShift(
   private def vehicle(arguments: ApplicationArguments): Option[Vehicle] =
     arguments.optionValue("vin").fold(registry.all.headOption)(vin => Try(Vin(vin)).toOption.flatMap(registry.find))
 
-  private def inspect(mechanic: Mechanic, vehicle: Vehicle): Unit = {
+  private def inspect(mechanic: Mechanic, vehicle: Vehicle): Unit =
+    Using.resource(MDC.putCloseable("job", s"inspection-${vehicle.vin.value}"))(_ => runInspection(mechanic, vehicle))
+
+  private def runInspection(mechanic: Mechanic, vehicle: Vehicle): Unit = {
     val steps = ServiceJob.inspection.filter(step => vehicle.modules.contains(step.module))
     log.info(
       s"${properties.name}: ${mechanic.name} (${mechanic.certification}) starts an inspection of ${vehicle.model} ${vehicle.vin.value}"

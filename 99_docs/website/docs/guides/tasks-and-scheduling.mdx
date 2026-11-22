@@ -8,6 +8,9 @@ sidebar_position: 6
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
 import InvoiceArchive from '!!raw-loader!@examples/scala/tasks/InvoiceArchive.scala';
+import CurrentTenant from '!!raw-loader!@examples/scala/tasks/CurrentTenant.scala';
+import TenantPropagator from '!!raw-loader!@examples/scala/tasks/TenantPropagator.scala';
+import TenantReport from '!!raw-loader!@examples/scala/tasks/TenantReport.scala';
 import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scala';
 import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
@@ -50,6 +53,20 @@ Annotate a method with `@Async` to run it on the compute pool whenever another b
 A method returning `Future[T]` returns the result of the run on the executor, and a method returning `Unit` is started without waiting; its failure is logged. Methods without `@Async` run on the calling thread.
 
 Coilix registers such a bean as a proxy of the trait, so other beans inject `InvoiceMailer`, not `SmtpInvoiceMailer`. A call from inside the bean itself does not pass the proxy and runs on the calling thread. An `@Async` method that no trait declares, or that returns something other than `Unit` or `Future`, stops the startup with `InvalidAsyncMethodException`.
+
+## Keep the logging context in tasks
+
+A task runs on another thread, but its log lines keep the MDC of the thread that handed it over, such as a request id put there by an HTTP filter. Coilix copies the MDC when a task is submitted, through `execute`, `submit`, `executionContext`, an `@Async` method or an asynchronous event listener, or when it is scheduled, and gives the thread its own MDC back when the task ends, so nothing leaks to the next task of a pooled thread. Set `coilix.concurrency.propagate-mdc: false` to turn it off.
+
+The MDC needs a logging backend that keeps it, such as Logback or Log4j 2. `slf4j-simple` ignores the MDC. With Log4j 2, set `shutdownHook="disable"` on its `Configuration`: otherwise Log4j stops logging in its own shutdown hook while Coilix is still closing the application, and the last lines are lost.
+
+Other thread-bound values travel the same way. A bean that implements `ContextPropagator` takes the value when a task is handed over and restores it around the task. Here the tenant of the caller follows the report to the compute pool:
+
+<CodeBlock language="scala" title="CurrentTenant.scala">{CurrentTenant}</CodeBlock>
+
+<CodeBlock language="scala" title="TenantPropagator.scala">{TenantPropagator}</CodeBlock>
+
+<CodeBlock language="scala" title="TenantReport.scala">{TenantReport}</CodeBlock>
 
 ## Repeat a method with @Scheduled
 

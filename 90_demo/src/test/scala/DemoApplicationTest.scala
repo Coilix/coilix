@@ -60,6 +60,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "immobilizerDriver",
         "inMemoryReplayGuard",
         "latestJobLog",
+        "mdcContextPropagator",
         "oemKeyRegistry",
         "oemPartsSupplier",
         "ownerApp",

@@ -25,14 +25,17 @@ import scala.concurrent.duration.FiniteDuration
  *   receives the fatal errors of tasks
  * @param maxConcurrency
  *   how many tasks may run at once, or `None` for no limit
+ * @param propagators
+ *   carry thread-bound context from the submitting thread to the task
  */
 final class ExecutorServiceBlockingExecutor(
   name:            String,
   service:         ExecutorService,
   shutdownTimeout: FiniteDuration,
-  fatalErrors:     FatalErrorHandler = FatalErrorHandler.logOnly,
-  maxConcurrency:  Option[Int]       = None
-) extends ExecutorServiceExecutor(name, service, shutdownTimeout, fatalErrors)
+  fatalErrors:     FatalErrorHandler       = FatalErrorHandler.logOnly,
+  maxConcurrency:  Option[Int]             = None,
+  propagators:     List[ContextPropagator] = Nil
+) extends ExecutorServiceExecutor(name, service, shutdownTimeout, fatalErrors, propagators)
     with BlockingExecutor {
 
   private val permits = maxConcurrency.map(limit => Semaphore(limit, true))
@@ -63,10 +66,13 @@ object ExecutorServiceBlockingExecutor {
    *
    * @param fatalErrors
    *   receives the fatal errors of tasks, also when they end a thread
+   * @param propagators
+   *   carry thread-bound context from the submitting thread to the task
    */
   def apply(
     settings:    BlockingSettings,
-    fatalErrors: FatalErrorHandler = FatalErrorHandler.logOnly
+    fatalErrors: FatalErrorHandler       = FatalErrorHandler.logOnly,
+    propagators: List[ContextPropagator] = Nil
   ): ExecutorServiceBlockingExecutor = {
     val uncaught = Some(FatalErrors.uncaughtExceptionHandler(fatalErrors))
     val service  =
@@ -77,7 +83,8 @@ object ExecutorServiceBlockingExecutor {
       service,
       settings.shutdownTimeout,
       fatalErrors,
-      settings.maxConcurrency
+      settings.maxConcurrency,
+      propagators
     )
   }
 

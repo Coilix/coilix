@@ -8,6 +8,9 @@ sidebar_position: 6
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
 import InvoiceArchive from '!!raw-loader!@examples/scala/tasks/InvoiceArchive.scala';
+import CurrentTenant from '!!raw-loader!@examples/scala/tasks/CurrentTenant.scala';
+import TenantPropagator from '!!raw-loader!@examples/scala/tasks/TenantPropagator.scala';
+import TenantReport from '!!raw-loader!@examples/scala/tasks/TenantReport.scala';
 import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scala';
 import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
@@ -50,6 +53,20 @@ Oznacz metodę adnotacją `@Async`, żeby wykonywała się na puli obliczeniowej
 Metoda zwracająca `Future[T]` zwraca wynik wykonania na wykonawcy, a metoda zwracająca `Unit` jest uruchamiana bez czekania; jej błąd trafia do logu. Metody bez `@Async` działają na wątku wywołującym.
 
 Coilix rejestruje taki bean jako proxy traitu, więc inne beany wstrzykują `InvoiceMailer`, a nie `SmtpInvoiceMailer`. Wywołanie z wnętrza samego beana omija proxy i działa na wątku wywołującym. Metoda `@Async`, której nie deklaruje żaden trait albo która zwraca coś innego niż `Unit` lub `Future`, zatrzymuje start wyjątkiem `InvalidAsyncMethodException`.
+
+## Kontekst logowania w zadaniach
+
+Zadanie działa na innym wątku, ale jego wpisy w logu zachowują MDC wątku, który je przekazał, np. identyfikator żądania wstawiony przez filtr HTTP. Coilix kopiuje MDC przy przekazaniu zadania, przez `execute`, `submit`, `executionContext`, metodę `@Async` albo asynchronicznego odbiorcę zdarzeń, albo przy zaplanowaniu zadania, a po zakończeniu zadania oddaje wątkowi jego własne MDC, więc nic nie przechodzi do następnego zadania wątku z puli. Ustaw `coilix.concurrency.propagate-mdc: false`, żeby to wyłączyć.
+
+MDC wymaga backendu logowania, który je przechowuje, np. Logback albo Log4j 2. `slf4j-simple` ignoruje MDC. Przy Log4j 2 ustaw `shutdownHook="disable"` w jego `Configuration`: inaczej Log4j przestaje logować we własnym hooku zamykania, gdy Coilix jeszcze zamyka aplikację, i ostatnie wpisy przepadają.
+
+Inne wartości związane z wątkiem przechodzą tak samo. Bean implementujący `ContextPropagator` pobiera wartość przy przekazaniu zadania i przywraca ją wokół zadania. Tutaj tenant wywołującego idzie za raportem na pulę obliczeniową:
+
+<CodeBlock language="scala" title="CurrentTenant.scala">{CurrentTenant}</CodeBlock>
+
+<CodeBlock language="scala" title="TenantPropagator.scala">{TenantPropagator}</CodeBlock>
+
+<CodeBlock language="scala" title="TenantReport.scala">{TenantReport}</CodeBlock>
 
 ## Metoda powtarzana przez @Scheduled
 

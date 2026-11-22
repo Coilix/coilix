@@ -30,6 +30,13 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
     }
   }
 
+  test("a task runs with the tenant of the thread that submitted it") {
+    setup.use {
+      val report = CurrentTenant.withTenant(Some("acme"))(bean[TenantReport].build())
+      assertEquals(Await.result(report, 5.seconds), "report for acme")
+    }
+  }
+
   test("a @Scheduled method runs on its own") {
     setup.use {
       val refresher = bean[PriceRefresher]

@@ -21,13 +21,16 @@ import scala.concurrent.duration.FiniteDuration
  *   how long closing waits for started tasks
  * @param fatalErrors
  *   receives the fatal errors of tasks
+ * @param propagators
+ *   carry thread-bound context from the submitting thread to the task
  */
 final class ExecutorServiceTaskExecutor(
   name:            String,
   service:         ExecutorService,
   shutdownTimeout: FiniteDuration,
-  fatalErrors:     FatalErrorHandler = FatalErrorHandler.logOnly
-) extends ExecutorServiceExecutor(name, service, shutdownTimeout, fatalErrors)
+  fatalErrors:     FatalErrorHandler       = FatalErrorHandler.logOnly,
+  propagators:     List[ContextPropagator] = Nil
+) extends ExecutorServiceExecutor(name, service, shutdownTimeout, fatalErrors, propagators)
     with TaskExecutor
 
 /** Factories of [[dev.coilix.concurrency.ExecutorServiceTaskExecutor]]. */
@@ -38,15 +41,21 @@ object ExecutorServiceTaskExecutor {
    *
    * @param fatalErrors
    *   receives the fatal errors of tasks, also when they end a worker thread
+   * @param propagators
+   *   carry thread-bound context from the submitting thread to the task
    */
-  def apply(settings: ComputeSettings, fatalErrors: FatalErrorHandler = FatalErrorHandler.logOnly): ExecutorServiceTaskExecutor = {
+  def apply(
+    settings:    ComputeSettings,
+    fatalErrors: FatalErrorHandler       = FatalErrorHandler.logOnly,
+    propagators: List[ContextPropagator] = Nil
+  ): ExecutorServiceTaskExecutor = {
     val pool = ForkJoinPool(
       settings.threads,
       workerFactory(settings.threadNamePrefix),
       FatalErrors.uncaughtExceptionHandler(fatalErrors),
       true
     )
-    new ExecutorServiceTaskExecutor(settings.threadNamePrefix + "*", pool, settings.shutdownTimeout, fatalErrors)
+    new ExecutorServiceTaskExecutor(settings.threadNamePrefix + "*", pool, settings.shutdownTimeout, fatalErrors, propagators)
   }
 
   private def workerFactory(prefix: String): ForkJoinPool.ForkJoinWorkerThreadFactory = {
