@@ -1,9 +1,12 @@
 package dev.coilix.context
 
 import dev.coilix.annotation.ConfigurationProperties
+import dev.coilix.annotation.Lazy
 import dev.coilix.annotation.Primary
+import dev.coilix.annotation.Prototype
 import dev.coilix.common.GenericType
 import dev.coilix.config.Environment
+import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Modifier
 
 /**
@@ -13,7 +16,9 @@ import java.lang.reflect.Modifier
  * chosen by the [[dev.coilix.context.ConstructorSelector]], with one dependency per parameter. Interfaces and abstract classes give
  * no
  * definition. The `@Bean` methods of the class are added by the [[dev.coilix.context.BeanMethodScanner]]. Every definition gets the
- * lifecycle methods of its bean class from the [[dev.coilix.context.LifecycleMethodScanner]].
+ * lifecycle methods of its bean class from the [[dev.coilix.context.LifecycleMethodScanner]], and its
+ * [[dev.coilix.context.BeanCreation]] from [[dev.coilix.annotation.Prototype]] or [[dev.coilix.annotation.Lazy]] on the class or
+ * the `@Bean` method.
  *
  * This is the default [[dev.coilix.context.BeanDefinitionFactory]].
  *
@@ -44,7 +49,7 @@ final class ReflectiveBeanDefinitionFactory(
 
   override def create(beanClass: Class[?]): List[BeanDefinition] =
     if (isInstantiable(beanClass))
-      (classDefinition(beanClass) :: methodScanner.scan(beanClass)).map(withLifecycle).map(withConditions)
+      (classDefinition(beanClass) :: methodScanner.scan(beanClass)).map(withLifecycle).map(withConditions).map(withCreation)
     else Nil
 
   private def withLifecycle(definition: BeanDefinition): BeanDefinition =
@@ -52,6 +57,20 @@ final class ReflectiveBeanDefinitionFactory(
 
   private def withConditions(definition: BeanDefinition): BeanDefinition =
     definition.copy(conditions = conditionScanner.scan(definition))
+
+  private def withCreation(definition: BeanDefinition): BeanDefinition =
+    definition.copy(creation = creationOf(annotatedElement(definition)))
+
+  private def annotatedElement(definition: BeanDefinition): AnnotatedElement =
+    definition.factory match {
+      case MethodInstanceFactory(method) => method
+      case _                             => definition.beanClass
+    }
+
+  private def creationOf(element: AnnotatedElement): BeanCreation =
+    if (element.isAnnotationPresent(classOf[Prototype])) BeanCreation.Prototype
+    else if (element.isAnnotationPresent(classOf[Lazy])) BeanCreation.Lazy
+    else BeanCreation.Eager
 
   private def isInstantiable(beanClass: Class[?]): Boolean =
     !beanClass.isInterface && !Modifier.isAbstract(beanClass.getModifiers)

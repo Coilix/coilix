@@ -21,6 +21,7 @@ import dev.coilix.events.listeners.ExhaustedListener
 import dev.coilix.events.listeners.FailingClosingListener
 import dev.coilix.events.listeners.FailingNotifier
 import dev.coilix.events.listeners.FlakyNotifier
+import dev.coilix.events.listeners.LazyAuditor
 import dev.coilix.events.listeners.MailServer
 import dev.coilix.events.listeners.OrderAudit
 import dev.coilix.events.listeners.OrderJournal
@@ -155,6 +156,15 @@ final class DefaultEventBusTest extends FunSuite {
       bus.publish(OrderEvent.Placed(1))
       assert(bus.awaitIdle(5.seconds))
       assertEquals((context.getBean[ExhaustedListener].attempts.get, bus.pendingDeliveries), (1, 0))
+    }
+  }
+
+  test("does not create a lazy bean to look for listeners in it") {
+    withContext(classOf[LazyAuditor]) { context =>
+      assertEquals(
+        (context.createdBeans.exists(_.beanName == "lazyAuditor"), context.getBean[EventBus].listeners.map(_.name)),
+        (false, Nil)
+      )
     }
   }
 

@@ -1,5 +1,7 @@
 # COILIX-00015: Zasięgi beanów i leniwe tworzenie
 
+> Zrobione 2026-11-22 (ADR 0030). Zamiast `@Scope("prototype")` są znaczniki `@Prototype` i `@Lazy`, a `RegisteredBean` zostaje gotową instancją obok `DeferredBean` w rejestrze.
+
 ## Cel
 
 Oprócz singletonów kontekst obsługuje beany tworzone przy każdym pobraniu (prototype) i singletony tworzone dopiero przy pierwszym użyciu (lazy), bez łamania niemutowalności rejestru ([ADR 0004](../docs/adr/0004-immutable-context-and-constructor-injection.md)).

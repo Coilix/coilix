@@ -40,9 +40,7 @@ final class ScheduledMethodRegistrar(scheduler: TaskScheduler, environment: Opti
    *   if a method takes parameters, is static, cannot be made accessible, or has a missing or invalid duration
    */
   override def onContextStarted(context: ApplicationContext): Unit = {
-    val scheduled = context.beanNames.flatMap(name =>
-      context.getBeanByName(name).toList.flatMap(bean => methodsOf(name, ProxiedBean.unwrap(bean)))
-    )
+    val scheduled = context.createdBeans.flatMap(bean => methodsOf(bean.beanName, ProxiedBean.unwrap(bean.instance)))
     val _         = tasks.updateAndGet(_ ++ scheduled.map(schedule))
   }
 

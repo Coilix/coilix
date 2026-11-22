@@ -1,0 +1,51 @@
+---
+id: bean-scopes
+title: Beany prototype i leniwe
+description: Nowa instancja przy każdym użyciu przez @Prototype, bean tworzony dopiero wtedy, gdy jest potrzebny, przez @Lazy, i dostęp do obu przez Provider.
+sidebar_position: 2
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ShoppingCart from '!!raw-loader!@examples/scala/scopes/ShoppingCart.scala';
+import Checkout from '!!raw-loader!@examples/scala/scopes/Checkout.scala';
+import ProductCatalog from '!!raw-loader!@examples/scala/scopes/ProductCatalog.scala';
+import PriceDesk from '!!raw-loader!@examples/scala/scopes/PriceDesk.scala';
+import ScopesTest from '!!raw-loader!@examples/test/scopes/ScopesTest.scala';
+
+Ta strona pokazuje dwa wyjątki od zwykłej zasady, że każdy bean to jedna instancja tworzona przy starcie aplikacji: beany tworzone od nowa przy każdym użyciu i beany tworzone dopiero wtedy, gdy są pierwszy raz potrzebne.
+
+## Nowa instancja przy każdym użyciu przez @Prototype
+
+Koszyk należy do jednego klienta, więc jeden koszyk na całą aplikację byłby błędem. `@Prototype` na klasie albo na metodzie `@Bean` sprawia, że kontekst tworzy nową instancję przy każdym pobraniu:
+
+<CodeBlock language="scala" title="ShoppingCart.scala">{ShoppingCart}</CodeBlock>
+
+Żeby za każdym razem dostać nowy koszyk, wstrzyknij `Provider[ShoppingCart]` i wywołaj `get()`:
+
+<CodeBlock language="scala" title="Checkout.scala">{Checkout}</CodeBlock>
+
+Bean, który wstrzykuje `ShoppingCart` bezpośrednio, dostaje jeden koszyk przy tworzeniu i trzyma go na zawsze. Rzadko o to chodzi, więc Coilix przy starcie zapisuje ostrzeżenie z podpowiedzią o `Provider`.
+
+Kontekst nie przechowuje prototypów, więc ich nie niszczy: ich metody `@PreDestroy` nigdy się nie wykonują. To, co prototyp trzyma, zwalnia kod, który go pobrał.
+
+## Bean tworzony przy pierwszym użyciu przez @Lazy
+
+Katalog, który długo się ładuje i jest potrzebny tylko części żądań, nie musi spowalniać startu. `@Lazy` tworzy bean przy pierwszym użyciu, a od tej chwili jest to zwykły singleton, niszczony razem z kontekstem:
+
+<CodeBlock language="scala" title="ProductCatalog.scala">{ProductCatalog}</CodeBlock>
+
+Pierwsze użycie to pierwsze `getBean`, pierwsze `get()` z `Provider` albo pierwszy później tworzony bean, który wymaga go bezpośrednio. Bean tworzony przy starcie, który wymaga beana leniwego, tworzy go więc też przy starcie. Żeby został leniwy, wstrzyknij zamiast tego `Provider[ProductCatalog]`:
+
+<CodeBlock language="scala" title="PriceDesk.scala">{PriceDesk}</CodeBlock>
+
+Bean leniwy psuje się przy pierwszym użyciu, a nie przy starcie: brakująca wartość w konfiguracji albo wyjątek w konstruktorze wychodzą w środku żądania. Używaj `@Lazy` dla beanów kosztownych i naprawdę opcjonalnych. Bean leniwy, który nie został utworzony, nie jest przeszukiwany pod kątem metod `@EventListener` i `@Scheduled`.
+
+## Przerwanie cyklu zależności przez Provider
+
+Parametr `Provider[T]` nie sprawia, że jego bean czeka na `T`. Gdy dwa beany potrzebują siebie nawzajem, jeden z nich może dostać drugi przez `Provider` i wywołać `get()` później, po starcie. Start i tak się nie uda, gdy żaden bean nie dostarcza `T`, więc literówka nie czeka do pierwszego wywołania.
+
+Provider użyty w trakcie startu kontekstu, np. w konstruktorze, widzi tylko beany utworzone przed beanem, który go deklaruje.
+
+## Test
+
+<CodeBlock language="scala" title="ScopesTest.scala">{ScopesTest}</CodeBlock>

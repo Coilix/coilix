@@ -6,6 +6,7 @@ import dev.coilix.annotation.Order
 import dev.coilix.annotation.Slf4s
 import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ApplicationRunner
+import dev.coilix.context.Provider
 import dev.coilix.demo.access.AuthToken
 import dev.coilix.demo.access.Mechanic
 import dev.coilix.demo.access.MechanicId
@@ -30,6 +31,7 @@ import scala.util.Using
  * [[dev.coilix.demo.workshop.ShiftStatistics]] counts and [[dev.coilix.demo.workshop.StaffNotifications]] sends to the staff.
  * The inspection runs with the vehicle under the `job` key of the MDC, which Coilix carries to the asynchronous notification,
  * so its log lines show the job too.
+ * Each inspection gets a new [[dev.coilix.demo.workshop.InspectionSheet]] from `sheets`.
  */
 @Component
 @Order(1)
@@ -41,7 +43,8 @@ final class WorkshopShift(
   clock:      Clock,
   uplink:     Option[TelematicsUplink],
   notifier:   Notifier,
-  events:     EventPublisher
+  events:     EventPublisher,
+  sheets:     Provider[InspectionSheet]
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit =
@@ -69,7 +72,7 @@ final class WorkshopShift(
       vehicle,
       steps.map(_.grant).toSet,
       clock.instant()
-    ).fold(error => log.warn(s"Access refused: $error"), token => work(vehicle, token, steps))
+    ).fold(error => log.warn(s"Access refused: $error"), token => work(vehicle, token, steps, sheets.get()))
     uplink.fold(
       log.info("No telematics uplink, the job report stays in the workshop")
     )(_.send(s"Inspection of ${vehicle.vin.value} done"))
@@ -77,16 +80,22 @@ final class WorkshopShift(
     events.publish(InspectionFinished(mechanic.name, vehicle.vin, steps.size))
   }
 
-  private def work(vehicle: Vehicle, token: AuthToken, steps: List[ServiceStep]): Unit = {
+  private def work(vehicle: Vehicle, token: AuthToken, steps: List[ServiceStep], sheet: InspectionSheet): Unit = {
     log.info(s"Session ${token.claims.session.value} valid until ${token.claims.expiresAt}")
-    steps.zipWithIndex.foreach((step, index) => perform(vehicle, token, step, RequestId(s"R-${index + 1}")))
+    steps.zipWithIndex.foreach((step, index) => perform(vehicle, token, step, RequestId(s"R-${index + 1}"), sheet))
+    log.info(s"Inspection sheet: ${sheet.notes.size} step(s) noted")
   }
 
-  private def perform(vehicle: Vehicle, token: AuthToken, step: ServiceStep, requestId: RequestId): Unit =
+  private def perform(vehicle: Vehicle, token: AuthToken, step: ServiceStep, requestId: RequestId, sheet: InspectionSheet): Unit =
     vehicle
       .program(token, step.module, step.command(requestId), clock.instant())
       .fold(
-        error  => log.warn(s"${step.description}: refused with $error"),
-        result => log.info(s"${step.description}: ${result.describe}")
+        error  => noted(sheet, s"${step.description}: refused with $error"),
+        result => noted(sheet, s"${step.description}: ${result.describe}")
       )
+
+  private def noted(sheet: InspectionSheet, entry: String): Unit = {
+    sheet.note(entry)
+    log.info(entry)
+  }
 }

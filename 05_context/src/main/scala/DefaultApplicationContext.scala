@@ -37,7 +37,10 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
     registry.findByName(beanName).map(_.instance)
 
   override def beanNames: List[String] =
-    registry.beans.map(_.beanName)
+    registry.beanNames
+
+  override def createdBeans: List[RegisteredBean] =
+    registry.beans
 
   override def isActive: Boolean = active.get
 
@@ -46,7 +49,7 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
 
   private def destroyBeans(): Unit = {
     log.info("Closing application context")
-    val listeners = getBeansOfType[ContextLifecycleListener].reverse
+    val listeners = createdBeans.map(_.instance).collect { case listener: ContextLifecycleListener => listener }.reverse
     ClosingPhase.values.toList.foreach(phase => listeners.filter(_.closingPhase == phase).foreach(notifyClosing))
     destroyer.destroy(registry.beans)
   }

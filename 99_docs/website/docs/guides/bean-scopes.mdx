@@ -1,0 +1,51 @@
+---
+id: bean-scopes
+title: Prototype and lazy beans
+description: Create a new instance for every use with @Prototype, create a bean only when it is needed with @Lazy, and reach both through Provider.
+sidebar_position: 2
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ShoppingCart from '!!raw-loader!@examples/scala/scopes/ShoppingCart.scala';
+import Checkout from '!!raw-loader!@examples/scala/scopes/Checkout.scala';
+import ProductCatalog from '!!raw-loader!@examples/scala/scopes/ProductCatalog.scala';
+import PriceDesk from '!!raw-loader!@examples/scala/scopes/PriceDesk.scala';
+import ScopesTest from '!!raw-loader!@examples/test/scopes/ScopesTest.scala';
+
+This page shows the two exceptions to the usual rule that every bean is one instance created when the application starts: beans created anew for every use, and beans created only when they are first needed.
+
+## A new instance for every use with @Prototype
+
+A shopping cart belongs to one customer, so sharing one cart in the whole application would be wrong. `@Prototype` on the class, or on a `@Bean` method, makes the context create a new instance for every lookup:
+
+<CodeBlock language="scala" title="ShoppingCart.scala">{ShoppingCart}</CodeBlock>
+
+To get a new cart each time, inject `Provider[ShoppingCart]` and call `get()`:
+
+<CodeBlock language="scala" title="Checkout.scala">{Checkout}</CodeBlock>
+
+A bean that injects `ShoppingCart` directly gets one cart when it is created and keeps it for good. That is rarely what you want, so Coilix logs a warning at startup that suggests a `Provider`.
+
+The context does not keep prototypes, so it does not destroy them: their `@PreDestroy` methods never run. Release what a prototype holds in the code that took it.
+
+## Create a bean when it is first needed with @Lazy
+
+A catalog that takes long to load and is used only by some requests does not have to slow down the startup. `@Lazy` creates the bean on its first use, and from then on it is an ordinary singleton, destroyed with the context:
+
+<CodeBlock language="scala" title="ProductCatalog.scala">{ProductCatalog}</CodeBlock>
+
+The first use is the first `getBean`, the first `get()` of a `Provider`, or the first bean created later that requires it directly. A bean created at startup that requires a lazy bean therefore creates it at startup too. Inject `Provider[ProductCatalog]` instead to keep it lazy:
+
+<CodeBlock language="scala" title="PriceDesk.scala">{PriceDesk}</CodeBlock>
+
+A lazy bean fails when it is first used, not at startup: a missing configuration value or an exception in its constructor shows up in the middle of a request. Keep `@Lazy` for beans that are expensive and really optional. A lazy bean that was never created is not searched for `@EventListener` and `@Scheduled` methods.
+
+## Break a dependency cycle with Provider
+
+A `Provider[T]` parameter does not make its bean wait for `T`. When two beans need each other, one of them can take the other through a `Provider` and call `get()` later, after the startup. The startup still fails when no bean provides `T`, so a typo does not wait until the first call.
+
+A provider used while the context is starting, for example in a constructor, sees only the beans created before the bean that declares it.
+
+## Test
+
+<CodeBlock language="scala" title="ScopesTest.scala">{ScopesTest}</CodeBlock>

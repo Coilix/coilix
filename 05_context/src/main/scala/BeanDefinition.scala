@@ -33,5 +33,6 @@ final case class BeanDefinition(
   isPrimary:    Boolean,
   lifecycle:    LifecycleMethods = LifecycleMethods.none,
   conditions:   BeanConditions   = BeanConditions.none,
-  result:       BeanResult       = BeanResult.Plain
+  result:       BeanResult       = BeanResult.Plain,
+  creation:     BeanCreation     = BeanCreation.Eager
 ) extends BeanDescriptor
