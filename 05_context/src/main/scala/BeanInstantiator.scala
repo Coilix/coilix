@@ -31,5 +31,7 @@ object BeanInstantiator {
    * not set.
    */
   def default(using components: ComponentProvider): BeanInstantiator =
-    components.get[BeanInstantiator](ReflectiveBeanInstantiator(components.environment, BeanPostProcessor.default))
+    components.get[BeanInstantiator](
+      ReflectiveBeanInstantiator(components.environment, BeanPostProcessor.default, LifecycleMethodScanner.default)
+    )
 }
