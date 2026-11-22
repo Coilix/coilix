@@ -28,6 +28,8 @@ Każda aplikacja ma dwóch wykonawców, bo praca, która liczy, i praca, która 
 - `TaskExecutor` to pula obliczeniowa: pula fork-join z jednym wątkiem platformowym na procesor, o nazwach `coilix-compute-<numer>`. Działają na niej obliczenia, metody `@Async` i asynchroniczni odbiorcy zdarzeń. Zadanie przekazane z jednego z jej wątków zwykle zostaje na tym samym wątku, co utrzymuje cache procesora.
 - `BlockingExecutor` służy do wywołań, które czekają, np. zapytań JDBC, żądań HTTP i dostępu do plików. Każde zadanie dostaje nowy wątek wirtualny o nazwie `coilix-blocking-<numer>`, który podczas czekania prawie nic nie kosztuje. Na JDK 17, które nie ma wątków wirtualnych, używa puli najwyżej 64 wątków platformowych.
 
+Z modułem [cats-effect](cats-effect.mdx) pula obliczeniowa cats-effect zastępuje pulę fork-join, a wątki nazywają się `io-compute-<numer>`.
+
 Nie mieszaj ich. Wywołanie blokujące na puli obliczeniowej zajmuje jeden z jej nielicznych wątków, a z nim rdzeń procesora, przez cały czas czekania. Obliczenia na wykonawcy blokującym też nie pomagają: wątki wirtualne dzielą wątki nośne, po jednym na rdzeń, a zadanie, które liczy, zajmuje swój nośnik.
 
 ## Zadanie w tle

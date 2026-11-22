@@ -136,7 +136,7 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 2. Rdzeń: pełne typy w definicjach i dopasowanie po typach sparametryzowanych, `TypeInfo`, błędy dla lambd typów i niezwiązanych zmiennych. Zrobione (`GenericType`, `TypeInfo`, ADR 0019); wiązanie `coilix.effect.type` przechodzi do kroku 5.
 3. Rdzeń: `ContextPlan`, `ContextPlanner` i `EffectfulResultRecognizer`, `DefaultApplicationContextBuilder` na planie. Zrobione (ADR 0019). Rodzaj wyniku (`BeanResult`) jest w `BeanDefinition.result`, a nie w `InstanceFactory`, i ustawia go `ReflectiveBeanMethodScanner`, więc bean efektowy ma od początku typ wartości. Cykl życia zwracający `IO[Unit]` przechodzi do kroku 5.
 4. Zasoby wykonania (albo COILIX-00005). Zrobione przez COILIX-00005 krok 1: `TaskExecutor` na wątkach wirtualnych i `TaskScheduler` z modułu `concurrency` (ADR 0020).
-5. `cats-effect`: `IORuntime` jako bean, beany `IO[A]` i `Resource[IO, A]`, cykl życia i runnery w `IO`, `CoilixIOApp`.
+5. `cats-effect`, w trzech PR-ach: 5a `IORuntime` jako bean i jedyna pula obliczeniowa (zrobione, ADR 0031), 5b beany `IO[A]` i `Resource[IO, A]`, cykl życia i runnery w `IO`, 5c `CoilixIOApp` i `testkit-cats-effect`.
 6. `testkit-cats-effect` i przewodnik w obu językach.
 
 ## Kryteria akceptacji

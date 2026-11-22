@@ -36,6 +36,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0028](0028-one-compute-pool.md) | Jedna pula obliczeniowa i osobny wykonawca blokujący | proponowana |
 | [0029](0029-context-propagation.md) | Przekazywanie kontekstu wątku do zadań | proponowana |
 | [0030](0030-prototype-and-lazy-beans.md) | Beany prototype i leniwe w niemutowalnym rejestrze | proponowana |
+| [0031](0031-cats-effect-runtime.md) | Runtime cats-effect jako jedyna pula obliczeniowa | proponowana |
 
 ## Nowa decyzja
 

@@ -1,0 +1,3 @@
+### Added
+
+- New module `coilix-cats-effect`: the `IORuntime` of the application as the `ioRuntime` bean, with the work-stealing pool of cats-effect sized by `coilix.concurrency.compute.threads`, shut down with the context. Its compute pool becomes the only compute pool of the application: the `ioTaskExecutor` bean is the `TaskExecutor`, so the default pool of the concurrency module is not created. A shutdown of the runtime after a fatal error in a fiber goes to the `FatalErrorHandler` as `IORuntimeStoppedException`, and `IO.onBlockingExecutor` runs a blocking call on a virtual thread of the `BlockingExecutor` (COILIX-00020).

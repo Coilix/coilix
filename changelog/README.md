@@ -5,6 +5,7 @@ Each release group of Coilix has its own directory and its own versions:
 | Directory | Group | Tag |
 |---|---|---|
 | `core/` | `coilix-common`, `coilix-annotations`, `coilix-slf4s-plugin`, `coilix-config`, `coilix-context`, `coilix-boot`, `coilix-testkit` | `core-vX.Y.Z` |
+| `cats-effect/` | `coilix-cats-effect` | `cats-effect-vX.Y.Z` |
 | `<module>/`, e.g. `web/` | one feature module | `<module>-vX.Y.Z` |
 
 The released changes are listed at [docs.coilix.dev/changelog](https://docs.coilix.dev/changelog) and in the GitHub releases.

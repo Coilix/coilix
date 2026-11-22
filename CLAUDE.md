@@ -32,6 +32,7 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `20_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
 | `21_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
 | `22_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
+| `23_cats_effect` | `cats-effect` | `dev.coilix.catseffect` | Scala | `IORuntime` jako bean i jedyna pula obliczeniowa (ADR 0031) |
 | `90_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
 | `99_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
@@ -39,9 +40,9 @@ Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium
 
 `99_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `99_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
-Moduły `data`, `web` i `security` są opcjonalne (zasady w `docs/architecture/modularity.md`):
+Moduły `data`, `web`, `security` i `cats-effect` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
-- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`) ani nie odwołują się do ich klas.
+- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `cats-effect`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
 - Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
 - Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.

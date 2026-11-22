@@ -28,6 +28,8 @@ Every application has two executors, because work that computes and work that wa
 - `TaskExecutor` is the compute pool: a fork-join pool with one platform thread per processor, named `coilix-compute-<number>`. Computation, `@Async` methods and asynchronous event listeners run here. A task handed over from one of its threads usually stays on the same thread, which keeps the processor cache warm.
 - `BlockingExecutor` is for calls that wait, such as JDBC queries, HTTP requests and file access. Each task gets a new virtual thread named `coilix-blocking-<number>`, which costs almost nothing while it waits. On JDK 17, which has no virtual threads, it uses a pool of up to 64 platform threads.
 
+With the [cats-effect](cats-effect.mdx) module, the compute pool of cats-effect takes the place of the fork-join pool, and the threads are named `io-compute-<number>`.
+
 Keep them apart. A blocking call on the compute pool holds one of its few threads, and with it a processor core, while it waits. Computation on the blocking executor does not help either: virtual threads share carrier threads, one per core, and a task that computes holds its carrier.
 
 ## Run a task in the background

@@ -14,6 +14,7 @@ import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
 import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
+import dev.coilix.demo.workshop.RecallCheck
 import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
@@ -164,6 +165,23 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     def loaded(using context: dev.coilix.context.ApplicationContext): Boolean =
       context.createdBeans.exists(_.beanName == "warrantyRegistry")
     assertEquals((workshop.use(loaded), workshop.withRunners.use(loaded)), (false, true))
+  }
+
+  test("checks recalls of the whole fleet with IO, waiting for the portal on the blocking executor") {
+    workshop.use {
+      val lines = bean[RecallCheck].openRecalls()
+      assertEquals(
+        (lines.map(_.takeWhile(_ != ':')), lines.forall(_.contains("coilix-blocking-"))),
+        (List("WVWZZZ1KZ6W000001", "TMBJJ7NE8J0000002"), true)
+      )
+    }
+  }
+
+  test("the compute pool of cats-effect is the only compute pool of the workshop") {
+    workshop.use {
+      val thread = Await.result(bean[dev.coilix.concurrency.TaskExecutor].submit(Thread.currentThread.getName), 5.seconds)
+      assertEquals((thread.startsWith("io-compute-"), beans[dev.coilix.concurrency.TaskExecutor].size), (true, 1))
+    }
   }
 
   test("a clock added by the test replaces the default one") {

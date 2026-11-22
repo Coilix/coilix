@@ -13,7 +13,7 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
 
   test("a computation runs on the compute pool") {
     setup.use {
-      assert(Await.result(bean[ThumbnailService].render("cat.png"), 5.seconds).contains("coilix-compute-"))
+      assert(Await.result(bean[ThumbnailService].render("cat.png"), 5.seconds).contains("compute-"))
     }
   }
 

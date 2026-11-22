@@ -12,7 +12,7 @@ const sidebars: SidebarsConfig = {
       type: 'category',
       label: 'Guides',
       collapsed: false,
-      items: ['guides/bean-lifecycle', 'guides/bean-scopes', 'guides/choosing-beans', 'guides/value-types', 'guides/profiles-and-conditions', 'guides/testing', 'guides/generic-types', 'guides/tasks-and-scheduling', 'guides/replicas', 'guides/application-events', 'guides/fatal-errors'],
+      items: ['guides/bean-lifecycle', 'guides/bean-scopes', 'guides/choosing-beans', 'guides/value-types', 'guides/profiles-and-conditions', 'guides/testing', 'guides/generic-types', 'guides/tasks-and-scheduling', 'guides/replicas', 'guides/application-events', 'guides/fatal-errors', 'guides/cats-effect'],
     },
   ],
 };

@@ -17,6 +17,8 @@
 | `org.reflections:reflections` | 0.10.2 | WTFPL **lub** Apache-2.0 (do wyboru) | `context` | tak, korzystamy z Apache-2.0 |
 | `org.javassist:javassist` (przez reflections) | 3.28.0-GA | MPL-1.1 **lub** LGPL-2.1 **lub** Apache-2.0 (do wyboru) | `context` | tak, korzystamy z Apache-2.0 |
 | `com.google.code.findbugs:jsr305` (przez reflections) | 3.0.2 | Apache-2.0 | `context` | tak |
+| `org.typelevel:cats-effect_3`, `cats-effect-kernel_3`, `cats-effect-std_3` | 3.7.1 | Apache-2.0 | `cats-effect` | tak |
+| `org.typelevel:cats-core_3`, `cats-kernel_3` (przez cats-effect) | 2.13.0 | MIT | `cats-effect` | tak |
 
 `sbt dependencyLicenseInfo` pokazuje tylko pierwszą licencję z POM-a (dla javassist MPL 1.1, dla reflections WTFPL). Pełne listy z POM-ów potwierdzają, że obie biblioteki dają też Apache-2.0.
 
