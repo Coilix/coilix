@@ -83,6 +83,7 @@ Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jedny
 - Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (COILIX-00009, `docs/architecture/versioning.md`).
 - Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.
 - Nie kopiuje się kodu, dokumentacji, komunikatów ani testów ze Springa i innych frameworków, także w parafrazie. Nazwy adnotacji i pojęć mogą odpowiadać Springowi, teksty piszemy od nowa.
+- Z prywatnych bibliotek opiekuna (bulldozer i `org.optimus:implicits`) wolno przenosić koncepcje, algorytmy i podział na komponenty, ale nie kod 1:1. Przeniesiony kod dostaje formę Coilix: własne nazwy typów, metod, parametrów i kluczy configu, formatowanie i zasady z tego pliku (klamry, bez `var` i `null`, jeden typ na plik, Scaladoc po angielsku) i styl bezpośredni rdzenia zamiast cats-effect tam, gdzie oryginał używa `IO`. Testy pisze się od nowa, a ADR albo task wskazuje, z czego wzorowano rozwiązanie.
 - Słowa „Spring” nie używa się w nazwach typów, pakietów, modułów, artefaktów, kluczy configu ani tytułów dokumentacji. W opisach tylko opisowo („API modeled on Spring”), bez sugerowania powiązania z Broadcom (`docs/legal/spring-similarity.md`).
 
 ## Dokumentacja
