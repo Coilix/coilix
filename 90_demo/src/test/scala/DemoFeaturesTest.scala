@@ -8,6 +8,7 @@ import dev.coilix.demo.vehicle.Vin
 import dev.coilix.demo.workshop.BayMonitor
 import dev.coilix.demo.workshop.FileJobArchive
 import dev.coilix.demo.workshop.InspectionFinished
+import dev.coilix.demo.workshop.InspectionSheet
 import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
@@ -151,6 +152,18 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       assert(awaitEvents())
       assertEquals(notifier.jobs, List(Some("inspection-WVWZZZ1KZ6W000001")))
     }
+  }
+
+  test("every inspection gets a new inspection sheet") {
+    workshop.use {
+      assert(!(bean[InspectionSheet] eq bean[InspectionSheet]))
+    }
+  }
+
+  test("the warranty registry is loaded only when the front desk needs it") {
+    def loaded(using context: dev.coilix.context.ApplicationContext): Boolean =
+      context.createdBeans.exists(_.beanName == "warrantyRegistry")
+    assertEquals((workshop.use(loaded), workshop.withRunners.use(loaded)), (false, true))
   }
 
   test("a clock added by the test replaces the default one") {

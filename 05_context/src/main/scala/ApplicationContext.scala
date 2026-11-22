@@ -45,4 +45,11 @@ trait ApplicationContext {
 
   /** Names of all beans in creation order, including `applicationContext` and beans registered by the framework. */
   def beanNames: List[String]
+
+  /**
+   * The beans that have an instance now, in registration order: every eager bean and the lazy beans created so far, never
+   * prototypes. Unlike [[dev.coilix.context.ApplicationContext.getBeanByName]], it creates nothing, so a module that looks for
+   * annotated methods of all beans uses it and leaves lazy beans lazy.
+   */
+  def createdBeans: List[RegisteredBean]
 }

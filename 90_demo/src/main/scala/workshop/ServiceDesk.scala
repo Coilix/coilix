@@ -7,6 +7,7 @@ import dev.coilix.annotation.Slf4s
 import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ApplicationRunner
 import dev.coilix.common.edit.EditOption
+import dev.coilix.context.Provider
 import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vehicle
 import dev.coilix.demo.vehicle.VehicleRegistry
@@ -19,23 +20,26 @@ import scala.concurrent.duration.DurationInt
  *
  * It shows `@Qualifier` ([[dev.coilix.demo.workshop.PartsQuote]]), beans told apart by type arguments (`JobLog[Option]` and
  * `JobLog[List]`), `EditOption`, an `@Async` bean ([[dev.coilix.demo.workshop.JobArchive]]) and a bean of an optional module
- * that is injected as `Option`, because the module can be disabled.
+ * that is injected as `Option`, because the module can be disabled. The `@Lazy` [[dev.coilix.demo.workshop.WarrantyRegistry]]
+ * comes through a `Provider`, so it is loaded only here.
  */
 @Component
 @Order(4)
 @Slf4s
 final class ServiceDesk(
-  quote:    PartsQuote,
-  latest:   JobLog[Option],
-  history:  JobLog[List],
-  archive:  JobArchive,
-  fleet:    Option[FleetScan],
-  registry: VehicleRegistry
+  quote:      PartsQuote,
+  latest:     JobLog[Option],
+  history:    JobLog[List],
+  archive:    JobArchive,
+  fleet:      Option[FleetScan],
+  registry:   VehicleRegistry,
+  warranties: Provider[WarrantyRegistry]
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
     log.info(s"Parts quote, ${quote.compare("brake pads")}")
     registry.all.headOption.foreach(showHistory)
+    registry.all.headOption.foreach(vehicle => log.info(s"Warranty: ${warranties.get().coverage(vehicle.vin)}"))
     log.info(s"Job notes: ${updatedNotes}")
     log.info(Await.result(archive.archive("shift report"), 10.seconds))
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))

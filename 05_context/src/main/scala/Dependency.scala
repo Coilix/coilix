@@ -23,6 +23,12 @@ enum Dependency {
   /** An `Option[T]` parameter: the bean of type `T` when there is one, otherwise `None`. */
   case Optional(beanType: GenericType)
 
+  /**
+   * A [[dev.coilix.context.Provider]]`[T]` parameter: a bean of type `T` must exist, but it is looked up only when the provider is
+   * used, so it does not have to be created first.
+   */
+  case Deferred(beanType: GenericType)
+
   /** A collection parameter such as `List[T]`: all beans of type `T`, possibly none. */
   case Collection(beanType: GenericType)
 

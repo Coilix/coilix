@@ -86,7 +86,7 @@ final class DefaultEventBus(
    *   if a listener cannot be called with events
    */
   override def onContextStarted(context: ApplicationContext): Unit = {
-    val found = context.beanNames.flatMap(name => context.getBeanByName(name).toList.flatMap(bean => listenersOf(name, bean)))
+    val found = context.createdBeans.flatMap(bean => listenersOf(bean.beanName, bean.instance))
     registered.set(found.sortBy(_.info.name))
     logListeners(registered.get.map(_.info))
     stateLock.synchronized {

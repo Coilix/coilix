@@ -54,6 +54,7 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
       case Dependency.Required(beanType)    => required(definition, definitions, provided, beanType)
       case Dependency.Named(name, beanType) => named(definition, definitions, provided, name, beanType)
       case Dependency.Optional(beanType)    => optional(definition, definitions, provided, beanType)
+      case Dependency.Deferred(beanType)    => deferred(definition, definitions, provided, beanType)
       case Dependency.Collection(beanType)  => matching(beanType, others(definition, definitions))
       case Dependency.Value(_, _)           => Nil
     }
@@ -89,6 +90,16 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
   ): List[BeanDefinition] =
     if (isProvided(provided)(beanType)) Nil
     else selector.select(beanType, others(definition, definitions)).toList
+
+  private def deferred(
+    definition:  BeanDefinition,
+    definitions: List[BeanDefinition],
+    provided:    List[GenericType],
+    beanType:    GenericType
+  ): List[BeanDefinition] = {
+    val _ = required(definition, definitions, provided, beanType)
+    Nil
+  }
 
   private def matching(beanType: GenericType, definitions: List[BeanDefinition]): List[BeanDefinition] =
     definitions.filter(candidate => beanType.isAssignableFrom(candidate.beanType))

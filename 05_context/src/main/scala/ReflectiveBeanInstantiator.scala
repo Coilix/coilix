@@ -71,6 +71,7 @@ final class ReflectiveBeanInstantiator(
       case Dependency.Required(beanType)           => required(definition, registry, beanType)
       case Dependency.Named(beanName, beanType)    => named(definition, registry, beanName, beanType)
       case Dependency.Optional(beanType)           => registry.find(beanType).map(_.instance)
+      case Dependency.Deferred(beanType)           => RegistryProvider[AnyRef](registry, beanType, definition.beanName)
       case Dependency.Collection(beanType)         => registry.findAll(beanType).map(_.instance)
       case Dependency.Value(expression, valueType) => environment.resolve(expression, valueType)
     }

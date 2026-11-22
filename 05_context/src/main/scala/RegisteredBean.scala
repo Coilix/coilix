@@ -23,7 +23,12 @@ final case class RegisteredBean(
   isPrimary: Boolean,
   instance:  AnyRef,
   lifecycle: LifecycleMethods = LifecycleMethods.none
-) extends BeanDescriptor
+) extends BeanEntry {
+
+  override def resolve(registry: BeanRegistry): RegisteredBean = this
+
+  override def created: Option[RegisteredBean] = Some(this)
+}
 
 /** Factories for [[dev.coilix.context.RegisteredBean]]. */
 object RegisteredBean {

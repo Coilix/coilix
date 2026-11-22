@@ -46,6 +46,7 @@ final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper)
       case Dependency.Required(beanType)   => Some(beanType)
       case Dependency.Named(_, beanType)   => Some(beanType)
       case Dependency.Optional(beanType)   => Some(beanType)
+      case Dependency.Deferred(beanType)   => Some(beanType)
       case Dependency.Collection(beanType) => Some(beanType)
       case Dependency.Value(_, _)          => None
     }
