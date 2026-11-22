@@ -22,6 +22,10 @@ final class PdfReportRenderer extends ReportRenderer {
   @Async
   override def fail(): Future[String] = throw IllegalStateException("cannot render")
 
+  @Async(blocking = true)
+  override def archive(name: String): Future[String] =
+    Future.successful(s"$name archived on ${Thread.currentThread.getName}")
+
   override def callerThread(): String = Thread.currentThread.getName
 
   @PostConstruct

@@ -1,13 +1,15 @@
 package dev.coilix.concurrency
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-
 /**
- * Runs tasks on threads managed by Coilix, so beans do not create their own threads.
+ * Runs computation on the single pool of the application that has about one thread per processor core.
  *
- * The concurrency module registers a `taskExecutor` bean on virtual threads, closed with the context. An application can
- * register its own executor marked `@Primary`, which is then injected wherever a `TaskExecutor` is required:
+ * The concurrency module registers a `taskExecutor` bean on a `ForkJoinPool` with `coilix.concurrency.compute.threads`
+ * platform threads, closed with the context. [[dev.coilix.annotation.Async]] methods and asynchronous event listeners run on
+ * it. A task that waits, for example for a database, holds a thread of this pool and a processor core with it, so such work
+ * goes to the [[dev.coilix.concurrency.BlockingExecutor]] instead.
+ *
+ * The default bean is left out when another bean provides a `TaskExecutor`, so an integration such as the cats-effect module
+ * can make the compute pool of its runtime the only compute pool of the application:
  *
  * ```scala
  * @Service
@@ -16,14 +18,4 @@ import scala.concurrent.Future
  * }
  * ```
  */
-trait TaskExecutor {
-
-  /** Runs `task` on another thread and does not wait for it. A failure of the task is logged. */
-  def execute(task: => Unit): Unit
-
-  /** Runs `task` on another thread and returns its result, or its failure, as a `Future`. */
-  def submit[T](task: => T): Future[T]
-
-  /** The executor as an `ExecutionContext`, for `Future` combinators and libraries that take one. */
-  def executionContext: ExecutionContext
-}
+trait TaskExecutor extends ManagedExecutor

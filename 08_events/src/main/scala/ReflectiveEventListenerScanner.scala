@@ -40,12 +40,13 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
     }
 
   private def fromMethod(beanName: String, bean: AnyRef, method: Method): RegisteredListener = {
-    val label     = s"@EventListener method ${method.getName} of bean '$beanName'"
+    val label      = s"@EventListener method ${method.getName} of bean '$beanName'"
     problemOf(method).foreach(problem => throw InvalidEventListenerException(s"$label $problem"))
-    val eventType = GenericType.of(method.getGenericParameterTypes()(0))
+    val eventType  = GenericType.of(method.getGenericParameterTypes()(0))
     checkEventType(label, eventType)
+    val annotation = method.getAnnotation(classOf[EventListener])
     RegisteredListener(
-      info(beanName, method.getName, eventType, method.getAnnotation(classOf[EventListener]).async),
+      info(beanName, method.getName, eventType, annotation.async, annotation.blocking),
       event                           => invoke(bean, method, event)
     )
   }
@@ -69,7 +70,7 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
     val label     = s"ApplicationEventListener bean '$beanName'"
     val eventType = traitArgument(label, listener)
     val typed     = listener.asInstanceOf[ApplicationEventListener[AnyRef]]
-    RegisteredListener(info(beanName, "onEvent", eventType, listener.async), event => typed.onEvent(event))
+    RegisteredListener(info(beanName, "onEvent", eventType, listener.async, listener.blocking), event => typed.onEvent(event))
   }
 
   private def traitArgument(label: String, listener: ApplicationEventListener[?]): GenericType =
@@ -88,8 +89,8 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
       )
     }
 
-  private def info(beanName: String, method: String, eventType: GenericType, async: Boolean): EventListenerInfo =
-    EventListenerInfo(s"$beanName.$method", eventType, async, settings.listener(beanName, method).retry)
+  private def info(beanName: String, method: String, eventType: GenericType, async: Boolean, blocking: Boolean): EventListenerInfo =
+    EventListenerInfo(s"$beanName.$method", eventType, async, settings.listener(beanName, method).retry, blocking)
 
   private def invoke(bean: AnyRef, method: Method, event: AnyRef): Unit =
     try {

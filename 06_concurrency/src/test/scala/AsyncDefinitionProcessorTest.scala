@@ -22,12 +22,25 @@ final class AsyncDefinitionProcessorTest extends FunSuite {
 
   private val processor = AsyncDefinitionProcessor()
 
-  test("registers a bean with @Async methods under its trait and depends on the executor") {
+  test("registers a bean with @Async methods under its trait and depends on both executors") {
     val definition = processor.process(BeanDefinitionFactory.default.create(classOf[PdfReportRenderer]).head)
     assertEquals(
-      (definition.beanType, definition.dependencies.last),
-      (GenericType.of(classOf[ReportRenderer]), Dependency.Required(GenericType.of(classOf[TaskExecutor])))
+      (definition.beanType, definition.dependencies.takeRight(2)),
+      (
+        GenericType.of(classOf[ReportRenderer]),
+        List(
+          Dependency.Required(GenericType.of(classOf[TaskExecutor])),
+          Dependency.Required(GenericType.of(classOf[BlockingExecutor]))
+        )
+      )
     )
+  }
+
+  test("runs a blocking @Async method on the blocking executor") {
+    withContext { context =>
+      val result = Await.result(context.getBean[ReportRenderer].archive("sales"), 5.seconds)
+      assert(result.startsWith("sales archived on coilix-blocking-"), result)
+    }
   }
 
   test("leaves other definitions as they are") {
@@ -38,7 +51,7 @@ final class AsyncDefinitionProcessorTest extends FunSuite {
   test("runs a method returning a Future on the executor") {
     withContext { context =>
       val result = Await.result(context.getBean[ReportDesk].renderer.render("sales"), 5.seconds)
-      assert(result.startsWith("sales on coilix-task-"), result)
+      assert(result.startsWith("sales on coilix-compute-"), result)
     }
   }
 
@@ -48,7 +61,7 @@ final class AsyncDefinitionProcessorTest extends FunSuite {
       val renderer  = target(context)
       assertEquals(renderer.events.poll(), "started")
       val announced = renderer.events.poll(5, TimeUnit.SECONDS)
-      assert(Option(announced).exists(_.startsWith("announced sales on coilix-task-")), announced)
+      assert(Option(announced).exists(_.startsWith("announced sales on coilix-compute-")), announced)
     }
   }
 

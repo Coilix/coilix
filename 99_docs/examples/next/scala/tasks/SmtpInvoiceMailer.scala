@@ -7,7 +7,7 @@ import scala.concurrent.Future
 
 @Service
 final class SmtpInvoiceMailer extends InvoiceMailer {
-  @Async
+  @Async(blocking = true)
   override def send(invoice: String): Future[String] =
     Future.successful(s"$invoice sent from ${Thread.currentThread.getName}")
 }

@@ -1,6 +1,6 @@
 # 0020: Moduł `concurrency` z wykonawcą na wątkach wirtualnych
 
-- Status: proponowana
+- Status: proponowana, wykonawca domyślny zastąpiony przez ADR 0028
 - Data: 2026-11-19
 - Task: COILIX-00005 (kroki 1 i 3), COILIX-00020 (krok 4)
 

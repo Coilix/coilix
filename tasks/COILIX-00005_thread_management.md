@@ -9,7 +9,7 @@ Framework zarządza wątkami za aplikację, tak jak Spring z `TaskExecutor`, `@A
 - zadania cykliczne deklaruje się adnotacją na metodzie,
 - zamknięcie kontekstu czeka na zakończenie zadań (graceful shutdown).
 
-Projekt działa na JDK 25, więc domyślnym wykonawcą mogą być wątki wirtualne.
+Aktualizacja 2026-11-22 (ADR 0028): domyślny `TaskExecutor` to pula obliczeniowa (`ForkJoinPool`, wątek na rdzeń), a wątki wirtualne są w osobnym `BlockingExecutor` dla kodu, który czeka (`@Async(blocking = true)`, `@EventListener(async = true, blocking = true)`). Domyślne wykonawcy ustępują przez `@ConditionalOnMissingBean` wykonawcom z integracji (cats-effect, Pekko), żeby aplikacja miała zawsze jedną pulę CPU.
 
 ## Stan obecny
 

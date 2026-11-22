@@ -9,7 +9,7 @@ Aplikacja napisana na `IO` używa Coilix bez rezygnacji z efektów i zasobów:
 - bean może powstać jako `IO[A]` albo `Resource[IO, A]`, a zasoby są otwierane w kolejności zależności i zamykane w odwrotnej,
 - metody cyklu życia i runnery mogą zwracać `IO[Unit]`,
 - aplikacja startuje jako `IOApp` (`CoilixIOApp`), a kontekst jest `Resource[IO, ApplicationContext]`,
-- `IORuntime` jest beanem zbudowanym z pul Coilix, więc kod blokujący z `IO` trafia na te same wątki wirtualne co reszta aplikacji,
+- `IORuntime` jest beanem z własną pulą work-stealing cats-effect, która staje się jedyną pulą obliczeniową aplikacji (ADR 0028): `TaskExecutor` Coilix i Pekko działają na `runtime.compute`,
 - zależności typu `Repository[IO]` i `Sync[IO]` są rozpoznawane po pełnym typie,
 - moduły z punktami rozszerzeń (procesory COILIX-00026, HTTP COILIX-00023) dostają silniki i instancje dla `IO`, które działają natywnie w `IO`, bez przekładania na `Future`.
 
@@ -74,16 +74,16 @@ final case class ContextPlan(steps: List[PlanStep]) {
 
 ### 3. Rdzeń: zasoby wykonania
 
-- Pula blokująca na wątkach wirtualnych i scheduler jako beany z cyklem życia, z rozmiarami i nazwami wątków z configu. Jeśli COILIX-00005 będzie gotowy wcześniej, to są jego `TaskExecutor` i `TaskScheduler`. Jeśli nie, ten task dodaje minimalne `ExecutionResources` w rdzeniu, a COILIX-00005 je przejmuje.
+- Zrobione w COILIX-00005 (ADR 0020 i 0028): `TaskExecutor` (pula obliczeniowa), `BlockingExecutor` (wątki wirtualne) i `TaskScheduler`. Domyślne `taskExecutor` i `blockingExecutor` mają `@ConditionalOnMissingBean`, więc moduł `cats-effect` podmienia pulę obliczeniową bez tworzenia drugiej.
 
 ### 4. Moduł `cats-effect` (`coilix-cats-effect`)
 
-- **`IORuntime` jako bean** (`CoilixIORuntimeFactory`, komponent z `given ConfigPath`):
-  - pula obliczeniowa: własna pula work-stealing cats-effect (z rozmiarem z configu), bo zwykła pula jest dla fiberów wyraźnie wolniejsza,
-  - pula blokująca (`IO.blocking`, `IO.interruptible`): wątki wirtualne z zasobów wykonania Coilix,
-  - scheduler: scheduler Coilix,
-  - zamknięcie runtime'u razem z kontekstem, po beanach, które go używają.
-- **Rozszerzenia jako `given` i metody rozszerzające**, w stylu z CLAUDE.md: np. `IO.coilixBlocking(thunk)` jest zbędne, bo `IO.blocking` już trafia na wątki wirtualne. W API modułu `IORuntime` jest dostępny jako `given` tam, gdzie trzeba go przekazać dalej (most do Pekko w COILIX-00029).
+- **`IORuntime` jako bean** (`CoilixIORuntimeFactory`, komponent z `given ConfigPath`), zbudowany domyślnym `IORuntime.builder()` (ADR 0028):
+  - pula obliczeniowa: własna pula work-stealing cats-effect z `coilix.concurrency.compute.threads` wątkami. Obcej puli nie podajemy, bo `IORuntime` traci wtedy timery i odpytywanie I/O w wątkach roboczych, `IO.blocking` w miejscu i kolejki pod fibery (błąd `OptimusRuntime`),
+  - moduł rejestruje `TaskExecutor` na `runtime.compute` (bez zamykania puli, bo należy do runtime'u), więc domyślny `ForkJoinPool` Coilix nie powstaje,
+  - `IO.blocking` i `IO.interruptible` zostają przy mechanizmie cats-effect: blokują w miejscu na wątku `io-compute-blocker-*`, a pula z `setBlocking` jest wtedy pomijana (eksperyment w ADR 0028),
+  - zamknięcie runtime'u razem z kontekstem, po beanach, które go używają; zamknięcie, którego nie zlecił kontekst (cats-effect zamyka runtime po błędzie fatalnym i woła hook z `addShutdownHook`), trafia do `FatalErrorHandler` (ADR 0027).
+- **Rozszerzenia jako `given` i metody rozszerzające**, w stylu z CLAUDE.md: `IO.onBlockingExecutor(thunk)` = `IO.blocking(thunk).evalOn(blockingExecutor.executionContext)` dla masowego czekania (tysiące równoczesnych wywołań), które na wątkach wirtualnych kosztuje mniej niż wątki `io-compute-blocker`. W API modułu `IORuntime` jest dostępny jako `given` tam, gdzie trzeba go przekazać dalej (most do Pekko w COILIX-00029).
 - **Beany w efekcie**:
 
   ```scala
@@ -146,7 +146,7 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 3. `Resource[IO, A]` z metody `@Bean` jest otwierany przed beanami zależnymi i zamykany po nich. Test sprawdza kolejność otwarć i zamknięć trzech zasobów z zależnościami.
 4. `@PreDestroy` zwracające `IO[Unit]` wykonuje się przy zamykaniu, a błąd jednego finalizatora nie zatrzymuje pozostałych i jest zalogowany.
 5. `CoilixIOApp` startuje aplikację z runnerem `IO`, a anulowanie (SIGTERM w teście przez anulowanie fibera) zamyka zasoby w odwrotnej kolejności.
-6. `IO.blocking` w beanie wykonuje się na wątku wirtualnym Coilix (test sprawdza nazwę i `Thread.isVirtual`).
+6. Z modułem `cats-effect` aplikacja ma jedną pulę obliczeniową: `TaskExecutor` wykonuje zadania na wątkach `io-compute-*`, a wątków `coilix-compute-*` nie ma. `IO.onBlockingExecutor` wykonuje się na wątku wirtualnym Coilix (test sprawdza nazwę i `Thread.isVirtual`).
 7. Synchroniczny `Coilix.run` bez modułu `cats-effect` i z beanem `Resource[IO, A]` kończy się błędem startu z podpowiedzią.
 8. Test w `testkit-cats-effect` z `coilixTest(name) { bean[Repo[IO]].find(id).map(assertEquals(_, None)) }` przechodzi.
 9. Rdzeń nie zależy od cats-effect, co sprawdza `checkModuleLayers`.
@@ -162,4 +162,4 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 1. Pełne typy w `BeanDefinition` i `RegisteredBean` zmieniają publiczne API rdzenia. Trzeba to zrobić przed `core-v0.1.0` albo w następnej linii `0.x` z wpisem **BREAKING**. Dotyczy też `TestBean` z testkitu (COILIX-00013).
 2. Wariancja: `Repo[+A]` i podobne. Na początek równość argumentów, a wariancja tylko tam, gdzie da się ją odczytać z sygnatury Scali (TASTy), co może wymagać czytania TASTy zamiast samej refleksji Javy.
 3. Dwa tryby startu (`CoilixIOApp` i `Coilix.run` z `IORuntime` z beana) to dwie ścieżki do utrzymania. Alternatywa: tylko `CoilixIOApp` dla aplikacji z beanami efektowymi.
-4. Pula obliczeniowa cats-effect zostaje poza kontrolą Coilix (tylko rozmiar z configu). Wspólne są pula blokująca i scheduler.
+4. Pula obliczeniowa cats-effect zostaje poza kontrolą Coilix (tylko rozmiar z configu), ale jest jedyną pulą CPU aplikacji. Do zmierzenia w benchmarkach (COILIX-00017): opóźnienia `IO` przy ciężkim obciążeniu z Pekko na tej samej puli (w eksperymencie z ADR 0028 bez zagłodzenia).

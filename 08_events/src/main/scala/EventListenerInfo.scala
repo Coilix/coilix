@@ -11,8 +11,16 @@ import dev.coilix.concurrency.RetryPolicy
  * @param eventType
  *   the type of the events the listener receives, together with their subtypes
  * @param async
- *   whether the listener runs on the task executor
+ *   whether the listener runs on an executor instead of the thread of the publisher
  * @param retry
  *   how an asynchronous listener retries a failed delivery
+ * @param blocking
+ *   whether an asynchronous listener runs on the blocking executor instead of the task executor
  */
-final case class EventListenerInfo(name: String, eventType: GenericType, async: Boolean, retry: RetryPolicy)
+final case class EventListenerInfo(
+  name:      String,
+  eventType: GenericType,
+  async:     Boolean,
+  retry:     RetryPolicy,
+  blocking:  Boolean = false
+)

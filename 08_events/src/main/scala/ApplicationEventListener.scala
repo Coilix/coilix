@@ -26,4 +26,7 @@ trait ApplicationEventListener[E] {
 
   /** Whether the listener runs on the task executor instead of the thread of the publisher, `false` by default. */
   def async: Boolean = false
+
+  /** Whether an asynchronous listener blocks and runs on the blocking executor, `false` by default. */
+  def blocking: Boolean = false
 }

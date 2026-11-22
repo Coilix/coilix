@@ -54,7 +54,7 @@ Ustaw `async = true`, gdy publikujący nie powinien czekać, na przykład na wys
 
 <CodeBlock language="scala" title="ConfirmationMailer.scala">{ConfirmationMailer}</CodeBlock>
 
-Odbiorca asynchroniczny działa później na wątku `TaskExecutor`, opisanym w przewodniku [Zadania w tle i harmonogram](tasks-and-scheduling.mdx). Odbiorcy asynchroniczni startują dopiero wtedy, gdy wszyscy odbiorcy synchroniczni zakończyli się powodzeniem. Ich wyjątki nie trafiają do publikującego, Coilix zapisuje je w logu jako błędy. Dostarczenia asynchroniczne nie mają określonej kolejności, nawet dla jednego odbiorcy. Gdy kolejność jest ważna, użyj odbiorcy synchronicznego.
+Odbiorca asynchroniczny działa później na wątku `TaskExecutor`, czyli puli obliczeniowej opisanej w przewodniku [Zadania w tle i harmonogram](tasks-and-scheduling.mdx). Odbiorca, który czeka, jak powyższy mailer na serwer pocztowy, ustawia też `blocking = true` i działa na `BlockingExecutor`, więc podczas czekania nie zajmuje wątku obliczeniowego. Bean implementujący `ApplicationEventListener` nadpisuje zamiast tego `async` i `blocking`. Odbiorcy asynchroniczni startują dopiero wtedy, gdy wszyscy odbiorcy synchroniczni zakończyli się powodzeniem. Ich wyjątki nie trafiają do publikującego, Coilix zapisuje je w logu jako błędy. Dostarczenia asynchroniczne nie mają określonej kolejności, nawet dla jednego odbiorcy. Gdy kolejność jest ważna, użyj odbiorcy synchronicznego.
 
 ## Ponowienia odbiorcy asynchronicznego
 
