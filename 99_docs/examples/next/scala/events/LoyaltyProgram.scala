@@ -1,0 +1,18 @@
+package com.example
+package events
+
+import dev.coilix.annotation.Component
+import dev.coilix.events.ApplicationEventListener
+import java.util.concurrent.atomic.AtomicReference
+
+@Component
+final class LoyaltyProgram extends ApplicationEventListener[OrderPlaced] {
+  private val points = AtomicReference(Map.empty[String, Int])
+
+  def pointsOf(customer: String): Int = points.get.getOrElse(customer, 0)
+
+  override def onEvent(event: OrderPlaced): Unit = {
+    val earned = event.total.toInt / 10
+    val _      = points.updateAndGet(all => all.updated(event.customer, all.getOrElse(event.customer, 0) + earned))
+  }
+}

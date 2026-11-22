@@ -1,0 +1,81 @@
+---
+id: application-events
+title: Application events
+description: Let beans react to what other beans do with EventPublisher and @EventListener, synchronously or on the task executor.
+sidebar_position: 8
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import OrderPlaced from '!!raw-loader!@examples/scala/events/OrderPlaced.scala';
+import Checkout from '!!raw-loader!@examples/scala/events/Checkout.scala';
+import ExpressCheckout from '!!raw-loader!@examples/scala/events/ExpressCheckout.scala';
+import SalesStatistics from '!!raw-loader!@examples/scala/events/SalesStatistics.scala';
+import LoyaltyProgram from '!!raw-loader!@examples/scala/events/LoyaltyProgram.scala';
+import ConfirmationMailer from '!!raw-loader!@examples/scala/events/ConfirmationMailer.scala';
+import EventsTest from '!!raw-loader!@examples/test/events/EventsTest.scala';
+import EventsYaml from '!!raw-loader!@examples/resources/guides/events/application.yaml';
+
+This page shows how one bean tells others that something happened without depending on them. The checkout publishes that an order was placed, and the statistics, the loyalty program and the mailer react to it. The checkout does not know any of them, so adding another reaction does not change it.
+
+Events live only in the memory of the running application. An event that is still waiting for an asynchronous listener is lost when the process crashes, it is not delivered again after a restart, and it does not reach other replicas. When work must happen for sure, even after a failure, use durable processing instead of events.
+
+## Publish an event
+
+An event is any value, usually a case class. Inject `EventPublisher` and pass it the event:
+
+<CodeBlock language="scala" title="OrderPlaced.scala">{OrderPlaced}</CodeBlock>
+
+<CodeBlock language="scala" title="Checkout.scala">{Checkout}</CodeBlock>
+
+A bean that keeps the publisher as a `using` parameter calls `Events.publish` instead:
+
+<CodeBlock language="scala" title="ExpressCheckout.scala">{ExpressCheckout}</CodeBlock>
+
+## Listen for events
+
+Annotate a method that takes the event as its only parameter with `@EventListener`. The method may be private and must return `Unit`:
+
+<CodeBlock language="scala" title="SalesStatistics.scala">{SalesStatistics}</CodeBlock>
+
+A bean can also extend `ApplicationEventListener` with the event type. The type argument must be written in the class, so a lambda does not work here:
+
+<CodeBlock language="scala" title="LoyaltyProgram.scala">{LoyaltyProgram}</CodeBlock>
+
+A listener receives events of its type and of every subtype, so a listener of a sealed trait receives each of its cases. Type arguments count too: a listener of `Changed[Customer]` does not receive `Changed[Product]`.
+
+Coilix finds the listeners when every bean of the application exists. An event published earlier, for example in a constructor, waits and is delivered right after the start. A listener method that takes more or fewer than one parameter, returns a value, or has the same name as another listener method of its bean stops the startup with `InvalidEventListenerException`.
+
+## Synchronous and asynchronous listeners
+
+By default a listener runs in the thread of the publisher, before `publish` returns. When the checkout gets control back, the statistics and the points are already updated. If a listener throws an exception, the other synchronous listeners still run, and `publish` then throws the first exception with the others attached as suppressed.
+
+Set `async = true` when the publisher should not wait, for example for a mail:
+
+<CodeBlock language="scala" title="ConfirmationMailer.scala">{ConfirmationMailer}</CodeBlock>
+
+An asynchronous listener runs later on a thread of the `TaskExecutor`, described in [Background tasks and scheduling](tasks-and-scheduling.mdx). Asynchronous listeners start only after every synchronous listener has succeeded. Their exceptions do not reach the publisher; Coilix logs them as errors. Asynchronous deliveries run in no particular order, even for one listener. When order matters, use a synchronous listener.
+
+## Retry an asynchronous listener
+
+An asynchronous listener is tried once by default. Give it a retry policy under `coilix.events.listeners.<bean>.<method>.retry`, with the keys of `RetryPolicy` described in [Retry failed work](tasks-and-scheduling.mdx#retry-failed-work). Keys that are not set keep their defaults:
+
+<CodeBlock language="yaml" title="application.yaml">{EventsYaml}</CodeBlock>
+
+A listener that implements `ApplicationEventListener` uses `onEvent` as its method name. After the last try the event is logged and dropped for that listener. Synchronous listeners do not retry; Coilix warns at startup when one of them has a retry policy.
+
+## What happens when the application stops
+
+`@Scheduled` methods and other sources of new work stop first. Then, in the `Events` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context), the event bus:
+
+1. refuses events published from outside listeners with `EventBusClosedException`, so no code counts on a delivery that would not happen,
+2. cancels retries that are still waiting,
+3. waits for the running asynchronous listeners, including the ones that receive events published by other listeners in the meantime,
+4. after `coilix.events.shutdown-timeout` (10 seconds by default) interrupts the listeners that still run and logs how many deliveries of each listener were abandoned.
+
+Only then are the beans destroyed, so a listener never uses a closed bean. In Kubernetes, keep `terminationGracePeriodSeconds` longer than the shutdown timeouts of the events and of the executor together.
+
+## Test code that uses events
+
+The event bus works in tests as in the application. A test waits for asynchronous listeners with `awaitIdle` of the `EventBus` bean:
+
+<CodeBlock language="scala" title="EventsTest.scala">{EventsTest}</CodeBlock>

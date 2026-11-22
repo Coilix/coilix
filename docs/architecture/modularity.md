@@ -8,7 +8,7 @@ Użytkownik dodaje tylko te moduły, których potrzebuje. Aplikacja konsolowa u�
 
 | Warstwa | Moduły | Wymagane | Może zależeć od |
 |---|---|---|---|
-| rdzeń | `common`, `annotations`, `config`, `context`, `concurrency`, `cluster` | tak | tylko rdzenia |
+| rdzeń | `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events` | tak | tylko rdzenia |
 | start | `boot` | nie (kontekst można zbudować ręcznie) | rdzenia |
 | testy | `testkit` | nie (tylko w zależnościach testowych) | rdzenia i `boot` |
 | funkcje | `data`, `web`, `security` | nie | rdzenia, nigdy od `boot` ani od innej funkcji |
@@ -37,7 +37,7 @@ annotations ↗        ↖ data
 slf4s-plugin (plugin kompilatora dla modułów z @Slf4s)
 ```
 
-- `boot` zależy tylko od `context` i `concurrency` (moduł rdzenia, który podłącza się przez `CoilixModule` jak moduł funkcji, ADR 0020), a `data`, `web` i `security` tylko od `context` (COILIX-00010). Pilnuje tego `checkModuleLayers` w buildzie.
+- `boot` zależy tylko od `context`, `concurrency` i `events` (moduły rdzenia, które podłączają się przez `CoilixModule` jak moduły funkcji, ADR 0020 i 0025), a `data`, `web` i `security` tylko od `context` (COILIX-00010). Pilnuje tego `checkModuleLayers` w buildzie.
 - Numery katalogów idą zakresami (ADR 0018): biblioteki rdzenia `01`–`14`, `15_boot`, `16_testkit`, funkcje i integracje od `20`, niepublikowane aplikacje `90`–`98` i `99_docs`. Nowy moduł nie wymaga przenumerowania istniejących. `security-web` dostanie kolejny wolny numer od `20` razem z pierwszym kodem, który go potrzebuje.
 - `data`, `web` i `security` są jeszcze puste.
 - `config` zawiera trzy formaty (HOCON, properties, YAML). YAML ciągnie `snakeyaml-engine` do rdzenia. Opcjonalnie: wydzielić `config-yaml` jako moduł funkcji. Niski priorytet, bo biblioteka jest mała.

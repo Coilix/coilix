@@ -1,0 +1,9 @@
+coilix:
+  events:
+    shutdown-timeout: 20s
+    listeners:
+      confirmationMailer:
+        onOrderPlaced:
+          retry:
+            max-attempts: 3
+            initial-delay: 500ms
