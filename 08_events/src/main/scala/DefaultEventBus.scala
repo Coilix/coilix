@@ -3,7 +3,9 @@ package dev.coilix.events
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.GenericType
 import dev.coilix.common.TypeInfo
+import dev.coilix.concurrency.BlockingExecutor
 import dev.coilix.concurrency.FatalErrors
+import dev.coilix.concurrency.ManagedExecutor
 import dev.coilix.concurrency.RetryPolicy
 import dev.coilix.concurrency.ScheduledTask
 import dev.coilix.concurrency.TaskExecutor
@@ -23,7 +25,8 @@ import scala.util.control.NonFatal
  * The [[dev.coilix.events.EventBus]] registered by the events module as the `eventBus` bean, which keeps events only in memory.
  *
  * Synchronous listeners run one after another in the thread of the publisher. Each asynchronous delivery is a separate task on
- * the [[dev.coilix.concurrency.TaskExecutor]], and a retry waits on the [[dev.coilix.concurrency.TaskScheduler]]. Events published
+ * the [[dev.coilix.concurrency.TaskExecutor]], or on the [[dev.coilix.concurrency.BlockingExecutor]] for a listener with
+ * `blocking = true`, and a retry waits on the [[dev.coilix.concurrency.TaskScheduler]]. Events published
  * before the context has started wait and are delivered when the listeners are found. When the context closes, waiting retries
  * are cancelled, and the bus waits for the running deliveries up to `shutdownTimeout`, then interrupts them and logs at `ERROR`
  * level how many deliveries of each listener were abandoned. A fatal error of an asynchronous listener ends its delivery without
@@ -32,14 +35,20 @@ import scala.util.control.NonFatal
  *
  * @param executor
  *   runs the asynchronous deliveries
+ * @param blockingExecutor
+ *   runs the asynchronous deliveries of listeners that block
  * @param scheduler
  *   waits before retries
  * @param settings
  *   the closing timeout and the retry policies of listeners
  */
 @Slf4s
-final class DefaultEventBus(executor: TaskExecutor, scheduler: TaskScheduler, settings: EventsSettings)
-    extends EventBus
+final class DefaultEventBus(
+  executor:         TaskExecutor,
+  blockingExecutor: BlockingExecutor,
+  scheduler:        TaskScheduler,
+  settings:         EventsSettings
+) extends EventBus
     with ContextLifecycleListener {
 
   private val scanner        = ReflectiveEventListenerScanner(settings)
@@ -175,12 +184,15 @@ final class DefaultEventBus(executor: TaskExecutor, scheduler: TaskScheduler, se
 
   private def submit(listener: RegisteredListener, event: AnyRef, attempt: Int): Unit =
     try {
-      executor.execute(runAsync(listener, event, attempt))
+      executorOf(listener).execute(runAsync(listener, event, attempt))
     } catch {
       case NonFatal(failure) =>
         log.error(s"Event listener ${listener.info.name} could not be started", failure)
         decrement(listener.info.name)
     }
+
+  private def executorOf(listener: RegisteredListener): ManagedExecutor =
+    if (listener.info.blocking) blockingExecutor else executor
 
   private def runAsync(listener: RegisteredListener, event: AnyRef, attempt: Int): Unit = {
     val thread = Thread.currentThread
@@ -287,12 +299,18 @@ final class DefaultEventBus(executor: TaskExecutor, scheduler: TaskScheduler, se
   private def logListeners(found: List[EventListenerInfo]): Unit = {
     log.info(s"Found ${found.size} event listener(s)")
     found.foreach { info =>
-      log.debug(s"Event listener ${info.name} receives ${info.eventType}${if (info.async) " asynchronously" else ""}")
+      log.debug(s"Event listener ${info.name} receives ${info.eventType}${mode(info)}")
       if (!info.async && info.retry != RetryPolicy.none) {
         log.warn(s"Event listener ${info.name} has a retry policy, but only asynchronous listeners retry")
       }
+      if (!info.async && info.blocking) {
+        log.warn(s"Event listener ${info.name} is marked blocking, but runs in the thread of the publisher because it is not async")
+      }
     }
   }
+
+  private def mode(info: EventListenerInfo): String =
+    if (!info.async) "" else if (info.blocking) " asynchronously on the blocking executor" else " asynchronously"
 
   private def deliverEarly(early: EarlyEvent): Unit =
     deliver(

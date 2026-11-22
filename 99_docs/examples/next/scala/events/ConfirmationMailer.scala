@@ -11,7 +11,7 @@ final class ConfirmationMailer {
 
   def sentMails: List[String] = sent.get
 
-  @EventListener(async = true)
+  @EventListener(async = true, blocking = true)
   def onOrderPlaced(event: OrderPlaced): Unit = {
     val _ = sent.updateAndGet(_ :+ s"Order ${event.orderId} confirmed for ${event.customer}")
   }

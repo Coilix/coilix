@@ -54,7 +54,7 @@ Set `async = true` when the publisher should not wait, for example for a mail:
 
 <CodeBlock language="scala" title="ConfirmationMailer.scala">{ConfirmationMailer}</CodeBlock>
 
-An asynchronous listener runs later on a thread of the `TaskExecutor`, described in [Background tasks and scheduling](tasks-and-scheduling.mdx). Asynchronous listeners start only after every synchronous listener has succeeded. Their exceptions do not reach the publisher; Coilix logs them as errors. Asynchronous deliveries run in no particular order, even for one listener. When order matters, use a synchronous listener.
+An asynchronous listener runs later on a thread of the `TaskExecutor`, the compute pool described in [Background tasks and scheduling](tasks-and-scheduling.mdx). A listener that waits, like the mailer above for the mail server, also sets `blocking = true` and runs on the `BlockingExecutor`, so it does not hold a compute thread while it waits. A bean that implements `ApplicationEventListener` overrides `async` and `blocking` instead. Asynchronous listeners start only after every synchronous listener has succeeded. Their exceptions do not reach the publisher; Coilix logs them as errors. Asynchronous deliveries run in no particular order, even for one listener. When order matters, use a synchronous listener.
 
 ## Retry an asynchronous listener
 

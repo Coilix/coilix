@@ -8,7 +8,7 @@ import dev.coilix.config.Environment
  *
  * The first pass leaves out definitions with a condition that does not hold. The second pass leaves out definitions marked
  * [[dev.coilix.annotation.ConditionalOnMissingBean]] when a definition kept in the first pass without that mark, or an
- * existing bean, has the same type or a subtype. Each left-out definition is logged at `DEBUG` level with the reason. This is
+ * existing bean, has the same type or a subtype, or a subtype of one of the types named in the annotation. Each left-out definition is logged at `DEBUG` level with the reason. This is
  * the default [[dev.coilix.context.DefinitionFilter]], selected when `coilix.context.definition-filter` is not set.
  *
  * @param environment
@@ -30,10 +30,13 @@ final class ConditionalDefinitionFilter(environment: Environment) extends Defini
     }
 
   private def isMissing(definition: BeanDefinition, providers: List[Class[?]]): Boolean =
-    providers.find(definition.beanClass.isAssignableFrom) match {
+    providers.find(provider => missingTypesOf(definition).exists(_.isAssignableFrom(provider))) match {
       case Some(provider) => leftOut(definition, s"bean of type ${provider.getName} already exists")
       case None           => true
     }
+
+  private def missingTypesOf(definition: BeanDefinition): List[Class[?]] =
+    if (definition.conditions.missingTypes.isEmpty) List(definition.beanClass) else definition.conditions.missingTypes
 
   private def leftOut(definition: BeanDefinition, reason: String): Boolean = {
     log.debug(s"Leaving out bean ${definition.beanName} because $reason")

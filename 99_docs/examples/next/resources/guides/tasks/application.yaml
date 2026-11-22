@@ -1,9 +1,9 @@
 coilix:
   concurrency:
-    executor:
-      thread-name-prefix: report-
-      virtual-threads: false
-      pool-size: 4
+    compute:
+      threads: 4
+    blocking:
+      max-concurrency: 20
       shutdown-timeout: 1m
     scheduler:
       pool-size: 2

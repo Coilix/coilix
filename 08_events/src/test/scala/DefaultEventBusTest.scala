@@ -11,6 +11,7 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.events.listeners.ArchivingListener
 import dev.coilix.events.listeners.AsyncJournal
 import dev.coilix.events.listeners.CancellingListener
 import dev.coilix.events.listeners.ClosingWatcher
@@ -83,7 +84,16 @@ final class DefaultEventBusTest extends FunSuite {
       mailer.release.countDown()
       assert(bus.awaitIdle(5.seconds))
       assertEquals(mailer.sent.recorded, List((1, true)))
-      assert(mailer.threads.recorded.forall(_.startsWith("coilix-task-")))
+      assert(mailer.threads.recorded.forall(_.startsWith("coilix-compute-")))
+    }
+  }
+
+  test("runs an asynchronous listener marked blocking on the blocking executor") {
+    withContext(classOf[ArchivingListener]) { context =>
+      context.getBean[EventBus].publish(OrderEvent.Placed(1))
+      val listener = context.getBean[ArchivingListener]
+      assert(listener.archived.await(5, TimeUnit.SECONDS))
+      assert(listener.threads.recorded.forall(_.startsWith("coilix-blocking-")), listener.threads.recorded)
     }
   }
 

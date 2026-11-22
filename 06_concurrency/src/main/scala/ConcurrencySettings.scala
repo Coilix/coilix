@@ -5,13 +5,16 @@ import dev.coilix.config.Environment
 /**
  * Settings of the concurrency module, read from `coilix.concurrency`. Every key is optional.
  *
- * @param executor
- *   settings of the `taskExecutor` bean
+ * @param compute
+ *   settings of the compute pool behind the `taskExecutor` bean
+ * @param blocking
+ *   settings of the `blockingExecutor` bean
  * @param scheduler
  *   settings of the `taskScheduler` bean
  */
 final case class ConcurrencySettings(
-  executor:  ExecutorSettings  = ExecutorSettings(),
+  compute:   ComputeSettings   = ComputeSettings(),
+  blocking:  BlockingSettings  = BlockingSettings(),
   scheduler: SchedulerSettings = SchedulerSettings()
 )
 

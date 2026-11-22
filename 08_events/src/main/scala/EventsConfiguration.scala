@@ -2,6 +2,7 @@ package dev.coilix.events
 
 import dev.coilix.annotation.Bean
 import dev.coilix.annotation.Configuration
+import dev.coilix.concurrency.BlockingExecutor
 import dev.coilix.concurrency.TaskExecutor
 import dev.coilix.concurrency.TaskScheduler
 import dev.coilix.config.Environment
@@ -21,8 +22,13 @@ final class EventsConfiguration {
 
   /** The in-memory event bus, injected as [[dev.coilix.events.EventPublisher]] or [[dev.coilix.events.EventBus]]. */
   @Bean
-  def eventBus(executor: TaskExecutor, scheduler: TaskScheduler, settings: EventsSettings): DefaultEventBus =
-    DefaultEventBus(executor, scheduler, settings)
+  def eventBus(
+    executor:         TaskExecutor,
+    blockingExecutor: BlockingExecutor,
+    scheduler:        TaskScheduler,
+    settings:         EventsSettings
+  ): DefaultEventBus =
+    DefaultEventBus(executor, blockingExecutor, scheduler, settings)
 
   /** Publishes [[dev.coilix.events.ContextClosing]] when the context starts closing. */
   @Bean

@@ -1,12 +1,13 @@
 ---
 id: tasks-and-scheduling
 title: Background tasks and scheduling
-description: Run work on threads managed by Coilix with TaskExecutor, and repeat it with @Scheduled or TaskScheduler.
+description: Run computation on TaskExecutor and blocking calls on BlockingExecutor, and repeat work with @Scheduled or TaskScheduler.
 sidebar_position: 6
 ---
 
 import CodeBlock from '@theme/CodeBlock';
 import ThumbnailService from '!!raw-loader!@examples/scala/tasks/ThumbnailService.scala';
+import InvoiceArchive from '!!raw-loader!@examples/scala/tasks/InvoiceArchive.scala';
 import InvoiceMailer from '!!raw-loader!@examples/scala/tasks/InvoiceMailer.scala';
 import SmtpInvoiceMailer from '!!raw-loader!@examples/scala/tasks/SmtpInvoiceMailer.scala';
 import StockRefresher from '!!raw-loader!@examples/scala/tasks/StockRefresher.scala';
@@ -17,21 +18,30 @@ import TasksYaml from '!!raw-loader!@examples/resources/guides/tasks/application
 
 This page shows how a bean runs work in the background or on a schedule without creating its own threads. Coilix owns the threads, so it stops them when the application stops. Use these beans whenever a bean would otherwise call `Executors.newFixedThreadPool` or start a `Thread`.
 
+## Two executors: computation and waiting
+
+Every application has two executors, because work that computes and work that waits need different threads:
+
+- `TaskExecutor` is the compute pool: a fork-join pool with one platform thread per processor, named `coilix-compute-<number>`. Computation, `@Async` methods and asynchronous event listeners run here. A task handed over from one of its threads usually stays on the same thread, which keeps the processor cache warm.
+- `BlockingExecutor` is for calls that wait, such as JDBC queries, HTTP requests and file access. Each task gets a new virtual thread named `coilix-blocking-<number>`, which costs almost nothing while it waits. On JDK 17, which has no virtual threads, it uses a pool of up to 64 platform threads.
+
+Keep them apart. A blocking call on the compute pool holds one of its few threads, and with it a processor core, while it waits. Computation on the blocking executor does not help either: virtual threads share carrier threads, one per core, and a task that computes holds its carrier.
+
 ## Run a task in the background
 
-Every application has a `TaskExecutor` bean. Inject it and pass it the work: `submit` returns the result as a `Future`, and `execute` starts the work without waiting for it.
+Inject the executor that fits the work and pass it the work: `submit` returns the result as a `Future`, and `execute` starts the work without waiting for it.
 
 <CodeBlock language="scala" title="ThumbnailService.scala">{ThumbnailService}</CodeBlock>
 
-By default each task runs on a new virtual thread named `coilix-task-<number>`. Virtual threads are cheap, so a task can block on a database call or an HTTP request without holding up other tasks. On JDK 17, which has no virtual threads, each task gets a new platform thread instead.
+<CodeBlock language="scala" title="InvoiceArchive.scala">{InvoiceArchive}</CodeBlock>
 
-If a task started with `execute` throws an exception, Coilix logs it as an error. A task started with `submit` returns the exception in its `Future`.
+If a task started with `execute` throws an exception, Coilix logs it as an error. A task started with `submit` returns the exception in its `Future`. A fatal error, such as `OutOfMemoryError`, is handled as described in [Fatal errors](fatal-errors.mdx).
 
-The executor can also be passed where a library expects an `ExecutionContext`, through `executor.executionContext`.
+Both executors can also be passed where a library expects an `ExecutionContext`, through `executionContext`.
 
 ## Run a method asynchronously with @Async
 
-Annotate a method with `@Async` to run it on the executor whenever another bean calls it. The method must be declared in a trait of the bean:
+Annotate a method with `@Async` to run it on the compute pool whenever another bean calls it, or with `@Async(blocking = true)` to run it on the blocking executor. Sending a mail waits for the mail server, so the mailer below blocks. The method must be declared in a trait of the bean:
 
 <CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
 
@@ -69,11 +79,13 @@ The policy keeps no state, so one instance can serve every call. `RetryPolicy.de
 
 ## Configure the threads
 
-All keys under `coilix.concurrency` are optional. This configuration runs tasks on four platform threads named `report-<number>` and gives the scheduler two threads:
+All keys under `coilix.concurrency` are optional. This configuration gives the compute pool four threads, lets at most 20 blocking calls run at once, for example to match a connection pool of 20, and gives the scheduler two threads:
 
 <CodeBlock language="yaml" title="application.yaml">{TasksYaml}</CodeBlock>
 
-Without configuration, the executor uses virtual threads named `coilix-task-<number>` and waits 30 seconds for running tasks when the application stops. With `virtual-threads: false` it uses a fixed pool of `pool-size` platform threads, by default one for each processor, for example for CPU-heavy work. The scheduler has one thread named `coilix-scheduler-<number>` and waits 10 seconds by default.
+Without configuration, the compute pool has `compute.threads` equal to the number of processors available to the JVM, which in a container is its CPU limit. The blocking executor has no limit, uses virtual threads, and with `blocking.virtual-threads: false` uses up to `blocking.platform-threads` platform threads (64 by default). Both wait 30 seconds for running tasks when the application stops. The scheduler has one thread named `coilix-scheduler-<number>` and waits 10 seconds by default. A scheduled method runs on that thread, so a method that computes or waits for long hands the work over to one of the executors.
+
+Keep about one compute thread per processor. More threads that compute at the same time than processors only make the system switch between them.
 
 ## What happens when the application stops
 
@@ -81,7 +93,7 @@ Without configuration, the executor uses virtual threads named `coilix-task-<num
 
 ## Use your own executor
 
-To run tasks your own way, declare a `TaskExecutor` bean and mark it `@Primary`. Beans that require a `TaskExecutor` then receive yours.
+To run tasks your own way, declare a `TaskExecutor` or `BlockingExecutor` bean. The default of that type is then left out and its threads are never created, so beans that require the executor receive yours.
 
 ## Test code that uses tasks
 

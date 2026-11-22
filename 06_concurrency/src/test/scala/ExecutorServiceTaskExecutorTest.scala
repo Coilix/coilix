@@ -9,7 +9,7 @@ import scala.concurrent.duration.DurationInt
 
 final class ExecutorServiceTaskExecutorTest extends FunSuite {
   private val executor = FunFixture[ExecutorServiceTaskExecutor](
-    _ => ExecutorServiceTaskExecutor(ExecutorSettings(threadNamePrefix = "test-task-", shutdownTimeout = 5.seconds)),
+    _ => ExecutorServiceTaskExecutor(ComputeSettings(threads = 2, threadNamePrefix = "test-task-", shutdownTimeout = 5.seconds)),
     _.close()
   )
 
@@ -18,9 +18,12 @@ final class ExecutorServiceTaskExecutorTest extends FunSuite {
     assertEquals((result._1.startsWith("test-task-"), result._2), (true, 42))
   }
 
-  executor.test("runs tasks on virtual threads when the JDK has them") { executor =>
-    val virtual = Await.result(executor.submit(ThreadFactories.isVirtual(Thread.currentThread)), 5.seconds)
-    assertEquals(virtual, ThreadFactories.virtualThreadsAvailable)
+  executor.test("computes on platform threads of a fork-join pool") { executor =>
+    val thread = Await.result(executor.submit(Thread.currentThread), 5.seconds)
+    assertEquals(
+      (ThreadFactories.isVirtual(thread), thread.isInstanceOf[java.util.concurrent.ForkJoinWorkerThread], thread.isDaemon),
+      (false, true, true)
+    )
   }
 
   executor.test("executes a task without waiting for it") { executor =>
@@ -42,7 +45,7 @@ final class ExecutorServiceTaskExecutorTest extends FunSuite {
   }
 
   test("closing waits for started tasks") {
-    val executor = ExecutorServiceTaskExecutor(ExecutorSettings(shutdownTimeout = 5.seconds))
+    val executor = ExecutorServiceTaskExecutor(ComputeSettings(shutdownTimeout = 5.seconds))
     val started  = CountDownLatch(1)
     val finished = AtomicBoolean(false)
     executor.execute { started.countDown(); Thread.sleep(100); finished.set(true) }
@@ -52,7 +55,7 @@ final class ExecutorServiceTaskExecutorTest extends FunSuite {
   }
 
   test("closing interrupts tasks that do not finish in time") {
-    val executor    = ExecutorServiceTaskExecutor(ExecutorSettings(shutdownTimeout = 50.millis))
+    val executor    = ExecutorServiceTaskExecutor(ComputeSettings(shutdownTimeout = 50.millis))
     val started     = CountDownLatch(1)
     val interrupted = CountDownLatch(1)
     executor.execute {
@@ -69,17 +72,17 @@ final class ExecutorServiceTaskExecutorTest extends FunSuite {
   }
 
   test("closing twice does nothing") {
-    val executor = ExecutorServiceTaskExecutor(ExecutorSettings())
+    val executor = ExecutorServiceTaskExecutor(ComputeSettings())
     executor.close()
     executor.close()
     assert(executor.isClosed)
   }
 
-  test("runs tasks on a fixed pool of platform threads") {
-    val executor = ExecutorServiceTaskExecutor(ExecutorSettings(threadNamePrefix = "pool-", virtualThreads = false, poolSize = 1))
+  test("uses the configured number of threads") {
+    val executor = ExecutorServiceTaskExecutor(ComputeSettings(threads = 1, threadNamePrefix = "pool-"))
     try {
-      val threads = (1 to 3).toList.map(_ => Await.result(executor.submit(Thread.currentThread), 5.seconds))
-      assertEquals(threads.map(thread => (thread.getName, ThreadFactories.isVirtual(thread))).distinct, List(("pool-1", false)))
+      val threads = (1 to 3).toList.map(_ => Await.result(executor.submit(Thread.currentThread.getName), 5.seconds))
+      assertEquals(threads.distinct, List("pool-1"))
     } finally {
       executor.close()
     }

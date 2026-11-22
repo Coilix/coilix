@@ -5,6 +5,7 @@ import dev.coilix.config.ComponentProvider
 import dev.coilix.context.conditions.AuditLog
 import dev.coilix.context.conditions.Clock
 import dev.coilix.context.conditions.ClockDefaults
+import dev.coilix.context.conditions.ConcreteClockDefaults
 import dev.coilix.context.conditions.DevGreeter
 import dev.coilix.context.conditions.DevLabels
 import dev.coilix.context.conditions.FixedClock
@@ -55,6 +56,15 @@ final class ConditionalBeansTest extends FunSuite {
     val context = contextOf("", classOf[ClockDefaults], classOf[FixedClock])
     assertEquals(context.getBean[Clock].now, 42L)
     assertEquals(context.getBeansOfType[Clock].size, 1)
+  }
+
+  test("a bean declared with its concrete class gives way to any bean of the type named in the annotation") {
+    val alone = contextOf("", classOf[ConcreteClockDefaults])
+    val other = contextOf("", classOf[ConcreteClockDefaults], classOf[FixedClock])
+    assertEquals(
+      (alone.getBean[SystemClock].getClass, other.getBeansOfType[Clock].map(_.getClass)),
+      (classOf[SystemClock], List(classOf[FixedClock]))
+    )
   }
 
   test("a bean marked as missing-only gives way to a ready singleton") {

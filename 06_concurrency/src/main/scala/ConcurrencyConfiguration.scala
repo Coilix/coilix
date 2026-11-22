@@ -1,17 +1,21 @@
 package dev.coilix.concurrency
 
 import dev.coilix.annotation.Bean
+import dev.coilix.annotation.ConditionalOnMissingBean
 import dev.coilix.annotation.Configuration
 import dev.coilix.annotation.Slf4s
 import dev.coilix.config.Environment
 import dev.coilix.context.ConfigurableApplicationContext
 
 /**
- * The beans of the concurrency module: `concurrencySettings`, `taskExecutor`, `taskScheduler`, `scheduledMethodRegistrar`,
- * which runs the [[dev.coilix.annotation.Scheduled]] methods, and `fatalErrorSettings`, `processTerminator` and
- * `fatalErrorHandler`, which react to fatal errors in the threads of the executor and the scheduler.
+ * The beans of the concurrency module: `concurrencySettings`, `taskExecutor` for computation, `blockingExecutor` for calls that
+ * wait, `taskScheduler`, `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods, and
+ * `fatalErrorSettings`, `processTerminator` and `fatalErrorHandler`, which react to fatal errors in the threads of the
+ * executors and the scheduler.
  *
- * The executor and the scheduler are closed with the context, after the beans that depend on them.
+ * The executors and the scheduler are closed with the context, after the beans that depend on them. `taskExecutor` and
+ * `blockingExecutor` are left out when another bean provides a [[dev.coilix.concurrency.TaskExecutor]] or a
+ * [[dev.coilix.concurrency.BlockingExecutor]], so their pools are not even created.
  */
 @Slf4s
 @Configuration
@@ -22,12 +26,25 @@ final class ConcurrencyConfiguration {
   def concurrencySettings(environment: Option[Environment]): ConcurrencySettings =
     environment.fold(ConcurrencySettings())(ConcurrencySettings.from)
 
-  /** The executor configured under `coilix.concurrency.executor`, on virtual threads by default. */
+  /** The compute pool configured under `coilix.concurrency.compute`, one platform thread per processor by default. */
   @Bean
+  @ConditionalOnMissingBean(Array(classOf[TaskExecutor]))
   def taskExecutor(settings: ConcurrencySettings, fatalErrors: FatalErrorHandler): ExecutorServiceTaskExecutor = {
-    val virtual = settings.executor.virtualThreads && ThreadFactories.virtualThreadsAvailable
-    log.info(s"Task executor ${settings.executor.threadNamePrefix}* runs on ${if (virtual) "virtual" else "platform"} threads")
-    ExecutorServiceTaskExecutor(settings.executor, fatalErrors)
+    log.info(s"Task executor ${settings.compute.threadNamePrefix}* computes on ${settings.compute.threads} platform threads")
+    ExecutorServiceTaskExecutor(settings.compute, fatalErrors)
+  }
+
+  /** The executor for blocking calls configured under `coilix.concurrency.blocking`, on virtual threads by default. */
+  @Bean
+  @ConditionalOnMissingBean(Array(classOf[BlockingExecutor]))
+  def blockingExecutor(settings: ConcurrencySettings, fatalErrors: FatalErrorHandler): ExecutorServiceBlockingExecutor = {
+    val blocking = settings.blocking
+    val threads  =
+      if (blocking.virtualThreads && ThreadFactories.virtualThreadsAvailable) "virtual threads"
+      else s"up to ${blocking.platformThreads} platform threads"
+    val limit    = blocking.maxConcurrency.fold("")(max => s", at most $max at once")
+    log.info(s"Blocking executor ${blocking.threadNamePrefix}* waits on $threads$limit")
+    ExecutorServiceBlockingExecutor(blocking, fatalErrors)
   }
 
   /** The scheduler configured under `coilix.concurrency.scheduler`. */

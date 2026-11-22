@@ -10,10 +10,11 @@ import scala.concurrent.Future
 
 /**
  * Turns the definition of a bean with [[dev.coilix.annotation.Async]] methods into a definition of a proxy that runs those
- * methods on the [[dev.coilix.concurrency.TaskExecutor]].
+ * methods on the [[dev.coilix.concurrency.TaskExecutor]], or on the [[dev.coilix.concurrency.BlockingExecutor]] for methods with
+ * `blocking = true`.
  *
  * The proxy implements every trait of the bean class and is registered under the trait that declares the asynchronous
- * methods, so other beans inject that trait. The definition gets the `TaskExecutor` as an extra dependency. Definitions
+ * methods, so other beans inject that trait. The definition gets both executors as extra dependencies. Definitions
  * without `@Async` methods stay as they are. The concurrency module provides this processor.
  */
 final class AsyncDefinitionProcessor extends DefinitionProcessor {
@@ -41,10 +42,15 @@ final class AsyncDefinitionProcessor extends DefinitionProcessor {
     val service        = serviceTrait(definition, methods, interfaces)
     definition.copy(
       beanType     = definition.beanType.asSuper(service).getOrElse(GenericType.of(service)),
-      factory      = AsyncProxyFactory(definition.factory, interfaces, methods.map(signature).toSet),
-      dependencies = definition.dependencies :+ Dependency.Required(GenericType.of(classOf[TaskExecutor]))
+      factory      = AsyncProxyFactory(definition.factory, interfaces, methods.map(method => signature(method) -> blocks(method)).toMap),
+      dependencies = definition.dependencies ++ List(
+        Dependency.Required(GenericType.of(classOf[TaskExecutor])),
+        Dependency.Required(GenericType.of(classOf[BlockingExecutor]))
+      )
     )
   }
+
+  private def blocks(method: Method): Boolean = method.getAnnotation(classOf[Async]).blocking
 
   private def checkResult(definition: BeanDefinition)(method: Method): Unit =
     if (method.getReturnType != Void.TYPE && !classOf[Future[?]].isAssignableFrom(method.getReturnType)) {

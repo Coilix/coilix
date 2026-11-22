@@ -11,15 +11,22 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
   private val mailSender = FlakyMailSender()
   private val setup      = CoilixTestSetup.forApplication[TasksApplication.type].addBean[MailSender](mailSender)
 
-  test("a task runs on a thread of the Coilix executor") {
+  test("a computation runs on the compute pool") {
     setup.use {
-      assert(Await.result(bean[ThumbnailService].render("cat.png"), 5.seconds).contains("coilix-task-"))
+      assert(Await.result(bean[ThumbnailService].render("cat.png"), 5.seconds).contains("coilix-compute-"))
     }
   }
 
-  test("an @Async method runs on the executor and the bean is injected through its trait") {
+  test("a blocking call runs on the blocking executor") {
     setup.use {
-      assert(Await.result(bean[InvoiceMailer].send("INV-7"), 5.seconds).startsWith("INV-7 sent from coilix-task-"))
+      val stored = Await.result(bean[InvoiceArchive].store("INV-7", "total 120"), 5.seconds)
+      assertEquals(java.nio.file.Files.readString(stored), "total 120")
+    }
+  }
+
+  test("a blocking @Async method runs on the blocking executor and the bean is injected through its trait") {
+    setup.use {
+      assert(Await.result(bean[InvoiceMailer].send("INV-7"), 5.seconds).startsWith("INV-7 sent from coilix-blocking-"))
     }
   }
 

@@ -29,7 +29,10 @@ W implicits (`Extensions.scala`): `Source.io`, `Source.fromIOList`, `Source.from
 
 - `ActorSystem` jako bean (`ActorSystemFactory`, komponent z `given ConfigPath`):
   - nazwa i konfiguracja Pekko z sekcji `coilix.pekko` configu Coilix (przekazywana do Typesafe Config Pekko), bez osobnego `application.conf`,
-  - dispatcher blokujący Pekko na wątkach wirtualnych Coilix (zasoby wykonania z COILIX-00020/00005),
+  - domyślny dispatcher na puli obliczeniowej aplikacji: `ActorSystem(name, config, classLoader, defaultExecutionContext = Some(taskExecutor.executionContext))`, czyli na `ForkJoinPool` Coilix albo na WSTP z `IORuntime`, gdy jest moduł `cats-effect` (ADR 0028). Moduł nie zależy od `cats-effect`, bo bierze tylko `TaskExecutor`,
+  - `pekko.actor.internal-dispatcher = "pekko.actor.default-dispatcher"`, żeby Pekko nie tworzyło drugiej puli (eksperyment w ADR 0028: 40 wątków zamiast 75 na 32 rdzeniach),
+  - `default-blocking-io-dispatcher` przez własny `ExecutorServiceConfigurator` kierowany do `BlockingExecutor`,
+  - `throughput` skrzynek domyślne (krótkie porcje wiadomości), bo działają na puli współdzielonej z `IO`; aktor, który blokuje, dostaje dispatcher blokujący,
   - `CoordinatedShutdown` bez własnego shutdown hooka JVM: zamyka go kontekst, po beanach, które zależą od `ActorSystem`.
 - `Materializer` jako bean zależny od `ActorSystem`.
 - Rozszerzenia jako `given` w stylu z CLAUDE.md: `ActorSystem` i `Materializer` dostępne jako `given` w kodzie modułów, które ich potrzebują.

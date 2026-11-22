@@ -14,13 +14,15 @@ final class ConcurrencySettingsTest extends FunSuite {
 
   test("reads the configured keys and keeps the defaults of the others") {
     val settings = ConcurrencySettings.from(environment("""
-      coilix.concurrency.executor { virtual-threads = false, pool-size = 3 }
+      coilix.concurrency.compute.threads = 3
+      coilix.concurrency.blocking { virtual-threads = false, max-concurrency = 10 }
       coilix.concurrency.scheduler.shutdown-timeout = 2s
     """))
     assertEquals(
       settings,
       ConcurrencySettings(
-        ExecutorSettings(virtualThreads   = false, poolSize = 3),
+        ComputeSettings(threads           = 3),
+        BlockingSettings(virtualThreads   = false, maxConcurrency = Some(10)),
         SchedulerSettings(shutdownTimeout = 2.seconds)
       )
     )
