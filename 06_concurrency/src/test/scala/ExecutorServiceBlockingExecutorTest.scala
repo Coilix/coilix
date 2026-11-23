@@ -1,7 +1,5 @@
 package dev.coilix.concurrency
 
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import munit.FunSuite
 import scala.concurrent.Await
@@ -26,22 +24,19 @@ final class ExecutorServiceBlockingExecutorTest extends FunSuite {
     }
   }
 
-  test("runs at most max-concurrency tasks at once") {
-    withExecutor(BlockingSettings(maxConcurrency = Some(2))) { executor =>
-      val running = AtomicInteger()
-      val peak    = AtomicInteger()
-      val done    = CountDownLatch(8)
-      (1 to 8).foreach { _ =>
-        executor.execute {
-          peak.accumulateAndGet(running.incrementAndGet(), Math.max)
-          Thread.sleep(50)
-          running.decrementAndGet()
-          done.countDown()
-        }
+  test("runs at most max-concurrency tasks at once and returns every permit") {
+    val executor = ExecutorServiceBlockingExecutor(BlockingSettings(maxConcurrency = Some(2), shutdownTimeout = 10.seconds))
+    val running  = AtomicInteger()
+    val peak     = AtomicInteger()
+    (1 to 8).foreach { _ =>
+      executor.execute {
+        peak.accumulateAndGet(running.incrementAndGet(), Math.max)
+        Thread.sleep(50)
+        running.decrementAndGet()
       }
-      assert(done.await(10, TimeUnit.SECONDS))
-      assertEquals((peak.get, executor.availablePermits), (2, Some(2)))
     }
+    executor.close()
+    assertEquals((peak.get, executor.availablePermits), (2, Some(2)))
   }
 
   test("has no limit without max-concurrency") {
