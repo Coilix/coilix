@@ -8,7 +8,9 @@ import scala.util.control.NonFatal
  *
  * The context itself is provided as `applicationContext`, before the given singletons. The plan from the
  * [[dev.coilix.context.ContextPlanner]] is checked before any bean is created: a bean whose factory returns an effect stops the
- * build with an [[dev.coilix.context.EffectfulBeanException]], because this builder does not run effects. Each other bean is
+ * build with an [[dev.coilix.context.EffectfulBeanException]] unless an [[dev.coilix.context.EffectInterpreter]] is given. The
+ * interpreter creates the levels of the plan from the first one with such a bean, and the context releases them when it closes,
+ * before it destroys the other beans; when it fails, the beans created before are destroyed. Each other bean is
  * created with the [[dev.coilix.context.BeanInstantiator]], at once for an eager bean, and as a
  * [[dev.coilix.context.DeferredBean]] created on lookup for a lazy bean or a prototype. A singleton that requires a prototype
  * directly gets one instance of it, which is logged as a warning, because it usually means a missing `Provider`. When every
@@ -37,18 +39,29 @@ final class DefaultApplicationContextBuilder(
 
   private val contextBeanName = "applicationContext"
 
-  override def build(definitions: List[BeanDefinition], singletons: List[RegisteredBean]): ConfigurableApplicationContext = {
-    lazy val context:  ConfigurableApplicationContext = DefaultApplicationContext(registry, destroyer)
-    lazy val registry: BeanRegistry                   = executed(planner.plan(definitions, contextBean(context) :: singletons))
-    val _ = registry
+  override def build(
+    definitions: List[BeanDefinition],
+    singletons:  List[RegisteredBean],
+    interpreter: Option[EffectInterpreter]
+  ): ConfigurableApplicationContext = {
+    lazy val context: ConfigurableApplicationContext = DefaultApplicationContext(beans.registry, releasing(beans))
+    lazy val beans:   InterpretedBeans               =
+      executed(planner.plan(definitions, contextBean(context) :: singletons), interpreter)
+    val _ = beans
     started(context)
   }
 
-  private def executed(plan: ContextPlan): BeanRegistry = {
+  private def releasing(beans: => InterpretedBeans): BeanDestroyer =
+    (created: List[RegisteredBean]) => {
+      beans.release()
+      destroyer.destroy(created)
+    }
+
+  private def executed(plan: ContextPlan, interpreter: Option[EffectInterpreter]): InterpretedBeans = {
     val completion = RegistryCompletion()
-    val registry   = execute(plan, completion)
-    completion.complete(registry)
-    registry
+    val beans      = execute(plan, interpreter, completion)
+    completion.complete(beans.registry)
+    beans
   }
 
   private def started(context: ConfigurableApplicationContext): ConfigurableApplicationContext =
@@ -66,17 +79,31 @@ final class DefaultApplicationContextBuilder(
   private def contextBean(context: ApplicationContext): RegisteredBean =
     RegisteredBean.ofClass(contextBeanName, context.getClass, context)
 
-  private def execute(plan: ContextPlan, completion: RegistryCompletion): BeanRegistry =
-    if (plan.effectful.nonEmpty) throw EffectfulBeanException(plan.effectful)
-    else {
-      warnAboutPrototypes(plan.creationOrder)
-      plan.steps.foldLeft(ImmutableBeanRegistry.empty(selector, completion))(execute)
-    }
+  private def execute(
+    plan:        ContextPlan,
+    interpreter: Option[EffectInterpreter],
+    completion:  RegistryCompletion
+  ): InterpretedBeans = {
+    val effects             = interpreter.filter(_ => plan.effectful.nonEmpty)
+    if (plan.effectful.nonEmpty && effects.isEmpty) throw EffectfulBeanException(plan.effectful)
+    warnAboutPrototypes(plan.creationOrder)
+    val (direct, effectful) = plan.levels.span(_.forall(!_.result.isEffectful))
+    val registry            = direct.flatten.foldLeft(provided(plan, completion))(created)
+    effects.fold(InterpretedBeans(registry, () => ()))(interpreted(effectful, registry))
+  }
 
-  private def execute(registry: BeanRegistry, step: PlanStep): BeanRegistry =
-    step match {
-      case PlanStep.Provide(bean)      => registry.register(bean)
-      case PlanStep.Create(definition) => created(registry, definition)
+  private def provided(plan: ContextPlan, completion: RegistryCompletion): BeanRegistry =
+    plan.provided.foldLeft(ImmutableBeanRegistry.empty(selector, completion))(_.register(_))
+
+  private def interpreted(levels: List[List[BeanDefinition]], registry: BeanRegistry)(
+    interpreter: EffectInterpreter
+  ): InterpretedBeans =
+    try {
+      interpreter.interpret(levels, registry, instantiator, destroyer)
+    } catch {
+      case NonFatal(failure) =>
+        destroyer.destroy(registry.beans)
+        throw failure
     }
 
   private def created(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =

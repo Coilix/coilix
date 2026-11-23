@@ -18,7 +18,19 @@ final case class ContextPlan(steps: List[PlanStep]) {
 
   /** The beans to create, each after its dependencies. */
   def creationOrder: List[BeanDefinition] =
-    steps.collect { case PlanStep.Create(definition) => definition }
+    steps.collect { case PlanStep.Create(definition, _) => definition }
+
+  /**
+   * The beans to create, grouped by their dependency level from the lowest. The beans of one level do not depend on each
+   * other, so an interpreter may create them at the same time.
+   */
+  def levels: List[List[BeanDefinition]] =
+    steps
+      .collect { case PlanStep.Create(definition, level) => level -> definition }
+      .groupMap(_._1)(_._2)
+      .toList
+      .sortBy(_._1)
+      .map(_._2)
 
   /** The created beans in the order they are destroyed, the reverse of creation. */
   def destructionOrder: List[BeanDefinition] =

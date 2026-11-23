@@ -1,0 +1,3 @@
+coilix:
+  cats-effect:
+    shutdown-timeout: 1m

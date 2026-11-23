@@ -11,7 +11,8 @@ final class ContextPlanTest extends FunSuite {
   private val provided = RegisteredBean.of("englishGreeter", EnglishGreeter())
   private val first    = Definitions.of(classOf[PolishGreeter]).map(_.copy(beanName = "first"))
   private val second   = Definitions.of(classOf[PolishGreeter]).map(_.copy(beanName = "second", result = deferred))
-  private val plan     = ContextPlan(PlanStep.Provide(provided) :: (first ++ second).map(PlanStep.Create(_)))
+  private val plan     =
+    ContextPlan(PlanStep.Provide(provided) :: first.map(PlanStep.Create(_, 0)) ++ second.map(PlanStep.Create(_, 1)))
 
   test("lists the ready instances") {
     assertEquals(plan.provided, List(provided))
@@ -23,6 +24,10 @@ final class ContextPlanTest extends FunSuite {
 
   test("destroys the beans in reverse creation order") {
     assertEquals(plan.destructionOrder.map(_.beanName), List("second", "first"))
+  }
+
+  test("groups the beans by their dependency level") {
+    assertEquals(plan.levels.map(_.map(_.beanName)), List(List("first"), List("second")))
   }
 
   test("lists the beans created by effects") {

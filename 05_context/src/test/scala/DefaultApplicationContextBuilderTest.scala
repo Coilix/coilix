@@ -3,6 +3,7 @@ package dev.coilix.context
 import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.effects.Later
+import dev.coilix.context.effects.LaterInterpreter
 import dev.coilix.context.effects.ReportReader
 import dev.coilix.context.effects.TestEffects
 import dev.coilix.context.ordering.AlphaService
@@ -15,6 +16,7 @@ import dev.coilix.context.wiring.DefaultGreetingService
 import dev.coilix.context.wiring.EnglishGreeter
 import dev.coilix.context.wiring.GreetingService
 import dev.coilix.context.wiring.PolishGreeter
+import java.util.concurrent.atomic.AtomicReference
 import munit.FunSuite
 
 final class DefaultApplicationContextBuilderTest extends FunSuite {
@@ -70,5 +72,36 @@ final class DefaultApplicationContextBuilderTest extends FunSuite {
     assertEquals(error.definitions.map(_.beanName), List("archive", "report"))
     assert(error.getMessage.contains(s"'report' (${classOf[Later[?]].getName}["), error.getMessage)
     assert(error.getMessage.contains("CoilixIOApp"), error.getMessage)
+  }
+
+  test("hands the levels from the first effectful bean to the interpreter and releases them when the context closes") {
+    val interpreter = LaterInterpreter()
+    val built       =
+      ApplicationContextBuilder.default.build(
+        TestEffects.definitions ++ Definitions.of(classOf[ReportReader]),
+        Nil,
+        Some(interpreter)
+      )
+    val title       = built.getBean[ReportReader].report.title
+    built.close()
+    assertEquals((title, interpreter.journal), ("daily", List("levels archive+report, reportReader", "released")))
+  }
+
+  test("does not use the interpreter without effectful beans") {
+    val interpreter = LaterInterpreter()
+    ApplicationContextBuilder.default.build(Definitions.of(classOf[EnglishGreeter]), Nil, Some(interpreter)).close()
+    assertEquals(interpreter.journal, Nil)
+  }
+
+  test("destroys the beans created before the interpreter when it fails") {
+    val destroyed = AtomicReference(List.empty[String])
+    val builder   = DefaultApplicationContextBuilder(
+      ContextPlanner.default,
+      BeanInstantiator.default,
+      CandidateSelector.default,
+      beans => destroyed.set(beans.map(_.beanName))
+    )
+    intercept[IllegalStateException](builder.build(TestEffects.definitions, Nil, Some(LaterInterpreter(failing = true))))
+    assertEquals(destroyed.get, List("applicationContext", "effectConfiguration"))
   }
 }

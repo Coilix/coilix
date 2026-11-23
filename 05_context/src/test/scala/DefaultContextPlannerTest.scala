@@ -28,6 +28,14 @@ final class DefaultContextPlannerTest extends FunSuite {
     assertEquals(plan.creationOrder.map(_.beanName), List("englishGreeter", "defaultGreetingService"))
   }
 
+  test("gives each bean its dependency level") {
+    val plan = planner.plan(Definitions.of(classOf[ReportReader]) ++ TestEffects.definitions, Nil)
+    assertEquals(
+      plan.levels.map(_.map(_.beanName)),
+      List(List("effectConfiguration"), List("archive", "report"), List("reportReader"))
+    )
+  }
+
   test("leaves out definitions whose conditions do not hold") {
     val plan = planner.plan(Definitions.of(classOf[ClockDefaults]), List(RegisteredBean.of("clock", FixedClock())))
     assertEquals(plan.creationOrder.map(_.beanName), List("clockDefaults"))

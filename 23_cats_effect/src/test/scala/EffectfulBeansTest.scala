@@ -1,0 +1,61 @@
+package dev.coilix.catseffect
+
+import dev.coilix.catseffect.failing.FailureJournal
+import dev.coilix.catseffect.parallel.Runner
+import dev.coilix.catseffect.shop.OpeningJournal
+import dev.coilix.catseffect.shop.Storefront
+import dev.coilix.catseffect.slow.DrainConfiguration
+import dev.coilix.testkit.CoilixContextOps
+import dev.coilix.testkit.CoilixTestSetup
+import munit.FunSuite
+
+final class EffectfulBeansTest extends FunSuite with CoilixContextOps {
+
+  private def setup(packageName: String): CoilixTestSetup =
+    CoilixTestSetup.forPackages(s"dev.coilix.catseffect.$packageName").withProperties("coilix.concurrency.compute.threads" -> "2")
+
+  test("gives other beans the values of IO and Resource beans") {
+    setup("shop").use {
+      val storefront = bean[Storefront]
+      assertEquals((storefront.catalog.pool.name, storefront.greeting.text), ("main", "Welcome"))
+    }
+  }
+
+  test("opens resources after the beans they need and closes them in reverse order") {
+    val journal = setup("shop").use(bean[OpeningJournal])
+    val entries = journal.all
+    assertEquals(
+      (entries.take(3).toSet, entries.drop(3)),
+      (
+        Set("pool opened", "mailbox opened", "greeting loaded"),
+        List("catalog opened", "storefront created", "storefront closed", "catalog closed") ++ entries.takeRight(2)
+      )
+    )
+    assertEquals(entries.takeRight(2).toSet, Set("pool closed", "mailbox closed"))
+  }
+
+  test("creates independent effectful beans at the same time") {
+    setup("parallel").use {
+      assertEquals(beans[Runner].map(_.name).toSet, Set("left", "right"))
+    }
+  }
+
+  test("closes the opened resources when a bean fails to open") {
+    val journal = FailureJournal()
+    val failure = intercept[IllegalStateException](setup("failing").addBean(journal).use(()))
+    assertEquals((failure.getMessage, journal.all), ("the forecast service is down", List("ledger opened", "ledger closed")))
+  }
+
+  test("goes on closing after a finalizer that fails or takes longer than its limit") {
+    val started    = System.nanoTime
+    val drains     = setup("slow").use(bean[DrainConfiguration])
+    val closedInMs = (System.nanoTime - started) / 1000000
+    assert(drains.isQuickDrainClosed)
+    assert(closedInMs < 20000, s"closing took $closedInMs ms")
+  }
+
+  test("a lazy bean made by an effect stops the startup") {
+    val failure = intercept[InvalidEffectfulBeanException](setup("lazyeffect").use(()))
+    assert(failure.getMessage.contains("'snapshot'"), failure.getMessage)
+  }
+}
