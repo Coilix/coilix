@@ -2,6 +2,19 @@
 
 > Szkic do doszlifowania. Kierunek uzgodniony z opiekunem 2026-11-19: rdzeń zostaje w stylu bezpośrednim (kod blokujący na wątkach wirtualnych), a efekty wpinają się w wyznaczonych punktach. Wspieramy `cats.effect.IO`. ZIO i fs2 są poza planem, a Pekko Streams to osobny task (COILIX-00029).
 
+> Decyzje opiekuna z 2026-11-23 (wywiad przed krokami 5b i 5c, zastępują wcześniejsze otwarte pytania):
+>
+> - **Start:** oba sposoby. `CoilixIOApp` (`IOApp`, anulowanie zamyka kontekst) i zwykłe `Coilix.run`, które wykonuje plan na `IORuntime` z beana z jednym `unsafeRun` na granicy.
+> - **Kolejność tworzenia:** niezależne beany `IO` i `Resource` otwierane równolegle poziomami grafu zależności, zamykane w odwrotnej kolejności poziomów. Kolejność wynikającą z efektu ubocznego, a nie z wstrzykiwania (np. migracje przed cache), wyraża `@DependsOn("nazwa")`: krawędź w grafie bez wstrzykiwania. Bez liczbowych priorytetów budowy, bo kłóciłyby się z grafem. Graf jest jedynym źródłem kolejności.
+> - **`@DependsOn`** dotyczy wszystkich beanów, więc powstaje w rdzeniu (`annotations`, `TopologicalDependencyResolver`, błąd startu przy nieznanej nazwie, przewodnik) jako osobny PR przed 5b.
+> - **Cykl życia:** `@PostConstruct` i `@PreDestroy` mogą zwracać `IO[Unit]`, obok zwykłych zwracających `Unit`.
+> - **Runnery:** `IOApplicationRunner` i `ApplicationRunner` w jednej liście według `@Order`, wykonywane po kolei; synchroniczne w `IO.blocking`.
+> - **`@Lazy` i `@Prototype` na beanie `IO` albo `Resource`:** błąd startu. Bean efektowy jest zawsze tworzony przy starcie, bez ukrytych `unsafeRun` w trakcie działania.
+> - **Zamykanie:** globalny limit `coilix.cats-effect.shutdown-timeout` (domyślnie 30 s) i nadpisanie dla jednego beana adnotacją `@ShutdownTimeout("2m")` na metodzie `@Bean`, czas jako tekst albo placeholder jak w `@Scheduled`. Po limicie finalizer jest anulowany i zalogowany, zamykanie idzie dalej. Błąd jednego finalizera jest logowany i nie zatrzymuje pozostałych. `@ShutdownTimeout` jest w `02_annotations`, bo adnotacje runtime muszą być w Javie.
+> - **`CoilixIOApp` po runnerach** czeka na anulowanie (SIGTERM), wtedy zamyka kontekst. `coilix.cats-effect.exit-after-runners = true` kończy aplikację po runnerach (zadania wsadowe).
+> - **Testy w `IO`:** osobny moduł `testkit-cats-effect` z munit-cats-effect jako `Provided`: `CoilixTestSetup.useIO` i `CoilixIOSuite` z `coilixTest` zwracającym `IO` i kontekstem jako `given`.
+> - **Później, poza 5b i 5c:** beany generyczne w efekcie (`SqlRepo[F]` z `using Sync[F]` i wiązanie `coilix.effect.type`) oraz most MDC dla fiberów (`IOLocal` ↔ MDC).
+
 ## Cel
 
 Aplikacja napisana na `IO` używa Coilix bez rezygnacji z efektów i zasobów:
@@ -136,13 +149,17 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 2. Rdzeń: pełne typy w definicjach i dopasowanie po typach sparametryzowanych, `TypeInfo`, błędy dla lambd typów i niezwiązanych zmiennych. Zrobione (`GenericType`, `TypeInfo`, ADR 0019); wiązanie `coilix.effect.type` przechodzi do kroku 5.
 3. Rdzeń: `ContextPlan`, `ContextPlanner` i `EffectfulResultRecognizer`, `DefaultApplicationContextBuilder` na planie. Zrobione (ADR 0019). Rodzaj wyniku (`BeanResult`) jest w `BeanDefinition.result`, a nie w `InstanceFactory`, i ustawia go `ReflectiveBeanMethodScanner`, więc bean efektowy ma od początku typ wartości. Cykl życia zwracający `IO[Unit]` przechodzi do kroku 5.
 4. Zasoby wykonania (albo COILIX-00005). Zrobione przez COILIX-00005 krok 1: `TaskExecutor` na wątkach wirtualnych i `TaskScheduler` z modułu `concurrency` (ADR 0020).
-5. `cats-effect`, w trzech PR-ach: 5a `IORuntime` jako bean i jedyna pula obliczeniowa (zrobione, ADR 0031), 5b beany `IO[A]` i `Resource[IO, A]`, cykl życia i runnery w `IO`, 5c `CoilixIOApp` i `testkit-cats-effect`.
-6. `testkit-cats-effect` i przewodnik w obu językach.
+5. `cats-effect`, w krokach:
+   - 5a: `IORuntime` jako bean i jedyna pula obliczeniowa (zrobione, ADR 0031).
+   - rdzeń: `@DependsOn` dla wszystkich beanów (osobny PR przed 5b).
+   - 5b: beany `IO[A]` i `Resource[IO, A]` otwierane równolegle poziomami grafu, `@PostConstruct` i `@PreDestroy` zwracające `IO[Unit]`, `IOApplicationRunner` w jednej liście z `ApplicationRunner`, `@ShutdownTimeout` i `coilix.cats-effect.shutdown-timeout`, błąd startu dla `@Lazy` i `@Prototype` na beanie efektowym, `Coilix.run` z jednym `unsafeRun` na granicy.
+   - 5c: `CoilixIOApp` (czeka na anulowanie, `exit-after-runners`) i moduł `testkit-cats-effect` (`useIO`, `CoilixIOSuite`).
+6. Przewodnik w obu językach przy każdym kroku. Później: beany generyczne w `F[_]` i most MDC dla fiberów.
 
 ## Kryteria akceptacji
 
 1. Bean z zależnościami `Repo[IO]` i `Sync[IO]` dostaje właściwe instancje, gdy w kontekście jest też bean `Repo[Option]`. Zależność z lambdą typu daje błąd startu z nazwą parametru.
-2. `@Bean def repo: Repo[IO] = SqlRepo[IO]` i wiązanie `coilix.effect.type` pozwalają skanować `SqlRepo[F]` z `using Sync[F]`.
+2. (później, poza 5b i 5c) `@Bean def repo: Repo[IO] = SqlRepo[IO]` i wiązanie `coilix.effect.type` pozwalają skanować `SqlRepo[F]` z `using Sync[F]`.
 3. `Resource[IO, A]` z metody `@Bean` jest otwierany przed beanami zależnymi i zamykany po nich. Test sprawdza kolejność otwarć i zamknięć trzech zasobów z zależnościami.
 4. `@PreDestroy` zwracające `IO[Unit]` wykonuje się przy zamykaniu, a błąd jednego finalizatora nie zatrzymuje pozostałych i jest zalogowany.
 5. `CoilixIOApp` startuje aplikację z runnerem `IO`, a anulowanie (SIGTERM w teście przez anulowanie fibera) zamyka zasoby w odwrotnej kolejności.
@@ -161,5 +178,5 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 
 1. Pełne typy w `BeanDefinition` i `RegisteredBean` zmieniają publiczne API rdzenia. Trzeba to zrobić przed `core-v0.1.0` albo w następnej linii `0.x` z wpisem **BREAKING**. Dotyczy też `TestBean` z testkitu (COILIX-00013).
 2. Wariancja: `Repo[+A]` i podobne. Na początek równość argumentów, a wariancja tylko tam, gdzie da się ją odczytać z sygnatury Scali (TASTy), co może wymagać czytania TASTy zamiast samej refleksji Javy.
-3. Dwa tryby startu (`CoilixIOApp` i `Coilix.run` z `IORuntime` z beana) to dwie ścieżki do utrzymania. Alternatywa: tylko `CoilixIOApp` dla aplikacji z beanami efektowymi.
+3. Dwa tryby startu (`CoilixIOApp` i `Coilix.run` z `IORuntime` z beana) to dwie ścieżki do utrzymania. Rozstrzygnięte 2026-11-23: oba, wspólny interpreter planu w `IO` pod spodem.
 4. Pula obliczeniowa cats-effect zostaje poza kontrolą Coilix (tylko rozmiar z configu), ale jest jedyną pulą CPU aplikacji. Do zmierzenia w benchmarkach (COILIX-00017): opóźnienia `IO` przy ciężkim obciążeniu z Pekko na tej samej puli (w eksperymencie z ADR 0028 bez zagłodzenia).
