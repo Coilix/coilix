@@ -11,7 +11,11 @@ import scala.annotation.tailrec
  *  - the bean chosen by the [[dev.coilix.context.CandidateSelector]] for each required dependency,
  *  - the bean with the given name for each `@Qualifier` dependency,
  *  - the bean chosen for each `Option[T]` dependency, when there is one,
- *  - every bean that matches a `List[T]` dependency, so the list is complete when the bean is created.
+ *  - every bean that matches a `List[T]` dependency, so the list is complete when the bean is created,
+ *  - the bean with each name in [[dev.coilix.context.BeanDefinition.dependsOn]].
+ *
+ * A name in `dependsOn` that matches no definition stops the resolution with a [[dev.coilix.context.NoSuchBeanException]], and
+ * a name of a prototype with a [[dev.coilix.context.BeanCreationException]].
  *
  * A bean never waits for itself through `Option[T]` or `List[T]`, so a bean that implements `T` can collect the other
  * beans of type `T`. Types in `provided` belong to beans that already exist, so nothing waits for them except collections.
@@ -45,7 +49,21 @@ final class TopologicalDependencyResolver(selector: CandidateSelector) extends D
     definitions: List[BeanDefinition],
     provided:    List[GenericType]
   ): List[BeanDefinition] =
-    definition.dependencies.flatMap(prerequisitesOf(definition, definitions, provided)).distinct
+    (definition.dependencies.flatMap(prerequisitesOf(definition, definitions, provided)) ++
+      definition.dependsOn.map(dependedOn(definition, definitions))).distinct
+
+  private def dependedOn(definition: BeanDefinition, definitions: List[BeanDefinition])(beanName: String): BeanDefinition =
+    definitions.find(_.beanName == beanName) match {
+      case Some(found) if found.creation == BeanCreation.Prototype => throw dependsOnPrototype(definition, beanName)
+      case Some(found)                                             => found
+      case None                                                    =>
+        throw new NoSuchBeanException(s"No bean named '$beanName' that '${definition.beanName}' depends on")
+    }
+
+  private def dependsOnPrototype(definition: BeanDefinition, beanName: String): BeanCreationException =
+    new BeanCreationException(
+      s"Bean '${definition.beanName}' depends on the prototype '$beanName', which has no single instance to create first"
+    )
 
   private def prerequisitesOf(definition: BeanDefinition, definitions: List[BeanDefinition], provided: List[GenericType])(
     dependency: Dependency

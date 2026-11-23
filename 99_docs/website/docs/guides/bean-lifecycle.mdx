@@ -8,6 +8,7 @@ sidebar_position: 1
 import CodeBlock from '@theme/CodeBlock';
 import ReportScheduler from '!!raw-loader!@examples/scala/ReportScheduler.scala';
 import OrderOutbox from '!!raw-loader!@examples/scala/lifecycle/OrderOutbox.scala';
+import PriceCache from '!!raw-loader!@examples/scala/lifecycle/PriceCache.scala';
 
 This page shows how a bean runs its own code right after Coilix creates it and again when the application stops. Use it when a bean has to check its settings, open a resource or start a thread pool, and release it later.
 
@@ -30,6 +31,16 @@ If a `@PostConstruct` method throws an exception, the startup stops with `BeanCr
 The application context closes when the JVM stops, for example after Ctrl+C, or when you call `close()` on the context returned by `Coilix.run`. Coilix then runs the `@PreDestroy` methods, starting with the bean that was created last. A bean is therefore destroyed before the beans it depends on, so it can still use them while it stops.
 
 If a `@PreDestroy` method throws an exception, Coilix logs it as a warning and goes on with the remaining methods and beans.
+
+## Order beans without injecting them
+
+Coilix creates a bean after the beans it receives in its constructor. Sometimes a bean relies on another one only through a side effect: a price cache reads a table that the schema migrations create, but it never calls the migrations. Name such beans in `@DependsOn` on the class or on a `@Bean` method:
+
+<CodeBlock language="scala" title="lifecycle/PriceCache.scala">{PriceCache}</CodeBlock>
+
+Coilix creates `schemaMigrations` and runs its `@PostConstruct` methods before it creates `PriceCache`, and destroys `PriceCache` first when the context closes. A lazy bean named in `@DependsOn` is created just before the bean that names it.
+
+A name that matches no bean stops the startup with `NoSuchBeanException`, and a name of a `@Prototype` bean with `BeanCreationException`, because a prototype has no single instance to create first. Beans that depend on each other through `@DependsOn` stop the startup with `CircularDependencyException`, as with constructor parameters. A bean that a test replaces with `replaceBean` is ready before any bean is created, so a name of a replaced bean waits for nothing.
 
 ## React to the whole context
 
