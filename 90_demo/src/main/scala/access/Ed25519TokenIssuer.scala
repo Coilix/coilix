@@ -2,16 +2,22 @@ package dev.coilix.demo
 package access
 
 import dev.coilix.annotation.Component
+import dev.coilix.annotation.DependsOn
 import java.security.KeyPair
 import java.security.Signature
 
 /**
  * Signs tokens with the Ed25519 key of the workshop.
  *
+ * Vehicles accept a token only when the portal knows the key, so the issuer is created after the
+ * [[dev.coilix.demo.access.OemKeyRegistry]] has registered it. It does not use the registry, so the order comes from
+ * `@DependsOn`, not from a constructor parameter.
+ *
  * @param workshopKeys
  *   the key pair from [[dev.coilix.demo.workshop.WorkshopConfiguration.workshopKeys]]
  */
 @Component
+@DependsOn(Array("oemKeyRegistry"))
 final class Ed25519TokenIssuer(workshopKeys: KeyPair) extends TokenIssuer {
 
   override def issue(claims: TokenClaims): Either[AccessError, AuthToken] =

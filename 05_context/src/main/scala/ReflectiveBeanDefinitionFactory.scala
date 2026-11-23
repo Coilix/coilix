@@ -1,6 +1,7 @@
 package dev.coilix.context
 
 import dev.coilix.annotation.ConfigurationProperties
+import dev.coilix.annotation.DependsOn
 import dev.coilix.annotation.Lazy
 import dev.coilix.annotation.Primary
 import dev.coilix.annotation.Prototype
@@ -18,7 +19,7 @@ import java.lang.reflect.Modifier
  * definition. The `@Bean` methods of the class are added by the [[dev.coilix.context.BeanMethodScanner]]. Every definition gets the
  * lifecycle methods of its bean class from the [[dev.coilix.context.LifecycleMethodScanner]], and its
  * [[dev.coilix.context.BeanCreation]] from [[dev.coilix.annotation.Prototype]] or [[dev.coilix.annotation.Lazy]] on the class or
- * the `@Bean` method.
+ * the `@Bean` method, and the names in [[dev.coilix.annotation.DependsOn]] on the class or the `@Bean` method.
  *
  * This is the default [[dev.coilix.context.BeanDefinitionFactory]].
  *
@@ -49,7 +50,11 @@ final class ReflectiveBeanDefinitionFactory(
 
   override def create(beanClass: Class[?]): List[BeanDefinition] =
     if (isInstantiable(beanClass))
-      (classDefinition(beanClass) :: methodScanner.scan(beanClass)).map(withLifecycle).map(withConditions).map(withCreation)
+      (classDefinition(beanClass) :: methodScanner.scan(beanClass))
+        .map(withLifecycle)
+        .map(withConditions)
+        .map(withCreation)
+        .map(withDependsOn)
     else Nil
 
   private def withLifecycle(definition: BeanDefinition): BeanDefinition =
@@ -60,6 +65,12 @@ final class ReflectiveBeanDefinitionFactory(
 
   private def withCreation(definition: BeanDefinition): BeanDefinition =
     definition.copy(creation = creationOf(annotatedElement(definition)))
+
+  private def withDependsOn(definition: BeanDefinition): BeanDefinition =
+    definition.copy(dependsOn = dependsOnOf(annotatedElement(definition)))
+
+  private def dependsOnOf(element: AnnotatedElement): List[String] =
+    Option(element.getAnnotation(classOf[DependsOn])).map(_.value.toList.distinct).getOrElse(Nil)
 
   private def annotatedElement(definition: BeanDefinition): AnnotatedElement =
     definition.factory match {

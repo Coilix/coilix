@@ -24,6 +24,11 @@ import dev.coilix.common.GenericType
  *   conditions that decide whether the bean is added to the context
  * @param result
  *   whether `factory` returns the instance or an effect that gives it, in which case `beanType` is the type of the value
+ * @param creation
+ *   when the instance is created and whether it is kept
+ * @param dependsOn
+ *   names of beans created before this one and destroyed after it, without being injected, from
+ *   [[dev.coilix.annotation.DependsOn]]
  */
 final case class BeanDefinition(
   beanName:     String,
@@ -34,5 +39,6 @@ final case class BeanDefinition(
   lifecycle:    LifecycleMethods = LifecycleMethods.none,
   conditions:   BeanConditions   = BeanConditions.none,
   result:       BeanResult       = BeanResult.Plain,
-  creation:     BeanCreation     = BeanCreation.Eager
+  creation:     BeanCreation     = BeanCreation.Eager,
+  dependsOn:    List[String]     = Nil
 ) extends BeanDescriptor

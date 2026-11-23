@@ -2,6 +2,8 @@ package dev.coilix.boot
 
 import dev.coilix.boot.collected.JobLog
 import dev.coilix.boot.collected.NightlyJob
+import dev.coilix.boot.dependson.Ticker
+import dev.coilix.boot.dependson.TickerAudit
 import dev.coilix.boot.fixture.Clock
 import dev.coilix.boot.fixture.FixedClock
 import dev.coilix.boot.fixture.StubClock
@@ -77,6 +79,12 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
     val extra   = BeanDefinitionFactory.default.create(classOf[FixedClock])
     val context = bootstrap.start(List("dev.coilix.boot.fixture"), extra, Nil, BeanReplacements.of[Clock])
     assertEquals(context.getBean[Clock].now, 42L)
+  }
+
+  test("a bean that depends on a replaced bean waits for nothing, because the replacement is ready") {
+    val stub    = RegisteredBean("stubTicker", GenericType.of(classOf[Ticker]), isPrimary = false, Ticker())
+    val context = bootstrap.start(List("dev.coilix.boot.dependson"), Nil, List(stub), BeanReplacements.of[Ticker])
+    assertEquals(context.getBeanOption[TickerAudit].isDefined, true)
   }
 
   test("fails when a replacement matches no discovered bean") {

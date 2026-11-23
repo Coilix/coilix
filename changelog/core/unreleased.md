@@ -34,6 +34,7 @@
 - `@Prototype` creates a bean anew for every lookup and `@Lazy` creates a singleton on its first use, on a component class or a `@Bean` method. A `Provider[T]` constructor parameter gives the bean when `get()` is called, which breaks a dependency cycle and gives a new prototype each time; a missing bean still stops the startup. A singleton that injects a prototype directly is reported as a warning. Lazy beans not created yet are not searched for `@EventListener` and `@Scheduled` methods, and prototypes are not destroyed by the context (COILIX-00015).
 - New core module `coilix-cluster` with a `ReplicaIdentity` bean that tells the number of this replica and the number of replicas. `coilix.cluster.identity` selects `single` (the default), `static` (from `coilix.cluster.replica-index` and `coilix.cluster.replicas` or `COILIX_REPLICA_INDEX` and `COILIX_REPLICAS`) or `stateful-set` (from `COILIX_POD_INDEX` or the end of the pod name). A missing or out-of-range number stops the startup with `ReplicaIdentityException` (COILIX-00027).
 - `CoilixBootstrap.start` with `BeanReplacements` leaves out discovered beans of the replaced types, and fails with `UnmatchedBeanReplacementException` when a replaced type matches no bean (COILIX-00013).
+- `@DependsOn(Array("name"))` on a component class or a `@Bean` method creates the bean after the named beans and destroys it before them, without injecting them. A lazy bean named there is created first, and a name that matches no bean or names a prototype stops the startup (COILIX-00020).
 
 ### Changed
 

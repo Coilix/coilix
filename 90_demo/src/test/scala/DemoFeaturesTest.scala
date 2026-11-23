@@ -161,6 +161,13 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     }
   }
 
+  test("issues tokens only after the workshop key is registered at the OEM portal") {
+    workshop.use {
+      val created = summon[dev.coilix.context.ApplicationContext].createdBeans.map(_.beanName)
+      assert(created.indexOf("oemKeyRegistry") < created.indexOf("ed25519TokenIssuer"), created)
+    }
+  }
+
   test("the warranty registry is loaded only when the front desk needs it") {
     def loaded(using context: dev.coilix.context.ApplicationContext): Boolean =
       context.createdBeans.exists(_.beanName == "warrantyRegistry")

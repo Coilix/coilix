@@ -18,7 +18,8 @@ import java.lang.annotation.Annotation
 /**
  * Scans each base package, drops classes found in more than one package, adds the components of the enabled modules, applies
  * the [[dev.coilix.context.DefinitionProcessor]]s of the modules, leaves out the replaced beans, adds the extra definitions, and
- * builds the context.
+ * builds the context. The names of replaced beans are dropped from [[dev.coilix.context.BeanDefinition.dependsOn]] of the
+ * others, because the replacement is a ready instance.
  *
  * When the modules collect annotations, the classes marked with them, found in the base packages or among the module
  * components, become the `collectedComponents` bean made by the [[dev.coilix.context.ComponentCollector]] instead of beans. Each
@@ -65,9 +66,16 @@ final class DefaultCoilixBootstrap(
 
   private def kept(definitions: List[BeanDefinition], replacements: BeanReplacements): List[BeanDefinition] =
     replacements.unmatched(definitions) match {
-      case Nil       => definitions.filterNot(definition => replaced(definition, replacements))
+      case Nil       => withoutReplaced(definitions, definitions.filter(definition => replaced(definition, replacements)))
       case unmatched => throw UnmatchedBeanReplacementException(unmatched)
     }
+
+  private def withoutReplaced(definitions: List[BeanDefinition], replaced: List[BeanDefinition]): List[BeanDefinition] = {
+    val replacedNames = replaced.map(_.beanName)
+    definitions
+      .filterNot(replaced.contains)
+      .map(definition => definition.copy(dependsOn = definition.dependsOn.filterNot(replacedNames.contains)))
+  }
 
   private def replaced(definition: BeanDefinition, replacements: BeanReplacements): Boolean = {
     val isReplaced = replacements.replaces(definition)
