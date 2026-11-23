@@ -8,6 +8,7 @@ sidebar_position: 1
 import CodeBlock from '@theme/CodeBlock';
 import ReportScheduler from '!!raw-loader!@examples/scala/ReportScheduler.scala';
 import OrderOutbox from '!!raw-loader!@examples/scala/lifecycle/OrderOutbox.scala';
+import PriceCache from '!!raw-loader!@examples/scala/lifecycle/PriceCache.scala';
 
 Ta strona pokazuje, jak bean uruchamia własny kod zaraz po tym, jak Coilix go utworzy, i jeszcze raz przy zatrzymaniu aplikacji. Przyda ci się, gdy bean musi sprawdzić swoje ustawienia, otworzyć zasób albo uruchomić pulę wątków, a potem je zwolnić.
 
@@ -30,6 +31,16 @@ Jeśli metoda `@PostConstruct` rzuci wyjątek, start aplikacji kończy się wyj�
 Kontekst aplikacji zamyka się przy zatrzymaniu JVM, na przykład po Ctrl+C, albo gdy wywołasz `close()` na kontekście zwróconym przez `Coilix.run`. Coilix uruchamia wtedy metody `@PreDestroy`, zaczynając od beana utworzonego jako ostatni. Bean jest więc niszczony przed beanami, od których zależy, i może z nich korzystać, gdy się zatrzymuje.
 
 Jeśli metoda `@PreDestroy` rzuci wyjątek, Coilix zapisuje go w logu jako ostrzeżenie i kontynuuje z pozostałymi metodami i beanami.
+
+## Kolejność beanów bez wstrzykiwania
+
+Coilix tworzy bean po beanach, które dostaje on w konstruktorze. Czasem bean zależy od innego tylko przez efekt uboczny: cache cen czyta tabelę, którą tworzą migracje schematu, ale nigdy nie wywołuje migracji. Takie beany podaje się w `@DependsOn` na klasie albo na metodzie `@Bean`:
+
+<CodeBlock language="scala" title="lifecycle/PriceCache.scala">{PriceCache}</CodeBlock>
+
+Coilix tworzy `schemaMigrations` i uruchamia jego metody `@PostConstruct`, zanim utworzy `PriceCache`, a przy zamykaniu kontekstu najpierw niszczy `PriceCache`. Leniwy bean wskazany w `@DependsOn` powstaje tuż przed beanem, który go wskazuje.
+
+Nazwa, która nie pasuje do żadnego beana, zatrzymuje start aplikacji wyjątkiem `NoSuchBeanException`, a nazwa beana `@Prototype` wyjątkiem `BeanCreationException`, bo prototyp nie ma jednej instancji, którą można utworzyć wcześniej. Beany zależne od siebie nawzajem przez `@DependsOn` zatrzymują start wyjątkiem `CircularDependencyException`, tak jak przy parametrach konstruktora. Bean podmieniony w teście przez `replaceBean` jest gotowy, zanim powstanie jakikolwiek bean, więc nazwa podmienionego beana na nic nie czeka.
 
 ## Reagowanie na cały kontekst
 

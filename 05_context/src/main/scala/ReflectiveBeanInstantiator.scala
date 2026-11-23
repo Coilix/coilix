@@ -12,7 +12,8 @@ import java.lang.reflect.Method
  * Each new instance goes through the [[dev.coilix.context.BeanPostProcessor]] before it is returned, so `@PostConstruct`
  * methods have run before any other bean receives it. When the instance is of a subclass of the declared bean class, as when a
  * `@Bean` method declares a trait and returns an implementation, the `@PostConstruct` and `@PreDestroy` methods of that subclass
- * are found too and added to those of the declared class. Each created bean is logged at `INFO` level. This is the default
+ * are found too and added to those of the declared class. The beans named in [[dev.coilix.context.BeanDefinition.dependsOn]] are
+ * looked up before the instance is created, so a lazy bean among them is created first. Each created bean is logged at `INFO` level. This is the default
  * [[dev.coilix.context.BeanInstantiator]].
  *
  * @param environment
@@ -37,6 +38,7 @@ final class ReflectiveBeanInstantiator(
    */
   override def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean = {
     log.info(s"Creating bean ${definition.beanName} (${definition.beanClass.getSimpleName})")
+    definition.dependsOn.foreach(registry.findByName)
     val instance   = newInstance(definition, registry)
     val completed  = definition.copy(lifecycle = lifecycleOf(definition, instance))
     RegisteredBean(
