@@ -1,0 +1,52 @@
+---
+id: cats-effect
+title: cats-effect
+description: Run IO on a runtime managed by Coilix, whose compute pool is the only compute pool of the application.
+sidebar_position: 10
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ExchangeRates from '!!raw-loader!@examples/scala/catseffect/ExchangeRates.scala';
+import CatsEffectTest from '!!raw-loader!@examples/test/catseffect/CatsEffectTest.scala';
+
+This page shows how an application of Coilix runs cats-effect `IO`. Coilix creates the `IORuntime`, closes it with the application, and makes its compute pool the only compute pool of the application, so `IO` fibers and the tasks of Coilix do not compete for the processor in two pools.
+
+## Add the module
+
+Add `coilix-cats-effect` to the dependencies:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-cats-effect" % "<version>"
+```
+
+The module adds three beans:
+
+- `ioRuntime`, the `IORuntime` of the application, with the work-stealing pool of cats-effect: `coilix.concurrency.compute.threads` threads named `io-compute-<number>`, by default one per processor,
+- `ioTaskExecutor`, the `TaskExecutor` on that pool. It takes the place of the default executor, so the threads `coilix-compute-<number>` from [Background tasks and scheduling](tasks-and-scheduling.mdx) are not created. `@Async` methods and asynchronous event listeners run on `io-compute` threads,
+- `coilixIORuntime`, which owns the runtime and shuts it down when the application closes, after the beans that use it.
+
+The `BlockingExecutor` stays as it is, for blocking code outside `IO`.
+
+## Run IO
+
+Inject the runtime where a bean runs `IO`, here as a `using` parameter, so `unsafeRunSync` and other calls find it:
+
+<CodeBlock language="scala" title="ExchangeRates.scala">{ExchangeRates}</CodeBlock>
+
+Run `IO` at the edge of your code, for example in a runner or a scheduled method, and keep the rest of the bean in `IO`.
+
+## Blocking calls in IO
+
+`IO.blocking` works as in any cats-effect application: the fiber blocks in place on a helper thread of cats-effect, and the compute pool gets a replacement thread in the meantime. It suits a few blocking calls at a time.
+
+For many calls that wait at once, such as requests to a slow service, `IO.onBlockingExecutor` from `import dev.coilix.catseffect.CoilixIO.*` runs the call on a virtual thread of the `BlockingExecutor` instead, which costs almost nothing while it waits. The fiber continues on the compute pool afterwards.
+
+## Fatal errors
+
+After a fatal error in a fiber, such as an `OutOfMemoryError`, cats-effect prints the error and shuts down every runtime of the JVM. Coilix reports that shutdown to its `FatalErrorHandler` as `IORuntimeStoppedException`, so the application closes and ends as described in [Fatal errors](fatal-errors.mdx). A fatal error in a task of the `TaskExecutor` goes to the handler directly.
+
+If your tests trigger a fatal error in a fiber, run them in their own test suite with parallel execution turned off, because the other runtimes of the JVM stop with it.
+
+## Test
+
+<CodeBlock language="scala" title="CatsEffectTest.scala">{CatsEffectTest}</CodeBlock>

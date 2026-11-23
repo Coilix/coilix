@@ -33,7 +33,8 @@ final class ServiceDesk(
   archive:    JobArchive,
   fleet:      Option[FleetScan],
   registry:   VehicleRegistry,
-  warranties: Provider[WarrantyRegistry]
+  warranties: Provider[WarrantyRegistry],
+  recalls:    RecallCheck
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
@@ -42,6 +43,7 @@ final class ServiceDesk(
     registry.all.headOption.foreach(vehicle => log.info(s"Warranty: ${warranties.get().coverage(vehicle.vin)}"))
     log.info(s"Job notes: ${updatedNotes}")
     log.info(Await.result(archive.archive("shift report"), 10.seconds))
+    recalls.openRecalls().foreach(line      => log.info(s"Recalls: $line"))
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))
   }
 
