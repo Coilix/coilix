@@ -229,16 +229,28 @@ lazy val testkit = slf4sModule("testkit", "16_testkit", "dev.coilix.testkit")
     libraryDependencies += Dependencies.munit % Provided
   )
 
+lazy val testkitCatsEffect =
+  slf4sModule("testkit-cats-effect", "24_testkit_cats_effect", "dev.coilix.testkit.catseffect")
+    .dependsOn(testkit, catsEffect)
+    .settings(featureGroup("cats-effect"))
+    .settings(
+      description              :=
+        "Test support for Coilix applications written with cats-effect: test contexts used in IO and a munit-cats-effect suite",
+      libraryDependencies ++= Seq(Dependencies.munit % Provided, Dependencies.munitCatsEffect % Provided),
+      Test / parallelExecution := false
+    )
+
 lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
-  .dependsOn(boot, cluster, catsEffect, testkit % Test)
+  .dependsOn(boot, cluster, catsEffect, testkit % Test, testkitCatsEffect % Test)
   .settings(unpublished)
   .settings(
-    coverageEnabled      := false,
+    coverageEnabled                                    := false,
     libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
     libraryDependencies ++= Dependencies.log4jSlf4j,
-    run / fork           := true,
+    libraryDependencies += Dependencies.munitCatsEffect % Test,
+    run / fork                                         := true,
     run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
-    run / outputStrategy := Some(StdoutOutput)
+    run / outputStrategy                               := Some(StdoutOutput)
   )
 
 lazy val apiSite =
@@ -251,20 +263,21 @@ def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
 lazy val docs = slf4sModule("docs", "99_docs", "com.example")
-  .dependsOn(boot, cluster, catsEffect, testkit % Test)
+  .dependsOn(boot, cluster, catsEffect, testkit % Test, testkitCatsEffect % Test)
   .settings(unpublished)
   .settings(
-    description                            := "Compiled examples and the combined API documentation of the Coilix documentation site",
-    coverageEnabled                        := false,
-    Compile / unmanagedSourceDirectories   := Seq(baseDirectory.value / "examples" / "next" / "scala"),
-    Compile / unmanagedResourceDirectories := Seq(baseDirectory.value / "examples" / "next" / "resources"),
+    description                                        := "Compiled examples and the combined API documentation of the Coilix documentation site",
+    coverageEnabled                                    := false,
+    Compile / unmanagedSourceDirectories               := Seq(baseDirectory.value / "examples" / "next" / "scala"),
+    Compile / unmanagedResourceDirectories             := Seq(baseDirectory.value / "examples" / "next" / "resources"),
+    libraryDependencies += Dependencies.munitCatsEffect % Test,
     Test / unmanagedSourceDirectories += baseDirectory.value / "examples" / "next" / "test",
     libraryDependencies += Dependencies.slf4jSimple,
-    run / fork                             := true,
-    run / outputStrategy                   := Some(StdoutOutput),
-    Test / fork                            := true,
+    run / fork                                         := true,
+    run / outputStrategy                               := Some(StdoutOutput),
+    Test / fork                                        := true,
     Test / javaOptions += s"-Dcoilix.docs.resources=${baseDirectory.value / "examples" / "next" / "resources"}",
-    Compile / doc / tastyFiles             := Def.uncached(
+    Compile / doc / tastyFiles                         := Def.uncached(
       Seq(
         (common / Compile / tastyFiles).value,
         (slf4sPlugin / Compile / tastyFiles).value,
@@ -275,13 +288,15 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (applicationEvents / Compile / tastyFiles).value,
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value,
-        (catsEffect / Compile / tastyFiles).value
+        (catsEffect / Compile / tastyFiles).value,
+        (testkitCatsEffect / Compile / tastyFiles).value
       ).flatten
     ),
     Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
     Compile / doc / dependencyClasspath ++= (testkit / Compile / dependencyClasspath).value,
+    Compile / doc / dependencyClasspath ++= (testkitCatsEffect / Compile / dependencyClasspath).value,
     Compile / doc / scalacOptions += javadocMapping(documentationLine(version.value)),
-    apiSite                                := Def.uncached(
+    apiSite                                            := Def.uncached(
       ApiSite.assemble(
         (Compile / doc).value,
         (annotations / Compile / doc).value,
@@ -306,6 +321,7 @@ lazy val modules: Seq[ProjectReference] =
     catsEffect,
     boot,
     testkit,
+    testkitCatsEffect,
     demo,
     docs
   )

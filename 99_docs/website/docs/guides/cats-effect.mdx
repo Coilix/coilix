@@ -12,6 +12,7 @@ import DatabaseConfiguration from '!!raw-loader!@examples/scala/catseffect/Datab
 import ProductCache from '!!raw-loader!@examples/scala/catseffect/ProductCache.scala';
 import PriceCheck from '!!raw-loader!@examples/scala/catseffect/PriceCheck.scala';
 import CatsEffectApplication from '!!raw-loader!@examples/scala/catseffect/CatsEffectApplication.scala';
+import PriceCheckTest from '!!raw-loader!@examples/test/catseffect/PriceCheckTest.scala';
 import CatsEffectYaml from '!!raw-loader!@examples/resources/guides/cats-effect/application.yaml';
 
 This page shows how an application of Coilix runs cats-effect `IO`. Coilix creates the `IORuntime`, closes it with the application, and makes its compute pool the only compute pool of the application, so `IO` fibers and the tasks of Coilix do not compete for the processor in two pools.
@@ -117,4 +118,21 @@ If your tests trigger a fatal error in a fiber, run them in their own test suite
 
 ## Test
 
+The tests of [Testing](testing.mdx) work as they are:
+
 <CodeBlock language="scala" title="CatsEffectTest.scala">{CatsEffectTest}</CodeBlock>
+
+### Tests in IO
+
+For test bodies that return `IO`, add `coilix-testkit-cats-effect` and munit-cats-effect to the test dependencies:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-testkit-cats-effect" % "<version>" % Test
+libraryDependencies += "org.typelevel" %% "munit-cats-effect" % "<version>" % Test
+```
+
+A `CatsEffectSuite` with `CoilixIOSuite` registers tests with `coilixTest`. Each test gets a fresh context, given to its body like in `setup.use`, and the context closes when the `IO` of the test ends, also when it fails:
+
+<CodeBlock language="scala" title="PriceCheckTest.scala">{PriceCheckTest}</CodeBlock>
+
+The runtime of the suite is the `ioRuntime` bean of the context, so the test and the beans run on the same compute pool. Outside such a suite, `setup.useIO { ... }` and `setup.resource` from `import dev.coilix.testkit.catseffect.CoilixIOTestSetup.*` use a setup in `IO`, and `setup.withIORuntime(runtime)` gives the context a runtime of your choice.
