@@ -1,0 +1,94 @@
+---
+id: background-processors
+title: Background processors
+description: Run long background work split into shards, supervised and restarted by Coilix and controlled through the processor manager.
+sidebar_position: 12
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ShopProcessor from '!!raw-loader!@examples/scala/processing/ShopProcessor.scala';
+import InvoiceExport from '!!raw-loader!@examples/scala/processing/InvoiceExport.scala';
+import OrderWatch from '!!raw-loader!@examples/scala/processing/OrderWatch.scala';
+import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.scala';
+import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
+import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
+
+This page shows how to run long background work, such as an export or a loop that watches for new orders, as a background processor. Coilix splits the work of a processor into shards, runs each shard of this replica on its own virtual thread, restarts it after a failure and stops it when the application closes.
+
+## Add the module
+
+Add `coilix-processing` to the dependencies:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-processing" % "<version>"
+```
+
+The module adds the `processorManager` bean, the only way to reach the processors.
+
+## Name the processors
+
+Each processor has an identifier, usually a `case object` of a sealed trait of the application. The manager takes identifiers, not names, so a misspelt processor does not compile:
+
+<CodeBlock language="scala" title="ShopProcessor.scala">{ShopProcessor}</CodeBlock>
+
+The name of an identifier is the name of the object in kebab case, such as `invoice-export`. It is used in the configuration, in thread names and in logs. Override `name` to keep an older name.
+
+## Write a processor
+
+A processor is a class with `@Processor` that extends a style of processor. Its constructor receives beans and `@Value` parameters like a bean, and its `@PostConstruct` and `@PreDestroy` methods run, but it is not a bean: no bean can inject it.
+
+A `BlockingProcessor` does the work of one shard in `run`. This export splits the customers between its two shards by the slot of each customer and ends when its customers are sent:
+
+<CodeBlock language="scala" title="InvoiceExport.scala">{InvoiceExport}</CodeBlock>
+
+Work that never ends by itself checks `shard.stopRequested` and returns when the shard stops:
+
+<CodeBlock language="scala" title="OrderWatch.scala">{OrderWatch}</CodeBlock>
+
+A shard that does not stop within half of the stop timeout gets its thread interrupted. A `CustomProcessor` starts work that runs on its own threads and returns an `Execution`, which the manager stops and waits for.
+
+`prepare` runs before every start of a shard, for example to restore its offsets. `onAcquired` and `onReleased` tell when this replica takes over and gives up a shard, with the reason: `Shutdown`, `Stopped`, `Completed` or `Failed`.
+
+## Slots, shards and replicas
+
+The data of a processor is split into slots, 256 by default. A slot is fixed: `ShardKeys.slotOf` gives the same slot for a key whatever the number of shards or replicas. Slot `s` belongs to shard `s % shards`, and each shard runs on one replica:
+
+- `round-robin`, the default, runs shard `i` on replica `i % replicas`,
+- `range` runs a contiguous range of shards on each replica,
+- `pinned` runs every shard on `pinned-replica`, so one shard runs once in the whole application,
+- `all` runs every shard on every replica, for sources that split the work themselves.
+
+The number of replicas and the number of this replica come from [Running several replicas](replicas.mdx). A replica of a processor with fewer shards than replicas may run none of its shards.
+
+## Configuration
+
+The number of shards is `shards` of the processor, or `defaultShards` of its class. The other keys can also be set for every processor under `defaults`:
+
+<CodeBlock language="yaml" title="application.yaml">{ProcessingYaml}</CodeBlock>
+
+- `shards` must not be more than `slots`,
+- `enabled: false` leaves the processor stopped until it is started through the manager, and `autostart: false` leaves every processor idle,
+- `on-completion` is `stop`, the default, so a shard whose work ends becomes `Completed`, or `restart`, which starts it again after `completion-delay`,
+- `shutdown-timeout` is how long stopping a processor, and closing the application, waits for its shards.
+
+A key under `coilix.processors` that matches no processor is logged as a warning at startup.
+
+## Restarts
+
+When the work of a shard fails, only that shard waits for the backoff of `restart` and starts again, with `prepare`. When it fails more than `max-attempts` times within `within`, it becomes `Failed` and stays so until it is started through the manager. A shard that ran for `reset-after` without failing, 5 minutes by default, starts counting again, so rare failures do not use up the attempts.
+
+## Control the processors
+
+Beans control processors through the `ProcessorManager`: `start`, `stop`, `restart` of a processor or of one shard, `status` with the state of each shard and its last failure, and `topology` with the shards of this replica:
+
+<CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
+
+The operations run one at a time on the thread `coilix-processor-manager` and change only this replica. Starting a running processor or stopping a stopped one changes nothing. Restarting a shard that another replica runs throws `ShardNotOwnedException` with the replica that runs it.
+
+## Closing
+
+When the application closes, the manager stops every shard at once, before any bean is destroyed, and logs the shards that did not stop within `shutdown-timeout`. Then it calls the `@PreDestroy` methods of the processors.
+
+## Test
+
+<CodeBlock language="scala" title="ProcessingTest.scala">{ProcessingTest}</CodeBlock>

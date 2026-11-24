@@ -42,6 +42,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0034](0034-coilix-io-app.md) | CoilixIOApp z runtime'em IOApp jako beanem | proponowana |
 | [0035](0035-testkit-cats-effect.md) | Moduł testkit-cats-effect | proponowana |
 | [0036](0036-pekko-module.md) | Moduł pekko z ActorSystem na pulach Coilix | proponowana |
+| [0037](0037-background-processors.md) | Procesory tła z shardami, nadzorem i jednym menedżerem | proponowana |
 
 ## Nowa decyzja
 
