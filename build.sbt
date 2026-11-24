@@ -31,7 +31,7 @@ ThisBuild / developers           := List(
   )
 )
 
-ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "cats-effect"))
+ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "cats-effect", "pekko"))
 
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
@@ -210,6 +210,14 @@ lazy val catsEffect = slf4sModule("cats-effect", "23_cats_effect", "dev.coilix.c
     Test / parallelExecution := false
   )
 
+lazy val pekko = slf4sModule("pekko", "25_pekko", "dev.coilix.pekko")
+  .dependsOn(boot, testkit % Test)
+  .settings(featureGroup("pekko"))
+  .settings(
+    description := "Pekko for Coilix: the ActorSystem and the Materializer as beans on the thread pools of the application",
+    libraryDependencies ++= Dependencies.pekko
+  )
+
 lazy val security = slf4sModule("security", "22_security", "dev.coilix.security")
   .dependsOn(context)
   .settings(featureGroup("security"))
@@ -241,7 +249,7 @@ lazy val testkitCatsEffect =
     )
 
 lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
-  .dependsOn(boot, cluster, catsEffect, testkit % Test, testkitCatsEffect % Test)
+  .dependsOn(boot, cluster, catsEffect, pekko, testkit % Test, testkitCatsEffect % Test)
   .settings(unpublished)
   .settings(
     coverageEnabled                                    := false,
@@ -263,7 +271,7 @@ def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
 lazy val docs = slf4sModule("docs", "99_docs", "com.example")
-  .dependsOn(boot, cluster, catsEffect, testkit % Test, testkitCatsEffect % Test)
+  .dependsOn(boot, cluster, catsEffect, pekko, testkit % Test, testkitCatsEffect % Test)
   .settings(unpublished)
   .settings(
     description                                        := "Compiled examples and the combined API documentation of the Coilix documentation site",
@@ -289,7 +297,8 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value,
         (catsEffect / Compile / tastyFiles).value,
-        (testkitCatsEffect / Compile / tastyFiles).value
+        (testkitCatsEffect / Compile / tastyFiles).value,
+        (pekko / Compile / tastyFiles).value
       ).flatten
     ),
     Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
@@ -319,6 +328,7 @@ lazy val modules: Seq[ProjectReference] =
     web,
     security,
     catsEffect,
+    pekko,
     boot,
     testkit,
     testkitCatsEffect,
@@ -335,7 +345,7 @@ lazy val root = (project in file("."))
       ModuleLayers.check(
         buildDependencies.value,
         coreModules.map(_.id),
-        Seq(data, web, security, catsEffect).map(_.id)
+        Seq(data, web, security, catsEffect, pekko).map(_.id)
       )
     ),
     Compile / compile := Def.uncached((Compile / compile).dependsOn(checkModuleLayers).value)

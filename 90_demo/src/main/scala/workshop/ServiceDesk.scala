@@ -21,7 +21,8 @@ import scala.concurrent.duration.DurationInt
  * It shows `@Qualifier` ([[dev.coilix.demo.workshop.PartsQuote]]), beans told apart by type arguments (`JobLog[Option]` and
  * `JobLog[List]`), `EditOption`, an `@Async` bean ([[dev.coilix.demo.workshop.JobArchive]]) and a bean of an optional module
  * that is injected as `Option`, because the module can be disabled. The `@Lazy` [[dev.coilix.demo.workshop.WarrantyRegistry]]
- * comes through a `Provider`, so it is loaded only here.
+ * comes through a `Provider`, so it is loaded only here. The [[dev.coilix.demo.workshop.ModuleCensus]] counts the modules of
+ * the fleet with a Pekko stream.
  */
 @Component
 @Order(4)
@@ -34,7 +35,8 @@ final class ServiceDesk(
   fleet:      Option[FleetScan],
   registry:   VehicleRegistry,
   warranties: Provider[WarrantyRegistry],
-  recalls:    RecallCheck
+  recalls:    RecallCheck,
+  census:     ModuleCensus
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
@@ -44,6 +46,9 @@ final class ServiceDesk(
     log.info(s"Job notes: ${updatedNotes}")
     log.info(Await.result(archive.archive("shift report"), 10.seconds))
     recalls.openRecalls().foreach(line      => log.info(s"Recalls: $line"))
+    log.info(
+      s"Modules in the fleet: ${Await.result(census.count(), 10.seconds).toList.sorted.map((id, count) => s"$count x $id").mkString(", ")}"
+    )
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))
   }
 
