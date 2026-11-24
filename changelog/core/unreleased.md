@@ -49,6 +49,7 @@
 
 ### Fixed
 
+- An exception thrown by the constructor of a bean or by a `@Bean` method now stops the startup with `BeanCreationException`, whose message names the class or method and the exception and whose cause is that exception. It escaped as the `InvocationTargetException` of reflection, with the real error only in its cause. A fatal error, such as `OutOfMemoryError`, is still rethrown as it is (COILIX-00003).
 - The `@PostConstruct` and `@PreDestroy` methods of the object returned by a `@Bean` method now run also when the method declares a trait or a superclass, for example `def gateway: Gateway = HttpGateway()`. They were looked up only in the declared type, so such a bean was never initialized or closed (COILIX-00004).
 - `@Qualifier("name")` on a constructor or `@Bean` method parameter now injects the bean with that name. It was documented as reserved and ignored. A missing name stops the startup with `NoSuchBeanException`, and `@Qualifier` on an `Option[T]` or collection parameter with `UnsupportedDependencyTypeException` (COILIX-00000).
 - A bean with an `Option[T]` or `List[T]` dependency now receives every matching bean, not only the beans created before it. A cycle through an `Option[T]` dependency is now reported as `CircularDependencyException` (COILIX-00012).
