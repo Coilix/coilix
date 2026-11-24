@@ -40,6 +40,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0032](0032-effectful-beans.md) | Beany z IO i Resource przez interpreter planu z modułu | proponowana |
 | [0033](0033-effectful-lifecycle-and-runners.md) | Cykl życia i runnery w IO | proponowana |
 | [0034](0034-coilix-io-app.md) | CoilixIOApp z runtime'em IOApp jako beanem | proponowana |
+| [0035](0035-testkit-cats-effect.md) | Moduł testkit-cats-effect | proponowana |
 
 ## Nowa decyzja
 

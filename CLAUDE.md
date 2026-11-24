@@ -32,7 +32,8 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `20_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
 | `21_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
 | `22_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
-| `23_cats_effect` | `cats-effect` | `dev.coilix.catseffect` | Scala | `IORuntime` jako bean i jedyna pula obliczeniowa (ADR 0031) |
+| `23_cats_effect` | `cats-effect` | `dev.coilix.catseffect` | Scala | `IORuntime` jako bean i jedyna pula obliczeniowa (ADR 0031), beany i start w `IO` |
+| `24_testkit_cats_effect` | `testkit-cats-effect` | `dev.coilix.testkit.catseffect` | Scala | testy w `IO` z munit-cats-effect (ADR 0035) |
 | `90_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
 | `99_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
