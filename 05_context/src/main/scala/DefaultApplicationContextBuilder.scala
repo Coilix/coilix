@@ -7,8 +7,11 @@ import scala.util.control.NonFatal
  * Builds a [[dev.coilix.context.DefaultApplicationContext]] by running a [[dev.coilix.context.ContextPlan]] synchronously.
  *
  * The context itself is provided as `applicationContext`, before the given singletons. The plan from the
- * [[dev.coilix.context.ContextPlanner]] is checked before any bean is created: a bean whose factory returns an effect stops the
- * build with an [[dev.coilix.context.EffectfulBeanException]] unless an [[dev.coilix.context.EffectInterpreter]] is given. The
+ * [[dev.coilix.context.ContextPlanner]] is checked before any bean is created: an effectful bean, whose factory or lifecycle
+ * method returns an effect, stops the build with an [[dev.coilix.context.EffectfulBeanException]] unless an
+ * [[dev.coilix.context.EffectInterpreter]] is given. A bean created by the builder itself whose instance turns out to have a
+ * lifecycle method returning an effect, declared only on its implementation, stops the build with a
+ * [[dev.coilix.context.BeanCreationException]]. The
  * interpreter creates the levels of the plan from the first one with such a bean, and the context releases them when it closes,
  * before it destroys the other beans; when it fails, the beans created before are destroyed. Each other bean is
  * created with the [[dev.coilix.context.BeanInstantiator]], at once for an eager bean, and as a
@@ -87,7 +90,7 @@ final class DefaultApplicationContextBuilder(
     val effects             = interpreter.filter(_ => plan.effectful.nonEmpty)
     if (plan.effectful.nonEmpty && effects.isEmpty) throw EffectfulBeanException(plan.effectful)
     warnAboutPrototypes(plan.creationOrder)
-    val (direct, effectful) = plan.levels.span(_.forall(!_.result.isEffectful))
+    val (direct, effectful) = plan.levels.span(_.forall(!_.isEffectful))
     val registry            = direct.flatten.foldLeft(provided(plan, completion))(created)
     effects.fold(InterpretedBeans(registry, () => ()))(interpreted(effectful, registry))
   }
@@ -107,8 +110,13 @@ final class DefaultApplicationContextBuilder(
     }
 
   private def created(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =
-    if (definition.creation.atStartup) registry.register(instantiator.instantiate(definition, registry))
-    else registry.defer(DeferredBean.of(definition)(lookup => instantiator.instantiate(definition, lookup)))
+    if (definition.creation.atStartup) registry.register(instantiated(definition, registry))
+    else registry.defer(DeferredBean.of(definition)(lookup => instantiated(definition, lookup)))
+
+  private def instantiated(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean = {
+    val bean = instantiator.instantiate(definition, registry)
+    bean.copy(lifecycle = bean.lifecycle.withoutEffects(bean.beanName))
+  }
 
   private def warnAboutPrototypes(definitions: List[BeanDefinition]): Unit =
     definitions.filter(_.creation != BeanCreation.Prototype).foreach { definition =>

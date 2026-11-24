@@ -4,7 +4,8 @@ package dev.coilix.boot
  * A bean that runs once the application context is ready.
  *
  * Every bean that implements this trait is called by `Coilix.run` after all beans are created, in the order set by `@Order`
- * (runners without it run last). An exception thrown by a runner stops the startup and is rethrown from `Coilix.run`.
+ * (runners without it run last), together with the runners of modules given by [[dev.coilix.boot.RunnerAdapter]] beans, such as
+ * `IOApplicationRunner` from `coilix-cats-effect`. An exception thrown by a runner stops the startup and is rethrown from `Coilix.run`.
  *
  * ```scala
  * @Component

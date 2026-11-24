@@ -36,7 +36,7 @@ final case class ContextPlan(steps: List[PlanStep]) {
   def destructionOrder: List[BeanDefinition] =
     creationOrder.reverse
 
-  /** The beans whose factory returns an effect, in creation order. */
+  /** The beans that only an effect interpreter can create, as described in [[dev.coilix.context.BeanDefinition.isEffectful]]. */
   def effectful: List[BeanDefinition] =
-    creationOrder.filter(_.result.isEffectful)
+    creationOrder.filter(_.isEffectful)
 }

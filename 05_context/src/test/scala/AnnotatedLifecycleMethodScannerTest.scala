@@ -1,5 +1,8 @@
 package dev.coilix.context
 
+import dev.coilix.context.effects.LaterCount
+import dev.coilix.context.effects.LaterWarmup
+import dev.coilix.context.effects.LaterWarmups
 import dev.coilix.context.lifecycle.BrokenShutdown
 import dev.coilix.context.lifecycle.Connection
 import dev.coilix.context.lifecycle.DestroyWithResult
@@ -47,6 +50,31 @@ final class AnnotatedLifecycleMethodScannerTest extends FunSuite {
 
   test("rejects a destroy method that returns a value") {
     val error = intercept[InvalidLifecycleMethodException](scanner.scan("destroyWithResult", classOf[DestroyWithResult]))
-    assertEquals(error.getMessage, "@PreDestroy method shutdown of bean 'destroyWithResult' must return Unit")
+    assertEquals(
+      error.getMessage,
+      "@PreDestroy method shutdown of bean 'destroyWithResult' must return Unit or an effect of Unit, such as IO[Unit]"
+    )
+  }
+
+  test("accepts methods that return an effect of Unit recognized as deferred") {
+    val methods = LaterWarmups.scanner.scan("laterWarmup", classOf[LaterWarmup])
+    assertEquals(
+      (methods.plainInit.map(_.getName), methods.effectfulInit.map(_.getName)),
+      (List("prepare"), List("warm"))
+    )
+    assertEquals(
+      (methods.plainDestroy.map(_.getName), methods.effectfulDestroy.map(_.getName), methods.hasEffects),
+      (List("stop"), List("cool"), true)
+    )
+  }
+
+  test("rejects an effect that is not recognized") {
+    val error = intercept[InvalidLifecycleMethodException](scanner.scan("laterWarmup", classOf[LaterWarmup]))
+    assert(error.getMessage.contains("must return Unit or an effect of Unit"), error.getMessage)
+  }
+
+  test("rejects an effect of a value other than Unit") {
+    val error = intercept[InvalidLifecycleMethodException](LaterWarmups.scanner.scan("laterCount", classOf[LaterCount]))
+    assert(error.getMessage.startsWith("@PostConstruct method count of bean 'laterCount' must return Unit or"), error.getMessage)
   }
 }

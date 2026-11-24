@@ -26,4 +26,13 @@ final class CatsEffectTest extends munit.FunSuite with CoilixContextOps {
     val (pool, report) = setup.use((bean[ConnectionPool], bean[MigrationReport]))
     assertEquals((report.applied, pool.isOpen), (3, false))
   }
+
+  test("IO lifecycle methods fill the cache at startup and clear it when the application closes") {
+    val (cache, size) = setup.use((bean[ProductCache], bean[ProductCache].size))
+    assertEquals((size, cache.size), (2, 0))
+  }
+
+  test("an IO runner runs with the other runners") {
+    assertEquals(setup.withRunners.use(bean[PriceCheck].checkedProducts), 2)
+  }
 }

@@ -153,7 +153,7 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
    - 5a: `IORuntime` jako bean i jedyna pula obliczeniowa (zrobione, ADR 0031).
    - rdzeń: `@DependsOn` dla wszystkich beanów (zrobione).
    - 5b część 1 (zrobione, ADR 0032): beany `IO[A]` i `Resource[IO, A]` otwierane równolegle poziomami grafu, `@ShutdownTimeout` i `coilix.cats-effect.shutdown-timeout`, błąd startu dla `@Lazy` i `@Prototype` na beanie efektowym, `Coilix.run` z jednym `unsafeRun` na granicy.
-   - 5b część 2: `@PostConstruct` i `@PreDestroy` zwracające `IO[Unit]`, `IOApplicationRunner` w jednej liście z `ApplicationRunner`.
+   - 5b część 2 (zrobione, ADR 0033): `@PostConstruct` i `@PreDestroy` zwracające `IO[Unit]`, `IOApplicationRunner` w jednej liście z `ApplicationRunner` przez `RunnerAdapter` z `boot`.
    - 5c: `CoilixIOApp` (czeka na anulowanie, `exit-after-runners`) i moduł `testkit-cats-effect` (`useIO`, `CoilixIOSuite`).
 6. Przewodnik w obu językach przy każdym kroku. Później: beany generyczne w `F[_]` i most MDC dla fiberów.
 

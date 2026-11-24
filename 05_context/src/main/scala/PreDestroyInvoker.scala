@@ -7,7 +7,8 @@ import scala.util.Failure
 import scala.util.Try
 
 /**
- * Invokes the `@PreDestroy` methods of each bean, starting with the bean created last.
+ * Invokes the `@PreDestroy` methods of each bean that return `Unit`, starting with the bean created last. Methods that return an
+ * effect are left to the [[dev.coilix.context.EffectInterpreter]].
  *
  * An exception thrown by a method is logged at `WARN` level with the bean and method name, and the remaining methods and beans
  * are still destroyed. For a [[dev.coilix.context.ProxiedBean]] the methods run on the instance behind the proxy. This is the
@@ -20,7 +21,7 @@ final class PreDestroyInvoker extends BeanDestroyer {
     beans.reverse.foreach(destroyBean)
 
   private def destroyBean(bean: RegisteredBean): Unit =
-    bean.lifecycle.destroy.foreach(invoke(bean))
+    bean.lifecycle.plainDestroy.foreach(invoke(bean))
 
   private def invoke(bean: RegisteredBean)(method: Method): Unit =
     Try(method.invoke(ProxiedBean.unwrap(bean.instance))) match {

@@ -9,6 +9,8 @@ import CodeBlock from '@theme/CodeBlock';
 import ExchangeRates from '!!raw-loader!@examples/scala/catseffect/ExchangeRates.scala';
 import CatsEffectTest from '!!raw-loader!@examples/test/catseffect/CatsEffectTest.scala';
 import DatabaseConfiguration from '!!raw-loader!@examples/scala/catseffect/DatabaseConfiguration.scala';
+import ProductCache from '!!raw-loader!@examples/scala/catseffect/ProductCache.scala';
+import PriceCheck from '!!raw-loader!@examples/scala/catseffect/PriceCheck.scala';
 import CatsEffectYaml from '!!raw-loader!@examples/resources/guides/cats-effect/application.yaml';
 
 This page shows how an application of Coilix runs cats-effect `IO`. Coilix creates the `IORuntime`, closes it with the application, and makes its compute pool the only compute pool of the application, so `IO` fibers and the tasks of Coilix do not compete for the processor in two pools.
@@ -21,12 +23,13 @@ Add `coilix-cats-effect` to the dependencies:
 libraryDependencies += "dev.coilix" %% "coilix-cats-effect" % "<version>"
 ```
 
-The module adds four beans:
+The module adds five beans:
 
 - `ioRuntime`, the `IORuntime` of the application, with the work-stealing pool of cats-effect: `coilix.concurrency.compute.threads` threads named `io-compute-<number>`, by default one per processor,
 - `ioTaskExecutor`, the `TaskExecutor` on that pool. It takes the place of the default executor, so the threads `coilix-compute-<number>` from [Background tasks and scheduling](tasks-and-scheduling.mdx) are not created. `@Async` methods and asynchronous event listeners run on `io-compute` threads,
 - `coilixIORuntime`, which owns the runtime and shuts it down when the application closes, after the beans that use it,
-- `catsEffectSettings`, the settings under `coilix.cats-effect`.
+- `catsEffectSettings`, the settings under `coilix.cats-effect`,
+- `ioRunnerAdapter`, which runs the `IOApplicationRunner` beans described in [Runners in IO](#runners-in-io).
 
 The `BlockingExecutor` stays as it is, for blocking code outside `IO`.
 
@@ -62,6 +65,27 @@ Coilix waits for the finalizer of each resource at most `coilix.cats-effect.shut
 <CodeBlock language="yaml" title="application.yaml">{CatsEffectYaml}</CodeBlock>
 
 `@ShutdownTimeout` on a `@Bean` method sets the limit of one bean, as a duration such as `"2m"` or a placeholder with a default, as in the example above. A finalizer that takes longer is cancelled and logged. A finalizer that fails is logged. In both cases Coilix goes on closing the other beans.
+
+## Lifecycle methods in IO
+
+`@PostConstruct` and `@PreDestroy` methods may return `IO[Unit]` instead of `Unit`:
+
+<CodeBlock language="scala" title="ProductCache.scala">{ProductCache}</CodeBlock>
+
+Coilix runs these effects on the `ioRuntime` bean:
+
+- the `IO` of a `@PostConstruct` method runs after the methods that return `Unit` and before any other bean receives the bean. If it fails, the startup stops with a `BeanCreationException`,
+- the `IO` of a `@PreDestroy` method runs when the application closes, before the methods that return `Unit`, within the same limit as the finalizer of a resource. If it fails, the failure is logged and closing goes on.
+
+Such a bean, like a bean made by an effect, is always created at startup, so it cannot be `@Lazy` or `@Prototype`. Declare the methods on the class of the bean or, for a `@Bean` method, on the type it returns: Coilix finds them before it creates the bean. Without the module, `Coilix.run` rejects these beans with `EffectfulBeanException`.
+
+## Runners in IO
+
+A bean that extends `IOApplicationRunner` returns the startup logic as `IO[Unit]`:
+
+<CodeBlock language="scala" title="PriceCheck.scala">{PriceCheck}</CodeBlock>
+
+`IOApplicationRunner` and `ApplicationRunner` beans run in one list, ordered by `@Order` (runners without it run last), each after the previous one finishes. A failing `IO` stops the startup like an exception thrown by an `ApplicationRunner`.
 
 ## Blocking calls in IO
 

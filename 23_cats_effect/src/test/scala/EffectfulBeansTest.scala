@@ -1,10 +1,15 @@
 package dev.coilix.catseffect
 
+import dev.coilix.boot.ApplicationArguments
+import dev.coilix.boot.OrderedRunnerInvoker
 import dev.coilix.catseffect.failing.FailureJournal
 import dev.coilix.catseffect.parallel.Runner
 import dev.coilix.catseffect.shop.OpeningJournal
 import dev.coilix.catseffect.shop.Storefront
 import dev.coilix.catseffect.slow.DrainConfiguration
+import dev.coilix.catseffect.warmup.WarmupJournal
+import dev.coilix.context.BeanCreationException
+import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
 import munit.FunSuite
@@ -57,5 +62,34 @@ final class EffectfulBeansTest extends FunSuite with CoilixContextOps {
   test("a lazy bean made by an effect stops the startup") {
     val failure = intercept[InvalidEffectfulBeanException](setup("lazyeffect").use(()))
     assert(failure.getMessage.contains("'snapshot'"), failure.getMessage)
+  }
+
+  test("runs @PostConstruct and @PreDestroy methods that return IO after and before the plain ones") {
+    val journal = setup("warmup").use(bean[WarmupJournal])
+    assertEquals(
+      journal.all.filter(_.startsWith("cache")),
+      List("cache loaded", "cache warmed", "cache flushed", "cache stopped")
+    )
+  }
+
+  test("goes on closing after a @PreDestroy method that returns a failing IO") {
+    val journal = setup("warmup").use(bean[WarmupJournal])
+    assert(journal.all.contains("thermostat released"), journal.all.toString)
+  }
+
+  test("a @PostConstruct method that returns a failing IO stops the startup") {
+    val failure = intercept[BeanCreationException](setup("brokenwarmup").use(()))
+    assertEquals(
+      (failure.getMessage.startsWith("@PostConstruct method heat of bean 'coldOven' failed"), failure.getCause.getMessage),
+      (true, "the oven stays cold")
+    )
+  }
+
+  test("runs IO runners and plain runners in one list by their order") {
+    val journal = setup("warmup").use {
+      OrderedRunnerInvoker().invoke(summon[ConfigurableApplicationContext], ApplicationArguments(Nil, Map.empty, List("today")))
+      bean[WarmupJournal]
+    }
+    assertEquals(journal.all.filterNot(_.startsWith("cache")).take(3), List("prices for today", "report", "audit"))
   }
 }

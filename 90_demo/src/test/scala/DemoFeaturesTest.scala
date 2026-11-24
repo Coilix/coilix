@@ -15,6 +15,8 @@ import dev.coilix.demo.workshop.JobNotes
 import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
 import dev.coilix.demo.workshop.PortalSession
+import dev.coilix.demo.workshop.RecallBoard
+import dev.coilix.demo.workshop.RecallBriefing
 import dev.coilix.demo.workshop.RecallCheck
 import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
@@ -191,6 +193,15 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       (session.isOpen, lines.forall(_.contains("in bulletin 2026-11")), session.url),
       (false, true, "https://oem-portal.example.com/workshop-keys")
     )
+  }
+
+  test("pins the recall bulletin with an IO @PostConstruct method and takes it down with an IO @PreDestroy method") {
+    val (board, notice) = workshop.use((bean[RecallBoard], bean[RecallBoard].pinned))
+    assertEquals((notice, board.pinned), (Some("Recall bulletin 2026-11"), None))
+  }
+
+  test("reads the recall notice to the staff with an IO runner among the other runners") {
+    assertEquals(workshop.withRunners.use(bean[RecallBriefing].isDone), true)
   }
 
   test("the compute pool of cats-effect is the only compute pool of the workshop") {

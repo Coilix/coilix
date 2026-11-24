@@ -11,7 +11,8 @@ import dev.coilix.config.Environment
 /**
  * The beans of the cats-effect module: `coilixIORuntime`, which creates the runtime and closes it with the context, `ioRuntime`
  * for code that needs a `given IORuntime`, and `ioTaskExecutor`, the [[dev.coilix.concurrency.TaskExecutor]] on the compute pool
- * of the runtime, which takes the place of the default executor of the concurrency module.
+ * of the runtime, which takes the place of the default executor of the concurrency module, and `ioRunnerAdapter`, which runs the
+ * [[dev.coilix.catseffect.IOApplicationRunner]] beans.
  */
 @Configuration
 final class CatsEffectConfiguration {
@@ -30,6 +31,11 @@ final class CatsEffectConfiguration {
   @Bean
   def ioRuntime(owner: CoilixIORuntime): IORuntime =
     owner.runtime
+
+  /** Runs the [[dev.coilix.catseffect.IOApplicationRunner]] beans in one list with the other runners. */
+  @Bean
+  def ioRunnerAdapter(runtime: IORuntime): IORunnerAdapter =
+    IORunnerAdapter(runtime)
 
   /** Runs the tasks of Coilix on the compute pool of the runtime. */
   @Bean
