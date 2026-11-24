@@ -1,0 +1,15 @@
+coilix:
+  processors:
+    shutdown-timeout: 20s
+    defaults:
+      restart:
+        backoff:
+          initial: 2s
+          max: 1m
+        max-attempts: 5
+        within: 10m
+    invoice-export:
+      shards: 4
+    order-watch:
+      assignment: pinned
+      pinned-replica: 0
