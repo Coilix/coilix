@@ -20,4 +20,11 @@ final class CatsEffectSettingsTest extends FunSuite {
       1.minute
     )
   }
+
+  test("runs until cancelled by default and reads coilix.cats-effect.exit-after-runners") {
+    val configured = CatsEffectSettings.from(
+      Environment.of(TypesafeConfigTree(ConfigFactory.parseString("coilix.cats-effect.exit-after-runners = true")))
+    )
+    assertEquals((CatsEffectSettings().exitAfterRunners, configured.exitAfterRunners), (false, true))
+  }
 }

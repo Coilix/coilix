@@ -42,6 +42,8 @@ workshop:
           kind: brakes
 
 coilix:
+  cats-effect:
+    exit-after-runners: true
   events:
     listeners:
       staffNotifications:

@@ -1,7 +1,7 @@
 package dev.coilix.demo
 
 import dev.coilix.annotation.CoilixApplication
-import dev.coilix.boot.Coilix
+import dev.coilix.catseffect.CoilixIOApp
 
 /**
  * Entry point of the demo: a car workshop where mechanics get signed, short-lived tokens to diagnose and code vehicles.
@@ -11,12 +11,10 @@ import dev.coilix.boot.Coilix
  *
  * Only the `access`, `vehicle` and `workshop` packages are scanned. The `diagnostics` package is an optional module added
  * through `META-INF/services`, and `--workshop.telematics.enabled=true` turns on the telematics uplink.
+ *
+ * The workshop is a `CoilixIOApp`: its context lives in the main fiber of cats-effect, whose runtime is the `ioRuntime` bean.
+ * `coilix.cats-effect.exit-after-runners` in `application.yaml` closes the workshop after the shift, and
+ * `--coilix.cats-effect.exit-after-runners=false` keeps it open until it is stopped with Ctrl+C.
  */
 @CoilixApplication(scanBasePackages = Array("dev.coilix.demo.access", "dev.coilix.demo.vehicle", "dev.coilix.demo.workshop"))
-object DemoApplication {
-
-  /** Starts the demo with the command-line arguments. */
-  def main(args: Array[String]): Unit = {
-    val _ = Coilix.run[DemoApplication.type](args)
-  }
-}
+object DemoApplication extends CoilixIOApp

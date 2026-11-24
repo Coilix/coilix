@@ -11,6 +11,7 @@ import CatsEffectTest from '!!raw-loader!@examples/test/catseffect/CatsEffectTes
 import DatabaseConfiguration from '!!raw-loader!@examples/scala/catseffect/DatabaseConfiguration.scala';
 import ProductCache from '!!raw-loader!@examples/scala/catseffect/ProductCache.scala';
 import PriceCheck from '!!raw-loader!@examples/scala/catseffect/PriceCheck.scala';
+import CatsEffectApplication from '!!raw-loader!@examples/scala/catseffect/CatsEffectApplication.scala';
 import CatsEffectYaml from '!!raw-loader!@examples/resources/guides/cats-effect/application.yaml';
 
 This page shows how an application of Coilix runs cats-effect `IO`. Coilix creates the `IORuntime`, closes it with the application, and makes its compute pool the only compute pool of the application, so `IO` fibers and the tasks of Coilix do not compete for the processor in two pools.
@@ -27,11 +28,26 @@ The module adds five beans:
 
 - `ioRuntime`, the `IORuntime` of the application, with the work-stealing pool of cats-effect: `coilix.concurrency.compute.threads` threads named `io-compute-<number>`, by default one per processor,
 - `ioTaskExecutor`, the `TaskExecutor` on that pool. It takes the place of the default executor, so the threads `coilix-compute-<number>` from [Background tasks and scheduling](tasks-and-scheduling.mdx) are not created. `@Async` methods and asynchronous event listeners run on `io-compute` threads,
-- `coilixIORuntime`, which owns the runtime and shuts it down when the application closes, after the beans that use it,
+- `coilixIORuntime`, which owns the runtime and shuts it down when the application closes, after the beans that use it. An application started as [`CoilixIOApp`](#start-as-an-ioapp) has no such bean, because its runtime belongs to the `IOApp`,
 - `catsEffectSettings`, the settings under `coilix.cats-effect`,
 - `ioRunnerAdapter`, which runs the `IOApplicationRunner` beans described in [Runners in IO](#runners-in-io).
 
 The `BlockingExecutor` stays as it is, for blocking code outside `IO`.
+
+## Start as an IOApp
+
+An application written with `IO` starts as a `CoilixIOApp`, an `IOApp` of cats-effect:
+
+<CodeBlock language="scala" title="CatsEffectApplication.scala">{CatsEffectApplication}</CodeBlock>
+
+The application then lives in the main fiber of the `IOApp`:
+
+- the runtime of the `IOApp` is the `ioRuntime` bean, with `coilix.concurrency.compute.threads` compute threads, so it stays the only compute pool. The number of threads is read before the command-line arguments, so set it in a configuration file, a system property or an environment variable,
+- Coilix builds the context, runs the runners as described in [Runners in IO](#runners-in-io) and waits until the application is cancelled, for example by `SIGTERM` or Ctrl+C. Cancelling closes the context, so resources close in the reverse order of opening,
+- with `coilix.cats-effect.exit-after-runners: true` the application closes and ends after its runners, which suits batch jobs,
+- if the start or a runner fails, the context closes and the application ends with exit code 1.
+
+`Coilix.run` from a plain `main` method works too: the module then creates the runtime itself and Coilix closes it with the application.
 
 ## Run IO
 

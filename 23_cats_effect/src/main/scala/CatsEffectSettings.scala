@@ -11,13 +11,17 @@ import scala.concurrent.duration.FiniteDuration
  * coilix:
  *   cats-effect:
  *     shutdown-timeout: 1m
+ *     exit-after-runners: true
  * ```
  *
  * @param shutdownTimeout
  *   how long the context waits for the finalizer of each bean made by an effect when it closes, unless the `@Bean` method sets
  *   its own limit with [[dev.coilix.annotation.ShutdownTimeout]]
+ * @param exitAfterRunners
+ *   whether an application started by [[dev.coilix.catseffect.CoilixIOApp]] closes and ends after its runners, as a batch job,
+ *   instead of running until it is cancelled
  */
-final case class CatsEffectSettings(shutdownTimeout: FiniteDuration = 30.seconds)
+final case class CatsEffectSettings(shutdownTimeout: FiniteDuration = 30.seconds, exitAfterRunners: Boolean = false)
 
 /** Reading of [[dev.coilix.catseffect.CatsEffectSettings]] from the configuration. */
 object CatsEffectSettings {

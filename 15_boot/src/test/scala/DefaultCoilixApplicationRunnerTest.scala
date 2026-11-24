@@ -7,6 +7,7 @@ import dev.coilix.config.ClasspathEnvironmentLoader
 import dev.coilix.config.ConfigFormat
 import dev.coilix.config.Environment
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.RegisteredBean
 import java.util.concurrent.atomic.AtomicReference
 import munit.FunSuite
 
@@ -58,5 +59,23 @@ final class DefaultCoilixApplicationRunnerTest extends FunSuite {
 
   test("returns an active context") {
     assert(context.isActive)
+  }
+
+  test("start builds the context with extra singletons, without runners, events or a shutdown hook") {
+    val token       = StartToken("till-1")
+    val application = runner.start[FixtureApplication.type](List("--name=Bob"), List(RegisteredBean.of[StartToken]("token", token)))
+    try {
+      assertEquals(
+        (
+          application.context.getBean[StartToken] eq token,
+          application.context.getBean[RunJournal].recorded,
+          application.arguments.optionValue("name"),
+          hooked.get.exists(_ eq application.context)
+        ),
+        (true, Nil, Some("Bob"), false)
+      )
+    } finally {
+      application.context.close()
+    }
   }
 }

@@ -1,5 +1,9 @@
 package dev.coilix.demo
 
+import cats.effect.ExitCode
+import cats.effect.IO
+import cats.effect.unsafe.IORuntime
+import dev.coilix.catseffect.CoilixIOStartup
 import dev.coilix.concurrency.ProcessTerminator
 import dev.coilix.context.ProxiedBean
 import dev.coilix.demo.access.ClaimSweeper
@@ -202,6 +206,19 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
 
   test("reads the recall notice to the staff with an IO runner among the other runners") {
     assertEquals(workshop.withRunners.use(bean[RecallBriefing].isDone), true)
+  }
+
+  test("starts as a CoilixIOApp on the given runtime, runs the shift and closes after the runners") {
+    val runtime = IORuntime.builder().build()
+    try {
+      val sameRuntime = CoilixIOStartup
+        .application[DemoApplication.type](Nil, runtime)
+        .use(application => IO(application.context.getBean[IORuntime] eq runtime))
+      val result      = sameRuntime.product(CoilixIOStartup.run[DemoApplication.type](Nil, runtime)).unsafeRunSync()(using runtime)
+      assertEquals(result, (true, ExitCode.Success))
+    } finally {
+      runtime.shutdown()
+    }
   }
 
   test("the compute pool of cats-effect is the only compute pool of the workshop") {

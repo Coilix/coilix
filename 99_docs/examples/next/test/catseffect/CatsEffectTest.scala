@@ -1,6 +1,9 @@
 package com.example
 package catseffect
 
+import cats.effect.ExitCode
+import cats.effect.unsafe.IORuntime
+import dev.coilix.catseffect.CoilixIOStartup
 import dev.coilix.concurrency.TaskExecutor
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
@@ -34,5 +37,17 @@ final class CatsEffectTest extends munit.FunSuite with CoilixContextOps {
 
   test("an IO runner runs with the other runners") {
     assertEquals(setup.withRunners.use(bean[PriceCheck].checkedProducts), 2)
+  }
+
+  test("the application starts as an IOApp and ends after its runners with exit-after-runners") {
+    val runtime = IORuntime.builder().build()
+    try {
+      val exitCode = CoilixIOStartup
+        .run[CatsEffectApplication.type](List("--coilix.cats-effect.exit-after-runners=true"), runtime)
+        .unsafeRunSync()(using runtime)
+      assertEquals(exitCode, ExitCode.Success)
+    } finally {
+      runtime.shutdown()
+    }
   }
 }
