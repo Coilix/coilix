@@ -202,7 +202,7 @@ lazy val web = slf4sModule("web", "21_web", "dev.coilix.web")
   .settings(description := "Web endpoints for Coilix")
 
 lazy val catsEffect = slf4sModule("cats-effect", "23_cats_effect", "dev.coilix.catseffect")
-  .dependsOn(concurrency, testkit % Test)
+  .dependsOn(boot, testkit % Test)
   .settings(featureGroup("cats-effect"))
   .settings(
     description              := "cats-effect for Coilix: the IORuntime as a bean whose compute pool is the only compute pool of the application",

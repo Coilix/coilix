@@ -10,7 +10,7 @@ trait LifecycleMethodScanner {
    * The lifecycle methods of `beanClass`.
    *
    * @throws dev.coilix.context.InvalidLifecycleMethodException
-   *   if a lifecycle method has parameters, returns a value, is static or cannot be made accessible
+   *   if a lifecycle method has parameters, returns a value other than `Unit` or an effect of `Unit`, is static or cannot be made accessible
    */
   def scan(beanName: String, beanClass: Class[?]): LifecycleMethods
 }
@@ -29,5 +29,5 @@ object LifecycleMethodScanner {
    * `coilix.context.lifecycle-method-scanner` is not set.
    */
   def default(using components: ComponentProvider): LifecycleMethodScanner =
-    components.get[LifecycleMethodScanner](AnnotatedLifecycleMethodScanner())
+    components.get[LifecycleMethodScanner](AnnotatedLifecycleMethodScanner(EffectfulResultRecognizer.default))
 }

@@ -41,4 +41,11 @@ final case class BeanDefinition(
   result:       BeanResult       = BeanResult.Plain,
   creation:     BeanCreation     = BeanCreation.Eager,
   dependsOn:    List[String]     = Nil
-) extends BeanDescriptor
+) extends BeanDescriptor {
+
+  /**
+   * Whether only an [[dev.coilix.context.EffectInterpreter]] can create this bean: its factory returns an effect, or one of its
+   * lifecycle methods returns an effect such as `IO[Unit]`.
+   */
+  def isEffectful: Boolean = result.isEffectful || lifecycle.hasEffects
+}

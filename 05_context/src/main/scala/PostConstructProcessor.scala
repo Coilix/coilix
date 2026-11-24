@@ -4,7 +4,8 @@ import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 
 /**
- * Invokes the `@PostConstruct` methods from [[dev.coilix.context.BeanDefinition.lifecycle]] and returns the same instance.
+ * Invokes the `@PostConstruct` methods that return `Unit` from [[dev.coilix.context.BeanDefinition.lifecycle]] and returns the
+ * same instance. Methods that return an effect are left to the [[dev.coilix.context.EffectInterpreter]].
  *
  * An exception thrown by a method becomes a [[dev.coilix.context.BeanCreationException]] naming the bean and the method, with the
  * original exception as its cause. For a [[dev.coilix.context.ProxiedBean]] the methods run on the instance behind the proxy,
@@ -13,7 +14,7 @@ import java.lang.reflect.Method
 final class PostConstructProcessor extends BeanPostProcessor {
 
   override def postProcess(definition: BeanDefinition, instance: AnyRef): AnyRef = {
-    definition.lifecycle.init.foreach(invoke(definition, ProxiedBean.unwrap(instance)))
+    definition.lifecycle.plainInit.foreach(invoke(definition, ProxiedBean.unwrap(instance)))
     instance
   }
 

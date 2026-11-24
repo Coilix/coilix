@@ -2,8 +2,11 @@ package dev.coilix.context
 
 import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
+import dev.coilix.config.Environment
 import dev.coilix.context.effects.Later
 import dev.coilix.context.effects.LaterInterpreter
+import dev.coilix.context.effects.LaterWarmup
+import dev.coilix.context.effects.LaterWarmups
 import dev.coilix.context.effects.ReportReader
 import dev.coilix.context.effects.TestEffects
 import dev.coilix.context.ordering.AlphaService
@@ -103,5 +106,31 @@ final class DefaultApplicationContextBuilderTest extends FunSuite {
     )
     intercept[IllegalStateException](builder.build(TestEffects.definitions, Nil, Some(LaterInterpreter(failing = true))))
     assertEquals(destroyed.get, List("applicationContext", "effectConfiguration"))
+  }
+
+  test("rejects beans whose lifecycle methods return effects without an interpreter") {
+    val error = intercept[EffectfulBeanException](ApplicationContextBuilder.default.build(List(LaterWarmups.definition())))
+    assertEquals(error.definitions.map(_.beanName), List("laterWarmup"))
+    assert(error.getMessage.contains("'laterWarmup' (lifecycle methods warm, cool)"), error.getMessage)
+  }
+
+  test("hands beans whose lifecycle methods return effects to the interpreter, which skips them in post-processing") {
+    val interpreter = LaterInterpreter()
+    val built       = ApplicationContextBuilder.default.build(List(LaterWarmups.definition()), Nil, Some(interpreter))
+    val journal     = built.getBean[LaterWarmup].journal
+    built.close()
+    assertEquals((journal, interpreter.journal), (List("prepare"), List("levels laterWarmup", "released")))
+  }
+
+  test("rejects a bean whose implementation has lifecycle methods that return effects") {
+    val builder = DefaultApplicationContextBuilder(
+      ContextPlanner.default,
+      ReflectiveBeanInstantiator(Environment.empty, PostConstructProcessor(), LaterWarmups.scanner),
+      CandidateSelector.default,
+      BeanDestroyer.default
+    )
+    val hidden  = LaterWarmups.definition().copy(beanType = GenericType.of(classOf[AnyRef]), lifecycle = LifecycleMethods.none)
+    val error   = intercept[BeanCreationException](builder.build(List(hidden), Nil, None))
+    assert(error.getMessage.contains("Bean 'laterWarmup' has lifecycle methods that return effects (warm, cool)"), error.getMessage)
   }
 }

@@ -1,7 +1,9 @@
 package dev.coilix.catseffect
 
 import dev.coilix.catseffect.lazyeffect.SnapshotConfiguration
+import dev.coilix.catseffect.lazywarmup.LazyWarmup
 import dev.coilix.catseffect.shop.ShopResources
+import dev.coilix.catseffect.warmup.PriceCache
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.BeanDefinition
 import dev.coilix.context.BeanDefinitionFactory
@@ -27,6 +29,18 @@ final class EffectfulBeanProcessorTest extends FunSuite {
   test("rejects a lazy bean made by an effect") {
     val snapshot = definitions(classOf[SnapshotConfiguration]).filter(_.beanName == "snapshot")
     intercept[InvalidEffectfulBeanException](snapshot.map(processor.process))
+  }
+
+  test("makes a bean whose lifecycle methods return IO wait for the runtime and the settings") {
+    assertEquals(
+      definitions(classOf[PriceCache]).map(processor.process).map(_.dependsOn),
+      List(List("ioRuntime", "catsEffectSettings"))
+    )
+  }
+
+  test("rejects a lazy bean whose lifecycle methods return IO") {
+    val failure = intercept[InvalidEffectfulBeanException](definitions(classOf[LazyWarmup]).map(processor.process))
+    assert(failure.getMessage.contains("'lazyWarmup' is made or initialized by an effect"), failure.getMessage)
   }
 
   private def definitions(beanClass: Class[?]): List[BeanDefinition] =
