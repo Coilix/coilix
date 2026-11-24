@@ -31,7 +31,7 @@ ThisBuild / developers           := List(
   )
 )
 
-ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "cats-effect", "pekko"))
+ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "cats-effect", "pekko", "processing"))
 
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
@@ -218,6 +218,16 @@ lazy val pekko = slf4sModule("pekko", "25_pekko", "dev.coilix.pekko")
     libraryDependencies ++= Dependencies.pekko
   )
 
+lazy val processingAnnotations =
+  javaModule("processing-annotations", "26_processing_annotations", "dev[.]coilix[.]processing[.]annotation")
+    .settings(featureGroup("processing"))
+    .settings(description := "The @Processor annotation that marks background processors of Coilix")
+
+lazy val processing = slf4sModule("processing", "27_processing", "dev.coilix.processing")
+  .dependsOn(cluster, processingAnnotations, testkit % Test)
+  .settings(featureGroup("processing"))
+  .settings(description := "Background processors of Coilix, split into shards that run on the replicas of the application")
+
 lazy val security = slf4sModule("security", "22_security", "dev.coilix.security")
   .dependsOn(context)
   .settings(featureGroup("security"))
@@ -249,7 +259,7 @@ lazy val testkitCatsEffect =
     )
 
 lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
-  .dependsOn(boot, cluster, catsEffect, pekko, testkit % Test, testkitCatsEffect % Test)
+  .dependsOn(boot, cluster, catsEffect, pekko, processing, testkit % Test, testkitCatsEffect % Test)
   .settings(unpublished)
   .settings(
     coverageEnabled                                    := false,
@@ -271,7 +281,7 @@ def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
 lazy val docs = slf4sModule("docs", "99_docs", "com.example")
-  .dependsOn(boot, cluster, catsEffect, pekko, testkit % Test, testkitCatsEffect % Test)
+  .dependsOn(boot, cluster, catsEffect, pekko, processing, testkit % Test, testkitCatsEffect % Test)
   .settings(unpublished)
   .settings(
     description                                        := "Compiled examples and the combined API documentation of the Coilix documentation site",
@@ -298,7 +308,8 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (testkit / Compile / tastyFiles).value,
         (catsEffect / Compile / tastyFiles).value,
         (testkitCatsEffect / Compile / tastyFiles).value,
-        (pekko / Compile / tastyFiles).value
+        (pekko / Compile / tastyFiles).value,
+        (processing / Compile / tastyFiles).value
       ).flatten
     ),
     Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
@@ -329,6 +340,8 @@ lazy val modules: Seq[ProjectReference] =
     security,
     catsEffect,
     pekko,
+    processingAnnotations,
+    processing,
     boot,
     testkit,
     testkitCatsEffect,
@@ -345,7 +358,7 @@ lazy val root = (project in file("."))
       ModuleLayers.check(
         buildDependencies.value,
         coreModules.map(_.id),
-        Seq(data, web, security, catsEffect, pekko).map(_.id)
+        Seq(data, web, security, catsEffect, pekko, processing).map(_.id)
       )
     ),
     Compile / compile := Def.uncached((Compile / compile).dependsOn(checkModuleLayers).value)

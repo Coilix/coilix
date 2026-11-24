@@ -11,6 +11,7 @@ import dev.coilix.context.Provider
 import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vehicle
 import dev.coilix.demo.vehicle.VehicleRegistry
+import dev.coilix.processing.ProcessorManager
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 
@@ -22,7 +23,7 @@ import scala.concurrent.duration.DurationInt
  * `JobLog[List]`), `EditOption`, an `@Async` bean ([[dev.coilix.demo.workshop.JobArchive]]) and a bean of an optional module
  * that is injected as `Option`, because the module can be disabled. The `@Lazy` [[dev.coilix.demo.workshop.WarrantyRegistry]]
  * comes through a `Provider`, so it is loaded only here. The [[dev.coilix.demo.workshop.ModuleCensus]] counts the modules of
- * the fleet with a Pekko stream.
+ * the fleet with a Pekko stream. The background processors are reached only through the `ProcessorManager`.
  */
 @Component
 @Order(4)
@@ -36,7 +37,8 @@ final class ServiceDesk(
   registry:   VehicleRegistry,
   warranties: Provider[WarrantyRegistry],
   recalls:    RecallCheck,
-  census:     ModuleCensus
+  census:     ModuleCensus,
+  processors: ProcessorManager
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
@@ -50,7 +52,12 @@ final class ServiceDesk(
       s"Modules in the fleet: ${Await.result(census.count(), 10.seconds).toList.sorted.map((id, count) => s"$count x $id").mkString(", ")}"
     )
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))
+    log.info(s"Fault code export: $exportShards")
   }
+
+  /** The state of each shard of the fault code export on this replica, such as `0 Completed, 1 Running`. */
+  def exportShards: String =
+    processors.status(WorkshopProcessor.FaultCodeExport).shards.map(shard => s"${shard.index} ${shard.state}").mkString(", ")
 
   /** The notes after the customer note is set and the internal note is cleared. */
   def updatedNotes: JobNotes =

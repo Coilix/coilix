@@ -10,6 +10,8 @@ import dev.coilix.demo.access.ClaimSweeper
 import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vin
 import dev.coilix.demo.workshop.BayMonitor
+import dev.coilix.demo.workshop.FaultCodeExport
+import dev.coilix.demo.workshop.FaultLedger
 import dev.coilix.demo.workshop.FileJobArchive
 import dev.coilix.demo.workshop.InspectionFinished
 import dev.coilix.demo.workshop.InspectionSheet
@@ -27,9 +29,12 @@ import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
 import dev.coilix.demo.workshop.WorkshopOpening
+import dev.coilix.demo.workshop.WorkshopProcessor
 import dev.coilix.events.ApplicationStarted
 import dev.coilix.events.ContextReady
 import dev.coilix.events.EventBus
+import dev.coilix.processing.ProcessorManager
+import dev.coilix.processing.WorkerState
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
 import java.time.Clock
@@ -37,7 +42,9 @@ import java.time.Instant
 import java.time.ZoneOffset
 import java.util.concurrent.TimeUnit
 import munit.FunSuite
+import scala.annotation.tailrec
 import scala.concurrent.Await
+import scala.concurrent.duration.Deadline
 import scala.concurrent.duration.DurationInt
 
 final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
@@ -241,4 +248,26 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       assertEquals(beans[Clock], List(fixed))
     }
   }
+
+  test("exports the fault codes of the fleet with a background processor on two shards") {
+    workshop.use {
+      val processors = bean[ProcessorManager]
+      assert(completed(processors, 5.seconds.fromNow))
+      assertEquals(bean[FaultLedger].faults, Map(vin -> List("P0301", "P0420", "C0035"), Vin("TMBJJ7NE8J0000002") -> Nil))
+      assertEquals(
+        processors.topology.processors.map(processor => (processor.id, processor.shards.map(_.shard))),
+        List((WorkshopProcessor.FaultCodeExport, List(0, 1)))
+      )
+      assertEquals((beanOption[FaultCodeExport], bean[ServiceDesk].exportShards), (None, "0 Completed, 1 Completed"))
+    }
+  }
+
+  @tailrec
+  private def completed(processors: ProcessorManager, deadline: Deadline): Boolean =
+    if (processors.status(WorkshopProcessor.FaultCodeExport).all(WorkerState.Completed)) true
+    else if (deadline.isOverdue()) false
+    else {
+      Thread.sleep(10)
+      completed(processors, deadline)
+    }
 }

@@ -1,6 +1,6 @@
 # COILIX-00026: Przetwarzanie w tle (`processing`)
 
-> Szkic do doszlifowania. Wzorem jest moduł `flow` z bulldozera (`OptimusFlow`, shardy, `StatefulFlow`), ale API piszemy od nowa pod zasady Coilix. Decyzje opiekuna z 2026-11-18 i 2026-11-19:
+> Kroki 1–4 zrobione (ADR 0037). Wzorem jest moduł `flow` z bulldozera (`OptimusFlow`, shardy, `StatefulFlow`), ale API piszemy od nowa pod zasady Coilix. Decyzje opiekuna z 2026-11-18 i 2026-11-19:
 >
 > - nazwa to „procesor”,
 > - rdzeń jest blokujący i działa na wątkach wirtualnych, a `IO` (COILIX-00020) i Pekko Streams (COILIX-00029) wpinają się jako osobne silniki wykonania na wspólnym modelu,
@@ -652,10 +652,10 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 
 ### Kroki (osobne PR-y)
 
-1. Ten szkic i COILIX-00027, potem ADR z decyzjami: nazwa, procesory poza rejestrem beanów, identyfikatory, moduły, model wykonania, sloty, shardy i repliki, model błędów.
+1. Ten szkic i COILIX-00027, potem ADR z decyzjami: nazwa, procesory poza rejestrem beanów, identyfikatory, moduły, model wykonania, sloty, shardy i repliki, model błędów — zrobione (ADR 0037).
 2. Rdzeń: `ComponentCollector` i instancjonowanie klas spoza rejestru beanów z cyklem życia — zrobione: `CoilixModule.collects`, `CollectedComponents`, `ManagedComponent` (ADR 0017).
 3. COILIX-00027 krok 1: tożsamość repliki i statyczne członkostwo.
-4. `processing-annotations` i szkielet `processing`: `ProcessorId`, zbieranie i tworzenie procesorów, wątek sterujący managera, sloty, `Shard`, `ShardAssignment` (strategie statyczne), `ShardKeys`, wspólny model nadzoru (maszyna stanów jako czyste przejścia, `RestartPolicy`, `Backoff`), SPI `ProcessorEngine` i silnik na wątkach wirtualnych, `CustomProcessor`, `BlockingProcessor`, lokalne operacje managera, konfiguracja, cykl życia.
+4. `processing-annotations` i szkielet `processing`: `ProcessorId`, zbieranie i tworzenie procesorów, wątek sterujący managera, sloty, `Shard`, `ShardAssignment` (strategie statyczne), `ShardKeys`, wspólny model nadzoru (maszyna stanów jako czyste przejścia, `RestartPolicy`, `Backoff`), SPI `ProcessorEngine` i silnik na wątkach wirtualnych, `CustomProcessor`, `BlockingProcessor`, lokalne operacje managera, konfiguracja, cykl życia — zrobione (ADR 0037). Procesory startują po zbudowaniu kontekstu, a nie po `ApplicationRunner`.
 5. `StatelessProcessor`, `InputSource`, `Input`, `Acknowledgement`, `Output`, implementacje w pamięci, statystyki i zdarzenia.
 6. `FailureHandling` z etapami, decyzjami, eskalacją, `poisonAfter`, `ErrorClassifier`, walidacją przy starcie i regułami z configu. `DeadLetterQueue` w pamięci z `DeadLetterBrowser`.
 7. `Concurrency` (równoległość z potwierdzeniami w kolejności) i `BatchProcessor`.
