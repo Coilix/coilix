@@ -14,6 +14,7 @@ import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
 import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
+import dev.coilix.demo.workshop.PortalSession
 import dev.coilix.demo.workshop.RecallCheck
 import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
@@ -182,6 +183,14 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
         (List("WVWZZZ1KZ6W000001", "TMBJJ7NE8J0000002"), true)
       )
     }
+  }
+
+  test("logs in to the portal with a Resource bean, downloads the bulletin with an IO bean and logs out when closing") {
+    val (session, lines) = workshop.use((bean[PortalSession], bean[RecallCheck].openRecalls()))
+    assertEquals(
+      (session.isOpen, lines.forall(_.contains("in bulletin 2026-11")), session.url),
+      (false, true, "https://oem-portal.example.com/workshop-keys")
+    )
   }
 
   test("the compute pool of cats-effect is the only compute pool of the workshop") {

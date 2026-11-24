@@ -11,12 +11,23 @@ trait ApplicationContextBuilder {
    *
    * @param singletons
    *   ready instances added to the context before any bean is created, such as the environment
+   * @param interpreter
+   *   creates the beans from the first level with a bean made by an effect; without one such beans stop the build with an
+   *   [[dev.coilix.context.EffectfulBeanException]]
    * @throws dev.coilix.context.NoSuchBeanException
    *   if a required dependency has no matching bean
    * @throws dev.coilix.context.CircularDependencyException
    *   if beans depend on each other in a cycle
    */
-  def build(definitions: List[BeanDefinition], singletons: List[RegisteredBean]): ConfigurableApplicationContext
+  def build(
+    definitions: List[BeanDefinition],
+    singletons:  List[RegisteredBean],
+    interpreter: Option[EffectInterpreter]
+  ): ConfigurableApplicationContext
+
+  /** Creates every bean in `definitions` after the `singletons`, without an effect interpreter. */
+  final def build(definitions: List[BeanDefinition], singletons: List[RegisteredBean]): ConfigurableApplicationContext =
+    build(definitions, singletons, None)
 
   /** Creates every bean in `definitions`, without ready instances. */
   final def build(definitions: List[BeanDefinition]): ConfigurableApplicationContext = build(definitions, Nil)

@@ -30,6 +30,16 @@ final class TopologicalDependencyResolverTest extends FunSuite {
     )
   }
 
+  test("groups beans that do not depend on each other into one level") {
+    assertEquals(
+      resolver.resolveLevels(
+        Definitions.of(classOf[DefaultGreetingService], classOf[EnglishGreeter], classOf[PolishGreeter]),
+        Nil
+      ).map(_.map(_.beanName)),
+      List(List("englishGreeter", "polishGreeter"), List("defaultGreetingService"))
+    )
+  }
+
   test("ignores optional dependencies without candidates") {
     assertEquals(resolver.resolve(Definitions.of(classOf[DefaultGreetingService], classOf[PolishGreeter]), Nil).size, 2)
   }

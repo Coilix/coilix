@@ -8,6 +8,8 @@ sidebar_position: 10
 import CodeBlock from '@theme/CodeBlock';
 import ExchangeRates from '!!raw-loader!@examples/scala/catseffect/ExchangeRates.scala';
 import CatsEffectTest from '!!raw-loader!@examples/test/catseffect/CatsEffectTest.scala';
+import DatabaseConfiguration from '!!raw-loader!@examples/scala/catseffect/DatabaseConfiguration.scala';
+import CatsEffectYaml from '!!raw-loader!@examples/resources/guides/cats-effect/application.yaml';
 
 Ta strona pokazuje, jak aplikacja Coilix uruchamia `IO` z cats-effect. Coilix tworzy `IORuntime`, zamyka go razem z aplikacją i robi z jego puli obliczeniowej jedyną pulę obliczeniową aplikacji, więc fibery `IO` i zadania Coilix nie rywalizują o procesor w dwóch pulach.
 
@@ -19,11 +21,12 @@ Dodaj `coilix-cats-effect` do zależności:
 libraryDependencies += "dev.coilix" %% "coilix-cats-effect" % "<version>"
 ```
 
-Moduł dodaje trzy beany:
+Moduł dodaje cztery beany:
 
 - `ioRuntime`, czyli `IORuntime` aplikacji, z pulą work-stealing cats-effect: `coilix.concurrency.compute.threads` wątków o nazwach `io-compute-<numer>`, domyślnie jeden na procesor,
 - `ioTaskExecutor`, czyli `TaskExecutor` na tej puli. Zastępuje domyślnego wykonawcę, więc wątki `coilix-compute-<numer>` z przewodnika [Zadania w tle i harmonogram](tasks-and-scheduling.mdx) nie powstają. Metody `@Async` i asynchroniczni odbiorcy zdarzeń działają na wątkach `io-compute`,
-- `coilixIORuntime`, który jest właścicielem runtime'u i zamyka go przy zamykaniu aplikacji, po beanach, które z niego korzystają.
+- `coilixIORuntime`, który jest właścicielem runtime'u i zamyka go przy zamykaniu aplikacji, po beanach, które z niego korzystają,
+- `catsEffectSettings`, ustawienia spod `coilix.cats-effect`.
 
 `BlockingExecutor` zostaje bez zmian, dla kodu blokującego poza `IO`.
 
@@ -34,6 +37,31 @@ Wstrzyknij runtime tam, gdzie bean uruchamia `IO`, tutaj jako parametr `using`, 
 <CodeBlock language="scala" title="ExchangeRates.scala">{ExchangeRates}</CodeBlock>
 
 Uruchamiaj `IO` na brzegu swojego kodu, np. w runnerze albo metodzie `@Scheduled`, a resztę beana trzymaj w `IO`.
+
+## Beany z IO i Resource
+
+Metoda `@Bean` może zwracać `IO[A]` albo `Resource[IO, A]`. Bean ma wtedy typ `A`: inne beany dostają wartość efektu albo otwarty zasób, nigdy samo `IO` ani `Resource`.
+
+<CodeBlock language="scala" title="DatabaseConfiguration.scala">{DatabaseConfiguration}</CodeBlock>
+
+Przy starcie aplikacji Coilix wykonuje te efekty na beanie `ioRuntime`:
+
+- każdy bean czeka na beany, których potrzebuje, więc `migrations` uruchamia się po otwarciu puli,
+- beany niezależne od siebie otwierają się jednocześnie, w równoległych fiberach,
+- zasób zamyka się przy zamykaniu aplikacji, po wszystkich beanach, które go używają, w odwrotnej kolejności otwarcia,
+- jeśli efekt się nie powiedzie, zasoby otwarte przed nim się zamykają, a start aplikacji kończy się tym błędem.
+
+Zwykły bean zależny od takiej wartości powstaje jak zwykle, po niej. Użyj [`@DependsOn`](bean-lifecycle.mdx#kolejność-beanów-bez-wstrzykiwania), gdy bean potrzebuje innego tylko przez efekt uboczny, na przykład cache czytający tabele, które tworzą migracje.
+
+Bean z efektu zawsze powstaje przy starcie, więc nie może być `@Lazy` ani `@Prototype`: taki bean zatrzymuje start wyjątkiem `InvalidEffectfulBeanException`. Bez modułu `Coilix.run` odrzuca te beany wyjątkiem `EffectfulBeanException`.
+
+### Zamykanie
+
+Coilix czeka na finalizer każdego zasobu najwyżej `coilix.cats-effect.shutdown-timeout`, domyślnie 30 sekund:
+
+<CodeBlock language="yaml" title="application.yaml">{CatsEffectYaml}</CodeBlock>
+
+`@ShutdownTimeout` na metodzie `@Bean` ustawia limit jednego beana, jako czas, np. `"2m"`, albo placeholder z wartością domyślną, jak w przykładzie wyżej. Finalizer, który trwa dłużej, jest anulowany i zapisany w logu. Finalizer, który rzuci wyjątek, trafia do logu. W obu przypadkach Coilix zamyka dalej pozostałe beany.
 
 ## Wywołania blokujące w IO
 

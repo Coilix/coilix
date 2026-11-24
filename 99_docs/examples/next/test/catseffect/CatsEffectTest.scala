@@ -21,4 +21,9 @@ final class CatsEffectTest extends munit.FunSuite with CoilixContextOps {
       assert(Await.result(bean[TaskExecutor].submit(Thread.currentThread.getName), 5.seconds).startsWith("io-compute-"))
     }
   }
+
+  test("beans receive the values of Resource and IO beans, and the resource closes with the application") {
+    val (pool, report) = setup.use((bean[ConnectionPool], bean[MigrationReport]))
+    assertEquals((report.applied, pool.isOpen), (3, false))
+  }
 }

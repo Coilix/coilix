@@ -14,7 +14,28 @@ trait BeanInstantiator {
    * @throws dev.coilix.context.BeanCreationException
    *   if the bean cannot be created or initialized
    */
-  def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean
+  def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean =
+    complete(definition, produce(definition, registry))
+
+  /**
+   * Calls the factory of `definition` with its dependencies from `registry` and returns what it returns: the instance of a
+   * plain bean, or the effect of a bean whose [[dev.coilix.context.BeanDefinition.result]] is effectful.
+   *
+   * @throws dev.coilix.context.NoSuchBeanException
+   *   if a required dependency is not in `registry`
+   * @throws dev.coilix.context.BeanCreationException
+   *   if the factory fails
+   */
+  def produce(definition: BeanDefinition, registry: BeanRegistry): AnyRef
+
+  /**
+   * Makes the bean of `definition` from its `instance`, the result of [[produce]] for a plain bean or the value of its effect
+   * for an effectful one: finds its lifecycle methods and runs the post-processing, such as `@PostConstruct` methods.
+   *
+   * @throws dev.coilix.context.BeanCreationException
+   *   if the bean cannot be initialized
+   */
+  def complete(definition: BeanDefinition, instance: AnyRef): RegisteredBean
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.BeanInstantiator]]. */
