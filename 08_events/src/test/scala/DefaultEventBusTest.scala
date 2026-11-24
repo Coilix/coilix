@@ -2,8 +2,10 @@ package dev.coilix.events
 
 import com.typesafe.config.ConfigFactory
 import dev.coilix.common.GenericType
+import dev.coilix.concurrency.BlockingExecutor
 import dev.coilix.concurrency.ConcurrencyModule
 import dev.coilix.concurrency.RetryPolicy
+import dev.coilix.concurrency.TaskExecutor
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
@@ -105,6 +107,24 @@ final class DefaultEventBusTest extends FunSuite {
       val notifier = context.getBean[FlakyNotifier]
       assert(notifier.delivered.await(5, TimeUnit.SECONDS))
       assertEquals(notifier.attempts.get, 3)
+    }
+  }
+
+  test("retries an asynchronous listener when the scheduler runs the retry before scheduling returns") {
+    val config = "coilix.events.listeners.flakyNotifier.onPlaced.retry { max-attempts = 3, initial-delay = 10ms, jitter = 0 }"
+    withContext(config, classOf[FlakyNotifier]) { context =>
+      val bus = DefaultEventBus(
+        context.getBean[TaskExecutor],
+        context.getBean[BlockingExecutor],
+        ImmediateScheduler(),
+        context.getBean[EventsSettings]
+      )
+      bus.onContextStarted(context)
+      bus.publish(OrderEvent.Placed(1))
+      assert(context.getBean[FlakyNotifier].delivered.await(5, TimeUnit.SECONDS))
+      assert(bus.awaitIdle(5.seconds))
+      assertEquals((context.getBean[FlakyNotifier].attempts.get, bus.pendingDeliveries), (3, 0))
+      bus.onContextClosing()
     }
   }
 

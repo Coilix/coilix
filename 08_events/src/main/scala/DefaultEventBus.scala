@@ -7,7 +7,6 @@ import dev.coilix.concurrency.BlockingExecutor
 import dev.coilix.concurrency.FatalErrors
 import dev.coilix.concurrency.ManagedExecutor
 import dev.coilix.concurrency.RetryPolicy
-import dev.coilix.concurrency.ScheduledTask
 import dev.coilix.concurrency.TaskExecutor
 import dev.coilix.concurrency.TaskScheduler
 import dev.coilix.context.ApplicationContext
@@ -59,7 +58,7 @@ final class DefaultEventBus(
   private val early          = AtomicReference(List.empty[EarlyEvent])
   private val pending        = AtomicReference(Map.empty[String, Int])
   private val running        = AtomicReference(Set.empty[Thread])
-  private val retries        = AtomicReference(Map.empty[Long, (String, ScheduledTask)])
+  private val retries        = AtomicReference(Map.empty[Long, PendingRetry])
   private val retryIds       = AtomicLong()
   private val insideListener = ThreadLocal.withInitial[Boolean](() => false)
 
@@ -221,11 +220,10 @@ final class DefaultEventBus(
 
   private def retried(listener: RegisteredListener, event: AnyRef, attempt: Int, failure: Throwable): Boolean =
     retryDelay(listener.info.retry, attempt) match {
-      case Some(delay) =>
+      case Some(delay) if scheduleRetry(listener, event, attempt + 1, delay) =>
         log.warn(s"Event listener ${listener.info.name} failed on attempt $attempt, retrying in $delay", failure)
-        scheduleRetry(listener, event, attempt + 1, delay)
         true
-      case None        =>
+      case _                                                                 =>
         log.error(s"Event listener ${listener.info.name} failed after $attempt attempt(s), dropping ${describe(event)}", failure)
         false
     }
@@ -233,22 +231,35 @@ final class DefaultEventBus(
   private def retryDelay(policy: RetryPolicy, attempt: Int): Option[FiniteDuration] =
     if (state.get == EventBusState.Running) policy.delayAfter(attempt) else None
 
-  private def scheduleRetry(listener: RegisteredListener, event: AnyRef, attempt: Int, delay: FiniteDuration): Unit = {
-    val id   = retryIds.incrementAndGet()
-    val task = scheduler.schedule(delay) {
-      if (retries.getAndUpdate(_ - id).contains(id)) submit(listener, event, attempt)
-    }
-    val _    = retries.updateAndGet(_.updated(id, (listener.info.name, task)))
+  private def scheduleRetry(listener: RegisteredListener, event: AnyRef, attempt: Int, delay: FiniteDuration): Boolean = {
+    val id = retryIds.incrementAndGet()
+    val _  = retries.updateAndGet(_.updated(id, PendingRetry(listener.info.name, None)))
+    if (state.get == EventBusState.Running) scheduled(id, listener, event, attempt, delay) else !removed(id)
   }
+
+  private def scheduled(id: Long, listener: RegisteredListener, event: AnyRef, attempt: Int, delay: FiniteDuration): Boolean =
+    try {
+      val task = scheduler.schedule(delay)(runRetry(id, listener, event, attempt))
+      val _    = retries.updateAndGet(pending => pending.get(id).fold(pending)(retry => pending.updated(id, retry.scheduled(task))))
+      true
+    } catch {
+      case NonFatal(failure) =>
+        log.error(s"A retry of event listener ${listener.info.name} could not be scheduled", failure)
+        !removed(id)
+    }
+
+  private def runRetry(id: Long, listener: RegisteredListener, event: AnyRef, attempt: Int): Unit =
+    if (removed(id)) submit(listener, event, attempt)
+
+  private def removed(id: Long): Boolean = retries.getAndUpdate(_ - id).contains(id)
 
   private def cancelRetries(): Map[String, Int] = {
     val cancelled = retries.getAndSet(Map.empty).values.toList
-    cancelled.foreach {
-      case (name, task) =>
-        task.cancel()
-        decrement(name)
+    cancelled.foreach { retry =>
+      retry.task.foreach(_.cancel())
+      decrement(retry.listener)
     }
-    cancelled.groupMapReduce(_._1)(_ => 1)(_ + _)
+    cancelled.groupMapReduce(_.listener)(_ => 1)(_ + _)
   }
 
   private def interruptRunning(): Unit = {
