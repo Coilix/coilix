@@ -151,8 +151,9 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
 4. Zasoby wykonania (albo COILIX-00005). Zrobione przez COILIX-00005 krok 1: `TaskExecutor` na wątkach wirtualnych i `TaskScheduler` z modułu `concurrency` (ADR 0020).
 5. `cats-effect`, w krokach:
    - 5a: `IORuntime` jako bean i jedyna pula obliczeniowa (zrobione, ADR 0031).
-   - rdzeń: `@DependsOn` dla wszystkich beanów (osobny PR przed 5b).
-   - 5b: beany `IO[A]` i `Resource[IO, A]` otwierane równolegle poziomami grafu, `@PostConstruct` i `@PreDestroy` zwracające `IO[Unit]`, `IOApplicationRunner` w jednej liście z `ApplicationRunner`, `@ShutdownTimeout` i `coilix.cats-effect.shutdown-timeout`, błąd startu dla `@Lazy` i `@Prototype` na beanie efektowym, `Coilix.run` z jednym `unsafeRun` na granicy.
+   - rdzeń: `@DependsOn` dla wszystkich beanów (zrobione).
+   - 5b część 1 (zrobione, ADR 0032): beany `IO[A]` i `Resource[IO, A]` otwierane równolegle poziomami grafu, `@ShutdownTimeout` i `coilix.cats-effect.shutdown-timeout`, błąd startu dla `@Lazy` i `@Prototype` na beanie efektowym, `Coilix.run` z jednym `unsafeRun` na granicy.
+   - 5b część 2: `@PostConstruct` i `@PreDestroy` zwracające `IO[Unit]`, `IOApplicationRunner` w jednej liście z `ApplicationRunner`.
    - 5c: `CoilixIOApp` (czeka na anulowanie, `exit-after-runners`) i moduł `testkit-cats-effect` (`useIO`, `CoilixIOSuite`).
 6. Przewodnik w obu językach przy każdym kroku. Później: beany generyczne w `F[_]` i most MDC dla fiberów.
 

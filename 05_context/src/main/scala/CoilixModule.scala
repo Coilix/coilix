@@ -57,4 +57,11 @@ trait CoilixModule {
    * proxies.
    */
   def definitionProcessors: List[DefinitionProcessor] = Nil
+
+  /**
+   * The interpreter that creates beans made by effects, such as `IO` and `Resource` of cats-effect, or `None`, the default.
+   *
+   * At most one enabled module may give one.
+   */
+  def effectInterpreter: Option[EffectInterpreter] = None
 }

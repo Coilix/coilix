@@ -30,16 +30,19 @@ final class ReflectiveBeanInstantiator(
   lifecycleScanner: LifecycleMethodScanner = AnnotatedLifecycleMethodScanner()
 ) extends BeanInstantiator {
 
-  /**
-   * Creates the bean of `definition`.
-   *
-   * @throws dev.coilix.context.InvalidLifecycleMethodException
-   *   if the class of the created instance has a lifecycle method that cannot be called
-   */
-  override def instantiate(definition: BeanDefinition, registry: BeanRegistry): RegisteredBean = {
+  override def produce(definition: BeanDefinition, registry: BeanRegistry): AnyRef = {
     log.info(s"Creating bean ${definition.beanName} (${definition.beanClass.getSimpleName})")
     definition.dependsOn.foreach(registry.findByName)
-    val instance   = newInstance(definition, registry)
+    newInstance(definition, registry)
+  }
+
+  /**
+   * Makes the bean of `definition` from `instance`.
+   *
+   * @throws dev.coilix.context.InvalidLifecycleMethodException
+   *   if the class of the instance has a lifecycle method that cannot be called
+   */
+  override def complete(definition: BeanDefinition, instance: AnyRef): RegisteredBean = {
     val completed  = definition.copy(lifecycle = lifecycleOf(definition, instance))
     RegisteredBean(
       beanName  = definition.beanName,

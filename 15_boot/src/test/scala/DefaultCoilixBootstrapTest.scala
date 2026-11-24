@@ -10,6 +10,7 @@ import dev.coilix.boot.fixture.StubClock
 import dev.coilix.boot.jobs.JobRunner
 import dev.coilix.boot.jobs.JobsModule
 import dev.coilix.boot.jobs.ModuleJob
+import dev.coilix.boot.modules.EffectModule
 import dev.coilix.boot.modules.FixedModuleLoader
 import dev.coilix.boot.modules.RenamingModule
 import dev.coilix.boot.modules.ReportModule
@@ -145,6 +146,21 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
       (context.beanNames.contains("monthlyTitle"), context.beanNames.contains("reportTitle")),
       (true, false)
     )
+  }
+
+  test("a module with an effect interpreter does not change a context without effectful beans") {
+    assertEquals(withModules(List(EffectModule("io"))).start(List("dev.coilix.boot.fixture"), Nil, Nil).getBean[Clock].now, 42L)
+  }
+
+  test("fails when two modules give an effect interpreter") {
+    val error = intercept[ConflictingEffectInterpretersException] {
+      withModules(List(EffectModule("io"), EffectModule("zio"))).start(List("dev.coilix.boot.fixture"), Nil, Nil)
+    }
+    assert(error.getMessage.contains("io, zio"), error.getMessage)
+  }
+
+  test("a module has no effect interpreter by default") {
+    assertEquals(ReportModule().effectInterpreter, None)
   }
 
   test("a module has no definition processors by default") {

@@ -6,6 +6,7 @@ import dev.coilix.annotation.Configuration
 import dev.coilix.concurrency.ConcurrencySettings
 import dev.coilix.concurrency.ContextPropagator
 import dev.coilix.concurrency.FatalErrorHandler
+import dev.coilix.config.Environment
 
 /**
  * The beans of the cats-effect module: `coilixIORuntime`, which creates the runtime and closes it with the context, `ioRuntime`
@@ -14,6 +15,11 @@ import dev.coilix.concurrency.FatalErrorHandler
  */
 @Configuration
 final class CatsEffectConfiguration {
+
+  /** The settings under `coilix.cats-effect`, or the defaults in a context without an environment. */
+  @Bean
+  def catsEffectSettings(environment: Option[Environment]): CatsEffectSettings =
+    environment.fold(CatsEffectSettings())(CatsEffectSettings.from)
 
   /** The runtime with `coilix.concurrency.compute.threads` compute threads. */
   @Bean

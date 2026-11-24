@@ -18,6 +18,18 @@ trait DependencyResolver {
    *   if the definitions depend on each other in a cycle
    */
   def resolve(definitions: List[BeanDefinition], provided: List[GenericType]): List[BeanDefinition]
+
+  /**
+   * `definitions` grouped by dependency level, from the lowest: each bean depends only on provided types and on beans of lower
+   * levels. The flattened levels are a valid creation order. By default every bean of [[resolve]] is a level of its own.
+   *
+   * @throws dev.coilix.context.NoSuchBeanException
+   *   if a required dependency matches neither a definition nor a provided type
+   * @throws dev.coilix.context.CircularDependencyException
+   *   if the definitions depend on each other in a cycle
+   */
+  def resolveLevels(definitions: List[BeanDefinition], provided: List[GenericType]): List[List[BeanDefinition]] =
+    resolve(definitions, provided).map(List(_))
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.DependencyResolver]]. */
