@@ -23,7 +23,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00017 | [Benchmarki startu](COILIX-00017_startup_benchmarks.md) | średni | do zrobienia |
 | COILIX-00018 | [Szablon nowego projektu](COILIX-00018_project_template.md) | niski | do zrobienia, po pierwszym wydaniu |
 | COILIX-00019 | [Przestrzeń nazw `dev.coilix`](COILIX-00019_dev_coilix_namespace.md) | najwyższy | zrobiony |
-| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | w trakcie: kroki 1–4, 5a, `@DependsOn` i 5b zrobione (ADR 0019, 0028, 0031, 0032, 0033: `ContextPlan` z poziomami, moduł `23_cats_effect` z `IORuntime`, beany `IO` i `Resource`, cykl życia i runnery w `IO`), dalej 5c: `CoilixIOApp` i `testkit-cats-effect` |
+| COILIX-00020 | [Integracja z cats-effect (`IO`)](COILIX-00020_effect_types.md) | wysoki | w trakcie: kroki 1–4, 5a, `@DependsOn`, 5b i 5c część 1 zrobione (ADR 0019, 0028, 0031–0034: `ContextPlan` z poziomami, moduł `23_cats_effect` z `IORuntime`, beany `IO` i `Resource`, cykl życia i runnery w `IO`, `CoilixIOApp`), dalej 5c część 2: `testkit-cats-effect` |
 | COILIX-00021 | [Audyt podobieństwa kodu do publicznych projektów](COILIX-00021_code_similarity_audit.md) | średni | do zrobienia, przed pierwszym wydaniem |
 | COILIX-00022 | [Typy wartości, enumy, walidacja i `EditOption` z biblioteki implicits](COILIX-00022_implicits_port.md) | wysoki | zrobiony w rdzeniu, mapowanie kolumn czeka na moduł `data` |
 | COILIX-00023 | [Moduł HTTP (`web`)](COILIX-00023_http.md) | wysoki | szkic do doszlifowania |

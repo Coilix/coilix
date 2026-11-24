@@ -19,6 +19,9 @@ import scala.reflect.ClassTag
  * rethrown. Options of the JVM that make the application fragile when memory runs out, described in
  * [[dev.coilix.boot.JvmMemoryOptions]], are logged at `WARN` level at the start.
  *
+ * `start` runs the same sequence up to the startup time and returns the context with the arguments, without the shutdown hook,
+ * the runners and their events.
+ *
  * The arguments and the configuration are registered as beans named `applicationArguments` and `environment`. This is the
  * implementation returned by [[dev.coilix.boot.CoilixApplicationRunner.default]].
  *
@@ -40,16 +43,24 @@ final class DefaultCoilixApplicationRunner(
   private val environmentBeanName = "environment"
 
   override def run[T: ClassTag](args: List[String]): ConfigurableApplicationContext = {
+    val (startup, application) = started[T](args, Nil)
+    val _                      = startup.shutdownHooks.register(application.context)
+    StartupEvents.around(application.context)(startup.invoker.invoke(application.context, application.arguments))
+  }
+
+  override def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): StartedApplication =
+    started[T](args, singletons)._2
+
+  private def started[T: ClassTag](args: List[String], extra: List[RegisteredBean]): (StartupComponents, StartedApplication) = {
     val startedAt   = System.nanoTime()
     val arguments   = parser.parse(args)
     val environment = environmentLoader.load(commandLineProperties(arguments))
     val startup     = assemble(ComponentProvider.from(environment))
     startup.startupLogger.starting(applicationName[T])
     JvmMemoryOptions.current.warnings.foreach(warning => log.warn(warning))
-    val context     = startup.bootstrap.start(startup.resolver.resolve[T], Nil, singletons(arguments, environment))
-    val _           = startup.shutdownHooks.register(context)
+    val context     = startup.bootstrap.start(startup.resolver.resolve[T], Nil, singletons(arguments, environment) ++ extra)
     startup.startupLogger.started(applicationName[T], elapsedSince(startedAt))
-    StartupEvents.around(context)(startup.invoker.invoke(context, arguments))
+    (startup, StartedApplication(context, arguments))
   }
 
   private def commandLineProperties(arguments: ApplicationArguments): Map[String, String] =

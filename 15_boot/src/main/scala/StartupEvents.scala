@@ -31,22 +31,37 @@ object StartupEvents {
    */
   def around(context: ConfigurableApplicationContext)(runners: => Unit): ConfigurableApplicationContext =
     try {
-      publish(context, ContextReady(context))
+      ready(context)
       runners
-      publish(context, ApplicationStarted(context))
+      started(context)
       context
     } catch {
       case NonFatal(failure) => failed(context, failure)
     }
 
-  private def failed(context: ConfigurableApplicationContext, failure: Throwable): Nothing = {
+  /** Publishes [[dev.coilix.events.ContextReady]] for a start that runs the runners itself, rethrowing a failing listener. */
+  def ready(context: ConfigurableApplicationContext): Unit =
+    publish(context, ContextReady(context))
+
+  /** Publishes [[dev.coilix.events.ApplicationStarted]] for a start that runs the runners itself, rethrowing a failing listener. */
+  def started(context: ConfigurableApplicationContext): Unit =
+    publish(context, ApplicationStarted(context))
+
+  /**
+   * Publishes [[dev.coilix.events.ApplicationFailed]] with `cause` for a start that runs the runners itself and closes the context
+   * afterwards. A failure of a listener is logged.
+   */
+  def failure(context: ConfigurableApplicationContext, cause: Throwable): Unit =
     try {
-      publish(context, ApplicationFailed(context, failure))
+      publish(context, ApplicationFailed(context, cause))
     } catch {
       case NonFatal(listenerFailure) => log.error("A listener failed on ApplicationFailed", listenerFailure)
     }
+
+  private def failed(context: ConfigurableApplicationContext, cause: Throwable): Nothing = {
+    failure(context, cause)
     context.close()
-    throw failure
+    throw cause
   }
 
   private def publish[E: TypeInfo](context: ConfigurableApplicationContext, event: E): Unit =

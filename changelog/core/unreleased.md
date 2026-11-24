@@ -38,6 +38,7 @@
 - `CoilixModule.effectInterpreter` lets one module create the beans made by effects: the `EffectInterpreter` gets the levels of the plan from the first one with such a bean, and the context releases what it opened when it closes, before the other beans are destroyed. `ContextPlan.levels` groups the beans by dependency level (`DependencyResolver.resolveLevels`), and `BeanInstantiator` splits into `produce` (the result of the factory) and `complete` (lifecycle and post-processing of the value). Two modules with an interpreter stop the startup with `ConflictingEffectInterpretersException` (COILIX-00020).
 - `@ShutdownTimeout("2m")` for a `@Bean` method sets how long closing waits for the finalizer of a bean made by an effect (COILIX-00020).
 - `RunnerAdapter` beans add runners of another kind, such as `IOApplicationRunner` from `coilix-cats-effect`, to the list of `ApplicationRunner` beans ordered by `@Order`. A lifecycle method may return an effect of `Unit` recognized by the `EffectfulResultRecognizer`, such as `IO[Unit]`; such a bean is effectful, so the synchronous builder rejects it with `EffectfulBeanException` until an effect module runs it (COILIX-00020).
+- `CoilixApplicationRunner.start` builds the context with extra ready beans and returns a `StartedApplication` without a shutdown hook or runners, for a start that runs them itself. `OrderedRunner.all` gives the runners of a context in their order, and `StartupEvents.ready`, `started` and `failure` publish the startup events one by one (COILIX-00020).
 
 ### Changed
 
