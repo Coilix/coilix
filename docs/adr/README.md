@@ -43,6 +43,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0035](0035-testkit-cats-effect.md) | Moduł testkit-cats-effect | proponowana |
 | [0036](0036-pekko-module.md) | Moduł pekko z ActorSystem na pulach Coilix | proponowana |
 | [0037](0037-background-processors.md) | Procesory tła z shardami, nadzorem i jednym menedżerem | proponowana |
+| [0038](0038-custom-warts.md) | Własne warty w module narzędziowym `tools/warts` | proponowana |
 
 ## Nowa decyzja
 

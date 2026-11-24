@@ -41,14 +41,15 @@ lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.MutableDataStructures,
   Wart.OptionPartial,
   Wart.TryPartial,
-  Wart.ScalaApp
+  Wart.ScalaApp,
+  Wart.AsInstanceOf
 )
+
+lazy val coilixWarts: Seq[wartremover.Wart] = Seq(Wart.custom("dev.coilix.warts.ConsoleOutput"))
 
 lazy val javaRelease = "17"
 
 lazy val javaOutputVersionOptions: Seq[String] = Seq("-java-output-version", javaRelease)
-
-lazy val checkForbiddenCalls = taskKey[Unit]("Fails when Scala sources write to the console")
 
 lazy val checkModuleLayers =
   taskKey[Unit]("Fails when the core or boot depends on a feature module, or feature modules depend on each other")
@@ -105,10 +106,8 @@ def scalaModule(id: String, directory: String, packageName: String): Project =
     Test / unmanagedSourceDirectories        := Seq((Test / scalaSource).value),
     libraryDependencies += Dependencies.munit % Test,
     scalafmtOnCompile                        := !insideCI.value,
-    wartremoverErrors ++= forbiddenWarts,
-    checkForbiddenCalls                      :=
-      Def.uncached(ForbiddenCalls.check((Compile / unmanagedSources).value ++ (Test / unmanagedSources).value)),
-    Compile / compile                        := Def.uncached((Compile / compile).dependsOn(checkForbiddenCalls).value),
+    wartremoverErrors ++= forbiddenWarts     ++ coilixWarts,
+    wartremover.WartRemover.dependsOnLocalProjectWarts(warts),
     Compile / doc / scalacOptions            := scaladocOptions(scalacOptions.value, scalaBinaryVersion.value, version.value)
   )
 
@@ -122,6 +121,19 @@ def slf4sModule(id: String, directory: String, packageName: String): Project =
       ),
       libraryDependencies ++= Seq(Dependencies.slf4jApi, Dependencies.slf4jSimple % Test)
     )
+
+lazy val warts = Project("warts", file("tools/warts"))
+  .settings(unpublished)
+  .settings(
+    idePackagePrefix                     := Some("dev.coilix.warts"),
+    Compile / unmanagedSourceDirectories := Seq((Compile / scalaSource).value),
+    Test / unmanagedSourceDirectories    := Seq((Test / scalaSource).value),
+    libraryDependencies ++= Seq(Dependencies.wartremover, Dependencies.munit % Test),
+    scalafmtOnCompile                    := !insideCI.value,
+    wartremoverErrors ++= forbiddenWarts,
+    coverageEnabled                      := false,
+    Compile / doc / scalacOptions        := scaladocOptions(scalacOptions.value, scalaBinaryVersion.value, version.value)
+  )
 
 lazy val coreGroup: Seq[Setting[?]] = ReleaseGroups.groupSettings(ReleaseGroups.core)
 
@@ -350,7 +362,7 @@ lazy val modules: Seq[ProjectReference] =
   )
 
 lazy val root = (project in file("."))
-  .aggregate(modules *)
+  .aggregate((modules :+ (warts: ProjectReference)) *)
   .settings(
     name              := "coilix",
     publish / skip    := true,

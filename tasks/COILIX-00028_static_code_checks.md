@@ -121,7 +121,7 @@ Konfiguracja w `.scalafix.conf` w korzeniu repo. CI dostaje krok `Check scalafix
 ## Kroki (osobne PR-y)
 
 1. Ten szkic.
-2. Moduł `tools/warts`, wart `ConsoleOutput` w miejsce `ForbiddenCalls`, włączenie `Wart.AsInstanceOf` i porządek z trzema wystąpieniami. ADR.
+2. Moduł `tools/warts`, wart `ConsoleOutput` w miejsce `ForbiddenCalls`, włączenie `Wart.AsInstanceOf` i porządek z trzema wystąpieniami. ADR. Zrobione (ADR 0038). Wystąpień `asInstanceOf` było 11: tablica z refleksji przeszła na dopasowanie wzorca, pozostałe są w małych metodach z `@SuppressWarnings` i uzasadnieniem w Scaladocu. Pomiar `clean Test/compile`: 17–20 s przed, 18–20 s po.
 3. `ClassParameterInApi` z przeglądem 129 wystąpień `Class[...]` i poprawkami publicznego API (zmiana niezgodna w `0.x`, wpis w changelogu, jeśli dotyczy wydanego API).
 4. `tools/scalafix-rules` i `tools/scalafix-tests`, reguły `NoPlainComments`, `OneTypePerFile`, `NoSpringNames`, krok CI i ruleset.
 5. `FullyQualifiedImports` z SemanticDB i raport `ExtractLongBranches`.

@@ -63,7 +63,7 @@ final class DefaultEventBus(
   private val insideListener = ThreadLocal.withInitial[Boolean](() => false)
 
   override def publish[E: TypeInfo](event: E): Unit = {
-    val value     = Objects.requireNonNull(event.asInstanceOf[AnyRef], "event")
+    val value     = Objects.requireNonNull(boxed(event), "event")
     val eventType = typeOf(value, TypeInfo[E].genericType)
     if (!keptForStart(value, eventType)) {
       checkOpen(eventType)
@@ -104,6 +104,10 @@ final class DefaultEventBus(
     state.set(EventBusState.Closed)
     if (!finished) interruptRunning()
   }
+
+  /** `event` as an object. The cast cannot fail, because the JVM passes every value of a type parameter as an object. */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def boxed(event: Any): AnyRef = event.asInstanceOf[AnyRef]
 
   private def typeOf(event: AnyRef, staticType: GenericType): GenericType =
     if (event.getClass.getTypeParameters.nonEmpty || staticType.erasure == event.getClass) staticType

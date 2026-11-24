@@ -58,5 +58,9 @@ object PekkoSettings {
     }
 
   private def stringKeys(values: JMap[?, ?]): JMap[String, AnyRef] =
-    values.asScala.map((key, value) => key.toString -> value.asInstanceOf[AnyRef]).asJava
+    values.asScala.map((key, value) => key.toString -> boxed(value)).asJava
+
+  /** `value` as an object. The cast cannot fail, because the values of a Java map are objects. */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def boxed(value: Any): AnyRef = value.asInstanceOf[AnyRef]
 }

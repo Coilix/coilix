@@ -19,7 +19,12 @@ object ClassTags {
 
   extension [T](tag: ClassTag[T]) {
 
-    /** The runtime class of `T`, typed as `Class[T]`. */
+    /**
+     * The runtime class of `T`, typed as `Class[T]`.
+     *
+     * The cast cannot fail, because the runtime class of a `ClassTag[T]` is the class of `T`.
+     */
+    @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
     def runtimeType: Class[T] = tag.runtimeClass.asInstanceOf[Class[T]]
   }
 

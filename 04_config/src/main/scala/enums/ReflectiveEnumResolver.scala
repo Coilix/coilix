@@ -36,7 +36,8 @@ final class ReflectiveEnumResolver extends EnumResolver {
 
   private def scalaValues(enumType: Class[?]): List[AnyRef] =
     Try(enumType.getMethod("values")).toOption
-      .map(_.invoke(enumType).asInstanceOf[Array[AnyRef]].toList)
+      .map(_.invoke(enumType))
+      .collect { case values: Array[AnyRef] => values.toList }
       .getOrElse(throw invalid(enumType, "must have only cases without parameters"))
 
   private def caseFields(enumType: Class[?], companion: Class[?]): List[Field] =

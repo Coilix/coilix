@@ -21,7 +21,12 @@ package dev.coilix.common
  */
 final class TypeInfo[T](val genericType: GenericType) {
 
-  /** The class of `T`, typed as `Class[T]`. */
+  /**
+   * The class of `T`, typed as `Class[T]`.
+   *
+   * The cast cannot fail, because the erasure of the type of `T` is the class of `T`.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
   def runtimeClass: Class[T] = genericType.erasure.asInstanceOf[Class[T]]
 
   /** Whether `value` is an instance of the class of `T`. Type arguments cannot be checked at runtime. */

@@ -57,11 +57,23 @@ Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/ma
 Plik w podpakiecie, np. fixture testu w katalogu `wiring`, ma pakiet modułu w osobnej klauzuli: `package dev.coilix.context`, a w następnej linii `package wiring`. Tego wymaga IntelliJ przy `idePackagePrefix`, a typy z pakietu modułu są wtedy widoczne bez importu.
 Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jednym typie w linii i bez importów względnych (`import wiring.Greeter`). `*` tylko przy importach metod rozszerzających i dużych API, np. `scala.jdk.CollectionConverters.*` albo `dotty.tools.dotc.ast.untpd.*`. Tak formatuje je scalafmt (`rewrite.imports.expand`), a styl kodu IntelliJ w `.idea/codeStyles/` jest ustawiony tak samo, więc „Optimize Imports” ich nie zmienia.
 
+## Narzędzia
+
+Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru poziomu, nie są publikowane (`unpublished`) i nie podlegają `checkModuleLayers` (ADR 0038).
+
+| Katalog | Projekt sbt | Pakiet | Zawartość |
+|---|---|---|---|
+| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`), podpięte do każdego modułu Scali |
+
+- Zasada z tego pliku, którą da się sprawdzić automatycznie, dostaje wart albo regułę (COILIX-00028).
+- Nowy wart dopisuje się do `coilixWarts` w `build.sbt` i dostaje testy munit z `WartTestTraverser`: przypadek zgłaszany, niezgłaszany i wyłączony przez `@SuppressWarnings`.
+
 ## Zasady kodu
 
 - Składnia tylko z klamrami `{}` i `if (...)`. Zakaz składni wcięć, `:` po nagłówku, `then`, `do` i `end` (wymusza `-no-indent -old-syntax`).
 - Zakaz `var`, `null`, `return`, `while` i mutowalnych kolekcji (wymusza wartremover). Zamiast tego rekurencja, `fold` i niemutowalne struktury. Mutowalność tylko tam, gdzie inaczej się nie da (np. API kompilatora).
-- Zakaz `println`, `print`, `printf` (wymusza `checkForbiddenCalls`). Logowanie przez `@Slf4s` i pole `log`.
+- Zakaz wypisywania na konsolę: `println`, `print`, `printf`, `Console.*`, `System.out` i `System.err` (wymusza wart `ConsoleOutput`). Logowanie przez `@Slf4s` i pole `log`.
+- Zakaz `asInstanceOf` (wymusza `Wart.AsInstanceOf`). Rzutowanie, bez którego się nie da (typ wymazany w kodzie refleksyjnym), idzie do małej metody z `@SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))`, a jej Scaladoc mówi, dlaczego jest bezpieczne.
 - Najpierw interfejs (`trait`), potem implementacja. Domyślne złożenie implementacji w `default` w obiekcie towarzyszącym traitu.
 - Komponent frameworka ma w obiekcie towarzyszącym traitu `given ConfigPath[T]` (np. `coilix.context.constructor-selector`) i `def default(using components: ComponentProvider): T = components.get[T](...)`. Dzięki temu użytkownik podmienia go w configu kluczem `class`.
 - Jeden plik to jeden typ o tej samej nazwie co plik. Dozwolony jest tylko obiekt towarzyszący o tej samej nazwie.

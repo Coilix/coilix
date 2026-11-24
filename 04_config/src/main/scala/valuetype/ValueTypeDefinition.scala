@@ -36,7 +36,11 @@ final case class ValueTypeDefinition(valueType: Class[?], constructor: Construct
    *   if the constructor rejects `inner`
    */
   def create(inner: AnyRef): AnyRef =
-    Try(constructor.newInstance(inner).asInstanceOf[AnyRef]).fold(failure => throw rejected(inner, failure), identity)
+    Try(boxed(constructor.newInstance(inner))).fold(failure => throw rejected(inner, failure), identity)
+
+  /** `value` as an object. The cast cannot fail, because the JVM keeps every value created by a constructor as an object. */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def boxed(value: Any): AnyRef = value.asInstanceOf[AnyRef]
 
   /** The inner value of `value`, which must be an instance of [[valueType]]. */
   def extract(value: AnyRef): AnyRef =

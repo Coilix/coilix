@@ -32,7 +32,7 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
     List.unfold(Option[Class[?]](beanClass))(_.map(current => (current, Option(current.getSuperclass))))
 
   private def checkUniqueNames(beanName: String, methods: List[Method]): Unit =
-    methods.groupBy(_.getName).collectFirst { case (name, several) if several.size > 1 => name }.foreach { name =>
+    methods.groupBy(_.getName).collectFirst { case (name, several) if several.sizeIs > 1 => name }.foreach { name =>
       throw InvalidEventListenerException(
         s"@EventListener methods of bean '$beanName' are overloaded as $name. Give each listener method its own name, " +
           "because the name identifies the listener in logs and in the configuration"
@@ -69,9 +69,17 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
   private def fromTrait(beanName: String, listener: ApplicationEventListener[?]): RegisteredListener = {
     val label     = s"ApplicationEventListener bean '$beanName'"
     val eventType = traitArgument(label, listener)
-    val typed     = listener.asInstanceOf[ApplicationEventListener[AnyRef]]
+    val typed     = acceptingAll(listener)
     RegisteredListener(info(beanName, "onEvent", eventType, listener.async, listener.blocking), event => typed.onEvent(event))
   }
+
+  /**
+   * `listener` typed to accept any event. The cast is unchecked, because the event type is erased, but the bus delivers to
+   * the listener only events of the type found by `traitArgument`.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def acceptingAll(listener: ApplicationEventListener[?]): ApplicationEventListener[AnyRef] =
+    listener.asInstanceOf[ApplicationEventListener[AnyRef]]
 
   private def traitArgument(label: String, listener: ApplicationEventListener[?]): GenericType =
     GenericType.of(listener.getClass).asSuper(classOf[ApplicationEventListener[?]]) match {
