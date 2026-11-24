@@ -16,7 +16,8 @@ import dev.coilix.context.RegisteredBean
 import java.lang.annotation.Annotation
 
 /**
- * Scans each base package, drops classes found in more than one package, adds the components of the enabled modules, applies
+ * Scans each base package, drops the beans of classes found in more than one package (while `@Bean` methods of one class
+ * that return the same type stay separate beans), adds the components of the enabled modules, applies
  * the [[dev.coilix.context.DefinitionProcessor]]s of the modules, leaves out the replaced beans, adds the extra definitions, and
  * builds the context. The names of replaced beans are dropped from [[dev.coilix.context.BeanDefinition.dependsOn]] of the
  * others, because the replacement is a ready instance.
@@ -84,7 +85,7 @@ final class DefaultCoilixBootstrap(
   }
 
   private def discovered(basePackages: List[String]): List[BeanDefinition] =
-    basePackages.flatMap(scan).distinctBy(_.beanClass)
+    basePackages.flatMap(scan).distinctBy(definition => (definition.beanName, definition.factory))
 
   private def fromModules(loaded: List[CoilixModule], annotations: List[Class[? <: Annotation]]): List[BeanDefinition] =
     loaded.flatMap(_.components).filterNot(isCollected(annotations)).flatMap(factory.create)

@@ -14,6 +14,7 @@ import dev.coilix.boot.modules.FixedModuleLoader
 import dev.coilix.boot.modules.RenamingModule
 import dev.coilix.boot.modules.ReportModule
 import dev.coilix.boot.modules.ReportTitle
+import dev.coilix.boot.twins.Mirror
 import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
 import dev.coilix.context.ApplicationContextBuilder
@@ -46,6 +47,11 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
   test("scans each package once") {
     val context = bootstrap.start(List("dev.coilix.boot.fixture", "dev.coilix.boot.fixture"), Nil, Nil)
     assertEquals(context.getBeansOfType[Clock].size, 1)
+  }
+
+  test("keeps every @Bean method of a class that returns the same type") {
+    val context = bootstrap.start(List("dev.coilix.boot.twins", "dev.coilix.boot.twins"), Nil, Nil)
+    assertEquals(context.getBeansOfType[Mirror].map(_.side), List("left", "right"))
   }
 
   test("registers ready singletons") {
