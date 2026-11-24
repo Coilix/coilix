@@ -19,6 +19,8 @@
 | `com.google.code.findbugs:jsr305` (przez reflections) | 3.0.2 | Apache-2.0 | `context` | tak |
 | `org.typelevel:cats-effect_3`, `cats-effect-kernel_3`, `cats-effect-std_3` | 3.7.1 | Apache-2.0 | `cats-effect` | tak |
 | `org.typelevel:cats-core_3`, `cats-kernel_3` (przez cats-effect) | 2.13.0 | MIT | `cats-effect` | tak |
+| `org.apache.pekko:pekko-actor_3`, `pekko-stream_3`, `pekko-slf4j_3`, `pekko-protobuf-v3_3` | 2.0.0 | Apache-2.0 | `pekko` | tak |
+| `org.reactivestreams:reactive-streams` (przez pekko-stream) | 1.0.4 | MIT-0 | `pekko` | tak |
 
 `sbt dependencyLicenseInfo` pokazuje tylko pierwszą licencję z POM-a (dla javassist MPL 1.1, dla reflections WTFPL). Pełne listy z POM-ów potwierdzają, że obie biblioteki dają też Apache-2.0.
 

@@ -32,7 +32,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00026 | [Przetwarzanie w tle (`processing`)](COILIX-00026_background_processing.md) | wysoki | szkic do doszlifowania, krok 2 (`ComponentCollector`) zrobiony (ADR 0017) |
 | COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | w trakcie: krok 1 zrobiony (`07_cluster`, tożsamość repliki, ADR 0021) |
 | COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | szkic do doszlifowania, krok 3 przed `core-v0.1.0` |
-| COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | szkic do doszlifowania |
+| COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | w trakcie: krok 1 zrobiony (ADR 0036: moduł `25_pekko`, `ActorSystem` i `Materializer` na pulach Coilix), dalej krok 2: `pekko-cats-effect` |
 | COILIX-00030 | [Diagnostyka i błędy fatalne](COILIX-00030_diagnostics_and_fatal_errors.md) | wysoki | w toku (krok 1 z 3: błędy fatalne wyłączają aplikację, ADR 0027) |
 
 Zależności między taskami:

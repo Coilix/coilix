@@ -140,7 +140,7 @@ Pekko i pekko-connectors mają licencję Apache-2.0, więc są dozwolone, ale ty
 
 ## Kroki (osobne PR-y)
 
-1. Moduł `pekko`: beany, konfiguracja, zamykanie z kontekstem, testy z testkitem.
+1. Moduł `pekko`: beany, konfiguracja, zamykanie z kontekstem, testy z testkitem. Zrobione (ADR 0036): moduł `25_pekko`, beany zamiast `ActorSystemFactory`, przewodnik i demo (`ModuleCensus`).
 2. `pekko-cats-effect`: mosty z anulowaniem i testy anulowania.
 3. `processing-pekko`: `PekkoProcessor`, `Stoppable` i silnik na wspólnym modelu nadzoru (po krokach 4–8 z COILIX-00026).
 4. Przewodnik w obu językach i przykładowy procesor Pekko w demo.
