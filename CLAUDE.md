@@ -24,7 +24,7 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `03_slf4s_plugin` | `slf4s-plugin` | `dev.coilix.slf4s` | Scala | plugin kompilatora `@Slf4s` |
 | `04_config` | `config` | `dev.coilix.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
 | `05_context` | `context` | `dev.coilix.context` | Scala | kontener IoC |
-| `06_concurrency` | `concurrency` | `dev.coilix.concurrency` | Scala | `IORuntime` cats-effect jako jedyna pula obliczeniowa (ADR 0031, 0042), wykonawca blokujący, harmonogram i beany w `IO` (ADR 0020, 0032) |
+| `06_concurrency` | `concurrency` | `dev.coilix.concurrency` | Scala | `IORuntime` cats-effect jako jedyna pula obliczeniowa (ADR 0031, 0042), fs2 (ADR 0043), wykonawca blokujący, harmonogram i beany w `IO` (ADR 0020, 0032) |
 | `07_cluster` | `cluster` | `dev.coilix.cluster` | Scala | tożsamość repliki, później członkostwo i API między replikami (ADR 0021) |
 | `08_events` | `events` | `dev.coilix.events` | Scala | zdarzenia aplikacji w pamięci z odbiorcami synchronicznymi i asynchronicznymi (ADR 0025) |
 | `09_diagnostics` | `diagnostics` | `dev.coilix.diagnostics` | Scala | zdrowie aplikacji (`Health`, wskaźniki) i kontrole wątków z wykrywaniem zakleszczeń (ADR 0039, 0040) |
@@ -33,7 +33,6 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `20_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
 | `21_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
 | `22_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
-| `25_pekko` | `pekko` | `dev.coilix.pekko` | Scala | `ActorSystem` i `Materializer` jako beany na pulach Coilix (ADR 0036) |
 | `26_processing_annotations` | `processing-annotations` | `dev.coilix.processing.annotation` | Java | adnotacja `@Processor` (ADR 0037) |
 | `27_processing` | `processing` | `dev.coilix.processing` | Scala | procesory tła z shardami, nadzorem i `ProcessorManager` (ADR 0037) |
 | `90_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
@@ -43,9 +42,9 @@ Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium
 
 `99_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `99_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
-Moduły `data`, `web`, `security`, `pekko` i `processing` są opcjonalne (zasady w `docs/architecture/modularity.md`):
+Moduły `data`, `web`, `security` i `processing` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
-- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `pekko`, `processing`) ani nie odwołują się do ich klas.
+- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `processing`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
 - Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
 - Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.

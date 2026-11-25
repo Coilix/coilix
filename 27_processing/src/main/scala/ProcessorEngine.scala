@@ -1,7 +1,7 @@
 package dev.coilix.processing
 
 /**
- * Runs the work of one shard in its model of concurrency, such as virtual threads, fibers of `IO` or graphs of Pekko.
+ * Runs the work of one shard in its model of concurrency, such as virtual threads or fibers of `IO` with fs2 streams.
  *
  * The [[dev.coilix.processing.ProcessorManager]] picks the only engine that supports a processor; none or several is an
  * error at startup. An engine runs one attempt of the work at a time and reports what happens to the given

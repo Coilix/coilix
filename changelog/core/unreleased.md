@@ -46,6 +46,7 @@
 - `IOApplicationRunner` describes the startup logic as `IO[Unit]`. Its beans run in one list with the `ApplicationRunner` beans, ordered by `@Order`, through the `ioRunnerAdapter` bean (COILIX-00020).
 - `CoilixIOApp` starts an application as an `IOApp`: its runtime, with `coilix.concurrency.compute.threads` compute threads, is the `ioRuntime` bean, the runners run in `IO` and the application runs until it is cancelled, which closes the context. `coilix.cats-effect.exit-after-runners = true` closes and ends it after the runners. `CoilixIOStartup` gives the same start as a `Resource` and an `IO` for a given runtime. When the context already has an `IORuntime`, Coilix creates no runtime of its own (COILIX-00020).
 - `coilix-testkit` supports tests in `IO`, with munit-cats-effect as a provided dependency: `CoilixIOSuite` for a `CatsEffectSuite` registers `coilixTest` bodies that return `IO` and get a fresh context, whose `ioRuntime` bean is the runtime of the suite. `setup.useIO { ... }`, `setup.resource` and `setup.withIORuntime(runtime)` use a `CoilixTestSetup` in `IO` (COILIX-00020).
+- fs2 is part of the core: `coilix-concurrency` depends on `fs2-core`, so applications can write streams as `fs2.Stream[IO, _]` running on the compute pool of the cats-effect runtime (COILIX-00032).
 
 ### Changed
 

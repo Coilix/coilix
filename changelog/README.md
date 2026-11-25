@@ -5,7 +5,6 @@ Each release group of Coilix has its own directory and its own versions:
 | Directory | Group | Tag |
 |---|---|---|
 | `core/` | `coilix-common`, `coilix-annotations`, `coilix-slf4s-plugin`, `coilix-config`, `coilix-context`, `coilix-boot`, `coilix-testkit` | `core-vX.Y.Z` |
-| `pekko/` | `coilix-pekko` | `pekko-vX.Y.Z` |
 | `processing/` | `coilix-processing-annotations`, `coilix-processing` | `processing-vX.Y.Z` |
 | `<module>/`, e.g. `web/` | one feature module | `<module>-vX.Y.Z` |
 

@@ -8,7 +8,7 @@ import scala.concurrent.Future
 
 /**
  * A [[dev.coilix.concurrency.TaskExecutor]] on the compute pool of a cats-effect runtime, so tasks of Coilix, `IO` fibers and,
- * with the Pekko module, actors share one pool with one thread per core. The `ioTaskExecutor` bean of the concurrency module.
+ * fs2 streams share one pool with one thread per core. The `ioTaskExecutor` bean of the concurrency module.
  *
  * The context of `propagators`, such as the MDC, is captured when a task is submitted and restored around it. A failure of a
  * task started with `execute` is logged and a fatal error goes to `fatalErrors`. The executor does not shut the pool down: the
