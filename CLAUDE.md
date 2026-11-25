@@ -79,10 +79,10 @@ Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru 
 - Zakaz `asInstanceOf` (wymusza `Wart.AsInstanceOf`). Rzutowanie, bez którego się nie da (typ wymazany w kodzie refleksyjnym), idzie do małej metody z `@SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))`, a jej Scaladoc mówi, dlaczego jest bezpieczne.
 - Najpierw interfejs (`trait`), potem implementacja. Domyślne złożenie implementacji w `default` w obiekcie towarzyszącym traitu.
 - Komponent frameworka ma w obiekcie towarzyszącym traitu `given ConfigPath[T]` (np. `coilix.context.constructor-selector`) i `def default(using components: ComponentProvider): T = components.get[T](...)`. Dzięki temu użytkownik podmienia go w configu kluczem `class`.
-- Klasa, która nie musi być rozszerzana i nie wynika z wymagań Javy, jest `final case class`, także serwis, komponent i implementacja traitu, a nie tylko dane. Publiczne `val` są parametrami konstruktora, a nie polami liczonymi w środku. Gdy klasa przyjmowała jeden obiekt i wyliczała z niego kilka pól, konstruktor główny przyjmuje te pola wprost, a `apply` w obiekcie towarzyszącym przyjmuje ten jeden obiekt i rozkłada go na konstruktor szczegółowy:
+- Klasa, która nie musi być rozszerzana i nie wynika z wymagań Javy, jest `case class` (bez `final`), także serwis, komponent i implementacja traitu, a nie tylko dane. Publiczne `val` są parametrami konstruktora, a nie polami liczonymi w środku. Gdy klasa przyjmowała jeden obiekt i wyliczała z niego kilka pól, konstruktor główny przyjmuje te pola wprost, a `apply` w obiekcie towarzyszącym przyjmuje ten jeden obiekt i rozkłada go na konstruktor szczegółowy:
 
   ```scala
-  final case class SmtpMailer(host: String, port: Int, sender: String) extends Mailer
+  case class SmtpMailer(host: String, port: Int, sender: String) extends Mailer
 
   object SmtpMailer {
     def apply(settings: MailSettings): SmtpMailer = SmtpMailer(settings.host, settings.port, settings.sender)
