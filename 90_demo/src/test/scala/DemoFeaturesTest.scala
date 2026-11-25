@@ -10,6 +10,7 @@ import dev.coilix.demo.access.ClaimSweeper
 import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vin
 import dev.coilix.demo.workshop.BayMonitor
+import dev.coilix.demo.workshop.BookingDesk
 import dev.coilix.demo.workshop.FaultCodeExport
 import dev.coilix.demo.workshop.FaultLedger
 import dev.coilix.demo.workshop.FileJobArchive
@@ -18,6 +19,7 @@ import dev.coilix.demo.workshop.InspectionSheet
 import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
+import dev.coilix.demo.workshop.LiftBoard
 import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
@@ -30,6 +32,8 @@ import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
 import dev.coilix.demo.workshop.WorkshopOpening
 import dev.coilix.demo.workshop.WorkshopProcessor
+import dev.coilix.diagnostics.Health
+import dev.coilix.diagnostics.HealthStatus
 import dev.coilix.events.ApplicationStarted
 import dev.coilix.events.ContextReady
 import dev.coilix.events.EventBus
@@ -239,6 +243,22 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     workshop.use {
       val thread = Await.result(bean[dev.coilix.concurrency.TaskExecutor].submit(Thread.currentThread.getName), 5.seconds)
       assertEquals((thread.startsWith("io-compute-"), beans[dev.coilix.concurrency.TaskExecutor].size), (true, 1))
+    }
+  }
+
+  test("pauses bookings while every lift is taken, told by the lifts health indicator and HealthChanged") {
+    workshop.withSynchronousEvents.use {
+      val lifts  = bean[LiftBoard]
+      val health = bean[Health]
+      val _      = (lifts.occupy(), lifts.occupy())
+      health.refresh()
+      val full   = (health.readiness, health.liveness, bean[BookingDesk].accepting)
+      lifts.release()
+      health.refresh()
+      assertEquals(
+        (full, health.readiness, bean[BookingDesk].accepting),
+        ((HealthStatus.Degraded, HealthStatus.Up, false), HealthStatus.Up, true)
+      )
     }
   }
 

@@ -139,7 +139,7 @@ lazy val warts = Project("warts", file("tools/warts"))
 lazy val coreGroup: Seq[Setting[?]] = ReleaseGroups.groupSettings(ReleaseGroups.core)
 
 lazy val coreModules: Seq[Project] =
-  Seq(common, annotations, slf4sPlugin, config, context, concurrency, cluster, applicationEvents, boot, testkit)
+  Seq(common, annotations, slf4sPlugin, config, context, concurrency, cluster, applicationEvents, diagnostics, boot, testkit)
 
 def featureGroup(id: String): Seq[Setting[?]] =
   ReleaseGroups.groupSettings(id) ++
@@ -202,6 +202,14 @@ lazy val applicationEvents = slf4sModule("events", "08_events", "dev.coilix.even
   .settings(coreGroup)
   .settings(description := "In-memory application events for Coilix, with synchronous and asynchronous listeners")
 
+lazy val diagnostics = slf4sModule("diagnostics", "09_diagnostics", "dev.coilix.diagnostics")
+  .dependsOn(applicationEvents)
+  .settings(coreGroup)
+  .settings(
+    description := "Health of Coilix applications and checks of their threads, such as deadlock detection",
+    Test / fork := true
+  )
+
 lazy val data = slf4sModule("data", "20_data", "dev.coilix.data")
   .dependsOn(context)
   .settings(featureGroup("data"))
@@ -248,7 +256,7 @@ lazy val security = slf4sModule("security", "22_security", "dev.coilix.security"
   .settings(description := "Security for Coilix")
 
 lazy val boot = slf4sModule("boot", "15_boot", "dev.coilix.boot")
-  .dependsOn(context, concurrency, applicationEvents)
+  .dependsOn(context, concurrency, applicationEvents, diagnostics)
   .settings(coreGroup)
   .settings(description := "Application startup for Coilix")
 
@@ -317,6 +325,7 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (concurrency / Compile / tastyFiles).value,
         (cluster / Compile / tastyFiles).value,
         (applicationEvents / Compile / tastyFiles).value,
+        (diagnostics / Compile / tastyFiles).value,
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value,
         (catsEffect / Compile / tastyFiles).value,
@@ -348,6 +357,7 @@ lazy val modules: Seq[ProjectReference] =
     concurrency,
     cluster,
     applicationEvents,
+    diagnostics,
     data,
     web,
     security,
