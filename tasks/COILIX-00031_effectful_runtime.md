@@ -23,7 +23,7 @@
 ## Kroki (osobne PR-y)
 
 1. ADR 0042 i ten task.
-2. Kontener: wiązanie niezwiązanych `F[_]` klas komponentów i metod `@Bean` z `IO`, `Async[IO]` jako bean, dopasowanie klas typów po nadtypach (`Sync[IO]` znajduje `Async[IO]`), czytelny błąd dla parametrów innego kształtu (`F[_, _]`) albo kilku `F`. Przewodnik o komponentach w tagless final. Zrobione: `EffectTypeBinding` w `context`, `CoilixModule.effectType`, wiązanie w bootstrapie przed procesorami, `ConflictingEffectTypesException`, kontrola w planerze, `ioAsync: Async[IO]` i efekt `IO` w module `cats-effect`, demo (`LabourRates`, `JobEstimates`) i sekcja przewodnika po cats-effect. Za efekt uchodzi parametr typu występujący w typach zależności, bo JVM nie przechowuje rodzaju parametru.
+2. Kontener: wiązanie niezwiązanych `F[_]` klas komponentów i metod `@Bean` z `IO`, `Async[IO]` jako bean, dopasowanie klas typów po nadtypach (`Sync[IO]` znajduje `Async[IO]`), czytelny błąd dla parametrów innego kształtu (`F[_, _]`) albo kilku `F`. Przewodnik o komponentach w tagless final.
 3. `processing` na `IO`: style procesorów, SPI źródeł i wyjść, worker jako fiber, menedżer na kolejce poleceń, statystyki w `Ref`, `InMemoryStream` na `Queue`. ADR o `fs2.Stream` jako źródle. Zastępuje otwarty PR kroku 5 z COILIX-00026.
 4. `events` na `IO`.
 5. `concurrency`: cats-effect jako zależność rdzenia, `@Scheduled` i `@Async` w `IO`, harmonogram na fiberach.

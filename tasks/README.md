@@ -34,8 +34,8 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | w trakcie: kroki 2 i 3 zrobione (ADR 0038: `tools/warts`, `ConsoleOutput`, `Wart.AsInstanceOf`, `ClassParameterInApi`), dalej krok 4 (reguły scalafix) |
 | COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | zastąpiony przez COILIX-00032 (ADR 0043); moduł `25_pekko` z kroku 1 do usunięcia |
 | COILIX-00030 | [Diagnostyka i błędy fatalne](COILIX-00030_diagnostics_and_fatal_errors.md) | wysoki | w toku (krok 1 z 3: błędy fatalne wyłączają aplikację, ADR 0027; w kroku 2 eksperyment z zakleszczeniami wątków wirtualnych zrobiony, ADR 0039, i moduł `09_diagnostics` ze zdrowiem i kontrolami wątków platformowych, ADR 0040; zostały wątki wirtualne) |
-| COILIX-00031 | [Runtime na `IO`, komponenty aplikacji w tagless final](COILIX-00031_effectful_runtime.md) | najwyższy | w trakcie: kroki 1 i 2 (ADR 0042, wiązanie `F[_]` komponentów z `IO`) i połączenie cats-effect z rdzeniem z kroku 7, dalej krok 3: `processing` na `IO` |
-| COILIX-00032 | [IO, Resource i fs2 zamiast Pekko i tagless final](COILIX-00032_io_resource_fs2.md) | najwyższy | w trakcie: krok 1 (ADR 0043), dalej krok 2: usunięcie wiązania `F[_]` |
+| COILIX-00031 | [Runtime na `IO`, komponenty aplikacji w tagless final](COILIX-00031_effectful_runtime.md) | najwyższy | w trakcie: krok 1 (ADR 0042) i połączenie cats-effect z rdzeniem z kroku 7; krok 2 (wiązanie `F[_]` z `IO`) wycofany przez COILIX-00032 (ADR 0043); dalej krok 3: `processing` na `IO` z fs2 |
+| COILIX-00032 | [IO, Resource i fs2 zamiast Pekko i tagless final](COILIX-00032_io_resource_fs2.md) | najwyższy | w trakcie: kroki 1 i 2 (ADR 0043, usunięcie wiązania `F[_]`), dalej krok 3: usunięcie Pekko |
 
 Zależności między taskami:
 

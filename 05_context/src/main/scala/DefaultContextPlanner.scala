@@ -15,7 +15,6 @@ package dev.coilix.context
 final class DefaultContextPlanner(filter: DefinitionFilter, resolver: DependencyResolver) extends ContextPlanner {
 
   override def plan(definitions: List[BeanDefinition], provided: List[RegisteredBean]): ContextPlan = {
-    EffectTypeBinding.requireBound(definitions)
     val kept   = filter.filter(definitions, provided.map(_.beanClass)).map(withoutProvidedNames(provided.map(_.beanName)))
     val levels = resolver.resolveLevels(kept, provided.map(_.beanType))
     ContextPlan(provided.map(PlanStep.Provide(_)) ++ levels.zipWithIndex.flatMap((level, index) => created(level, index)))

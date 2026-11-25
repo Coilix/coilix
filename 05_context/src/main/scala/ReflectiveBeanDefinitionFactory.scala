@@ -13,10 +13,6 @@ import java.lang.reflect.Modifier
 /**
  * Creates bean definitions through reflection.
  *
- * A class whose type parameter appears in the types of its constructor parameters, such as
- * `OrderService[F[_]](repo: OrderRepository[F])`, gets the type `OrderService[F]` with `F` unbound, to be bound by
- * [[dev.coilix.context.EffectTypeBinding]]; any other class gets its class as its type.
- *
  * A `@ConfigurationProperties` class is bound from the configuration. Any other class is created through the constructor
  * chosen by the [[dev.coilix.context.ConstructorSelector]], with one dependency per parameter. Interfaces and abstract classes give
  * no
@@ -100,20 +96,13 @@ final class ReflectiveBeanDefinitionFactory(
     definitionOf(beanClass, ConstructorInstanceFactory(constructor), constructor.getParameters.toList.map(parameterMapper.map))
   }
 
-  private def typeOf(beanClass: Class[?], dependencies: List[Dependency]): GenericType = {
-    val parameters = beanClass.getTypeParameters.toList.map(_.getName)
-    val used       = EffectTypeBinding.variablesIn(dependencies)
-    if (parameters.exists(used.contains)) GenericType.Concrete(beanClass, parameters.map(GenericType.Variable(_)))
-    else GenericType.of(beanClass)
-  }
-
   private def propertiesDefinition(beanClass: Class[?], prefix: String): BeanDefinition =
     definitionOf(beanClass, PropertiesInstanceFactory(environment, prefix, beanClass), Nil)
 
   private def definitionOf(beanClass: Class[?], factory: InstanceFactory, dependencies: List[Dependency]): BeanDefinition =
     BeanDefinition(
       beanName     = nameGenerator.generate(beanClass),
-      beanType     = typeOf(beanClass, dependencies),
+      beanType     = GenericType.of(beanClass),
       factory      = factory,
       dependencies = dependencies,
       isPrimary    = beanClass.isAnnotationPresent(classOf[Primary])

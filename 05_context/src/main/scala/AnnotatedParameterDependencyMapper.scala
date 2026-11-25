@@ -12,10 +12,9 @@ import java.lang.reflect.Parameter
  * [[dev.coilix.context.Dependency.Named]]; on an `Option[T]` or collection parameter `@Qualifier` is rejected with
  * [[dev.coilix.context.UnsupportedDependencyTypeException]].
  *
- * A type variable declared by the class of the constructor or by the `@Bean` method, such as `F` in
- * `SqlRepository[F[_]](sync: Sync[F])`, stays in the dependency, so that [[dev.coilix.context.EffectTypeBinding]] can bind it to
- * the effect of the application. Any other type variable, and a type argument that is a class with several type parameters,
- * which is how the JVM keeps a type lambda such as `[A] =>> Either[String, A]`, are rejected with
+ * A bean type must be fully known: a type variable that the declaring class or method leaves unbound, such as `F` in
+ * `SqlRepository[F[_]](sync: Sync[F])`, and a type argument that is a class with several type parameters, which is how the JVM
+ * keeps a type lambda such as `[A] =>> Either[String, A]`, are rejected with
  * [[dev.coilix.context.UnsupportedDependencyTypeException]]. This is the default
  * [[dev.coilix.context.ParameterDependencyMapper]].
  */
@@ -53,17 +52,9 @@ final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper)
     }
 
   private def check(parameter: Parameter, beanType: GenericType): Unit = {
-    beanType.variables.filterNot(declaredBy(parameter).contains).headOption.foreach(variable =>
-      throw unbound(parameter, beanType, variable)
-    )
-    lossyArgument(beanType).foreach(argument                                                 => throw lossy(parameter, beanType, argument))
+    beanType.variables.headOption.foreach(variable => throw unbound(parameter, beanType, variable))
+    lossyArgument(beanType).foreach(argument       => throw lossy(parameter, beanType, argument))
   }
-
-  private def declaredBy(parameter: Parameter): Set[String] =
-    parameter.getDeclaringExecutable match {
-      case constructor: java.lang.reflect.Constructor[?] => constructor.getDeclaringClass.getTypeParameters.map(_.getName).toSet
-      case method => method.getTypeParameters.map(_.getName).toSet
-    }
 
   private def lossyArgument(beanType: GenericType): Option[Class[?]] =
     beanType match {
