@@ -23,12 +23,12 @@
 ## Kroki (osobne PR-y)
 
 1. ADR 0042 i ten task.
-2. Kontener: wiązanie niezwiązanych `F[_]` klas komponentów i metod `@Bean` z `IO`, `Async[IO]` jako bean, dopasowanie klas typów po nadtypach (`Sync[IO]` znajduje `Async[IO]`), czytelny błąd dla parametrów innego kształtu (`F[_, _]`) albo kilku `F`. Przewodnik o komponentach w tagless final.
+2. Kontener: wiązanie niezwiązanych `F[_]` klas komponentów i metod `@Bean` z `IO`, `Async[IO]` jako bean, dopasowanie klas typów po nadtypach (`Sync[IO]` znajduje `Async[IO]`), czytelny błąd dla parametrów innego kształtu (`F[_, _]`) albo kilku `F`. Przewodnik o komponentach w tagless final. Zrobione: `EffectTypeBinding` w `context`, `CoilixModule.effectType`, wiązanie w bootstrapie przed procesorami, `ConflictingEffectTypesException`, kontrola w planerze, `ioAsync: Async[IO]` i efekt `IO` w module `cats-effect`, demo (`LabourRates`, `JobEstimates`) i sekcja przewodnika po cats-effect. Za efekt uchodzi parametr typu występujący w typach zależności, bo JVM nie przechowuje rodzaju parametru.
 3. `processing` na `IO`: style procesorów, SPI źródeł i wyjść, worker jako fiber, menedżer na kolejce poleceń, statystyki w `Ref`, `InMemoryStream` na `Queue`. ADR o `fs2.Stream` jako źródle. Zastępuje otwarty PR kroku 5 z COILIX-00026.
 4. `events` na `IO`.
 5. `concurrency`: cats-effect jako zależność rdzenia, `@Scheduled` i `@Async` w `IO`, harmonogram na fiberach.
 6. `diagnostics` na `IO`.
-7. Połączenie modułu `cats-effect` z rdzeniem (interpreter planu, `CoilixIOApp`, adapter runnerów) i `testkit-cats-effect` z `testkit`. `Coilix.run` przez ten sam runtime.
+7. Połączenie modułu `cats-effect` z rdzeniem (interpreter planu, `CoilixIOApp`, adapter runnerów) i `testkit-cats-effect` z `testkit`. `Coilix.run` przez ten sam runtime. Pomysły z `OptimusIOApp` bulldozera (koncepcje, nie kod): wykrywanie zablokowanych wątków `IORuntime` (`blockedThreadDetectionEnabled`), okresowy log wątków nie-demonów, czytelny log głodzenia CPU (`onCpuStarvationWarn`) i `reportFailure` przez logger Coilix.
 8. Wart, który zabrania `synchronized`, `wait`/`notify` i `Atomic*` w modułach runtime'u (COILIX-00028), z wyjątkami dla wątków niezależnych od puli.
 
 9. Moduły kontenera, których migracja nie przepisuje (`common`, `config`, `context`, `boot`, `testkit`): zamiana klas (także `final case class`) na `case class` z konstruktorem szczegółowym i `apply` w obiekcie towarzyszącym według zasady z `CLAUDE.md`.

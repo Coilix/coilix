@@ -11,10 +11,14 @@ import dev.coilix.boot.jobs.JobRunner
 import dev.coilix.boot.jobs.JobsModule
 import dev.coilix.boot.jobs.ModuleJob
 import dev.coilix.boot.modules.EffectModule
+import dev.coilix.boot.modules.EffectTypeModule
 import dev.coilix.boot.modules.FixedModuleLoader
 import dev.coilix.boot.modules.RenamingModule
 import dev.coilix.boot.modules.ReportModule
 import dev.coilix.boot.modules.ReportTitle
+import dev.coilix.boot.tagless.Delay
+import dev.coilix.boot.tagless.Greeter
+import dev.coilix.boot.tagless.Task
 import dev.coilix.boot.twins.Mirror
 import dev.coilix.common.GenericType
 import dev.coilix.config.ComponentProvider
@@ -157,6 +161,23 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
       withModules(List(EffectModule("io"), EffectModule("zio"))).start(List("dev.coilix.boot.fixture"), Nil, Nil)
     }
     assert(error.getMessage.contains("io, zio"), error.getMessage)
+  }
+
+  test("binds the type parameter of tagless final components to the effect of the module that gives one") {
+    val context = withModules(List(EffectTypeModule("task", classOf[Task[?]]))).start(List("dev.coilix.boot.tagless"), Nil, Nil)
+    assert(context.getBean[Greeter[Task]].delay eq context.getBean[Delay[Task]])
+  }
+
+  test("fails when two modules give the effect of the application") {
+    val error = intercept[ConflictingEffectTypesException] {
+      withModules(List(EffectTypeModule("task", classOf[Task[?]]), EffectTypeModule("other", classOf[Option[?]])))
+        .start(List("dev.coilix.boot.tagless"), Nil, Nil)
+    }
+    assert(error.getMessage.contains("task (dev.coilix.boot.tagless.Task), other (scala.Option)"), error.getMessage)
+  }
+
+  test("a module gives no effect type by default") {
+    assertEquals(ReportModule().effectType, None)
   }
 
   test("a module has no effect interpreter by default") {

@@ -56,9 +56,11 @@ final class TypedBeansTest extends FunSuite {
     assertEquals(context.getBeanOption[Repo[Vector]], None)
   }
 
-  test("rejects a dependency with an unbound type variable") {
-    val error = intercept[UnsupportedDependencyTypeException](Definitions.of(classOf[UnboundRepoUser[?]]))
-    assert(error.getMessage.contains("with the unbound type variable F"))
+  test("a context without an effect binding rejects a component with an unbound type parameter") {
+    val error = intercept[UnsupportedDependencyTypeException](
+      ApplicationContextBuilder.default.build(Definitions.of(classOf[UnboundRepoUser[?]]))
+    )
+    assert(error.getMessage.contains("with the unbound type parameter F"), error.getMessage)
   }
 
   test("rejects a dependency whose type argument looks like a type lambda") {

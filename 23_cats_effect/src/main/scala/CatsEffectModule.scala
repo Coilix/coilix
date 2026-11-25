@@ -1,5 +1,6 @@
 package dev.coilix.catseffect
 
+import cats.effect.IO
 import dev.coilix.context.CoilixModule
 import dev.coilix.context.DefinitionProcessor
 import dev.coilix.context.EffectInterpreter
@@ -14,6 +15,10 @@ import dev.coilix.context.EffectInterpreter
  * A `@Bean` method may return `IO[A]` or `Resource[IO, A]`: the module checks such beans with the
  * [[dev.coilix.catseffect.EffectfulBeanProcessor]] and creates them with the [[dev.coilix.catseffect.IOEffectInterpreter]], and
  * other beans receive the value `A`.
+ *
+ * `IO` is the effect of the application: a component written in tagless final style, such as
+ * `OrderService[F[_]: Async](repo: OrderRepository[F])`, becomes the bean `OrderService[IO]`, and its type class dependencies
+ * find the `ioAsync` bean.
  */
 final class CatsEffectModule extends CoilixModule {
 
@@ -24,4 +29,6 @@ final class CatsEffectModule extends CoilixModule {
   override def definitionProcessors: List[DefinitionProcessor] = List(EffectfulBeanProcessor())
 
   override def effectInterpreter: Option[EffectInterpreter] = Some(IOEffectInterpreter())
+
+  override def effectType: Option[Class[?]] = Some(classOf[IO[?]])
 }
