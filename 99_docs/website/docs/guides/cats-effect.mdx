@@ -42,8 +42,6 @@ The application then lives in the main fiber of the `IOApp`:
 - with `coilix.cats-effect.exit-after-runners: true` the application closes and ends after its runners, which suits batch jobs,
 - if the start or a runner fails, the context closes and the application ends with exit code 1.
 
-`Coilix.run` from a plain `main` method works too: the module then creates the runtime itself and Coilix closes it with the application.
-
 ## Run IO
 
 Inject the runtime where a bean runs `IO`, here as a `using` parameter, so `unsafeRunSync` and other calls find it:
@@ -67,7 +65,7 @@ When the application starts, Coilix runs these effects on the `ioRuntime` bean:
 
 A plain bean that depends on such a value is created as usual, after it. Use [`@DependsOn`](bean-lifecycle.mdx#order-beans-without-injecting-them) when a bean needs another one only through a side effect, for example a cache that reads tables the migrations create.
 
-A bean made by an effect is always created at startup, so it cannot be `@Lazy` or `@Prototype`: such a bean stops the startup with `InvalidEffectfulBeanException`. Without the module, `Coilix.run` rejects these beans with `EffectfulBeanException`.
+A bean made by an effect is always created at startup, so it cannot be `@Lazy` or `@Prototype`: such a bean stops the startup with `InvalidEffectfulBeanException`.
 
 ### Closing
 
@@ -88,7 +86,7 @@ Coilix runs these effects on the `ioRuntime` bean:
 - the `IO` of a `@PostConstruct` method runs after the methods that return `Unit` and before any other bean receives the bean. If it fails, the startup stops with a `BeanCreationException`,
 - the `IO` of a `@PreDestroy` method runs when the application closes, before the methods that return `Unit`, within the same limit as the finalizer of a resource. If it fails, the failure is logged and closing goes on.
 
-Such a bean, like a bean made by an effect, is always created at startup, so it cannot be `@Lazy` or `@Prototype`. Declare the methods on the class of the bean or, for a `@Bean` method, on the type it returns: Coilix finds them before it creates the bean. Without the module, `Coilix.run` rejects these beans with `EffectfulBeanException`.
+Such a bean, like a bean made by an effect, is always created at startup, so it cannot be `@Lazy` or `@Prototype`. Declare the methods on the class of the bean or, for a `@Bean` method, on the type it returns: Coilix finds them before it creates the bean.
 
 ## Runners in IO
 

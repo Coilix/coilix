@@ -23,7 +23,7 @@ Every other exception is a failure the application survives. A task, a scheduled
 
 ## What happens after a fatal error
 
-A fatal error thrown in a task of the `TaskExecutor`, in a task of the `TaskScheduler` (including `@Scheduled` methods) or in an asynchronous event listener goes to the `FatalErrorHandler` bean. In an application started with `Coilix.run`, the handler also receives fatal errors of every other thread. By default it:
+A fatal error thrown in a task of the `TaskExecutor`, in a task of the `TaskScheduler` (including `@Scheduled` methods) or in an asynchronous event listener goes to the `FatalErrorHandler` bean. In an application started as a `CoilixIOApp`, the handler also receives fatal errors of every other thread. By default it:
 
 1. logs the error,
 2. closes the context on a new thread, so `@PreDestroy` methods run and asynchronous listeners get the usual time to finish,
@@ -46,7 +46,7 @@ Coilix handles the threads it manages. Libraries that start their own threads, o
 java -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -XX:MaxRAMPercentage=75 -jar shop.jar
 ```
 
-In a container, the JVM gives the heap only 25% of the memory limit by default. `-XX:MaxRAMPercentage=75` gives it most of the limit and leaves the rest for threads, metaspace and buffers. `Coilix.run` logs a warning at startup when `-XX:+ExitOnOutOfMemoryError` and `-XX:+CrashOnOutOfMemoryError` are both missing, or, in a container, when the maximum heap is less than half of the memory limit. Outside a container the memory is shared with other programs, so the heap is not checked.
+In a container, the JVM gives the heap only 25% of the memory limit by default. `-XX:MaxRAMPercentage=75` gives it most of the limit and leaves the rest for threads, metaspace and buffers. Coilix logs a warning at startup when `-XX:+ExitOnOutOfMemoryError` and `-XX:+CrashOnOutOfMemoryError` are both missing, or, in a container, when the maximum heap is less than half of the memory limit. Outside a container the memory is shared with other programs, so the heap is not checked.
 
 In Kubernetes, a pod that keeps failing the same way goes into `CrashLoopBackOff`. That is the intended signal: the application does not pretend to work, and the logs and the heap dump show why.
 

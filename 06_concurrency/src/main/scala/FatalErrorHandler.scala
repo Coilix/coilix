@@ -1,8 +1,8 @@
 package dev.coilix.concurrency
 
 /**
- * Reacts to a fatal error, such as an `OutOfMemoryError`, thrown in a thread of Coilix or, in an application started by
- * `Coilix.run`, in any thread.
+ * Reacts to a fatal error, such as an `OutOfMemoryError`, thrown in a thread of Coilix or, in an application started as a
+ * `CoilixIOApp`, in any thread.
  *
  * The concurrency module registers a `fatalErrorHandler` bean chosen by `coilix.fatal-errors.action`: a
  * [[dev.coilix.concurrency.ShutdownFatalErrorHandler]], which closes the context and ends the process, or a

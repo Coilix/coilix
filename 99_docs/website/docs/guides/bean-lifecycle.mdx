@@ -28,7 +28,7 @@ Coilix runs the `@PostConstruct` methods before it passes the bean to any other 
 
 If a `@PostConstruct` method throws an exception, the startup stops with `BeanCreationException`. The message names the bean and the method, and the original exception is its cause.
 
-The application context closes when the JVM stops, for example after Ctrl+C, or when you call `close()` on the context returned by `Coilix.run`. Coilix then runs the `@PreDestroy` methods, starting with the bean that was created last. A bean is therefore destroyed before the beans it depends on, so it can still use them while it stops.
+The application context closes when the application ends, for example after `SIGTERM` or Ctrl+C. Coilix then runs the `@PreDestroy` methods, starting with the bean that was created last. A bean is therefore destroyed before the beans it depends on, so it can still use them while it stops.
 
 If a `@PreDestroy` method throws an exception, Coilix logs it as a warning and goes on with the remaining methods and beans.
 

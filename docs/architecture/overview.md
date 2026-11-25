@@ -4,18 +4,18 @@ Jak Coilix startuje aplikację i buduje kontekst. Zasady podziału na moduły s�
 
 ## Start aplikacji
 
-`Coilix.run[App.type](args)` deleguje do `CoilixApplicationRunner.default`, czyli `DefaultCoilixApplicationRunner`:
+Aplikacja to obiekt z `@CoilixApplication`, który rozszerza `CoilixIOApp`, czyli `IOApp` cats-effect (ADR 0034, 0045). `run` woła `CoilixIOStartup.run`, a ten buduje kontekst przez `CoilixApplicationRunner.default`, czyli `DefaultCoilixApplicationRunner`:
 
 ```mermaid
 flowchart TD
-    A["Coilix.run[T](args)"] --> B["ArgumentsParser<br/>args → ApplicationArguments"]
+    A["CoilixIOApp.run(args)"] --> B["ArgumentsParser<br/>args → ApplicationArguments"]
     B --> C["EnvironmentLoader<br/>linia poleceń, właściwości systemowe, pliki application.*"]
     C --> D["ComponentProvider.from(environment)<br/>wybór komponentów frameworka"]
-    D --> E["StartupComponents<br/>resolver, bootstrap, invoker, logger, shutdown hooks"]
+    D --> E["StartupComponents<br/>resolver, bootstrap, invoker, logger"]
     E --> F["BasePackageResolver<br/>pakiety z @CoilixApplication"]
     F --> G["CoilixBootstrap<br/>skanowanie i budowa kontekstu"]
-    G --> H["ShutdownHookRegistrar<br/>close() przy zamknięciu JVM"]
-    H --> I["RunnerInvoker<br/>ApplicationRunner według @Order"]
+    G --> H["CoilixIOStartup<br/>handler błędów fatalnych, runnery w IO"]
+    H --> I["Resource<br/>close() po anulowaniu albo po runnerach"]
 ```
 
 1. **Argumenty.** `SimpleArgumentsParser` dzieli `args` na opcje (`--klucz=wartość` albo sama flaga `--klucz`) i argumenty pozycyjne.
@@ -23,7 +23,7 @@ flowchart TD
 3. **Komponenty frameworka.** `ComponentProvider` sprawdza, czy pod ścieżką komponentu (`coilix.context.*`, `coilix.boot.*`) jest klucz `class`. Jeśli tak, tworzy wskazaną klasę. Jeśli nie, używa domyślnej implementacji. Dzieje się to przed budową kontekstu, więc komponenty frameworka nie są beanami.
 4. **Pakiety do skanowania.** `AnnotationBasePackageResolver` bierze `scanBasePackages` z `@CoilixApplication`, a gdy jest puste, pakiet klasy aplikacji.
 5. **Kontekst.** `DefaultCoilixBootstrap` skanuje pakiety, dokłada komponenty modułów z classpath (`ModuleLoader`, zob. [modularity.md](modularity.md)), przepuszcza definicje przez `DefinitionProcessor`y modułów (`CoilixModule.definitionProcessors`, np. proxy `@Async`) i przekazuje je do `ApplicationContextBuilder` (opis niżej).
-6. **Po starcie.** Rejestrowany jest shutdown hook, który wywołuje `close()` kontekstu. Potem `OrderedRunnerInvoker` uruchamia beany `ApplicationRunner` razem z runnerami beanów `RunnerAdapter` (np. `IOApplicationRunner` z beanem `ioRunnerAdapter` modułu `boot`) w jednej liście w kolejności `@Order` (`OrderedRunner.all`), między zdarzeniami `ContextReady` i `ApplicationStarted`. Gdy runner albo odbiorca tych zdarzeń rzuci wyjątek, publikowane jest `ApplicationFailed`, kontekst jest zamykany, a wyjątek idzie dalej.
+6. **Po starcie.** Kontekst jest `Resource`: `close()` wywołuje się po anulowaniu głównego fibera (`SIGTERM`, Ctrl+C) albo po runnerach z `exit-after-runners`. Dopóki zasób żyje, `FatalErrorHandler` kontekstu jest domyślnym handlerem niezłapanych wyjątków procesu. `CoilixIOStartup.runners` uruchamia beany `ApplicationRunner` razem z runnerami beanów `RunnerAdapter` (np. `IOApplicationRunner` z beanem `ioRunnerAdapter` modułu `boot`) w jednej liście w kolejności `@Order` (`OrderedRunner.all`), między zdarzeniami `ContextReady` i `ApplicationStarted`. Gdy runner albo odbiorca tych zdarzeń rzuci wyjątek, publikowane jest `ApplicationFailed`, kontekst jest zamykany, a wyjątek idzie dalej.
 
 ## Budowa kontekstu
 
@@ -77,7 +77,6 @@ coilix.context.bean-name-generator.class: com.example.PrefixedBeanNameGenerator
 | `coilix.boot.startup-logger` | `StartupLogger` | `Slf4jStartupLogger` |
 | `coilix.boot.startup-message-formatter` | `StartupMessageFormatter` | `DefaultStartupMessageFormatter` |
 | `coilix.boot.banner-loader` | `BannerLoader` | `ClasspathBannerLoader` |
-| `coilix.boot.shutdown-hook-registrar` | `ShutdownHookRegistrar` | `RuntimeShutdownHookRegistrar` |
 | `coilix.context.application-context-builder` | `ApplicationContextBuilder` | `DefaultApplicationContextBuilder` |
 | `coilix.context.class-path-scanner` | `ClassPathScanner` | `ReflectionsClassPathScanner` |
 | `coilix.context.module-loader` | `ModuleLoader` | `ServiceLoaderModuleLoader` |

@@ -23,7 +23,7 @@ Każdy inny wyjątek to porażka, którą aplikacja przeżywa. Zadanie, metoda `
 
 ## Co się dzieje po błędzie fatalnym
 
-Błąd fatalny rzucony w zadaniu `TaskExecutor`, w zadaniu `TaskScheduler` (także w metodzie `@Scheduled`) albo w asynchronicznym odbiorcy zdarzeń trafia do beana `FatalErrorHandler`. W aplikacji uruchomionej przez `Coilix.run` handler dostaje też błędy fatalne wszystkich innych wątków. Domyślnie:
+Błąd fatalny rzucony w zadaniu `TaskExecutor`, w zadaniu `TaskScheduler` (także w metodzie `@Scheduled`) albo w asynchronicznym odbiorcy zdarzeń trafia do beana `FatalErrorHandler`. W aplikacji uruchomionej jako `CoilixIOApp` handler dostaje też błędy fatalne wszystkich innych wątków. Domyślnie:
 
 1. zapisuje błąd w logu,
 2. zamyka kontekst w nowym wątku, więc działają metody `@PreDestroy`, a odbiorcy asynchroniczni dostają zwykły czas na dokończenie pracy,
@@ -46,7 +46,7 @@ Coilix obsługuje wątki, którymi zarządza. Biblioteki, które uruchamiają w�
 java -XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/dumps -XX:MaxRAMPercentage=75 -jar shop.jar
 ```
 
-W kontenerze JVM domyślnie daje stercie tylko 25% limitu pamięci. `-XX:MaxRAMPercentage=75` daje jej większość limitu, a resztę zostawia na wątki, metaspace i bufory. `Coilix.run` ostrzega przy starcie, gdy brakuje obu opcji `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` albo, w kontenerze, gdy maksymalna sterta to mniej niż połowa limitu pamięci. Poza kontenerem pamięć jest dzielona z innymi programami, więc sterta nie jest sprawdzana.
+W kontenerze JVM domyślnie daje stercie tylko 25% limitu pamięci. `-XX:MaxRAMPercentage=75` daje jej większość limitu, a resztę zostawia na wątki, metaspace i bufory. Coilix ostrzega przy starcie, gdy brakuje obu opcji `-XX:+ExitOnOutOfMemoryError` i `-XX:+CrashOnOutOfMemoryError` albo, w kontenerze, gdy maksymalna sterta to mniej niż połowa limitu pamięci. Poza kontenerem pamięć jest dzielona z innymi programami, więc sterta nie jest sprawdzana.
 
 W Kubernetesie pod, który ciągle pada w ten sam sposób, przechodzi w `CrashLoopBackOff`. To zamierzony sygnał: aplikacja nie udaje, że działa, a logi i zrzut pamięci pokazują dlaczego.
 

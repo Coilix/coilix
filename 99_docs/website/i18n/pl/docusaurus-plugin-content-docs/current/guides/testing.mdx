@@ -51,9 +51,9 @@ Domieszaj `CoilixSuite` do suite'u munit i opisz kontekst przez `CoilixTestSetup
 
 Setup zadeklarowany jako `given` służy każdemu `coilixTest`, który nie podaje własnego. Test, który potrzebuje czegoś innego, przekazuje swój setup, zwykle zbudowany z tego z `given`, tak jak drugi test powyżej.
 
-`forApplication` skanuje te same pakiety, co `Coilix.run` dla tej aplikacji. Żeby skanować inne pakiety, zacznij od `CoilixTestSetup.forPackages("com.example.billing")`.
+`forApplication` skanuje te same pakiety, co sama aplikacja. Żeby skanować inne pakiety, zacznij od `CoilixTestSetup.forPackages("com.example.billing")`.
 
-Kontekst testowy różni się od działającej aplikacji kilkoma rzeczami: nie wypisuje banera ani logu startu, nie rejestruje shutdown hooka i nie wywołuje beanów `ApplicationRunner`. Gdy test ich potrzebuje, wywołaj `withRunners`.
+Kontekst testowy różni się od działającej aplikacji kilkoma rzeczami: nie wypisuje banera ani logu startu i nie wywołuje beanów `ApplicationRunner`. Gdy test ich potrzebuje, wywołaj `withRunners`.
 
 ## Czytaj z kontekstu
 

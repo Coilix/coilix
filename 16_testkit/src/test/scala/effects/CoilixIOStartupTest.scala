@@ -56,6 +56,16 @@ final class CoilixIOStartupTest extends FunSuite {
     assertEquals((failure.getMessage, IOAppJournal.all), ("the till does not add up", opened ++ closed))
   }
 
+  test("makes the fatal error handler the default uncaught exception handler while the application runs") {
+    val previous        = Thread.getDefaultUncaughtExceptionHandler
+    val (during, after) = CoilixIOStartup
+      .application[TillApplication.type](Nil, runtime)
+      .use(_ => IO(Thread.getDefaultUncaughtExceptionHandler))
+      .map(during => (during, Thread.getDefaultUncaughtExceptionHandler))
+      .unsafeRunSync()
+    assertEquals((during ne previous, after eq previous), (true, true))
+  }
+
   private def waitFor(entry: String): IO[Unit] =
     IO(IOAppJournal.all.contains(entry)).flatMap(found => if (found) IO.unit else IO.sleep(10.millis) *> waitFor(entry))
 }

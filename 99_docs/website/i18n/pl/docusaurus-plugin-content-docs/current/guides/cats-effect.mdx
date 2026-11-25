@@ -42,8 +42,6 @@ Aplikacja żyje wtedy w głównym fiberze `IOApp`:
 - z `coilix.cats-effect.exit-after-runners: true` aplikacja zamyka się i kończy po runnerach, co pasuje do zadań wsadowych,
 - jeśli start albo runner się nie powiedzie, kontekst się zamyka, a aplikacja kończy się kodem wyjścia 1.
 
-Zwykłe `Coilix.run` z metody `main` też działa: moduł sam tworzy wtedy runtime, a Coilix zamyka go razem z aplikacją.
-
 ## Uruchamianie IO
 
 Wstrzyknij runtime tam, gdzie bean uruchamia `IO`, tutaj jako parametr `using`, żeby `unsafeRunSync` i inne wywołania go znalazły:
@@ -67,7 +65,7 @@ Przy starcie aplikacji Coilix wykonuje te efekty na beanie `ioRuntime`:
 
 Zwykły bean zależny od takiej wartości powstaje jak zwykle, po niej. Użyj [`@DependsOn`](bean-lifecycle.mdx#kolejność-beanów-bez-wstrzykiwania), gdy bean potrzebuje innego tylko przez efekt uboczny, na przykład cache czytający tabele, które tworzą migracje.
 
-Bean z efektu zawsze powstaje przy starcie, więc nie może być `@Lazy` ani `@Prototype`: taki bean zatrzymuje start wyjątkiem `InvalidEffectfulBeanException`. Bez modułu `Coilix.run` odrzuca te beany wyjątkiem `EffectfulBeanException`.
+Bean z efektu zawsze powstaje przy starcie, więc nie może być `@Lazy` ani `@Prototype`: taki bean zatrzymuje start wyjątkiem `InvalidEffectfulBeanException`.
 
 ### Zamykanie
 

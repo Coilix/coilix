@@ -13,7 +13,7 @@ Coilix is a dependency injection and application framework for Scala 3. Its API 
 
 ```scala
 import dev.coilix.annotation.{CoilixApplication, Component, Service, Slf4s}
-import dev.coilix.boot.{ApplicationArguments, ApplicationRunner, Coilix}
+import dev.coilix.boot.{ApplicationArguments, ApplicationRunner, CoilixIOApp}
 
 trait UserService {
   def listUsers(): List[String]
@@ -32,14 +32,10 @@ final class Greeter(users: UserService) extends ApplicationRunner {
 }
 
 @CoilixApplication
-object App {
-  def main(args: Array[String]): Unit = {
-    val _ = Coilix.run[App.type](args)
-  }
-}
+object App extends CoilixIOApp
 ```
 
-`Coilix.run` scans the package of the application object, creates the beans, injects them through constructors, loads `application.yaml` (or `.conf`, `.properties`) from the classpath and calls every `ApplicationRunner`.
+`CoilixIOApp` starts the application as an `IOApp` of cats-effect: it scans the package of the application object, creates the beans, injects them through constructors, loads `application.yaml` (or `.conf`, `.properties`) from the classpath calls every `ApplicationRunner` and runs until `SIGTERM` or Ctrl+C closes the context.
 
 ## Features
 

@@ -23,7 +23,7 @@ import scala.util.Using
  *
  * `use` runs a block inside the context, and [[dev.coilix.testkit.CoilixSuite]] registers munit tests that do the same.
  *
- * A test context has no banner, no startup log and no shutdown hook. The runners do not run unless
+ * A test context has no banner, and no startup log. The runners do not run unless
  * [[dev.coilix.testkit.CoilixTestSetup.withRunners]] is called, and asynchronous event listeners run on the task executor unless
  * [[dev.coilix.testkit.CoilixTestSetup.withSynchronousEvents]] is called.
  *
@@ -87,7 +87,7 @@ final case class CoilixTestSetup(
   def withSynchronousEvents: CoilixTestSetup =
     withProperties("coilix.events.synchronous" -> "true")
 
-  /** Calls the [[dev.coilix.boot.ApplicationRunner]] beans after the context is built, as `Coilix.run` does. */
+  /** Calls the [[dev.coilix.boot.ApplicationRunner]] beans after the context is built, as a `CoilixIOApp` does. */
   def withRunners: CoilixTestSetup =
     copy(runners = true)
 
@@ -119,7 +119,7 @@ final case class CoilixTestSetup(
 /** Starting points for a [[dev.coilix.testkit.CoilixTestSetup]]. */
 object CoilixTestSetup {
 
-  /** Scans the packages of application `T`, annotated with `@CoilixApplication`, as `Coilix.run` does. */
+  /** Scans the packages of application `T`, annotated with `@CoilixApplication`, as a `CoilixIOApp` does. */
   def forApplication[T: ClassTag]: CoilixTestSetup =
     empty(_.resolve[T])
 

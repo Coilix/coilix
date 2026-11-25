@@ -1,12 +1,7 @@
 package com.example
 
 import dev.coilix.annotation.CoilixApplication
-import dev.coilix.boot.Coilix
+import dev.coilix.boot.CoilixIOApp
 
 @CoilixApplication
-object FirstApplication {
-
-  def main(args: Array[String]): Unit = {
-    val _ = Coilix.run[FirstApplication.type](args)
-  }
-}
+object FirstApplication extends CoilixIOApp
