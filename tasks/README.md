@@ -34,7 +34,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | w trakcie: kroki 2 i 3 zrobione (ADR 0038: `tools/warts`, `ConsoleOutput`, `Wart.AsInstanceOf`, `ClassParameterInApi`), dalej krok 4 (reguły scalafix) |
 | COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | w trakcie: krok 1 zrobiony (ADR 0036: moduł `25_pekko`, `ActorSystem` i `Materializer` na pulach Coilix), dalej krok 2: `pekko-cats-effect` |
 | COILIX-00030 | [Diagnostyka i błędy fatalne](COILIX-00030_diagnostics_and_fatal_errors.md) | wysoki | w toku (krok 1 z 3: błędy fatalne wyłączają aplikację, ADR 0027; w kroku 2 eksperyment z zakleszczeniami wątków wirtualnych zrobiony, ADR 0039, i moduł `09_diagnostics` ze zdrowiem i kontrolami wątków platformowych, ADR 0040; zostały wątki wirtualne) |
-| COILIX-00031 | [Runtime na efektach w stylu tagless final](COILIX-00031_effectful_runtime.md) | najwyższy | w trakcie: krok 1 (ADR 0042), dalej krok 2: wiązanie `F[_]` z efektem aplikacji w kontenerze |
+| COILIX-00031 | [Runtime na `IO`, komponenty aplikacji w tagless final](COILIX-00031_effectful_runtime.md) | najwyższy | w trakcie: krok 1 (ADR 0042), dalej krok 2: wiązanie `F[_]` komponentów z `IO` w kontenerze |
 
 Zależności między taskami:
 

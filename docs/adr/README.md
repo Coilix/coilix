@@ -45,7 +45,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0037](0037-background-processors.md) | Procesory tła z shardami, nadzorem i jednym menedżerem | proponowana |
 | [0038](0038-custom-warts.md) | Własne warty w module narzędziowym `tools/warts` | proponowana |
 | [0039](0039-deadlocks-of-virtual-threads.md) | Wykrywanie zakleszczeń przy wątkach wirtualnych | proponowana |
-| [0042](0042-effectful-runtime.md) | Runtime Coilix na efektach w stylu tagless final | proponowana |
+| [0042](0042-effectful-runtime.md) | Runtime Coilix na IO, komponenty aplikacji w tagless final | proponowana |
 | [0040](0040-diagnostics-module.md) | Moduł rdzenia diagnostics: zdrowie aplikacji i kontrole wątków | proponowana |
 
 ## Nowa decyzja
