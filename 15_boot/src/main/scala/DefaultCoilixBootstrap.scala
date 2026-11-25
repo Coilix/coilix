@@ -11,6 +11,7 @@ import dev.coilix.context.ComponentCollector
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.Dependency
 import dev.coilix.context.EffectInterpreter
+import dev.coilix.context.EffectTypeBinding
 import dev.coilix.context.ModuleLoader
 import dev.coilix.context.NoSuchBeanException
 import dev.coilix.context.RegisteredBean
@@ -23,7 +24,9 @@ import java.lang.annotation.Annotation
  * builds the context. The names of replaced beans are dropped from [[dev.coilix.context.BeanDefinition.dependsOn]] of the
  * others, because the replacement is a ready instance. The [[dev.coilix.context.EffectInterpreter]] of the enabled module that
  * gives one creates the beans made by effects; two such modules stop the start with a
- * [[dev.coilix.boot.ConflictingEffectInterpretersException]].
+ * [[dev.coilix.boot.ConflictingEffectInterpretersException]]. Before the processors run, the unbound type parameter of tagless
+ * final components is bound to the effect of the module that gives one ([[dev.coilix.context.EffectTypeBinding]]); two such
+ * modules stop the start with a [[dev.coilix.boot.ConflictingEffectTypesException]].
  *
  * When the modules collect annotations, the classes marked with them, found in the base packages or among the module
  * components, become the `collectedComponents` bean made by the [[dev.coilix.context.ComponentCollector]] instead of beans. Each
@@ -59,7 +62,7 @@ final class DefaultCoilixBootstrap(
     val loaded      = modules.load()
     val annotations = loaded.flatMap(_.collects).distinct
     val collected   = collectedClasses(basePackages, loaded, annotations)
-    val processed   = processedBy(loaded)(discovered(basePackages) ++ fromModules(loaded, annotations))
+    val processed   = processedBy(loaded)(boundBy(loaded)(discovered(basePackages) ++ fromModules(loaded, annotations)))
     val beans       = kept(processed, replacements) ++ extraDefinitions
     checkCollected(beans, singletons, collected, annotations)
     ready(builder.build(beans ++ collectedDefinition(collected, annotations), singletons, effectInterpreter(loaded)))
@@ -70,6 +73,17 @@ final class DefaultCoilixBootstrap(
       case Nil           => None
       case module :: Nil => module.effectInterpreter
       case modules       => throw ConflictingEffectInterpretersException(modules.map(_.name))
+    }
+
+  private def boundBy(loaded: List[CoilixModule])(definitions: List[BeanDefinition]): List[BeanDefinition] =
+    effectType(loaded).fold(definitions)(effect => definitions.map(EffectTypeBinding(effect).bind))
+
+  private def effectType(loaded: List[CoilixModule]): Option[Class[?]] =
+    loaded.filter(_.effectType.isDefined) match {
+      case Nil           => None
+      case module :: Nil => module.effectType
+      case modules       =>
+        throw ConflictingEffectTypesException(modules.map(module => s"${module.name} (${module.effectType.fold("")(_.getName)})"))
     }
 
   private def processedBy(loaded: List[CoilixModule])(definitions: List[BeanDefinition]): List[BeanDefinition] =

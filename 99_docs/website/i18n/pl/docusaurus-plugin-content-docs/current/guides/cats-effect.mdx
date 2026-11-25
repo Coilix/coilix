@@ -14,6 +14,9 @@ import PriceCheck from '!!raw-loader!@examples/scala/catseffect/PriceCheck.scala
 import CatsEffectApplication from '!!raw-loader!@examples/scala/catseffect/CatsEffectApplication.scala';
 import PriceCheckTest from '!!raw-loader!@examples/test/catseffect/PriceCheckTest.scala';
 import CatsEffectYaml from '!!raw-loader!@examples/resources/guides/cats-effect/application.yaml';
+import ShippingRates from '!!raw-loader!@examples/scala/catseffect/ShippingRates.scala';
+import ShippingQuotes from '!!raw-loader!@examples/scala/catseffect/ShippingQuotes.scala';
+import ShippingQuotesTest from '!!raw-loader!@examples/test/catseffect/ShippingQuotesTest.scala';
 
 Ta strona pokazuje, jak aplikacja Coilix uruchamia `IO` z cats-effect. Coilix tworzy `IORuntime`, zamyka go razem z aplikacją i robi z jego puli obliczeniowej jedyną pulę obliczeniową aplikacji, więc fibery `IO` i zadania Coilix nie rywalizują o procesor w dwóch pulach.
 
@@ -57,6 +60,18 @@ Wstrzyknij runtime tam, gdzie bean uruchamia `IO`, tutaj jako parametr `using`, 
 <CodeBlock language="scala" title="ExchangeRates.scala">{ExchangeRates}</CodeBlock>
 
 Uruchamiaj `IO` na brzegu swojego kodu, np. w runnerze albo metodzie `@Scheduled`, a resztę beana trzymaj w `IO`.
+
+## Komponenty w stylu tagless final
+
+Serwisy i repozytoria można pisać dla dowolnego efektu `F[_]`, z klasami typów cats-effect jako context boundami. Z modułem efektem aplikacji jest `IO`: kontener wiąże parametr typu takiego komponentu z `IO`, a jego context boundy dostają bean `ioAsync`, czyli instancję `Async[IO]`, która obsługuje też `Sync[IO]`, `Temporal[IO]` i `Concurrent[IO]`. Metoda `@Bean` nie jest potrzebna:
+
+<CodeBlock language="scala" title="ShippingRates.scala">{ShippingRates}</CodeBlock>
+
+<CodeBlock language="scala" title="ShippingQuotes.scala">{ShippingQuotes}</CodeBlock>
+
+Beany mają typy `ShippingRates[IO]` i `ShippingQuotes[IO]` i z takimi typami wstrzykują je inne beany. Same klasy nie znają `IO`, więc test jednostkowy może je utworzyć z innym efektem. Komponent może w ten sposób związać tylko jeden parametr typu. JVM nie przechowuje rodzaju parametru typu, więc za efekt uchodzi każdy parametr typu, który występuje w typach parametrów konstruktora.
+
+<CodeBlock language="scala" title="ShippingQuotesTest.scala">{ShippingQuotesTest}</CodeBlock>
 
 ## Beany z IO i Resource
 
