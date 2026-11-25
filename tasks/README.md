@@ -32,9 +32,10 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00026 | [Przetwarzanie w tle (`processing`)](COILIX-00026_background_processing.md) | wysoki | w trakcie: kroki 1–4 zrobione (ADR 0017 i 0037: moduł `27_processing`, `BlockingProcessor`, `CustomProcessor`, shardy, nadzór i `ProcessorManager`), dalej krok 5: `StatelessProcessor` ze źródłami |
 | COILIX-00027 | [Klaster replik (`cluster`)](COILIX-00027_cluster.md) | wysoki | w trakcie: krok 1 zrobiony (`07_cluster`, tożsamość repliki, ADR 0021) |
 | COILIX-00028 | [Statyczne kontrole zasad kodu](COILIX-00028_static_code_checks.md) | wysoki | w trakcie: kroki 2 i 3 zrobione (ADR 0038: `tools/warts`, `ConsoleOutput`, `Wart.AsInstanceOf`, `ClassParameterInApi`), dalej krok 4 (reguły scalafix) |
-| COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | w trakcie: krok 1 zrobiony (ADR 0036: moduł `25_pekko`, `ActorSystem` i `Materializer` na pulach Coilix), dalej krok 2: `pekko-cats-effect` |
+| COILIX-00029 | [Integracja z Pekko Streams](COILIX-00029_pekko_streams.md) | wysoki | zastąpiony przez COILIX-00032 (ADR 0043); moduł `25_pekko` z kroku 1 do usunięcia |
 | COILIX-00030 | [Diagnostyka i błędy fatalne](COILIX-00030_diagnostics_and_fatal_errors.md) | wysoki | w toku (krok 1 z 3: błędy fatalne wyłączają aplikację, ADR 0027; w kroku 2 eksperyment z zakleszczeniami wątków wirtualnych zrobiony, ADR 0039, i moduł `09_diagnostics` ze zdrowiem i kontrolami wątków platformowych, ADR 0040; zostały wątki wirtualne) |
 | COILIX-00031 | [Runtime na `IO`, komponenty aplikacji w tagless final](COILIX-00031_effectful_runtime.md) | najwyższy | w trakcie: kroki 1 i 2 (ADR 0042, wiązanie `F[_]` komponentów z `IO`), dalej krok 3: `processing` na `IO` |
+| COILIX-00032 | [IO, Resource i fs2 zamiast Pekko i tagless final](COILIX-00032_io_resource_fs2.md) | najwyższy | w trakcie: krok 1 (ADR 0043), dalej krok 2: usunięcie wiązania `F[_]` |
 
 Zależności między taskami:
 
@@ -63,7 +64,7 @@ Zależności między taskami:
 - COILIX-00030 korzysta z `TaskExecutor`, `TaskScheduler` i fabryk wątków z COILIX-00005, z zamykania kontekstu z COILIX-00004 i z `EventPublisher` z COILIX-00016 (zdarzenia `HealthChanged`). Reakcje na `Degraded` dokładają COILIX-00026 (wstrzymanie procesorów) i COILIX-00023 (503 i endpointy zdrowia).
 - COILIX-00027 to moduł rdzenia bez zależności zewnętrznych. `ClusterCodec` trzeba uzgodnić z COILIX-00024, a `@Scheduled` z COILIX-00005 może z niego korzystać do zadań na jednej replice.
 - COILIX-00028 zastępuje `checkForbiddenCalls` wartem i dodaje moduły narzędziowe poza numeracją modułów frameworka. Zmiana `Class[T]` na `ClassTag` w publicznym API (krok 3) i szkielet reguł migracyjnych (krok 8) powinny być przed wydaniem `core-v0.1.0` z COILIX-00009.
-- COILIX-00029 wymaga COILIX-00020 dla mostów `IO` ↔ Pekko i silnika procesorów z COILIX-00026 (kroki 4–8) dla `processing-pekko`. Moduł `kafka-pekko` powstaje razem z taskiem konektora Kafki.
+- COILIX-00032 zastępuje COILIX-00029 i część COILIX-00031 o tagless final. Jego krok 4 to krok 3 COILIX-00031 (`processing` na `IO`) ze źródłami na fs2, a moduły Kafki i `web` korzystają z COILIX-00023 i konektorów z COILIX-00026.
 
 Plan wydań na podstawie tych tasków jest w [ROADMAP.md](../ROADMAP.md), a decyzje architektoniczne w [docs/adr](../docs/adr/README.md).
 
