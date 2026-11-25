@@ -42,6 +42,7 @@
 
 ### Changed
 
+- **BREAKING** The constructor of `ConfigPath` is private, so the component type always comes from a `ClassTag`. Migration: replace `ConfigPath("path", classOf[Component])` with `ConfigPath[Component]("path")` (COILIX-00028).
 - **BREAKING** `BeanRegistry` gets `beanNames`, `defer` and `complete`, `ApplicationContext` gets `createdBeans`, and `ImmutableBeanRegistry` takes `BeanEntry` values and a `RegistryCompletion`. Migration: custom implementations of these traits add the new methods; code that walks all beans to find annotated methods uses `createdBeans` instead of `beanNames` with `getBeanByName`, so it does not create lazy beans (COILIX-00015).
 - **BREAKING** `TaskExecutor` is now the compute pool of the application: a `ForkJoinPool` with one platform thread per processor (`coilix.concurrency.compute.threads`), named `coilix-compute-*`, instead of a virtual thread per task. Migration: replace `coilix.concurrency.executor.*` with `coilix.concurrency.compute.threads` and move blocking work to `BlockingExecutor` or `@Async(blocking = true)`. The default `taskExecutor` and `blockingExecutor` beans are left out when the application or a module provides its own executor of that type (COILIX-00005).
 - `GracefulShutdown.logFailure` is replaced by `FatalErrors.guarded`, and `ExecutorServiceTaskExecutor`, `ScheduledExecutorTaskScheduler` and `NamedThreadFactory` take an optional handler of fatal errors (COILIX-00030).

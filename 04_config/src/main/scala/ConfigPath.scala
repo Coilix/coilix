@@ -18,9 +18,10 @@ import scala.reflect.ClassTag
  * @param path
  *   dotted path of the component section, for example `coilix.boot.startup-logger`
  * @param componentType
- *   the component type, which every configured implementation must extend
+ *   the component type, which every configured implementation must extend. The constructor is private, so the type always comes
+ *   from the `ClassTag` of `T` through `ConfigPath[T](path)`
  */
-final case class ConfigPath[T](path: String, componentType: Class[T])
+final case class ConfigPath[T] private (path: String, componentType: Class[T])
 
 /** Factories for [[dev.coilix.config.ConfigPath]]. */
 object ConfigPath {

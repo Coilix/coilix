@@ -63,10 +63,11 @@ Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru 
 
 | Katalog | Projekt sbt | Pakiet | Zawartość |
 |---|---|---|---|
-| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`), podpięte do każdego modułu Scali |
+| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`, `ClassParameterInApi`), podpięte do każdego modułu Scali |
 
 - Zasada z tego pliku, którą da się sprawdzić automatycznie, dostaje wart albo regułę (COILIX-00028).
 - Nowy wart dopisuje się do `coilixWarts` w `build.sbt` i dostaje testy munit z `WartTestTraverser`: przypadek zgłaszany, niezgłaszany i wyłączony przez `@SuppressWarnings`.
+- `WartTestTraverser` to makro, które uruchamia wart przy kompilacji testu, a zinc nie kompiluje testów ponownie po zmianie samego ciała wartu. Po zmianie wartu testy uruchamia się przez `sbt warts/clean warts/testFull`.
 
 ## Zasady kodu
 
@@ -91,7 +92,7 @@ Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru 
 - Delegowanie zamiast rozbudowanych metod. Kod rozdrobniony, ale czysty.
 - Bez zwykłych komentarzy (`//`, `/* */`). Jedyne dozwolone komentarze to Scaladoc i Javadoc według sekcji „Dokumentacja”.
 - API ma być zwięzłe i wygodne w użyciu: tam, gdzie to upraszcza kod wywołujący, używa się `given`, `using`, funkcji kontekstowych (`A ?=> B`), metod rozszerzających i metod generycznych wołanych samym typem, np. `setup.use { bean[Reception].welcome("Ann") }` zamiast przekazywania kontekstu w każdym wywołaniu. Obok zostaje wersja jawna (parametr zamiast `using`), z której korzysta wersja zwięzła. Wzorem jest testkit (`CoilixSuite`, `CoilixContextOps`).
-- Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]`. Klasę runtime pobiera się przez `dev.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
+- Typy w API przez `[T: ClassTag]`, a nie jawne parametry `Class[T]` (wymusza wart `ClassParameterInApi` w `src/main`). Klasę runtime pobiera się przez `dev.coilix.common.ClassTags` (`runtimeTypeOf[T]`, `tag.runtimeType`), bez `asInstanceOf` w kodzie wywołującym.
 - Java i Scala w osobnych modułach. Java tylko tam, gdzie jest wymagana (adnotacje runtime).
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt (konfiguracja w `.scalafmt.conf`) i google-java-format w stylu AOSP dla Javy (`sbt-java-formatter`), lokalnie przy każdej kompilacji. W CI formatowanie przy kompilacji jest wyłączone (`insideCI`), a krok `Check formatting` przerywa build, gdy kod albo pliki buildu (`*.sbt`, `project/*.scala`) nie są sformatowane. Każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).

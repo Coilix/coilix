@@ -45,7 +45,8 @@ lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.AsInstanceOf
 )
 
-lazy val coilixWarts: Seq[wartremover.Wart] = Seq(Wart.custom("dev.coilix.warts.ConsoleOutput"))
+lazy val coilixWarts: Seq[wartremover.Wart] =
+  Seq("ConsoleOutput", "ClassParameterInApi").map(name => Wart.custom(s"dev.coilix.warts.$name"))
 
 lazy val javaRelease = "17"
 
