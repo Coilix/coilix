@@ -31,7 +31,9 @@
 7. Połączenie modułu `cats-effect` z rdzeniem (interpreter planu, `CoilixIOApp`, adapter runnerów) i `testkit-cats-effect` z `testkit`. `Coilix.run` przez ten sam runtime.
 8. Wart, który zabrania `synchronized`, `wait`/`notify` i `Atomic*` w modułach runtime'u (COILIX-00028), z wyjątkami dla wątków niezależnych od puli.
 
-Każdy krok aktualizuje przewodniki w obu językach, demo i ADR-y, które zastępuje.
+9. Moduły kontenera, których migracja nie przepisuje (`common`, `config`, `context`, `boot`, `testkit`): zamiana klas na `final case class` z konstruktorem szczegółowym i `apply` w obiekcie towarzyszącym według zasady z `CLAUDE.md`.
+
+Każdy krok aktualizuje przewodniki w obu językach, demo i ADR-y, które zastępuje, a przepisywane klasy od razu są `final case class` według zasady z `CLAUDE.md`.
 
 ## Kryteria akceptacji
 
