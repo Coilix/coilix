@@ -121,7 +121,7 @@ final class DefaultProcessorManagerTest extends FunSuite with CoilixContextOps {
           shard.lastFailure.map(failure => (failure.stage, failure.message)),
           Some((FailureStage.Process, "the warehouse is offline"))
         )
-        assert(journal.contains("released flaky#0 Failed"))
+        assert(waitUntil(journal.contains("released flaky#0 Failed")), journal.all)
         manager.start(TestProcessor.Flaky)
         assert(waitUntil(journal.count("attempt flaky#0") == 6), journal.all)
       }

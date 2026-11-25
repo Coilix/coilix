@@ -17,7 +17,7 @@ final class PekkoModuleTest extends FunSuite with CoilixContextOps {
 
   test("injects the materializer as a using parameter and runs streams on the task executor") {
     setup.use {
-      assert(Await.result(bean[PriceFeed].threadOfLatest, 5.seconds).startsWith("coilix-compute-"))
+      assert(Await.result(bean[PriceFeed].threadOfLatest, 5.seconds).startsWith("io-compute-"))
     }
   }
 

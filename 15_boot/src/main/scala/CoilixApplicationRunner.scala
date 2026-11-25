@@ -13,7 +13,7 @@ trait CoilixApplicationRunner {
 
   /**
    * Builds the context of application `T` like [[run]], with `singletons` as additional ready beans, but registers no shutdown
-   * hook and calls no runner, for a start that runs them itself, such as `CoilixIOApp` from `coilix-cats-effect`.
+   * hook and calls no runner, for a start that runs them itself, such as [[dev.coilix.boot.CoilixIOApp]].
    *
    * @param singletons
    *   ready instances registered before the beans are created, such as a runtime that the caller owns

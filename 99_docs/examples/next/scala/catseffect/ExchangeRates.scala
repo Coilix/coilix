@@ -5,8 +5,8 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
 import dev.coilix.annotation.Service
-import dev.coilix.catseffect.CoilixIO.*
 import dev.coilix.concurrency.BlockingExecutor
+import dev.coilix.concurrency.CoilixIO.*
 
 @Service
 final class ExchangeRates(using IORuntime, BlockingExecutor) {

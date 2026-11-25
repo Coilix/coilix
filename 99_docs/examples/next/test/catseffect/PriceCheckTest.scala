@@ -1,8 +1,8 @@
 package com.example
 package catseffect
 
+import dev.coilix.testkit.CoilixIOSuite
 import dev.coilix.testkit.CoilixTestSetup
-import dev.coilix.testkit.catseffect.CoilixIOSuite
 import munit.CatsEffectSuite
 
 final class PriceCheckTest extends CatsEffectSuite with CoilixIOSuite {

@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference
  * The notice board of the workshop with the current recall bulletin, pinned when the workshop opens and taken down when it
  * closes.
  *
- * Pinning and taking down are `IO[Unit]` methods marked `@PostConstruct` and `@PreDestroy`, which the cats-effect module runs
+ * Pinning and taking down are `IO[Unit]` methods marked `@PostConstruct` and `@PreDestroy`, which Coilix runs
  * when it creates and releases the bean.
  */
 @Component

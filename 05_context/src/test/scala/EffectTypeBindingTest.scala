@@ -70,6 +70,6 @@ final class EffectTypeBindingTest extends FunSuite {
     val error = intercept[UnsupportedDependencyTypeException](
       ApplicationContextBuilder.default.build(definitionsOf(classOf[OrderService[?]], classOf[EffectConfiguration]))
     )
-    assert(error.getMessage.contains("coilix-cats-effect"), error.getMessage)
+    assert(error.getMessage.contains("coilix-concurrency"), error.getMessage)
   }
 }

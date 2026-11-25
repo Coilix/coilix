@@ -32,13 +32,13 @@ final class ConcurrencyModuleTest extends FunSuite {
     }
   }
 
-  test("closes the executor and the scheduler with the context") {
+  test("computes on the cats-effect runtime and closes the blocking executor and the scheduler with the context") {
     val context   = contextOf()
-    val executor  = context.getBean[ExecutorServiceTaskExecutor]
+    val executor  = context.getBean[TaskExecutor]
     val blocking  = context.getBean[ExecutorServiceBlockingExecutor]
     val scheduler = context.getBean[ScheduledExecutorTaskScheduler]
     context.close()
-    assertEquals((executor.isClosed, blocking.isClosed, scheduler.isClosed), (true, true, true))
+    assertEquals((executor.isInstanceOf[IORuntimeTaskExecutor], blocking.isClosed, scheduler.isClosed), (true, true, true))
   }
 
   test("uses the default settings in a context without an environment") {

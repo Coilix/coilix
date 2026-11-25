@@ -20,18 +20,12 @@ import ShippingQuotesTest from '!!raw-loader!@examples/test/catseffect/ShippingQ
 
 This page shows how an application of Coilix runs cats-effect `IO`. Coilix creates the `IORuntime`, closes it with the application, and makes its compute pool the only compute pool of the application, so `IO` fibers and the tasks of Coilix do not compete for the processor in two pools.
 
-## Add the module
+## Beans of the runtime
 
-Add `coilix-cats-effect` to the dependencies:
-
-```scala
-libraryDependencies += "dev.coilix" %% "coilix-cats-effect" % "<version>"
-```
-
-The module adds five beans:
+cats-effect is part of the core of Coilix, so `coilix-boot` brings it and there is nothing to add. The core adds five beans:
 
 - `ioRuntime`, the `IORuntime` of the application, with the work-stealing pool of cats-effect: `coilix.concurrency.compute.threads` threads named `io-compute-<number>`, by default one per processor,
-- `ioTaskExecutor`, the `TaskExecutor` on that pool. It takes the place of the default executor, so the threads `coilix-compute-<number>` from [Background tasks and scheduling](tasks-and-scheduling.mdx) are not created. `@Async` methods and asynchronous event listeners run on `io-compute` threads,
+- `ioTaskExecutor`, the `TaskExecutor` from [Background tasks and scheduling](tasks-and-scheduling.mdx) on that pool. `@Async` methods and asynchronous event listeners run on `io-compute` threads,
 - `coilixIORuntime`, which owns the runtime and shuts it down when the application closes, after the beans that use it. An application started as [`CoilixIOApp`](#start-as-an-ioapp) has no such bean, because its runtime belongs to the `IOApp`,
 - `catsEffectSettings`, the settings under `coilix.cats-effect`,
 - `ioRunnerAdapter`, which runs the `IOApplicationRunner` beans described in [Runners in IO](#runners-in-io).
@@ -63,7 +57,7 @@ Run `IO` at the edge of your code, for example in a runner or a scheduled method
 
 ## Components in tagless final style
 
-Services and repositories can be written for any effect `F[_]`, with the type classes of cats-effect as context bounds. With the module, `IO` is the effect of the application: the container binds the type parameter of such a component to `IO` and gives its context bounds the `ioAsync` bean, the `Async[IO]` instance, which also serves `Sync[IO]`, `Temporal[IO]` and `Concurrent[IO]`. No `@Bean` method is needed:
+Services and repositories can be written for any effect `F[_]`, with the type classes of cats-effect as context bounds. `IO` is the effect of the application: the container binds the type parameter of such a component to `IO` and gives its context bounds the `ioAsync` bean, the `Async[IO]` instance, which also serves `Sync[IO]`, `Temporal[IO]` and `Concurrent[IO]`. No `@Bean` method is needed:
 
 <CodeBlock language="scala" title="ShippingRates.scala">{ShippingRates}</CodeBlock>
 
@@ -123,7 +117,7 @@ A bean that extends `IOApplicationRunner` returns the startup logic as `IO[Unit]
 
 `IO.blocking` works as in any cats-effect application: the fiber blocks in place on a helper thread of cats-effect, and the compute pool gets a replacement thread in the meantime. It suits a few blocking calls at a time.
 
-For many calls that wait at once, such as requests to a slow service, `IO.onBlockingExecutor` from `import dev.coilix.catseffect.CoilixIO.*` runs the call on a virtual thread of the `BlockingExecutor` instead, which costs almost nothing while it waits. The fiber continues on the compute pool afterwards.
+For many calls that wait at once, such as requests to a slow service, `IO.onBlockingExecutor` from `import dev.coilix.concurrency.CoilixIO.*` runs the call on a virtual thread of the `BlockingExecutor` instead, which costs almost nothing while it waits. The fiber continues on the compute pool afterwards.
 
 ## Fatal errors
 
@@ -139,10 +133,9 @@ The tests of [Testing](testing.mdx) work as they are:
 
 ### Tests in IO
 
-For test bodies that return `IO`, add `coilix-testkit-cats-effect` and munit-cats-effect to the test dependencies:
+For test bodies that return `IO`, add munit-cats-effect to the test dependencies next to `coilix-testkit`:
 
 ```scala
-libraryDependencies += "dev.coilix" %% "coilix-testkit-cats-effect" % "<version>" % Test
 libraryDependencies += "org.typelevel" %% "munit-cats-effect" % "<version>" % Test
 ```
 
@@ -150,4 +143,4 @@ A `CatsEffectSuite` with `CoilixIOSuite` registers tests with `coilixTest`. Each
 
 <CodeBlock language="scala" title="PriceCheckTest.scala">{PriceCheckTest}</CodeBlock>
 
-The runtime of the suite is the `ioRuntime` bean of the context, so the test and the beans run on the same compute pool. Outside such a suite, `setup.useIO { ... }` and `setup.resource` from `import dev.coilix.testkit.catseffect.CoilixIOTestSetup.*` use a setup in `IO`, and `setup.withIORuntime(runtime)` gives the context a runtime of your choice.
+The runtime of the suite is the `ioRuntime` bean of the context, so the test and the beans run on the same compute pool. Outside such a suite, `setup.useIO { ... }` and `setup.resource` from `import dev.coilix.testkit.CoilixIOTestSetup.*` use a setup in `IO`, and `setup.withIORuntime(runtime)` gives the context a runtime of your choice.

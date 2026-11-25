@@ -5,7 +5,7 @@ import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Order
 import dev.coilix.boot.ApplicationArguments
-import dev.coilix.catseffect.IOApplicationRunner
+import dev.coilix.boot.IOApplicationRunner
 import java.util.concurrent.atomic.AtomicInteger
 
 @Component

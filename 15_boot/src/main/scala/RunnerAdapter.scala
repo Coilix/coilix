@@ -4,7 +4,7 @@ import dev.coilix.context.ApplicationContext
 
 /**
  * Runs beans of another kind of runner among the [[dev.coilix.boot.ApplicationRunner]] beans, for a module whose runners have a
- * different signature, such as `IOApplicationRunner` from `coilix-cats-effect`.
+ * different signature, such as [[dev.coilix.boot.IOApplicationRunner]].
  *
  * Every bean of this type is used by the [[dev.coilix.boot.OrderedRunnerInvoker]], which puts the runners it gives into one list
  * with the [[dev.coilix.boot.ApplicationRunner]] beans, ordered by the `@Order` of their classes.

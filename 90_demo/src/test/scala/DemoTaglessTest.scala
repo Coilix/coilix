@@ -3,8 +3,8 @@ package dev.coilix.demo
 import cats.effect.IO
 import dev.coilix.demo.workshop.JobEstimates
 import dev.coilix.demo.workshop.LabourRates
+import dev.coilix.testkit.CoilixIOSuite
 import dev.coilix.testkit.CoilixTestSetup
-import dev.coilix.testkit.catseffect.CoilixIOSuite
 import munit.CatsEffectSuite
 
 final class DemoTaglessTest extends CatsEffectSuite with CoilixIOSuite {
