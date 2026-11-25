@@ -20,7 +20,7 @@ Oznacz metodę adnotacją `@PostConstruct`, żeby uruchomić ją raz po utworzen
 
 Metoda cyklu życia nie ma parametrów i zwraca `Unit`. Może być prywatna, jak w przykładzie, i może być zadeklarowana w nadklasie beana. Jeśli bean ma kilka metod z tą samą adnotacją, Coilix uruchamia je w kolejności ich nazw. Dla beana z metody `@Bean` Coilix patrzy na klasę zwróconego obiektu, więc metoda zadeklarowana jako `def gateway: Gateway = HttpGateway()` nadal uruchamia metody cyklu życia `HttpGateway`.
 
-Metoda z parametrami albo z wynikiem innym niż `Unit` zatrzymuje start aplikacji wyjątkiem `InvalidLifecycleMethodException`. Komunikat podaje nazwę beana i metody. Z modułem cats-effect metoda cyklu życia może też zwracać `IO[Unit]`, jak opisuje przewodnik [cats-effect](cats-effect.mdx#metody-cyklu-życia-w-io).
+Metoda z parametrami albo z wynikiem innym niż `Unit` zatrzymuje start aplikacji wyjątkiem `InvalidLifecycleMethodException`. Komunikat podaje nazwę beana i metody. Metoda cyklu życia może też zwracać `IO[Unit]`, jak opisuje przewodnik [cats-effect](cats-effect.mdx#metody-cyklu-życia-w-io).
 
 ## Kiedy metody się uruchamiają
 

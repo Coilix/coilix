@@ -40,7 +40,7 @@ Bean aplikacji typu `ActorSystem` albo `Materializer` zastępuje bean z modułu.
 
 Pekko nie tworzy własnych pul wątków:
 
-- domyślny dispatcher działa na `TaskExecutor` z przewodnika [Zadania w tle i harmonogram](tasks-and-scheduling.mdx). Z modułem [cats-effect](cats-effect.mdx) jest to pula obliczeniowa cats-effect, więc aktory, strumienie i `IO` dzielą jedną pulę obliczeniową,
+- domyślny dispatcher działa na `TaskExecutor` z przewodnika [Zadania w tle i harmonogram](tasks-and-scheduling.mdx). Jest to pula obliczeniowa [cats-effect](cats-effect.mdx), więc aktory, strumienie i `IO` dzielą jedną pulę obliczeniową,
 - `pekko.actor.internal-dispatcher`, którego Pekko używa do własnej pracy, jest domyślnym dispatcherem,
 - `pekko.actor.default-blocking-io-dispatcher`, którego używają etapy blokujące, np. źródła i ujścia plikowe, działa na `BlockingExecutor`, domyślnie na wątkach wirtualnych:
 

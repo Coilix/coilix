@@ -51,7 +51,7 @@ final class AsyncDefinitionProcessorTest extends FunSuite {
   test("runs a method returning a Future on the executor") {
     withContext { context =>
       val result = Await.result(context.getBean[ReportDesk].renderer.render("sales"), 5.seconds)
-      assert(result.startsWith("sales on coilix-compute-"), result)
+      assert(result.startsWith("sales on io-compute-"), result)
     }
   }
 
@@ -61,7 +61,7 @@ final class AsyncDefinitionProcessorTest extends FunSuite {
       val renderer  = target(context)
       assertEquals(renderer.events.poll(), "started")
       val announced = renderer.events.poll(5, TimeUnit.SECONDS)
-      assert(Option(announced).exists(_.startsWith("announced sales on coilix-compute-")), announced)
+      assert(Option(announced).exists(_.startsWith("announced sales on io-compute-")), announced)
     }
   }
 

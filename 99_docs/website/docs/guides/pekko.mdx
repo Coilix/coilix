@@ -40,7 +40,7 @@ An application bean of type `ActorSystem` or `Materializer` takes the place of t
 
 Pekko starts no thread pools of its own:
 
-- the default dispatcher runs on the `TaskExecutor` from [Background tasks and scheduling](tasks-and-scheduling.mdx). With the [cats-effect](cats-effect.mdx) module, that is the compute pool of cats-effect, so actors, streams and `IO` share one compute pool,
+- the default dispatcher runs on the `TaskExecutor` from [Background tasks and scheduling](tasks-and-scheduling.mdx). That is the compute pool of [cats-effect](cats-effect.mdx), so actors, streams and `IO` share one compute pool,
 - `pekko.actor.internal-dispatcher`, which Pekko uses for its own work, is the default dispatcher,
 - `pekko.actor.default-blocking-io-dispatcher`, which blocking stages such as file sources and sinks use, runs on the `BlockingExecutor`, by default on virtual threads:
 

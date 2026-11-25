@@ -87,7 +87,7 @@ final class DefaultEventBusTest extends FunSuite {
       mailer.release.countDown()
       assert(bus.awaitIdle(5.seconds))
       assertEquals(mailer.sent.recorded, List((1, true)))
-      assert(mailer.threads.recorded.forall(_.startsWith("coilix-compute-")))
+      assert(mailer.threads.recorded.forall(_.startsWith("io-compute-")))
     }
   }
 

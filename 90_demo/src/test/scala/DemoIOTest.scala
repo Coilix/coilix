@@ -4,8 +4,8 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import dev.coilix.demo.workshop.RecallBoard
 import dev.coilix.demo.workshop.RecallBriefing
+import dev.coilix.testkit.CoilixIOSuite
 import dev.coilix.testkit.CoilixTestSetup
-import dev.coilix.testkit.catseffect.CoilixIOSuite
 import munit.CatsEffectSuite
 
 final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {

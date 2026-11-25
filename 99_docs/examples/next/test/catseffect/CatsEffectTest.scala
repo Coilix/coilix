@@ -3,7 +3,7 @@ package catseffect
 
 import cats.effect.ExitCode
 import cats.effect.unsafe.IORuntime
-import dev.coilix.catseffect.CoilixIOStartup
+import dev.coilix.boot.CoilixIOStartup
 import dev.coilix.concurrency.TaskExecutor
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup

@@ -1,7 +1,7 @@
 package dev.coilix.demo
 
 import dev.coilix.annotation.CoilixApplication
-import dev.coilix.catseffect.CoilixIOApp
+import dev.coilix.boot.CoilixIOApp
 
 /**
  * Entry point of the demo: a car workshop where mechanics get signed, short-lived tokens to diagnose and code vehicles.

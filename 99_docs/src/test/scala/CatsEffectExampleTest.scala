@@ -1,6 +1,6 @@
 package com.example
 
-import dev.coilix.catseffect.CatsEffectSettings
+import dev.coilix.concurrency.CatsEffectSettings
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat

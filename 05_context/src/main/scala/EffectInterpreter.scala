@@ -2,7 +2,7 @@ package dev.coilix.context
 
 /**
  * Creates the beans of a [[dev.coilix.context.ContextPlan]] from the first level that has a bean made by an effect, for an effect
- * module such as `coilix-cats-effect`.
+ * module such as `coilix-concurrency`.
  *
  * The [[dev.coilix.context.ApplicationContextBuilder]] creates the levels before that one itself, so beans the interpreter needs,
  * such as the runtime of the effect, already exist in `registry`. A module gives its interpreter through

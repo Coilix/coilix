@@ -6,7 +6,7 @@ import dev.coilix.annotation.Component
 
 /**
  * The hourly rates of the workshop, written in tagless final style: the container binds `F` to `IO`, so other beans inject
- * `LabourRates[IO]`, and the `Sync[F]` context bound receives the `Async[IO]` bean of the cats-effect module.
+ * `LabourRates[IO]`, and the `Sync[F]` context bound receives the `Async[IO]` bean of the concurrency module.
  */
 @Component
 final class LabourRates[F[_]: Sync] {

@@ -19,8 +19,8 @@ import scala.util.Try
 /**
  * Owns the `ActorSystem` of the application: creates it on the thread pools of Coilix and stops it when the context closes.
  *
- * The default dispatcher runs on the [[dev.coilix.concurrency.TaskExecutor]], which is the compute pool of cats-effect when the
- * cats-effect module is present, and `pekko.actor.internal-dispatcher` is the same dispatcher, so Pekko starts no compute pool of
+ * The default dispatcher runs on the [[dev.coilix.concurrency.TaskExecutor]], which is the compute pool of cats-effect, and
+ * `pekko.actor.internal-dispatcher` is the same dispatcher, so Pekko starts no compute pool of
  * its own. `pekko.actor.default-blocking-io-dispatcher` runs on the [[dev.coilix.concurrency.BlockingExecutor]] through the
  * [[dev.coilix.pekko.BlockingExecutorConfigurator]]. Pekko logs through SLF4J.
  *

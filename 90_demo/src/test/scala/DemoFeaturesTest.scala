@@ -3,7 +3,8 @@ package dev.coilix.demo
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
-import dev.coilix.catseffect.CoilixIOStartup
+import dev.coilix.boot.CoilixIOApp
+import dev.coilix.boot.CoilixIOStartup
 import dev.coilix.concurrency.ProcessTerminator
 import dev.coilix.context.ProxiedBean
 import dev.coilix.demo.access.ClaimSweeper

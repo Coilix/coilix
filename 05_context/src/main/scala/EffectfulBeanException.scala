@@ -17,7 +17,7 @@ object EffectfulBeanException {
 
   private def message(definitions: List[BeanDefinition]): String =
     s"Beans ${definitions.map(describe).mkString(", ")} are created or initialized by effects, which the synchronous context builder does not " +
-      "run. Start the application with an effect module, such as CoilixIOApp from coilix-cats-effect"
+      "run. Start the application with an effect module, such as CoilixIOApp from coilix-boot"
 
   private def describe(definition: BeanDefinition): String =
     definition.result.declaredType.fold(withLifecycle(definition))(effectType => s"'${definition.beanName}' ($effectType)")

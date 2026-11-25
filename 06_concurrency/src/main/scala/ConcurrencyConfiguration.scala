@@ -9,14 +9,14 @@ import dev.coilix.config.Environment
 import dev.coilix.context.ConfigurableApplicationContext
 
 /**
- * The beans of the concurrency module: `concurrencySettings`, `taskExecutor` for computation, `blockingExecutor` for calls that
- * wait, `taskScheduler`, `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods,
+ * The beans of the concurrency module: `concurrencySettings`, `blockingExecutor` for calls that wait, `taskScheduler`, `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods,
  * `mdcContextPropagator`, which carries the MDC to tasks, and `fatalErrorSettings`, `processTerminator` and `fatalErrorHandler`, which react to fatal errors in the threads of the
  * executors and the scheduler.
  *
- * The executors and the scheduler are closed with the context, after the beans that depend on them. `taskExecutor` and
- * `blockingExecutor` are left out when another bean provides a [[dev.coilix.concurrency.TaskExecutor]] or a
- * [[dev.coilix.concurrency.BlockingExecutor]], so their pools are not even created.
+ * The executor for computation is `ioTaskExecutor` of the [[dev.coilix.concurrency.CatsEffectConfiguration]], on the compute
+ * pool of the cats-effect runtime. The executors and the scheduler are closed with the context, after the beans that depend on
+ * them. `blockingExecutor` is left out when another bean provides a [[dev.coilix.concurrency.BlockingExecutor]], so its pool is
+ * not even created.
  */
 @Slf4s
 @Configuration
@@ -26,18 +26,6 @@ final class ConcurrencyConfiguration {
   @Bean
   def concurrencySettings(environment: Option[Environment]): ConcurrencySettings =
     environment.fold(ConcurrencySettings())(ConcurrencySettings.from)
-
-  /** The compute pool configured under `coilix.concurrency.compute`, one platform thread per processor by default. */
-  @Bean
-  @ConditionalOnMissingBean(Array(classOf[TaskExecutor]))
-  def taskExecutor(
-    settings:    ConcurrencySettings,
-    fatalErrors: FatalErrorHandler,
-    propagators: List[ContextPropagator]
-  ): ExecutorServiceTaskExecutor = {
-    log.info(s"Task executor ${settings.compute.threadNamePrefix}* computes on ${settings.compute.threads} platform threads")
-    ExecutorServiceTaskExecutor(settings.compute, fatalErrors, propagators)
-  }
 
   /** The executor for blocking calls configured under `coilix.concurrency.blocking`, on virtual threads by default. */
   @Bean

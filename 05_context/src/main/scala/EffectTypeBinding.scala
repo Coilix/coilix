@@ -67,7 +67,7 @@ object EffectTypeBinding {
     UnsupportedDependencyTypeException(
       s"Bean ${definition.beanName} (${definition.beanClass.getName}) has the type ${definition.beanType} with the unbound type " +
         s"parameter ${variablesOf(definition).mkString(", ")}. Add a module that binds it to the effect of the application, " +
-        "such as coilix-cats-effect for cats.effect.IO, or declare the bean through a @Bean method with a concrete type"
+        "such as coilix-concurrency for cats.effect.IO, or declare the bean through a @Bean method with a concrete type"
     )
 
   private def typeOf(dependency: Dependency): Option[GenericType] =

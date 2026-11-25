@@ -24,17 +24,15 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `03_slf4s_plugin` | `slf4s-plugin` | `dev.coilix.slf4s` | Scala | plugin kompilatora `@Slf4s` |
 | `04_config` | `config` | `dev.coilix.config` | Scala | ładowanie konfiguracji i nadpisywanie komponentów |
 | `05_context` | `context` | `dev.coilix.context` | Scala | kontener IoC |
-| `06_concurrency` | `concurrency` | `dev.coilix.concurrency` | Scala | wykonawca zadań i harmonogram jako beany (ADR 0020) |
+| `06_concurrency` | `concurrency` | `dev.coilix.concurrency` | Scala | `IORuntime` cats-effect jako jedyna pula obliczeniowa (ADR 0031, 0042), wykonawca blokujący, harmonogram i beany w `IO` (ADR 0020, 0032) |
 | `07_cluster` | `cluster` | `dev.coilix.cluster` | Scala | tożsamość repliki, później członkostwo i API między replikami (ADR 0021) |
 | `08_events` | `events` | `dev.coilix.events` | Scala | zdarzenia aplikacji w pamięci z odbiorcami synchronicznymi i asynchronicznymi (ADR 0025) |
 | `09_diagnostics` | `diagnostics` | `dev.coilix.diagnostics` | Scala | zdrowie aplikacji (`Health`, wskaźniki) i kontrole wątków z wykrywaniem zakleszczeń (ADR 0039, 0040) |
-| `15_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
-| `16_testkit` | `testkit` | `dev.coilix.testkit` | Scala | kontekst Coilix w testach munit (ADR 0016) |
+| `15_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji, także jako `CoilixIOApp` z runnerami w `IO` (ADR 0033, 0034) |
+| `16_testkit` | `testkit` | `dev.coilix.testkit` | Scala | kontekst Coilix w testach munit, także w `IO` z munit-cats-effect (ADR 0016, 0035) |
 | `20_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
 | `21_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
 | `22_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
-| `23_cats_effect` | `cats-effect` | `dev.coilix.catseffect` | Scala | `IORuntime` jako bean i jedyna pula obliczeniowa (ADR 0031), beany i start w `IO` |
-| `24_testkit_cats_effect` | `testkit-cats-effect` | `dev.coilix.testkit.catseffect` | Scala | testy w `IO` z munit-cats-effect (ADR 0035) |
 | `25_pekko` | `pekko` | `dev.coilix.pekko` | Scala | `ActorSystem` i `Materializer` jako beany na pulach Coilix (ADR 0036) |
 | `26_processing_annotations` | `processing-annotations` | `dev.coilix.processing.annotation` | Java | adnotacja `@Processor` (ADR 0037) |
 | `27_processing` | `processing` | `dev.coilix.processing` | Scala | procesory tła z shardami, nadzorem i `ProcessorManager` (ADR 0037) |
@@ -45,9 +43,9 @@ Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium
 
 `99_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `99_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
-Moduły `data`, `web`, `security`, `cats-effect`, `pekko` i `processing` są opcjonalne (zasady w `docs/architecture/modularity.md`):
+Moduły `data`, `web`, `security`, `pekko` i `processing` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
-- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `cats-effect`, `pekko`, `processing`) ani nie odwołują się do ich klas.
+- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `pekko`, `processing`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
 - Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
 - Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.
@@ -110,7 +108,7 @@ Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru 
 - Każdy nowy plik (kod, testy, zasoby, dokumenty) od razu dodaje się do gita przez `git add`. Przeniesienia robi się przez `git mv`. Commit tylko na wyraźną prośbę.
 - Formatowanie robi scalafmt (konfiguracja w `.scalafmt.conf`) i google-java-format w stylu AOSP dla Javy (`sbt-java-formatter`), lokalnie przy każdej kompilacji. W CI formatowanie przy kompilacji jest wyłączone (`insideCI`), a krok `Check formatting` przerywa build, gdy kod albo pliki buildu (`*.sbt`, `project/*.scala`) nie są sformatowane. Każdy warning kompilatora Scali i Javy przerywa build (`-Werror`).
 - Każda nowa klasa ma testy munit w `src/test/scala` swojego modułu.
-- Test kodu w `IO` jest testem w `IO`: `CatsEffectSuite with CoilixIOSuite` z `coilixTest`, którego ciało zwraca `IO`, bez `unsafeRunSync` i innych `unsafeRun*`. Wyjątek do kroku 7 COILIX-00031: testy modułu `cats-effect`, który nie może zależeć od `testkit-cats-effect`.
+- Test kodu w `IO` jest testem w `IO`: `CatsEffectSuite with CoilixIOSuite` z `coilixTest`, którego ciało zwraca `IO`, bez `unsafeRunSync` i innych `unsafeRun*`.
 - Każda funkcja widoczna dla programisty aplikacji (adnotacja, bean modułu, punkt rozszerzeń) jest użyta w aplikacji demo (`90_demo`) w naturalnym miejscu jej domeny i sprawdzona testem demo, w tym samym PR co funkcja.
 - Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (COILIX-00009, `docs/architecture/versioning.md`).
 - Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.

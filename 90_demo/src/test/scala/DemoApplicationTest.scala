@@ -37,6 +37,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "bayMonitor",
         "blockingExecutor",
         "bookingDesk",
+        "bootConfiguration",
         "brakesDriver",
         "catsEffectConfiguration",
         "catsEffectSettings",
