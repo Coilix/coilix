@@ -1,37 +1,38 @@
 package dev.coilix.processing
 
+import cats.effect.IO
+import cats.effect.Resource
+import cats.effect.unsafe.IORuntime
 import dev.coilix.annotation.Bean
 import dev.coilix.annotation.Configuration
 import dev.coilix.cluster.ReplicaIdentity
-import dev.coilix.concurrency.FatalErrorHandler
-import dev.coilix.concurrency.TaskScheduler
 import dev.coilix.config.Environment
 import dev.coilix.context.CollectedComponents
-import java.time.Clock
 
-/** The beans of the `processing` module. */
+/**
+ * The beans of the `processing` module: `processingSettings`, `fiberEngine`, which runs
+ * [[dev.coilix.processing.IOProcessor]] shards on fibers, and `processorManager`.
+ */
 @Configuration
 final class ProcessingConfiguration {
 
-  /** The settings under `coilix.processors`. */
+  /** The settings under `coilix.processors`, or the defaults in a context without an environment. */
   @Bean
   def processingSettings(environment: Option[Environment]): ProcessingSettings =
     environment.fold(ProcessingSettings())(ProcessingSettings.from)
 
-  /** The engine that runs blocking and custom processors on virtual threads. */
+  /** The engine of [[dev.coilix.processing.IOProcessor]], whose fibers are cancelled when the context closes. */
   @Bean
-  def virtualThreadEngine(fatalErrors: FatalErrorHandler): VirtualThreadEngine =
-    VirtualThreadEngine(fatalErrors)
+  def fiberEngine(): Resource[IO, FiberEngine] = FiberEngine.resource
 
-  /** The manager of every processor of the application. */
+  /** The manager of every processor, which closes the processors when the context closes. */
   @Bean
   def processorManager(
-    collected:   CollectedComponents,
-    engines:     List[ProcessorEngine],
-    identity:    ReplicaIdentity,
-    settings:    ProcessingSettings,
-    scheduler:   TaskScheduler,
-    fatalErrors: FatalErrorHandler
-  ): DefaultProcessorManager =
-    DefaultProcessorManager(collected, engines, identity, settings, scheduler, fatalErrors, Clock.systemUTC)
+    collected: CollectedComponents,
+    engines:   List[ProcessorEngine],
+    identity:  ReplicaIdentity,
+    settings:  ProcessingSettings,
+    runtime:   IORuntime
+  ): Resource[IO, DefaultProcessorManager] =
+    DefaultProcessorManager.resource(collected, engines, identity, settings, runtime)
 }

@@ -1,26 +1,14 @@
 package dev.coilix.processing
 package fleet
 
+import cats.effect.IO
 import dev.coilix.processing.annotation.Processor
-import scala.concurrent.Future
-import scala.concurrent.Promise
 
-/** Starts work that completes only when it is stopped. */
+/** Streams until its shard is asked to stop and then finishes its current step. */
 @Processor
-final class Streamer(journal: Journal) extends CustomProcessor {
-
+final class Streamer(journal: Journal) extends IOProcessor {
   override val id: TestProcessor = TestProcessor.Streamer
 
-  override def run(shard: Shard): Execution = {
-    journal.add(s"streaming $shard")
-    val done = Promise[Unit]()
-    new Execution {
-      override def stop(): Unit = {
-        journal.add(s"stream stopped $shard")
-        done.trySuccess(()): Unit
-      }
-
-      override def completion: Future[Unit] = done.future
-    }
-  }
+  override def run(shard: Shard): IO[Unit] =
+    IO(journal.add(s"streaming $shard")) *> shard.stopped *> IO(journal.add(s"stream stopped $shard"))
 }

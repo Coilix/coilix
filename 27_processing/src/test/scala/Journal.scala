@@ -1,5 +1,6 @@
 package dev.coilix.processing
 
+import cats.effect.IO
 import java.util.concurrent.atomic.AtomicReference
 import scala.annotation.tailrec
 import scala.concurrent.duration.Deadline
@@ -26,6 +27,13 @@ object Journal {
 
   /** Waits until the condition holds, at most `timeout`, and tells whether it held. */
   def waitUntil(condition: => Boolean, timeout: FiniteDuration = 5.seconds): Boolean = waitFor(condition, timeout.fromNow)
+
+  /** Waits in `IO` until the condition holds, at most `timeout`, and tells whether it held. */
+  def awaitUntil(condition: => Boolean, timeout: FiniteDuration = 5.seconds): IO[Boolean] =
+    polled(IO(condition)).timeoutTo(timeout, IO.pure(false))
+
+  private def polled(condition: IO[Boolean]): IO[Boolean] =
+    condition.ifM(IO.pure(true), IO.sleep(5.millis) *> polled(condition))
 
   @tailrec
   private def waitFor(condition: => Boolean, deadline: Deadline): Boolean =

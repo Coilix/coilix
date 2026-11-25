@@ -1,6 +1,7 @@
 package dev.coilix.processing
 
-import dev.coilix.concurrency.ScheduledTask
+import cats.effect.Fiber
+import cats.effect.IO
 
 /**
  * The state of one shard in the manager.
@@ -19,7 +20,7 @@ import dev.coilix.concurrency.ScheduledTask
 private[processing] final case class ShardRun(
   supervision: ShardSupervision,
   shard:       Shard,
-  generation:  Long                  = 0L,
-  worker:      Option[RunningWorker] = None,
-  restart:     Option[ScheduledTask] = None
+  generation:  Long                               = 0L,
+  worker:      Option[RunningWorker]              = None,
+  restart:     Option[Fiber[IO, Throwable, Unit]] = None
 )

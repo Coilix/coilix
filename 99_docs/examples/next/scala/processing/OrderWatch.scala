@@ -1,25 +1,16 @@
 package com.example
 package processing
 
-import dev.coilix.processing.BlockingProcessor
+import cats.effect.IO
+import dev.coilix.processing.IOProcessor
 import dev.coilix.processing.Shard
 import dev.coilix.processing.annotation.Processor
-import java.util.concurrent.atomic.AtomicInteger
-import scala.annotation.tailrec
+import scala.concurrent.duration.DurationInt
 
 @Processor
-final class OrderWatch extends BlockingProcessor {
-  private val polls = AtomicInteger()
-
+final class OrderWatch(orders: Orders) extends IOProcessor {
   override val id: ShopProcessor = ShopProcessor.OrderWatch
 
-  def pollCount: Int = polls.get
-
-  @tailrec
-  override def run(shard: Shard): Unit =
-    if (!shard.stopRequested) {
-      polls.incrementAndGet()
-      Thread.sleep(100)
-      run(shard)
-    }
+  override def run(shard: Shard): IO[Unit] =
+    shard.stopRequested.ifM(IO.unit, IO.blocking(orders.poll()) *> IO.sleep(100.millis) *> run(shard))
 }

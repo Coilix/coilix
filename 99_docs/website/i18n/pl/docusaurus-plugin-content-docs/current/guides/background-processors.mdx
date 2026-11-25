@@ -13,7 +13,7 @@ import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.sca
 import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
 import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
 
-Ta strona pokazuje, jak uruchomić długą pracę w tle, np. eksport albo pętlę, która czeka na nowe zamówienia, jako procesor tła. Coilix dzieli pracę procesora na shardy, uruchamia każdy shard tej repliki na osobnym wątku wirtualnym, restartuje go po błędzie i zatrzymuje przy zamykaniu aplikacji.
+Ta strona pokazuje, jak uruchomić długą pracę w tle, np. eksport albo pętlę, która czeka na nowe zamówienia, jako procesor tła. Coilix dzieli pracę procesora na shardy, uruchamia każdy shard tej repliki na osobnym fiberze cats-effect, restartuje go po błędzie i zatrzymuje przy zamykaniu aplikacji.
 
 ## Dodaj moduł
 
@@ -31,21 +31,21 @@ Każdy procesor ma identyfikator, zwykle `case object` sealed traitu aplikacji. 
 
 <CodeBlock language="scala" title="ShopProcessor.scala">{ShopProcessor}</CodeBlock>
 
-Nazwa identyfikatora to nazwa obiektu w kebab case, np. `invoice-export`. Trafia do konfiguracji, nazw wątków i logów. Nadpisz `name`, żeby zachować starszą nazwę.
+Nazwa identyfikatora to nazwa obiektu w kebab case, np. `invoice-export`. Trafia do konfiguracji i logów. Nadpisz `name`, żeby zachować starszą nazwę.
 
 ## Napisz procesor
 
 Procesor to klasa z `@Processor`, która rozszerza jeden ze stylów procesorów. Jej konstruktor dostaje beany i parametry `@Value` tak jak bean, a jej metody `@PostConstruct` i `@PreDestroy` są wywoływane, ale nie jest beanem: żaden bean nie może jej wstrzyknąć.
 
-`BlockingProcessor` wykonuje pracę jednego sharda w `run`. Ten eksport dzieli klientów między dwa shardy według slotu każdego klienta i kończy się, gdy wyśle swoich klientów:
+`IOProcessor` wykonuje pracę jednego sharda w `run`, które zwraca `IO[Unit]`. Wywołania blokujące idą przez `IO.blocking` albo `IO.onBlockingExecutor`. Ten eksport dzieli klientów między dwa shardy według slotu każdego klienta i kończy się, gdy wyśle swoich klientów:
 
 <CodeBlock language="scala" title="InvoiceExport.scala">{InvoiceExport}</CodeBlock>
 
-Praca, która sama się nie kończy, sprawdza `shard.stopRequested` i wraca, gdy shard się zatrzymuje:
+Praca, która sama się nie kończy, sprawdza `shard.stopRequested` między krokami albo czeka na `shard.stopped` i kończy się, gdy shard się zatrzymuje:
 
 <CodeBlock language="scala" title="OrderWatch.scala">{OrderWatch}</CodeBlock>
 
-Shard, który nie zatrzyma się w połowie czasu na zatrzymanie, dostaje przerwanie wątku. `CustomProcessor` uruchamia pracę działającą na własnych wątkach i zwraca `Execution`, które menedżer zatrzymuje i na które czeka.
+Shard, który nie zatrzyma się w połowie czasu na zatrzymanie, jest anulowany. Praca w obszarze nieanulowalnym, która działa jeszcze po całym czasie, zostaje porzucona z wpisem w logu.
 
 `prepare` działa przed każdym startem sharda, np. żeby odtworzyć jego offsety. `onAcquired` i `onReleased` mówią, kiedy ta replika przejmuje i oddaje shard, z powodem: `Shutdown`, `Stopped`, `Completed` albo `Failed`.
 
@@ -83,7 +83,7 @@ Beany sterują procesorami przez `ProcessorManager`: `start`, `stop`, `restart` 
 
 <CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
 
-Operacje wykonują się po kolei na wątku `coilix-processor-manager` i zmieniają tylko tę replikę. Uruchomienie działającego procesora albo zatrzymanie zatrzymanego niczego nie zmienia. Restart sharda, który działa na innej replice, rzuca `ShardNotOwnedException` z repliką, która go ma.
+Operacje zwracają `IO`, wykonują się po kolei na fiberze sterującym menedżera i zmieniają tylko tę replikę. Uruchomienie działającego procesora albo zatrzymanie zatrzymanego niczego nie zmienia. Restart sharda, który działa na innej replice, kończy się błędem `ShardNotOwnedException` z repliką, która go ma.
 
 ## Zamykanie
 

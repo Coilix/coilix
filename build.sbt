@@ -233,7 +233,10 @@ lazy val processingAnnotations =
 lazy val processing = slf4sModule("processing", "27_processing", "dev.coilix.processing")
   .dependsOn(cluster, processingAnnotations, testkit % Test)
   .settings(featureGroup("processing"))
-  .settings(description := "Background processors of Coilix, split into shards that run on the replicas of the application")
+  .settings(
+    description                                        := "Background processors of Coilix, split into shards that run on the replicas of the application",
+    libraryDependencies += Dependencies.munitCatsEffect % Test
+  )
 
 lazy val security = slf4sModule("security", "22_security", "dev.coilix.security")
   .dependsOn(context)

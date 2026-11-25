@@ -1,40 +1,38 @@
 package com.example
 package processing
 
+import cats.effect.IO
 import dev.coilix.processing.ProcessorManager
 import dev.coilix.processing.WorkerState
-import dev.coilix.testkit.CoilixContextOps
+import dev.coilix.testkit.CoilixIOSuite
 import dev.coilix.testkit.CoilixTestSetup
-import scala.annotation.tailrec
-import scala.concurrent.duration.Deadline
+import munit.CatsEffectSuite
 import scala.concurrent.duration.DurationInt
 
-final class ProcessingTest extends munit.FunSuite with CoilixContextOps {
-  private val setup = CoilixTestSetup.forApplication[ProcessingApplication.type]
+class ProcessingTest extends CatsEffectSuite with CoilixIOSuite {
+  private given CoilixTestSetup = CoilixTestSetup.forApplication[ProcessingApplication.type]
 
-  test("the shards of the export together export every customer") {
-    setup.use {
-      assert(waitUntil(5.seconds.fromNow)(bean[ProcessorManager].status(ShopProcessor.InvoiceExport).all(WorkerState.Completed)))
+  coilixTest("the shards of the export together export every customer") {
+    within(bean[ProcessorManager].status(ShopProcessor.InvoiceExport).map(_.all(WorkerState.Completed))).map { completed =>
+      assert(completed)
       assertEquals(bean[Invoices].exportedCustomers, bean[Invoices].customers.toSet)
     }
   }
 
-  test("maintenance stops and starts the order watch through the manager") {
-    setup.use {
-      val maintenance = bean[Maintenance]
-      assert(waitUntil(5.seconds.fromNow)(maintenance.ordersRunning))
-      assert(maintenance.pauseOrders().isComplete)
-      maintenance.resumeOrders()
-      assert(waitUntil(5.seconds.fromNow)(maintenance.ordersRunning))
+  coilixTest("maintenance stops and starts the order watch through the manager") {
+    val maintenance = bean[Maintenance]
+    for {
+      running <- within(maintenance.ordersRunning)
+      paused  <- maintenance.pauseOrders
+      _       <- maintenance.resumeOrders
+      resumed <- within(maintenance.ordersRunning)
+    } yield {
+      assert(running && resumed)
+      assert(paused.isComplete)
+      assert(bean[Orders].pollCount > 0)
     }
   }
 
-  @tailrec
-  private def waitUntil(deadline: Deadline)(condition: => Boolean): Boolean =
-    if (condition) true
-    else if (deadline.isOverdue()) false
-    else {
-      Thread.sleep(10)
-      waitUntil(deadline)(condition)
-    }
+  private def within(condition: IO[Boolean]): IO[Boolean] =
+    condition.ifM(IO.pure(true), IO.sleep(10.millis) *> within(condition)).timeoutTo(5.seconds, IO.pure(false))
 }

@@ -102,7 +102,7 @@ private[processing] final class ProcessorAssembler(
     s"Processor ${definition.id.name} (${definition.getClass.getName})"
 
   private val noEngineHint: String =
-    "extend BlockingProcessor or CustomProcessor, or add the module that runs its style of processors"
+    "extend IOProcessor, or add the module that runs its style of processors"
 
   private def warnAboutUnknownNames(ids: List[ProcessorId]): Unit =
     settings.unknown(ids).foreach { name =>

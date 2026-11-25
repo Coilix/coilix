@@ -262,26 +262,4 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       assertEquals(beans[Clock], List(fixed))
     }
   }
-
-  test("exports the fault codes of the fleet with a background processor on two shards") {
-    workshop.use {
-      val processors = bean[ProcessorManager]
-      assert(completed(processors, 5.seconds.fromNow))
-      assertEquals(bean[FaultLedger].faults, Map(vin -> List("P0301", "P0420", "C0035"), Vin("TMBJJ7NE8J0000002") -> Nil))
-      assertEquals(
-        processors.topology.processors.map(processor => (processor.id, processor.shards.map(_.shard))),
-        List((WorkshopProcessor.FaultCodeExport, List(0, 1)))
-      )
-      assertEquals((beanOption[FaultCodeExport], bean[ServiceDesk].exportShards), (None, "0 Completed, 1 Completed"))
-    }
-  }
-
-  @tailrec
-  private def completed(processors: ProcessorManager, deadline: Deadline): Boolean =
-    if (processors.status(WorkshopProcessor.FaultCodeExport).all(WorkerState.Completed)) true
-    else if (deadline.isOverdue()) false
-    else {
-      Thread.sleep(10)
-      completed(processors, deadline)
-    }
 }

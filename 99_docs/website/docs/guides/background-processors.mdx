@@ -13,7 +13,7 @@ import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.sca
 import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
 import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
 
-This page shows how to run long background work, such as an export or a loop that watches for new orders, as a background processor. Coilix splits the work of a processor into shards, runs each shard of this replica on its own virtual thread, restarts it after a failure and stops it when the application closes.
+This page shows how to run long background work, such as an export or a loop that watches for new orders, as a background processor. Coilix splits the work of a processor into shards, runs each shard of this replica on its own fiber of cats-effect, restarts it after a failure and stops it when the application closes.
 
 ## Add the module
 
@@ -31,21 +31,21 @@ Each processor has an identifier, usually a `case object` of a sealed trait of t
 
 <CodeBlock language="scala" title="ShopProcessor.scala">{ShopProcessor}</CodeBlock>
 
-The name of an identifier is the name of the object in kebab case, such as `invoice-export`. It is used in the configuration, in thread names and in logs. Override `name` to keep an older name.
+The name of an identifier is the name of the object in kebab case, such as `invoice-export`. It is used in the configuration and in logs. Override `name` to keep an older name.
 
 ## Write a processor
 
 A processor is a class with `@Processor` that extends a style of processor. Its constructor receives beans and `@Value` parameters like a bean, and its `@PostConstruct` and `@PreDestroy` methods run, but it is not a bean: no bean can inject it.
 
-A `BlockingProcessor` does the work of one shard in `run`. This export splits the customers between its two shards by the slot of each customer and ends when its customers are sent:
+An `IOProcessor` does the work of one shard in `run`, which returns `IO[Unit]`. Blocking calls go through `IO.blocking` or `IO.onBlockingExecutor`. This export splits the customers between its two shards by the slot of each customer and ends when its customers are sent:
 
 <CodeBlock language="scala" title="InvoiceExport.scala">{InvoiceExport}</CodeBlock>
 
-Work that never ends by itself checks `shard.stopRequested` and returns when the shard stops:
+Work that never ends by itself checks `shard.stopRequested` between steps, or waits on `shard.stopped`, and ends when the shard stops:
 
 <CodeBlock language="scala" title="OrderWatch.scala">{OrderWatch}</CodeBlock>
 
-A shard that does not stop within half of the stop timeout gets its thread interrupted. A `CustomProcessor` starts work that runs on its own threads and returns an `Execution`, which the manager stops and waits for.
+A shard that does not stop within half of the stop timeout is cancelled. Work in an uncancelable region that still runs after the whole timeout is abandoned and logged.
 
 `prepare` runs before every start of a shard, for example to restore its offsets. `onAcquired` and `onReleased` tell when this replica takes over and gives up a shard, with the reason: `Shutdown`, `Stopped`, `Completed` or `Failed`.
 
@@ -83,7 +83,7 @@ Beans control processors through the `ProcessorManager`: `start`, `stop`, `resta
 
 <CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
 
-The operations run one at a time on the thread `coilix-processor-manager` and change only this replica. Starting a running processor or stopping a stopped one changes nothing. Restarting a shard that another replica runs throws `ShardNotOwnedException` with the replica that runs it.
+The operations return `IO`, run one at a time on the control fiber of the manager and change only this replica. Starting a running processor or stopping a stopped one changes nothing. Restarting a shard that another replica runs fails with `ShardNotOwnedException` with the replica that runs it.
 
 ## Closing
 

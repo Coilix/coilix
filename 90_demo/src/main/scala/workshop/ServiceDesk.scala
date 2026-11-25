@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Order
@@ -54,12 +55,12 @@ final class ServiceDesk(
       s"Modules in the fleet: ${census.count.unsafeRunSync()(using runtime).toList.sorted.map((id, count) => s"$count x $id").mkString(", ")}"
     )
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))
-    log.info(s"Fault code export: $exportShards")
+    log.info(s"Fault code export: ${exportShards.unsafeRunSync()(using runtime)}")
   }
 
   /** The state of each shard of the fault code export on this replica, such as `0 Completed, 1 Running`. */
-  def exportShards: String =
-    processors.status(WorkshopProcessor.FaultCodeExport).shards.map(shard => s"${shard.index} ${shard.state}").mkString(", ")
+  def exportShards: IO[String] =
+    processors.status(WorkshopProcessor.FaultCodeExport).map(_.shards.map(shard => s"${shard.index} ${shard.state}").mkString(", "))
 
   /** The notes after the customer note is set and the internal note is cleared. */
   def updatedNotes: JobNotes =
