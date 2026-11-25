@@ -1,0 +1,68 @@
+---
+id: health-and-diagnostics
+title: Zdrowie aplikacji i diagnostyka wątków
+description: Jak Coilix mówi, czy aplikacja żyje i jest gotowa do pracy, i jak znajduje zakleszczone i zablokowane wątki.
+sidebar_position: 13
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import DiagnosticsYaml from '!!raw-loader!@examples/resources/guides/diagnostics/application.yaml';
+import StockHealth from '!!raw-loader!@examples/scala/diagnostics/StockHealth.scala';
+import OrderIntake from '!!raw-loader!@examples/scala/diagnostics/OrderIntake.scala';
+import DiagnosticsTest from '!!raw-loader!@examples/test/diagnostics/DiagnosticsTest.scala';
+
+Ta strona wyjaśnia, jak aplikacja zbudowana na Coilix mówi o swoim zdrowiu i jak pilnuje własnych wątków. Jedno i drugie przychodzi z `coilix-boot`, więc każda aplikacja ma to bez dodatkowej konfiguracji.
+
+## Liveness i readiness
+
+Bean `Health` odpowiada na dwa pytania:
+
+- **liveness**: czy aplikacja żyje? Aplikacja, która nie żyje, sama się nie naprawi i trzeba ją uruchomić od nowa, na przykład po zakleszczeniu wątków.
+- **readiness**: czy aplikacja powinna dostawać nową pracę? Aplikacja, która nie jest gotowa, działa, ale potrzebuje przerwy, na przykład na odrobienie zaległości.
+
+Każda odpowiedź to `Up`, `Degraded` albo `Down`. Odpowiedzi biorą się z beanów `HealthIndicator`. Wskaźnik ma nazwę, rodzaj (`Liveness` albo `Readiness`) i bieżący stan z powodem. Liveness to najgorszy stan wskaźników liveness, a readiness to najgorszy stan wszystkich wskaźników, bo aplikacja, która nie żyje, nie jest też gotowa.
+
+Wskaźnik dodaje się jako bean. Ten mówi, że sklep nie jest gotowy, gdy na magazyn czeka za dużo zmian stanów:
+
+<CodeBlock language="scala" title="StockHealth.scala">{StockHealth}</CodeBlock>
+
+Wątek diagnostyki czyta każdy wskaźnik co `coilix.diagnostics.interval` (domyślnie co 5 sekund), więc `state` musi być szybkie i nie może blokować. Gdy liveness albo readiness się zmieni, `Health` zapisuje to w logu i publikuje zdarzenie `HealthChanged`. Części aplikacji, które przyjmują pracę, słuchają go i wstrzymują się, dopóki aplikacja nie jest gotowa:
+
+<CodeBlock language="scala" title="OrderIntake.scala">{OrderIntake}</CodeBlock>
+
+Endpointy zdrowia po HTTP przyjdą z modułem web. Do tego czasu `Health` czyta się we własnym kodzie, na przykład `health.readiness == HealthStatus.Up`, a `health.refresh()` daje najnowszy stan od razu.
+
+## Kontrole wątków
+
+Wątek diagnostyki, `coilix-diagnostics`, to osobny wątek platformowy poza pulami aplikacji, więc działa także wtedy, gdy one stoją. W każdej rundzie robi migawkę wątków platformowych i uruchamia beany `ThreadCheck`:
+
+| Kontrola | Wynik | Kiedy |
+|---|---|---|
+| `DeadlockCheck` | `Critical` | Wątki czekają na siebie nawzajem bez końca, na monitorach albo na blokadach `java.util.concurrent`. |
+| `ThreadCountCheck` | `Warning`, `Critical` | Żyje więcej niż `warning-count` albo `critical-count` wątków platformowych. |
+| `LongBlockedCheck` | `Warning` | Wątek czeka na monitor co najmniej `blocked-after`. |
+| `ThreadGrowthCheck` | `Warning` | Liczba wątków urosła o `growth-limit` w ciągu `growth-window`, co wskazuje na wyciek wątków. |
+
+Bean `findingReporter` zapisuje wyniki w logu ze stosami wątków, których dotyczą. Wynik `Critical` trafia do logu w każdej rundzie, a ostrzeżenie jednego rodzaju dopiero po `repeat-after`, żeby trwający problem nie zalał logu. Żeby wysyłać wyniki gdzie indziej, zarejestruj własny bean `FindingReporter`. Własną kontrolę dodaje się jako bean, który implementuje `ThreadCheck`.
+
+<CodeBlock language="yaml" title="application.yaml">{DiagnosticsYaml}</CodeBlock>
+
+## Zakleszczenia
+
+Zakleszczone wątki nigdy się nie odblokują, więc domyślnie (`on-deadlock: shutdown`) Coilix przekazuje `ThreadDeadlockException` do `FatalErrorHandler`. Ten zamyka kontekst i kończy proces, jak opisano w przewodniku [Błędy fatalne](fatal-errors.mdx), a orkiestrator uruchamia nową instancję. Zatrzymanie po `coilix.fatal-errors.shutdown-timeout` ma tu znaczenie, bo zamykanie może czekać na zakleszczone wątki.
+
+Przy `on-deadlock: report` Coilix tylko zapisuje zakleszczenie w logu i ustawia wskaźnik liveness `threads` na `Down`. Ta opcja przydaje się, gdy orkiestrator restartuje aplikację po nieudanej sondzie liveness.
+
+## Wątki wirtualne
+
+API zarządzania JVM nie pokazuje wątków wirtualnych, więc te kontrole widzą tylko wątki platformowe. Zakleszczenie zadań na wątkach wirtualnych, na przykład na `BlockingExecutor`, nie jest jeszcze wykrywane. Żeby samemu obejrzeć wątki działającej aplikacji, zapisz zrzut ze wszystkimi wątkami wirtualnymi i blokadami, na które czekają i które trzymają (blokady pokazuje JDK 25 i nowszy):
+
+```bash
+jcmd <pid> Thread.dump_to_file -format=json threads.json
+```
+
+## Testy ze wskaźnikami zdrowia
+
+Test czyta `Health` jak każdy inny bean. Po zmianie stanu wywołaj `refresh()`, a zdarzenia ustaw jako synchroniczne, żeby odbiorcy `HealthChanged` skończyli, zanim `refresh()` wróci:
+
+<CodeBlock language="scala" title="DiagnosticsTest.scala">{DiagnosticsTest}</CodeBlock>

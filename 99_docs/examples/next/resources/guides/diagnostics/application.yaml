@@ -1,0 +1,8 @@
+coilix:
+  diagnostics:
+    interval: 5s
+    threads:
+      on-deadlock: shutdown
+      blocked-after: 30s
+      warning-count: 1000
+      critical-count: 5000

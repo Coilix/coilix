@@ -27,6 +27,7 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `06_concurrency` | `concurrency` | `dev.coilix.concurrency` | Scala | wykonawca zadań i harmonogram jako beany (ADR 0020) |
 | `07_cluster` | `cluster` | `dev.coilix.cluster` | Scala | tożsamość repliki, później członkostwo i API między replikami (ADR 0021) |
 | `08_events` | `events` | `dev.coilix.events` | Scala | zdarzenia aplikacji w pamięci z odbiorcami synchronicznymi i asynchronicznymi (ADR 0025) |
+| `09_diagnostics` | `diagnostics` | `dev.coilix.diagnostics` | Scala | zdrowie aplikacji (`Health`, wskaźniki) i kontrole wątków z wykrywaniem zakleszczeń (ADR 0039, 0040) |
 | `15_boot` | `boot` | `dev.coilix.boot` | Scala | start aplikacji |
 | `16_testkit` | `testkit` | `dev.coilix.testkit` | Scala | kontekst Coilix w testach munit (ADR 0016) |
 | `20_data` | `data` | `dev.coilix.data` | Scala | bazy danych (planowane) |
@@ -46,7 +47,7 @@ Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium
 
 Moduły `data`, `web`, `security`, `cats-effect`, `pekko` i `processing` są opcjonalne (zasady w `docs/architecture/modularity.md`):
 
-- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `cats-effect`, `pekko`, `processing`) ani nie odwołują się do ich klas.
+- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `cats-effect`, `pekko`, `processing`) ani nie odwołują się do ich klas.
 - Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
 - Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
 - Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.
@@ -123,7 +124,7 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 
 ## Wersjonowanie
 
-Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `concurrency`, `cluster`, `events`, `boot`, `testkit`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`.
+Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot`, `testkit`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`.
 
 - Nowy moduł rdzenia dostaje w `build.sbt` `.settings(coreGroup)`, a nowy moduł funkcji `.settings(featureGroup("<id>"))` i wpis `<id>` na liście w `ReleaseGroups.buildSettings(...)`.
 
