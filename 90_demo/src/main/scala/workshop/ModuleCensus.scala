@@ -1,25 +1,25 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import dev.coilix.annotation.Service
 import dev.coilix.demo.vehicle.VehicleRegistry
-import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.scaladsl.Sink
-import org.apache.pekko.stream.scaladsl.Source
-import scala.concurrent.Future
+import fs2.Stream
 
 /**
- * Counts the control modules of the whole fleet with a Pekko stream, to plan which testers the workshop needs.
+ * Counts the control modules of the whole fleet with an fs2 stream, to plan which testers the workshop needs.
  *
- * The `Materializer` comes from the pekko module as a `using` parameter, and the stream runs on the task executor of the
- * workshop, the compute pool of cats-effect.
+ * The stream runs in `IO` on the compute pool of the workshop, which belongs to the cats-effect runtime of Coilix.
  */
 @Service
-final class ModuleCensus(registry: VehicleRegistry)(using Materializer) {
+final class ModuleCensus(registry: VehicleRegistry) {
 
   /** The number of modules of each identifier in the fleet, such as `engine -> 2`. */
-  def count(): Future[Map[String, Int]] =
-    Source(registry.all)
-      .mapConcat(_.modules.keys.map(_.value).toList)
-      .runWith(Sink.fold(Map.empty[String, Int])((counts, id) => counts.updated(id, counts.getOrElse(id, 0) + 1)))
+  def count: IO[Map[String, Int]] =
+    Stream
+      .emits(registry.all)
+      .covary[IO]
+      .flatMap(vehicle => Stream.emits(vehicle.modules.keys.map(_.value).toList))
+      .compile
+      .fold(Map.empty[String, Int])((counts, id) => counts.updated(id, counts.getOrElse(id, 0) + 1))
 }

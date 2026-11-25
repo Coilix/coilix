@@ -9,13 +9,7 @@ object Dependencies {
   val munit:           ModuleID = "org.scalameta"  %% "munit"             % "1.3.6"
   val catsEffect:      ModuleID = "org.typelevel"  %% "cats-effect"       % "3.7.1"
   val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect" % "2.2.1"
-
-  /** Pekko actors and streams with SLF4J logging, for the pekko module. */
-  val pekko: Seq[ModuleID] = Seq(
-    "org.apache.pekko" %% "pekko-actor"  % "2.0.0",
-    "org.apache.pekko" %% "pekko-stream" % "2.0.0",
-    "org.apache.pekko" %% "pekko-slf4j"  % "2.0.0"
-  )
+  val fs2Core:         ModuleID = "co.fs2"         %% "fs2-core"          % "3.16.0"
 
   /** Log4j 2 behind SLF4J, with a working MDC, for the demo and the tests of MDC propagation. */
   val log4jSlf4j: Seq[ModuleID] = Seq(

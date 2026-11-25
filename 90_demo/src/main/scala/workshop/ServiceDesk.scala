@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.unsafe.IORuntime
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Order
 import dev.coilix.annotation.Slf4s
@@ -23,7 +24,7 @@ import scala.concurrent.duration.DurationInt
  * `JobLog[List]`), `EditOption`, an `@Async` bean ([[dev.coilix.demo.workshop.JobArchive]]) and a bean of an optional module
  * that is injected as `Option`, because the module can be disabled. The `@Lazy` [[dev.coilix.demo.workshop.WarrantyRegistry]]
  * comes through a `Provider`, so it is loaded only here. The [[dev.coilix.demo.workshop.ModuleCensus]] counts the modules of
- * the fleet with a Pekko stream. The background processors are reached only through the `ProcessorManager`.
+ * the fleet with an fs2 stream. The background processors are reached only through the `ProcessorManager`.
  */
 @Component
 @Order(4)
@@ -38,7 +39,8 @@ final class ServiceDesk(
   warranties: Provider[WarrantyRegistry],
   recalls:    RecallCheck,
   census:     ModuleCensus,
-  processors: ProcessorManager
+  processors: ProcessorManager,
+  runtime:    IORuntime
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
@@ -49,7 +51,7 @@ final class ServiceDesk(
     log.info(Await.result(archive.archive("shift report"), 10.seconds))
     recalls.openRecalls().foreach(line      => log.info(s"Recalls: $line"))
     log.info(
-      s"Modules in the fleet: ${Await.result(census.count(), 10.seconds).toList.sorted.map((id, count) => s"$count x $id").mkString(", ")}"
+      s"Modules in the fleet: ${census.count.unsafeRunSync()(using runtime).toList.sorted.map((id, count) => s"$count x $id").mkString(", ")}"
     )
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))
     log.info(s"Fault code export: $exportShards")

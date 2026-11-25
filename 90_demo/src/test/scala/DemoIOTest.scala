@@ -2,6 +2,7 @@ package dev.coilix.demo
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
+import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.RecallBoard
 import dev.coilix.demo.workshop.RecallBriefing
 import dev.coilix.testkit.CoilixIOSuite
@@ -15,6 +16,10 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
     bean[RecallBriefing].run(arguments).map(_ =>
       assertEquals((bean[RecallBriefing].isDone, bean[RecallBoard].pinned.isDefined), (true, true))
     )
+  }
+
+  coilixTest("counts the modules of the fleet with an fs2 stream") {
+    bean[ModuleCensus].count.map(counts => assertEquals(counts, Map("engine" -> 2, "abs" -> 2, "immobilizer" -> 1)))
   }
 
   coilixTest("the workshop runs its effects on the runtime of the test") {

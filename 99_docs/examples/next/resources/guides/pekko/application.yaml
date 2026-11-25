@@ -1,9 +1,0 @@
-coilix:
-  pekko:
-    system-name: shop
-    shutdown-timeout: 20s
-    config:
-      pekko:
-        stream:
-          materializer:
-            max-input-buffer-size: 32

@@ -21,7 +21,6 @@ import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
 import dev.coilix.demo.workshop.LiftBoard
-import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
 import dev.coilix.demo.workshop.PortalSession
@@ -231,12 +230,6 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       assertEquals(result, (true, ExitCode.Success))
     } finally {
       runtime.shutdown()
-    }
-  }
-
-  test("counts the modules of the fleet with a Pekko stream on the materializer of the pekko module") {
-    workshop.use {
-      assertEquals(Await.result(bean[ModuleCensus].count(), 5.seconds), Map("engine" -> 2, "abs" -> 2, "immobilizer" -> 1))
     }
   }
 
