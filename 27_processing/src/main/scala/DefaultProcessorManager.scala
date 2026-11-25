@@ -9,6 +9,7 @@ import dev.coilix.concurrency.ThreadFactories
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.CollectedComponents
 import dev.coilix.context.ContextLifecycleListener
+import dev.coilix.events.EventPublisher
 import java.time.Clock
 import java.util.concurrent.ThreadLocalRandom
 import java.util.concurrent.TimeoutException
@@ -28,7 +29,8 @@ import scala.util.control.NonFatal
  * It creates the processors when it is created, starts the enabled ones when the context has started and
  * `coilix.processors.autostart` is true, and stops every shard in the first phase of closing, within
  * `coilix.processors.shutdown-timeout`, logging the shards that did not stop in time. The state of the shards is an
- * immutable map replaced by the control thread, so reading it never waits.
+ * immutable map replaced by the control thread, so reading it never waits. Every change of the state of a shard and every
+ * failure of a worker is published as a [[dev.coilix.processing.ProcessorEvent]] when an `EventPublisher` is given.
  */
 @Slf4s
 final class DefaultProcessorManager(
@@ -38,6 +40,7 @@ final class DefaultProcessorManager(
   settings:    ProcessingSettings,
   scheduler:   TaskScheduler,
   fatalErrors: FatalErrorHandler,
+  publisher:   Option[EventPublisher],
   clock:       Clock
 ) extends ProcessorManager
     with ContextLifecycleListener {
@@ -65,6 +68,17 @@ final class DefaultProcessorManager(
     val processor = processorOf(id)
     val current   = runs.get
     ProcessorStatus(id, processor.shards.flatMap(slots => current.get(ShardKey(id, slots.shard)).map(statusOf(slots, _))))
+  }
+
+  override def statistics(id: ProcessorId): ProcessorStatistics = {
+    val processor = processorOf(id)
+    val current   = runs.get
+    ProcessorStatistics(
+      id,
+      processor.shards.flatMap(slots =>
+        current.get(ShardKey(id, slots.shard)).map(run => ShardStatistics(statusOf(slots, run), run.shard.metrics.snapshot))
+      )
+    )
   }
 
   override def start(id: ProcessorId): Unit = control.call(keysOf(processorOf(id)).foreach(handle(_, WorkerEvent.StartRequested)))
@@ -113,7 +127,8 @@ final class DefaultProcessorManager(
     managed.flatMap { processor =>
       val state = if (processor.settings.enabled) WorkerState.Idle else WorkerState.Stopped
       processor.shards.map(slots =>
-        ShardKey(processor.id, slots.shard) -> ShardRun(ShardSupervision(state, now), shardOf(processor, slots))
+        ShardKey(processor.id, slots.shard) ->
+          ShardRun(ShardSupervision(state, now), shardOf(processor, slots, ShardMetrics(clock)))
       )
     }.toMap
   }
@@ -133,7 +148,8 @@ final class DefaultProcessorManager(
     ShardNotOwnedException(processor.id, shard, owners)
   }
 
-  private def shardOf(processor: ManagedProcessor, slots: SlotSet): Shard = Shard(processor.id, slots, identity.self)
+  private def shardOf(processor: ManagedProcessor, slots: SlotSet, metrics: ShardMetrics): Shard =
+    Shard(processor.id, slots, identity.self, metrics)
 
   private def topologyOf(processor: ManagedProcessor): ProcessorTopology = {
     val resolved = processor.settings
@@ -157,9 +173,20 @@ final class DefaultProcessorManager(
   private def handle(key: ShardKey, event: WorkerEvent): Unit =
     runs.get.get(key).foreach { run =>
       val step = run.supervision.on(event, clock.instant, byId(key.id).settings.policy, ThreadLocalRandom.current.nextDouble())
-      update(key, _.copy(supervision = step.supervision))
+      moved(key, run, step)
       step.commands.foreach(execute(key, _))
     }
+
+  private def moved(key: ShardKey, run: ShardRun, step: SupervisionStep): Unit = {
+    update(key, _.copy(supervision = step.supervision))
+    val previous = run.supervision.state
+    val current  = step.supervision.state
+    if (previous != current)
+      announce(ProcessorEvent.ShardStateChanged(key.id, key.shard, previous, current, step.supervision.since))
+  }
+
+  private def announce(event: ProcessorEvent): Unit =
+    publisher.foreach(events => guarded(s"Publishing $event")(events.publish(event)))
 
   private def handleCurrent(key: ShardKey, generation: Long, event: WorkerEvent): Unit =
     if (runs.get.get(key).exists(_.generation == generation)) handle(key, event)
@@ -185,7 +212,7 @@ final class DefaultProcessorManager(
   private def startWorker(key: ShardKey): Unit = {
     val processor  = byId(key.id)
     val generation = runOf(key).generation + 1
-    val shard      = shardOf(processor, runOf(key).shard.slots)
+    val shard      = shardOf(processor, runOf(key).shard.slots, runOf(key).shard.metrics)
     update(key, _.copy(shard = shard, generation = generation, worker = None))
     try {
       val worker = processor.engine.start(processor.definition, shard, eventsOf(key, generation))
@@ -208,7 +235,9 @@ final class DefaultProcessorManager(
   private def crashed(key: ShardKey, generation: Long, stage: FailureStage, error: Throwable): Unit =
     if (runs.get.get(key).exists(_.generation == generation)) {
       log.warn(s"Shard $key failed in stage $stage", error)
-      handle(key, WorkerEvent.Crashed(FailureInfo.of(stage, error, clock.instant)))
+      val failure = FailureInfo.of(stage, error, clock.instant)
+      announce(ProcessorEvent.ShardFailed(key.id, key.shard, failure))
+      handle(key, WorkerEvent.Crashed(failure))
     }
 
   private def stopWorker(key: ShardKey, timeout: FiniteDuration): Unit = {
@@ -245,7 +274,7 @@ final class DefaultProcessorManager(
   private def requestStop(key: ShardKey, reason: ReleaseReason): Boolean =
     runs.get.get(key).exists { run =>
       val step = run.supervision.on(WorkerEvent.StopRequested(reason), clock.instant, byId(key.id).settings.policy, 0.5)
-      update(key, _.copy(supervision = step.supervision))
+      moved(key, run, step)
       step.commands.filterNot(_ == WorkerCommand.StopWorker).foreach(execute(key, _))
       step.commands.contains(WorkerCommand.StopWorker)
     }

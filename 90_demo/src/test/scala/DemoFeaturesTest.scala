@@ -18,6 +18,8 @@ import dev.coilix.demo.workshop.InspectionSheet
 import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
+import dev.coilix.demo.workshop.MileageFeed
+import dev.coilix.demo.workshop.MileageReading
 import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.Notifier
 import dev.coilix.demo.workshop.PartsQuote
@@ -25,6 +27,7 @@ import dev.coilix.demo.workshop.PortalSession
 import dev.coilix.demo.workshop.RecallBoard
 import dev.coilix.demo.workshop.RecallBriefing
 import dev.coilix.demo.workshop.RecallCheck
+import dev.coilix.demo.workshop.ReminderOutbox
 import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
@@ -33,6 +36,7 @@ import dev.coilix.demo.workshop.WorkshopProcessor
 import dev.coilix.events.ApplicationStarted
 import dev.coilix.events.ContextReady
 import dev.coilix.events.EventBus
+import dev.coilix.processing.ProcessorEvent
 import dev.coilix.processing.ProcessorManager
 import dev.coilix.processing.WorkerState
 import dev.coilix.testkit.CoilixContextOps
@@ -139,7 +143,7 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     workshop.replaceBean[Notifier](notifier).withRunners.withSynchronousEvents.use {
       assertEquals(
         (
-          recordedEvents[AnyRef].map(_.getClass.getSimpleName),
+          recordedEvents[AnyRef].filterNot(_.isInstanceOf[ProcessorEvent]).map(_.getClass.getSimpleName),
           recordedEvents[InspectionFinished].map(_.steps),
           notifier.messages.size
         ),
@@ -242,6 +246,17 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     }
   }
 
+  test("sends service reminders from the mileage of the fleet with a stateless processor on two shards") {
+    workshop.use {
+      val readings   = List(MileageReading(vin, 15400), MileageReading(Vin("TMBJJ7NE8J0000002"), 8000))
+      bean[MileageFeed].publish(readings*)
+      assert(waitFor(bean[MileageFeed].pending == 0, 5.seconds.fromNow))
+      val statistics = bean[ProcessorManager].statistics(WorkshopProcessor.ServiceReminders)
+      assertEquals(bean[ReminderOutbox].emitted, List("WVWZZZ1KZ6W000001: service due at 15400 km"))
+      assertEquals((statistics.processed, statistics.shards.map(_.index)), (2L, List(0, 1)))
+    }
+  }
+
   test("a clock added by the test replaces the default one") {
     val fixed = Clock.fixed(Instant.parse("2026-11-16T10:00:00Z"), ZoneOffset.UTC)
     workshop.addBean[Clock](fixed).use {
@@ -256,11 +271,20 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
       assertEquals(bean[FaultLedger].faults, Map(vin -> List("P0301", "P0420", "C0035"), Vin("TMBJJ7NE8J0000002") -> Nil))
       assertEquals(
         processors.topology.processors.map(processor => (processor.id, processor.shards.map(_.shard))),
-        List((WorkshopProcessor.FaultCodeExport, List(0, 1)))
+        List((WorkshopProcessor.FaultCodeExport, List(0, 1)), (WorkshopProcessor.ServiceReminders, List(0, 1)))
       )
       assertEquals((beanOption[FaultCodeExport], bean[ServiceDesk].exportShards), (None, "0 Completed, 1 Completed"))
     }
   }
+
+  @tailrec
+  private def waitFor(condition: => Boolean, deadline: Deadline): Boolean =
+    if (condition) true
+    else if (deadline.isOverdue()) false
+    else {
+      Thread.sleep(10)
+      waitFor(condition, deadline)
+    }
 
   @tailrec
   private def completed(processors: ProcessorManager, deadline: Deadline): Boolean =

@@ -16,6 +16,10 @@ object TestProcessor {
 
   case object Orphan extends TestProcessor
 
+  case object Shipping extends TestProcessor
+
+  case object Misfit extends TestProcessor
+
   case object LegacyName extends TestProcessor {
     override def name: String = "legacy_flow"
   }

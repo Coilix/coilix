@@ -29,6 +29,15 @@ final class ProcessingTest extends munit.FunSuite with CoilixContextOps {
     }
   }
 
+  test("the invoice mailer sends one invoice for each order and counts them") {
+    setup.use {
+      bean[OrderStream].publish(Order(1, "acme"), Order(2, "globex"), Order(3, "acme"))
+      assert(waitUntil(5.seconds.fromNow)(bean[OrderStream].pending == 0))
+      assertEquals(bean[SentMail].emitted.sorted, List("Invoice 1 for acme", "Invoice 2 for globex", "Invoice 3 for acme"))
+      assertEquals(bean[ProcessorManager].statistics(ShopProcessor.InvoiceMailer).processed, 3L)
+    }
+  }
+
   @tailrec
   private def waitUntil(deadline: Deadline)(condition: => Boolean): Boolean =
     if (condition) true

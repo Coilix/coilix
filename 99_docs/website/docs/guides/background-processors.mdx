@@ -10,6 +10,9 @@ import ShopProcessor from '!!raw-loader!@examples/scala/processing/ShopProcessor
 import InvoiceExport from '!!raw-loader!@examples/scala/processing/InvoiceExport.scala';
 import OrderWatch from '!!raw-loader!@examples/scala/processing/OrderWatch.scala';
 import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.scala';
+import InvoiceMailer from '!!raw-loader!@examples/scala/processing/InvoiceMailer.scala';
+import OrderStream from '!!raw-loader!@examples/scala/processing/OrderStream.scala';
+import FailureAlerts from '!!raw-loader!@examples/scala/processing/FailureAlerts.scala';
 import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
 import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
 
@@ -49,6 +52,22 @@ A shard that does not stop within half of the stop timeout gets its thread inter
 
 `prepare` runs before every start of a shard, for example to restore its offsets. `onAcquired` and `onReleased` tell when this replica takes over and gives up a shard, with the reason: `Shutdown`, `Stopped`, `Completed` or `Failed`.
 
+## Process elements from a source
+
+A `StatelessProcessor[T]` handles elements that come from a source, one at a time and without state between them. The worker of each shard reads the source of the shard, calls `process` for each element in order and acknowledges the element when `process` returns:
+
+<CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
+
+The source is an `InputSource[T]`, created for each start of a shard. It reads only the slots of that shard and gives each element as an `Input` with its slot, a stable `InputId` and the delivery number. The worker calls `poll` in a loop on its own thread, so a connector may simply block in it. When the shard stops or restarts, the worker closes the source, and the source delivers again every element that was not acknowledged.
+
+When `process` throws, the worker fails with an `ElementFailedException` that names the element, and it restarts after the backoff of the restart policy. The element comes again with a higher delivery number, which `ElementContext.delivery` shows. Handling of failures per element, such as retrying or skipping, comes later.
+
+`InMemoryStream` is a source in memory with slots, for tests, demos and work that may be lost when the process ends. `publish` puts each element into the slot of its key, so the elements of one key keep their order. `InMemoryOutput` keeps what a processor emits:
+
+<CodeBlock language="scala" title="OrderStream.scala">{OrderStream}</CodeBlock>
+
+A source that defines its own number of slots, like the partitions of a topic, needs the same `slots` for the processor; otherwise its shards fail at start with the key to set.
+
 ## Slots, shards and replicas
 
 The data of a processor is split into slots, 256 by default. A slot is fixed: `ShardKeys.slotOf` gives the same slot for a key whatever the number of shards or replicas. Slot `s` belongs to shard `s % shards`, and each shard runs on one replica:
@@ -84,6 +103,14 @@ Beans control processors through the `ProcessorManager`: `start`, `stop`, `resta
 <CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
 
 The operations run one at a time on the thread `coilix-processor-manager` and change only this replica. Starting a running processor or stopping a stopped one changes nothing. Restarting a shard that another replica runs throws `ShardNotOwnedException` with the replica that runs it.
+
+## Statistics and events
+
+`statistics(id)` of the manager returns, for each shard of this replica, its state with the counters of its worker: processed and failed elements, the total and longest processing time, the time of the last element and the elements waiting in each slot. The counters survive restarts. A `BlockingProcessor` or a `CustomProcessor` records its own work through `shard.metrics`.
+
+Every change of the state of a shard is published as `ProcessorEvent.ShardStateChanged`, and every failure of a worker as `ProcessorEvent.ShardFailed`. They are published on the thread of the manager, so a slow listener should be asynchronous:
+
+<CodeBlock language="scala" title="FailureAlerts.scala">{FailureAlerts}</CodeBlock>
 
 ## Closing
 

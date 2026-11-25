@@ -23,7 +23,8 @@ import scala.concurrent.duration.DurationInt
  * `JobLog[List]`), `EditOption`, an `@Async` bean ([[dev.coilix.demo.workshop.JobArchive]]) and a bean of an optional module
  * that is injected as `Option`, because the module can be disabled. The `@Lazy` [[dev.coilix.demo.workshop.WarrantyRegistry]]
  * comes through a `Provider`, so it is loaded only here. The [[dev.coilix.demo.workshop.ModuleCensus]] counts the modules of
- * the fleet with a Pekko stream. The background processors are reached only through the `ProcessorManager`.
+ * the fleet with a Pekko stream. The background processors are reached only through the `ProcessorManager`, and the mileage of the fleet goes to
+ * [[dev.coilix.demo.workshop.ServiceReminders]] through the [[dev.coilix.demo.workshop.MileageFeed]].
  */
 @Component
 @Order(4)
@@ -38,7 +39,8 @@ final class ServiceDesk(
   warranties: Provider[WarrantyRegistry],
   recalls:    RecallCheck,
   census:     ModuleCensus,
-  processors: ProcessorManager
+  processors: ProcessorManager,
+  mileage:    MileageFeed
 ) extends ApplicationRunner {
 
   override def run(arguments: ApplicationArguments): Unit = {
@@ -53,6 +55,8 @@ final class ServiceDesk(
     )
     fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line => log.info(s"Fleet scan: $line")))
     log.info(s"Fault code export: $exportShards")
+    mileage.publish(registry.all.zipWithIndex.map((vehicle, index) => MileageReading(vehicle.vin, 9000 + index * 7000))*)
+    log.info(s"Mileage of ${registry.all.size} vehicles sent to the service reminders")
   }
 
   /** The state of each shard of the fault code export on this replica, such as `0 Completed, 1 Running`. */

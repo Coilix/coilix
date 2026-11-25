@@ -656,7 +656,7 @@ Kolejność: najpierw Kafka (bez niej nie ma stanowego przetwarzania z bulldozer
 2. Rdzeń: `ComponentCollector` i instancjonowanie klas spoza rejestru beanów z cyklem życia — zrobione: `CoilixModule.collects`, `CollectedComponents`, `ManagedComponent` (ADR 0017).
 3. COILIX-00027 krok 1: tożsamość repliki i statyczne członkostwo.
 4. `processing-annotations` i szkielet `processing`: `ProcessorId`, zbieranie i tworzenie procesorów, wątek sterujący managera, sloty, `Shard`, `ShardAssignment` (strategie statyczne), `ShardKeys`, wspólny model nadzoru (maszyna stanów jako czyste przejścia, `RestartPolicy`, `Backoff`), SPI `ProcessorEngine` i silnik na wątkach wirtualnych, `CustomProcessor`, `BlockingProcessor`, lokalne operacje managera, konfiguracja, cykl życia — zrobione (ADR 0037). Procesory startują po zbudowaniu kontekstu, a nie po `ApplicationRunner`.
-5. `StatelessProcessor`, `InputSource`, `Input`, `Acknowledgement`, `Output`, implementacje w pamięci, statystyki i zdarzenia.
+5. `StatelessProcessor`, `InputSource`, `Input`, `Acknowledgement`, `Output`, implementacje w pamięci, statystyki i zdarzenia — zrobione (ADR 0041): zdarzenia przez `EventPublisher` zamiast `ProcessorListener`, `slotCount` źródła musi być równy `slots` procesora, histogramy i tempo czekają na integrację z metrykami.
 6. `FailureHandling` z etapami, decyzjami, eskalacją, `poisonAfter`, `ErrorClassifier`, walidacją przy starcie i regułami z configu. `DeadLetterQueue` w pamięci z `DeadLetterBrowser`.
 7. `Concurrency` (równoległość z potwierdzeniami w kolejności) i `BatchProcessor`.
 8. `StatefulProcessor`, `Step`, `StateStore` w pamięci ze slotami, tick i retencja, epoka i kontrola `slotCount`.

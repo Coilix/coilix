@@ -11,4 +11,7 @@ object WorkshopProcessor {
 
   /** Exports the fault codes of the fleet, configured under `coilix.processors.fault-code-export`. */
   case object FaultCodeExport extends WorkshopProcessor
+
+  /** Sends service reminders from the mileage of the fleet, configured under `coilix.processors.service-reminders`. */
+  case object ServiceReminders extends WorkshopProcessor
 }

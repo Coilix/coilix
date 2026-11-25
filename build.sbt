@@ -237,7 +237,7 @@ lazy val processingAnnotations =
     .settings(description := "The @Processor annotation that marks background processors of Coilix")
 
 lazy val processing = slf4sModule("processing", "27_processing", "dev.coilix.processing")
-  .dependsOn(cluster, processingAnnotations, testkit % Test)
+  .dependsOn(cluster, applicationEvents, processingAnnotations, testkit % Test)
   .settings(featureGroup("processing"))
   .settings(description := "Background processors of Coilix, split into shards that run on the replicas of the application")
 

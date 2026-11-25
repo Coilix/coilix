@@ -10,6 +10,9 @@ import ShopProcessor from '!!raw-loader!@examples/scala/processing/ShopProcessor
 import InvoiceExport from '!!raw-loader!@examples/scala/processing/InvoiceExport.scala';
 import OrderWatch from '!!raw-loader!@examples/scala/processing/OrderWatch.scala';
 import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.scala';
+import InvoiceMailer from '!!raw-loader!@examples/scala/processing/InvoiceMailer.scala';
+import OrderStream from '!!raw-loader!@examples/scala/processing/OrderStream.scala';
+import FailureAlerts from '!!raw-loader!@examples/scala/processing/FailureAlerts.scala';
 import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
 import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
 
@@ -49,6 +52,22 @@ Shard, który nie zatrzyma się w połowie czasu na zatrzymanie, dostaje przerwa
 
 `prepare` działa przed każdym startem sharda, np. żeby odtworzyć jego offsety. `onAcquired` i `onReleased` mówią, kiedy ta replika przejmuje i oddaje shard, z powodem: `Shutdown`, `Stopped`, `Completed` albo `Failed`.
 
+## Przetwarzanie elementów ze źródła
+
+`StatelessProcessor[T]` obsługuje elementy, które przychodzą ze źródła, po jednym i bez stanu między nimi. Worker każdego sharda czyta źródło sharda, woła `process` dla każdego elementu po kolei i potwierdza element, gdy `process` wróci:
+
+<CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
+
+Źródło to `InputSource[T]` tworzone przy każdym starcie sharda. Czyta tylko sloty tego sharda i daje każdy element jako `Input` ze slotem, stałym `InputId` i numerem dostarczenia. Worker woła `poll` w pętli na własnym wątku, więc konektor może w nim po prostu blokować. Gdy shard się zatrzymuje albo restartuje, worker zamyka źródło, a źródło dostarcza ponownie każdy element, który nie został potwierdzony.
+
+Gdy `process` rzuci wyjątek, worker kończy się wyjątkiem `ElementFailedException` z identyfikatorem elementu i startuje ponownie po opóźnieniu z polityki restartów. Element przychodzi jeszcze raz z wyższym numerem dostarczenia, który pokazuje `ElementContext.delivery`. Obsługa błędów pojedynczych elementów, np. ponawianie albo pomijanie, przyjdzie później.
+
+`InMemoryStream` to źródło w pamięci ze slotami do testów, dem i pracy, którą wolno stracić przy końcu procesu. `publish` wkłada każdy element do slotu jego klucza, więc elementy jednego klucza zachowują kolejność. `InMemoryOutput` przechowuje to, co procesor emituje:
+
+<CodeBlock language="scala" title="OrderStream.scala">{OrderStream}</CodeBlock>
+
+Źródło, które samo określa liczbę slotów, np. partycji topiku, wymaga takiej samej wartości `slots` procesora. Inaczej jego shardy kończą się błędem przy starcie z kluczem do ustawienia.
+
 ## Sloty, shardy i repliki
 
 Dane procesora dzielą się na sloty, domyślnie 256. Slot jest stały: `ShardKeys.slotOf` daje dla klucza ten sam slot niezależnie od liczby shardów i replik. Slot `s` należy do sharda `s % shards`, a każdy shard działa na jednej replice:
@@ -84,6 +103,14 @@ Beany sterują procesorami przez `ProcessorManager`: `start`, `stop`, `restart` 
 <CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
 
 Operacje wykonują się po kolei na wątku `coilix-processor-manager` i zmieniają tylko tę replikę. Uruchomienie działającego procesora albo zatrzymanie zatrzymanego niczego nie zmienia. Restart sharda, który działa na innej replice, rzuca `ShardNotOwnedException` z repliką, która go ma.
+
+## Statystyki i zdarzenia
+
+`statistics(id)` menedżera zwraca dla każdego sharda tej repliki jego stan z licznikami workera: elementy przetworzone i nieudane, łączny i najdłuższy czas przetwarzania, czas ostatniego elementu i elementy czekające w każdym slocie. Liczniki przeżywają restarty. `BlockingProcessor` albo `CustomProcessor` zapisuje swoją pracę przez `shard.metrics`.
+
+Każda zmiana stanu sharda jest publikowana jako `ProcessorEvent.ShardStateChanged`, a każdy błąd workera jako `ProcessorEvent.ShardFailed`. Publikuje je wątek menedżera, więc wolny odbiorca powinien być asynchroniczny:
+
+<CodeBlock language="scala" title="FailureAlerts.scala">{FailureAlerts}</CodeBlock>
 
 ## Zamykanie
 

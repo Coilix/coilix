@@ -1,6 +1,7 @@
 package dev.coilix.processing
 
 import dev.coilix.cluster.Member
+import java.time.Clock
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
@@ -23,8 +24,15 @@ import java.util.concurrent.atomic.AtomicBoolean
  *   the index of the shard, the number of shards and the slots of the shard
  * @param replica
  *   the replica that runs the shard
+ * @param metrics
+ *   the counters of the shard, the same object for every start of its worker
  */
-final class Shard(val processor: ProcessorId, val slots: SlotSet, val replica: Member) {
+final class Shard(
+  val processor: ProcessorId,
+  val slots:     SlotSet,
+  val replica:   Member,
+  val metrics:   ShardMetrics = ShardMetrics(Clock.systemUTC)
+) {
 
   private val stopping = AtomicBoolean(false)
 

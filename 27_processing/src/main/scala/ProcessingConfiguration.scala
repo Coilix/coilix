@@ -7,6 +7,7 @@ import dev.coilix.concurrency.FatalErrorHandler
 import dev.coilix.concurrency.TaskScheduler
 import dev.coilix.config.Environment
 import dev.coilix.context.CollectedComponents
+import dev.coilix.events.EventPublisher
 import java.time.Clock
 
 /** The beans of the `processing` module. */
@@ -31,7 +32,8 @@ final class ProcessingConfiguration {
     identity:    ReplicaIdentity,
     settings:    ProcessingSettings,
     scheduler:   TaskScheduler,
-    fatalErrors: FatalErrorHandler
+    fatalErrors: FatalErrorHandler,
+    publisher:   Option[EventPublisher]
   ): DefaultProcessorManager =
-    DefaultProcessorManager(collected, engines, identity, settings, scheduler, fatalErrors, Clock.systemUTC)
+    DefaultProcessorManager(collected, engines, identity, settings, scheduler, fatalErrors, publisher, Clock.systemUTC)
 }

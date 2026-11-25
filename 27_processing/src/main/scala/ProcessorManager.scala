@@ -33,6 +33,14 @@ trait ProcessorManager {
   /** The state of the shards of the processor on this replica. Reading it does not wait for running operations. */
   def status(id: ProcessorId): ProcessorStatus
 
+  /**
+   * The state and the counters of every shard of processor `id` on this replica.
+   *
+   * @throws dev.coilix.processing.NoSuchProcessorException
+   *   if there is no processor `id`
+   */
+  def statistics(id: ProcessorId): ProcessorStatistics
+
   /** Starts the shards of the processor that are not running. A `Failed` shard starts with a fresh restart policy. */
   def start(id: ProcessorId): Unit
 
