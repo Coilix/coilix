@@ -56,7 +56,7 @@
   - **za dużo wątków**: progi ostrzeżenia i błędu liczby wątków platformowych,
   - **długie czekanie na blokadę**: wątek w `BLOCKED` dłużej niż próg,
   - **przyrost wątków**: wzrost liczby wątków w oknie czasu ponad próg (podejrzenie wycieku),
-  - **zablokowane zadania wirtualne**: `TaskExecutor` liczy zadania działające dłużej niż próg, bo wątków wirtualnych nie widać w `ThreadMXBean`.
+  - **zablokowane zadania wirtualne**: `TaskExecutor` liczy zadania działające dłużej niż próg, bo wątków wirtualnych nie widać w `ThreadMXBean`. Na JDK 25 i nowszych długie zadania wyzwalają zrzut `dumpThreads` JSON i szukanie w nim cykli (ADR 0039).
 - Wynik kontroli to `Finding` z wagą (`Info`, `Warning`, `Critical`), rodzajem, opisem i wątkami. `FindingReporter` loguje je ze stosami (pierwsze ramki) i ogranicza powtórzenia tego samego rodzaju (np. raz na 30 s).
 - `coilix.diagnostics.threads.on-deadlock`: `shutdown` (domyślnie) loguje zrzut wątków i woła `FatalErrorHandler`. `report` tylko loguje i ustawia wskaźnik `threads` (liveness) na `Down`. Przy zakleszczeniu łagodne zamknięcie może się nie udać, więc strażnik z `halt` jest tu szczególnie potrzebny.
 
@@ -83,7 +83,7 @@
 ## Kroki (osobne PR-y)
 
 1. **Błędy fatalne** (zrobione, ADR 0027). Klasyfikacja, `FatalErrorHandler` z wyłączeniem, strażnik z `halt`, `ProcessTerminator`, handler w wątkach `concurrency` i `events`, domyślny handler w `boot`, ostrzeżenia o flagach JVM. ADR, przewodnik w obu językach, demo (opcja uruchomienia, która wywołuje błąd fatalny w zadaniu).
-2. **Moduł `09_diagnostics`: zdrowie i monitor wątków.** Najpierw eksperyment na JDK 17 i 25, co z zakleszczeń widać przy wątkach wirtualnych (`synchronized` i `ReentrantLock`), i wynik w ADR. Potem `HealthStatus`, `HealthIndicator`, `Health`, `HealthChanged`, kontrole wątków, `FindingReporter`, `on-deadlock`. Przewodnik, demo.
+2. **Moduł `09_diagnostics`: zdrowie i monitor wątków.** Najpierw eksperyment na JDK 17 i 25, co z zakleszczeń widać przy wątkach wirtualnych (`synchronized` i `ReentrantLock`), i wynik w ADR (zrobione: ADR 0039, uruchomione też na JDK 21 i 26). Potem `HealthStatus`, `HealthIndicator`, `Health`, `HealthChanged`, kontrole wątków, `FindingReporter`, `on-deadlock`. Przewodnik, demo.
 3. **Monitor pamięci.** Progi po GC, czas GC, wskaźnik `memory` z histerezą, okresowe statystyki. Przewodnik z zaleceniami flag JVM dla kontenera, demo.
 
 ## Kryteria akceptacji
@@ -111,7 +111,7 @@
 
 ## Ryzyka i otwarte pytania
 
-1. Wątki wirtualne nie są widoczne w `ThreadMXBean`, a od JDK 24 nie przypinają się do wątku nośnego przy `synchronized`. Wykrycie zakleszczeń między zadaniami wirtualnymi może być niemożliwe przez MXBean. Wtedy zostaje licznik długich zadań w `TaskExecutor` i zrzut przez `jcmd Thread.dump_to_file` w przewodniku. Eksperyment w kroku 2 to rozstrzygnie.
+1. Wątki wirtualne nie są widoczne w `ThreadMXBean`, a od JDK 24 nie przypinają się do wątku nośnego przy `synchronized`. Wykrycie zakleszczeń między zadaniami wirtualnymi może być niemożliwe przez MXBean. Wtedy zostaje licznik długich zadań w `TaskExecutor` i zrzut przez `jcmd Thread.dump_to_file` w przewodniku. Eksperyment w kroku 2 to rozstrzygnie. Rozstrzygnięte w ADR 0039: MXBean nie widzi wątków wirtualnych na żadnej wersji, więc sygnałem jest licznik długich zadań, a potwierdzeniem zrzut `dumpThreads` JSON z informacją o blokadach (monitory od JDK 25, `java.util.concurrent` od JDK 26).
 2. `System.exit` w bibliotece jest kontrowersyjny. Dlatego domyślny handler procesu ustawia tylko `boot` (aplikacja startowana przez Coilix), a `action = log` wyłącza wyłączanie.
 3. Progi pamięci zależą od GC (G1, ZGC, Parallel). ZGC generacyjny ma inne pule. Test kontraktowy trzeba uruchomić na G1 i ZGC.
 4. Po wyłączeniu przez błąd fatalny Kubernetes restartuje pod. Przy błędzie powtarzalnym pod wpada w `CrashLoopBackOff`, co jest poprawnym, widocznym sygnałem. Przewodnik ma to opisać.
