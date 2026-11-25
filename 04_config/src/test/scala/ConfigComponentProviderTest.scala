@@ -31,6 +31,6 @@ final class ConfigComponentProviderTest extends FunSuite {
   }
 
   test("config path carries the component type") {
-    assertEquals(summon[ConfigPath[Greeting]], ConfigPath("test.greeting", classOf[Greeting]))
+    assertEquals(summon[ConfigPath[Greeting]], ConfigPath[Greeting]("test.greeting"))
   }
 }
