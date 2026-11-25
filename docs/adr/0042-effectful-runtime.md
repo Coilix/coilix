@@ -1,6 +1,6 @@
 # 0042: Runtime Coilix na `IO`, komponenty aplikacji w tagless final
 
-- Status: proponowana
+- Status: proponowana; punkty o tagless final, klasach typów jako beanach i strumieniach zastąpione przez 0043
 - Data: 2026-11-25
 - Task: COILIX-00031
 

@@ -41,12 +41,13 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0033](0033-effectful-lifecycle-and-runners.md) | Cykl życia i runnery w IO | proponowana |
 | [0034](0034-coilix-io-app.md) | CoilixIOApp z runtime'em IOApp jako beanem | proponowana |
 | [0035](0035-testkit-cats-effect.md) | Moduł testkit-cats-effect | proponowana |
-| [0036](0036-pekko-module.md) | Moduł pekko z ActorSystem na pulach Coilix | proponowana |
+| [0036](0036-pekko-module.md) | Moduł pekko z ActorSystem na pulach Coilix | zastąpiona przez 0043 |
 | [0037](0037-background-processors.md) | Procesory tła z shardami, nadzorem i jednym menedżerem | proponowana |
 | [0038](0038-custom-warts.md) | Własne warty w module narzędziowym `tools/warts` | proponowana |
 | [0039](0039-deadlocks-of-virtual-threads.md) | Wykrywanie zakleszczeń przy wątkach wirtualnych | proponowana |
-| [0042](0042-effectful-runtime.md) | Runtime Coilix na IO, komponenty aplikacji w tagless final | proponowana |
+| [0042](0042-effectful-runtime.md) | Runtime Coilix na IO, komponenty aplikacji w tagless final | proponowana, część o tagless final zastąpiona przez 0043 |
 | [0040](0040-diagnostics-module.md) | Moduł rdzenia diagnostics: zdrowie aplikacji i kontrole wątków | proponowana |
+| [0043](0043-io-resource-fs2.md) | Coilix na IO, Resource i fs2, bez Pekko i bez tagless final | proponowana |
 
 ## Nowa decyzja
 

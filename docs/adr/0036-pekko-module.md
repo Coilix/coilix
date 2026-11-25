@@ -1,6 +1,6 @@
 # 0036: Moduł pekko z ActorSystem na pulach Coilix
 
-- Status: proponowana
+- Status: zastąpiona przez 0043
 - Data: 2026-11-24
 - Task: COILIX-00029 (krok 1)
 

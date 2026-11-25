@@ -1,5 +1,7 @@
 # COILIX-00029: Integracja z Pekko Streams
 
+> **Zastąpiony** 2026-11-25 przez COILIX-00032 i ADR 0043: Coilix rezygnuje z Pekko na rzecz fs2. Treść zostaje jako zapis analizy wzorców bulldozera.
+
 > Szkic do doszlifowania. Decyzja opiekuna z 2026-11-19: Pekko Streams to podstawowy silnik strumieni (wartość materializowana daje sterowanie grafem), łączony z `IO` z cats-effect (COILIX-00020). Wzorem są `OptimusFlow` i `ShardControl` z bulldozera oraz mosty `IO` ↔ Pekko z biblioteki implicits.
 
 ## Cel
