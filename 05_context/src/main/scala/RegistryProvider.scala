@@ -17,7 +17,14 @@ import dev.coilix.common.GenericType
 final class RegistryProvider[T](registry: BeanRegistry, beanType: GenericType, requiredBy: String) extends Provider[T] {
 
   override def get(): T =
-    registry.complete.find(beanType).map(_.instance.asInstanceOf[T]).getOrElse(throw missing)
+    registry.complete.find(beanType).map(bean => typed(bean.instance)).getOrElse(throw missing)
+
+  /**
+   * `instance` as a `T`. The cast is unchecked, because `T` is erased, but the registry found `instance` by the full type of
+   * `T`.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def typed(instance: AnyRef): T = instance.asInstanceOf[T]
 
   private def missing: NoSuchBeanException =
     new NoSuchBeanException(

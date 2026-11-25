@@ -64,13 +64,25 @@ final class IOBeanResources(instantiator: BeanInstantiator, destroyer: BeanDestr
   private def produced(definition: BeanDefinition, registry: BeanRegistry): IO[AnyRef] =
     IO.blocking(instantiator.produce(definition, registry))
 
+  /**
+   * `effect` as an `IO`. The cast is unchecked, because the type argument is erased, but only beans whose factory returns
+   * `IO` are run here.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
   private def run(effect: AnyRef): IO[AnyRef] =
     effect.asInstanceOf[IO[AnyRef]]
 
   private def open(definition: BeanDefinition)(resource: AnyRef): Resource[IO, AnyRef] =
     Resource
-      .make(resource.asInstanceOf[Resource[IO, AnyRef]].allocated)((_, release) => timeouts.bounded(definition, release))
+      .make(asResource(resource).allocated)((_, release) => timeouts.bounded(definition, release))
       .map(_._1)
+
+  /**
+   * `resource` as a `Resource` of `IO`. The cast is unchecked, because the type arguments are erased, but only beans whose
+   * factory returns `Resource[IO, A]` are opened here.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def asResource(resource: AnyRef): Resource[IO, AnyRef] = resource.asInstanceOf[Resource[IO, AnyRef]]
 
   private def completed(definition: BeanDefinition, value: Resource[IO, AnyRef]): Resource[IO, BeanRegistry => BeanRegistry] =
     value.flatMap(instance => destroyable(definition, IO.blocking(instantiator.complete(definition, instance))))
@@ -101,8 +113,15 @@ final class IOBeanResources(instantiator: BeanInstantiator, destroyer: BeanDestr
 
   private def invoked(bean: RegisteredBean, method: Method): IO[Unit] =
     try {
-      method.invoke(ProxiedBean.unwrap(bean.instance)).asInstanceOf[IO[Unit]]
+      asEffect(method.invoke(ProxiedBean.unwrap(bean.instance)))
     } catch {
       case failure: InvocationTargetException => throw failure.getCause
     }
+
+  /**
+   * The result of a lifecycle method as an `IO[Unit]`. The cast is unchecked, because the type argument is erased, but the
+   * lifecycle scanner keeps here only methods that return `IO[Unit]`.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def asEffect(result: AnyRef): IO[Unit] = result.asInstanceOf[IO[Unit]]
 }

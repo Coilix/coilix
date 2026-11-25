@@ -23,6 +23,12 @@ object Dependencies {
     "org.apache.logging.log4j" % "log4j-core"        % "2.26.1"
   )
 
+  /**
+   * The wartremover library for the custom warts in tools/warts, in the version of the sbt-wartremover plugin from
+   * project/plugins.sbt and for the exact Scala version, because the warts run inside the compiler.
+   */
+  val wartremover: ModuleID = ("org.wartremover" % "wartremover" % "3.6.3").cross(CrossVersion.full)
+
   def scalaCompiler(scalaVersion: String): ModuleID =
     "org.scala-lang" %% "scala3-compiler" % scalaVersion
 }

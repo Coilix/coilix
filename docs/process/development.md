@@ -53,7 +53,7 @@ Zasady:
 sbt -Dsbt.server.autostart=false testFull doc demo/run
 ```
 
-- `testFull` przechodzi (kompilacja z `-Werror`, wartremover, scalafmt, zakaz `println`).
+- `testFull` przechodzi (kompilacja z `-Werror`, warty wartremovera razem z własnymi z `tools/warts`, scalafmt).
 - W logu `doc` nie ma `Couldn't resolve a member for the given link query`.
 - `demo/run` startuje i pokazuje nową funkcję, jeśli task jej dotyczy.
 
