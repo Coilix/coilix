@@ -1,6 +1,6 @@
 # 0037: Procesory tła z shardami, nadzorem i jednym menedżerem
 
-- Status: proponowana
+- Status: proponowana; style procesorów, silnik i wątek menedżera zastąpione przez 0044
 - Data: 2026-11-24
 - Task: COILIX-00026 (kroki 1 i 4)
 

@@ -1,20 +1,20 @@
 package dev.coilix.processing
 
+import cats.effect.Deferred
+import cats.effect.IO
 import dev.coilix.cluster.Member
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * One shard of a processor that runs on this replica: its index, its slots and the replica that runs it.
+ * One shard of a processor that runs on this replica: its index, its slots, the replica that runs it and the signal that
+ * stops it.
  *
- * The manager gives a new `Shard` to every start of the shard's worker. A processor reads
- * [[dev.coilix.processing.Shard.stopRequested]] to end its work when the shard stops:
+ * The manager gives a new `Shard` to every start of the shard's worker. A processor checks
+ * [[dev.coilix.processing.Shard.stopRequested]] between steps, or waits on [[dev.coilix.processing.Shard.stopped]], to end
+ * its work when the shard stops:
  *
  * ```scala
- * override def run(shard: Shard): Unit =
- *   if (!shard.stopRequested) {
- *     exportNext(shard.slots)
- *     run(shard)
- *   }
+ * override def run(shard: Shard): IO[Unit] =
+ *   shard.stopRequested.ifM(IO.unit, exportNext(shard.slots) *> run(shard))
  * ```
  *
  * @param processor
@@ -23,10 +23,10 @@ import java.util.concurrent.atomic.AtomicBoolean
  *   the index of the shard, the number of shards and the slots of the shard
  * @param replica
  *   the replica that runs the shard
+ * @param stopSignal
+ *   completed when the shard is asked to stop
  */
-final class Shard(val processor: ProcessorId, val slots: SlotSet, val replica: Member) {
-
-  private val stopping = AtomicBoolean(false)
+case class Shard(processor: ProcessorId, slots: SlotSet, replica: Member, stopSignal: Deferred[IO, Unit]) {
 
   /** The index of the shard, from 0 until [[dev.coilix.processing.Shard.count]]. */
   def index: Int = slots.shard
@@ -37,12 +37,23 @@ final class Shard(val processor: ProcessorId, val slots: SlotSet, val replica: M
   /** Whether the slot belongs to this shard. */
   def owns(slot: Int): Boolean = slots.contains(slot)
 
-  /** Whether the shard is stopping, so the processor should finish its current work and return. */
-  def stopRequested: Boolean = stopping.get
+  /** Whether the shard is stopping, so the processor should finish its current step and end. */
+  def stopRequested: IO[Boolean] = stopSignal.tryGet.map(_.isDefined)
 
-  /** Asks the processor to stop its work on this shard. */
-  def requestStop(): Unit = stopping.set(true)
+  /** Completes when the shard is asked to stop. */
+  def stopped: IO[Unit] = stopSignal.get
+
+  /** Asks the processor to stop its work on this shard. Asking again does nothing. */
+  def requestStop: IO[Unit] = stopSignal.complete(()).void
 
   /** The name of the processor with the index of the shard, such as `invoice-export#2`. */
   override def toString: String = s"${processor.name}#$index"
+}
+
+/** Creation of [[dev.coilix.processing.Shard]] values. */
+object Shard {
+
+  /** A shard that is not stopping yet. */
+  def create(processor: ProcessorId, slots: SlotSet, replica: Member): IO[Shard] =
+    Deferred[IO, Unit].map(signal => Shard(processor, slots, replica, signal))
 }

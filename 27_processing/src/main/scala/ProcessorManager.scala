@@ -1,5 +1,6 @@
 package dev.coilix.processing
 
+import cats.effect.IO
 import scala.concurrent.duration.FiniteDuration
 
 /**
@@ -7,20 +8,20 @@ import scala.concurrent.duration.FiniteDuration
  *
  * The manager creates every class with the `@Processor` annotation once, assigns its shards to the replicas of the
  * application and supervises a worker for each shard of this replica. Operations take effect on this replica, one at a
- * time on the thread `coilix-processor-manager`, so they are safe to call from many threads. They are idempotent:
- * starting a running processor or stopping a stopped one changes nothing.
+ * time on the control fiber of the manager, so they are safe to run from many fibers. They are idempotent: starting a
+ * running processor or stopping a stopped one changes nothing.
  *
  * ```scala
  * @Component
  * final class Maintenance(processors: ProcessorManager) {
- *   def pauseExports(): StopResult = processors.stop(ShopProcessor.InvoiceExport)
+ *   def pauseExports: IO[StopResult] = processors.stop(ShopProcessor.InvoiceExport)
  *
- *   def resumeExports(): Unit = processors.start(ShopProcessor.InvoiceExport)
+ *   def resumeExports: IO[Unit] = processors.start(ShopProcessor.InvoiceExport)
  * }
  * ```
  *
- * Every method that takes an identifier throws [[dev.coilix.processing.NoSuchProcessorException]] when no processor has
- * it.
+ * Every operation that takes an identifier fails with [[dev.coilix.processing.NoSuchProcessorException]] when no
+ * processor has it.
  */
 trait ProcessorManager {
 
@@ -31,28 +32,26 @@ trait ProcessorManager {
   def topology: ProcessingTopology
 
   /** The state of the shards of the processor on this replica. Reading it does not wait for running operations. */
-  def status(id: ProcessorId): ProcessorStatus
+  def status(id: ProcessorId): IO[ProcessorStatus]
 
   /** Starts the shards of the processor that are not running. A `Failed` shard starts with a fresh restart policy. */
-  def start(id: ProcessorId): Unit
+  def start(id: ProcessorId): IO[Unit]
 
   /** Stops the shards of the processor and waits for them at most `coilix.processors.shutdown-timeout`. */
-  def stop(id: ProcessorId): StopResult
+  def stop(id: ProcessorId): IO[StopResult]
 
   /** Stops the shards of the processor and waits for them at most `timeout`. */
-  def stop(id: ProcessorId, timeout: FiniteDuration): StopResult
+  def stop(id: ProcessorId, timeout: FiniteDuration): IO[StopResult]
 
   /** Stops the running shards of the processor and starts every shard again. */
-  def restart(id: ProcessorId): Unit
+  def restart(id: ProcessorId): IO[Unit]
 
   /**
-   * Stops the shard if it runs and starts it again.
-   *
-   * @throws dev.coilix.processing.ShardNotOwnedException
-   *   when this replica does not run the shard
+   * Stops the shard if it runs and starts it again. Fails with [[dev.coilix.processing.ShardNotOwnedException]] when
+   * this replica does not run the shard.
    */
-  def restart(id: ProcessorId, shard: Int): Unit
+  def restart(id: ProcessorId, shard: Int): IO[Unit]
 
   /** Stops every processor and waits for the shards at most `timeout`. */
-  def stopAll(timeout: FiniteDuration): List[StopResult]
+  def stopAll(timeout: FiniteDuration): IO[List[StopResult]]
 }

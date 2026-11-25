@@ -1,7 +1,9 @@
 package dev.coilix.processing
 
+import cats.effect.IO
+
 /**
- * Runs the work of one shard in its model of concurrency, such as virtual threads or fibers of `IO` with fs2 streams.
+ * Runs the work of one shard in its model of concurrency, such as fibers of `IO` or fs2 streams.
  *
  * The [[dev.coilix.processing.ProcessorManager]] picks the only engine that supports a processor; none or several is an
  * error at startup. An engine runs one attempt of the work at a time and reports what happens to the given
@@ -10,7 +12,7 @@ package dev.coilix.processing
  */
 trait ProcessorEngine {
 
-  /** A short name of the engine for logs and errors, such as `virtual-threads`. */
+  /** A short name of the engine for logs and errors, such as `fibers`. */
   def name: String
 
   /** Whether this engine runs the processor. */
@@ -18,7 +20,7 @@ trait ProcessorEngine {
 
   /**
    * Starts one attempt of the work on the shard, beginning with [[dev.coilix.processing.ProcessorDefinition.prepare]],
-   * and returns without waiting for it.
+   * and completes without waiting for it.
    */
-  def start(definition: ProcessorDefinition, shard: Shard, events: WorkerEvents): RunningWorker
+  def start(definition: ProcessorDefinition, shard: Shard, events: WorkerEvents): IO[RunningWorker]
 }

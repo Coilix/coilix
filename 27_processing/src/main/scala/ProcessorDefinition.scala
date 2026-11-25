@@ -1,12 +1,13 @@
 package dev.coilix.processing
 
+import cats.effect.IO
+
 /**
  * What every background processor declares, whatever its style.
  *
  * A processor class has the `@Processor` annotation and extends one of the styles, such as
- * [[dev.coilix.processing.BlockingProcessor]] or [[dev.coilix.processing.CustomProcessor]]. The number of shards comes
- * from `coilix.processors.<name>.shards`, and [[dev.coilix.processing.ProcessorDefinition.defaultShards]] is used when
- * the configuration has none.
+ * [[dev.coilix.processing.IOProcessor]]. The number of shards comes from `coilix.processors.<name>.shards`, and
+ * [[dev.coilix.processing.ProcessorDefinition.defaultShards]] is used when the configuration has none.
  */
 trait ProcessorDefinition {
 
@@ -17,14 +18,14 @@ trait ProcessorDefinition {
   def defaultShards: Int = 1
 
   /**
-   * Called on the worker thread before every start of the shard's work, including restarts, for example to restore
-   * offsets. A failure here is handled like a failure of the work.
+   * Runs before every start of the shard's work, including restarts, for example to restore offsets. A failure here is
+   * handled like a failure of the work.
    */
-  def prepare(shard: Shard): Unit = ()
+  def prepare(shard: Shard): IO[Unit] = IO.unit
 
-  /** Called when this replica takes over the shard, before its first start. */
-  def onAcquired(shard: Shard): Unit = ()
+  /** Runs when this replica takes over the shard, before its first start. */
+  def onAcquired(shard: Shard): IO[Unit] = IO.unit
 
-  /** Called when this replica gives up the shard, after its worker has stopped. */
-  def onReleased(shard: Shard, reason: ReleaseReason): Unit = ()
+  /** Runs when this replica gives up the shard, after its worker has stopped. */
+  def onReleased(shard: Shard, reason: ReleaseReason): IO[Unit] = IO.unit
 }

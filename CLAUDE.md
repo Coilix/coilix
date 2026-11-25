@@ -34,7 +34,7 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `21_web` | `web` | `dev.coilix.web` | Scala | endpointy (planowane) |
 | `22_security` | `security` | `dev.coilix.security` | Scala | security (planowane) |
 | `26_processing_annotations` | `processing-annotations` | `dev.coilix.processing.annotation` | Java | adnotacja `@Processor` (ADR 0037) |
-| `27_processing` | `processing` | `dev.coilix.processing` | Scala | procesory tła z shardami, nadzorem i `ProcessorManager` (ADR 0037) |
+| `27_processing` | `processing` | `dev.coilix.processing` | Scala | procesory tła z shardami, nadzorem i `ProcessorManager` na `IO` (ADR 0037, 0044) |
 | `90_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
 | `99_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
