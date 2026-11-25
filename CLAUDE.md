@@ -74,10 +74,22 @@ Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru 
 
 - Składnia tylko z klamrami `{}` i `if (...)`. Zakaz składni wcięć, `:` po nagłówku, `then`, `do` i `end` (wymusza `-no-indent -old-syntax`).
 - Zakaz `var`, `null`, `return`, `while` i mutowalnych kolekcji (wymusza wartremover). Zamiast tego rekurencja, `fold` i niemutowalne struktury. Mutowalność tylko tam, gdzie inaczej się nie da (np. API kompilatora).
+- Kontrakty, które runtime woła w kodzie aplikacji po starcie (procesory, odbiorcy zdarzeń, `@Scheduled`, `@Async`, wskaźniki zdrowia, przyszłe web i data), zwracają `cats.effect.IO`, a nie `Unit` ani `Future` (ADR 0042, migracja w COILIX-00031). Komponenty aplikacji mogą być w tagless final (`OrderService[F[_]: Async]`), a kontener wiąże ich `F[_]` z `IO` i daje `Async[IO]` jako bean. Runtime pisze się na `Ref`, `Deferred`, `Queue`, `Supervisor` i `Resource`, bez `synchronized`, `wait`/`notify`, `Atomic*` i `Thread.sleep`. Synchroniczny zostaje tylko kontener (skanowanie, plan, tworzenie beanów).
 - Zakaz wypisywania na konsolę: `println`, `print`, `printf`, `Console.*`, `System.out` i `System.err` (wymusza wart `ConsoleOutput`). Logowanie przez `@Slf4s` i pole `log`.
 - Zakaz `asInstanceOf` (wymusza `Wart.AsInstanceOf`). Rzutowanie, bez którego się nie da (typ wymazany w kodzie refleksyjnym), idzie do małej metody z `@SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))`, a jej Scaladoc mówi, dlaczego jest bezpieczne.
 - Najpierw interfejs (`trait`), potem implementacja. Domyślne złożenie implementacji w `default` w obiekcie towarzyszącym traitu.
 - Komponent frameworka ma w obiekcie towarzyszącym traitu `given ConfigPath[T]` (np. `coilix.context.constructor-selector`) i `def default(using components: ComponentProvider): T = components.get[T](...)`. Dzięki temu użytkownik podmienia go w configu kluczem `class`.
+- Klasa, która nie musi być rozszerzana i nie wynika z wymagań Javy, jest `case class` (bez `final`), także serwis, komponent i implementacja traitu, a nie tylko dane. Publiczne `val` są parametrami konstruktora, a nie polami liczonymi w środku. Gdy klasa przyjmowała jeden obiekt i wyliczała z niego kilka pól, konstruktor główny przyjmuje te pola wprost, a `apply` w obiekcie towarzyszącym przyjmuje ten jeden obiekt i rozkłada go na konstruktor szczegółowy:
+
+  ```scala
+  case class SmtpMailer(host: String, port: Int, sender: String) extends Mailer
+
+  object SmtpMailer {
+    def apply(settings: MailSettings): SmtpMailer = SmtpMailer(settings.host, settings.port, settings.sender)
+  }
+  ```
+
+  Wyjątki: klasy, które coś dziedziczą z Javy albo muszą być otwarte (punkt rozszerzeń dla aplikacji) i wyjątki (`extends CoilixException`). Stan serwisu (np. `Ref`) też jest parametrem konstruktora, tworzonym w `apply` albo w metodzie `@Bean`. Kontener wybiera konstruktor główny, więc bean case class dostaje zależności jak każdy inny.
 - Jeden plik to jeden typ o tej samej nazwie co plik. Dozwolony jest tylko obiekt towarzyszący o tej samej nazwie.
 - Metody w traitach, klasach i obiektach oddziela jedna pusta linia, także same sygnatury w traicie:
 
@@ -102,7 +114,7 @@ Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru 
 - Zależności zawsze w najnowszej stabilnej wersji. Wersje są w `project/Dependencies.scala`. Wyjątek: Scala publikowanych modułów jest w najnowszej wersji linii LTS (COILIX-00009, `docs/architecture/versioning.md`).
 - Nowa zależność musi mieć licencję zgodną z Apache-2.0 (lista w `docs/legal/dependency-licenses.md`). GPL i AGPL są zakazane. Sprawdza to `sbt checkLicenses`.
 - Nie kopiuje się kodu, dokumentacji, komunikatów ani testów ze Springa i innych frameworków, także w parafrazie. Nazwy adnotacji i pojęć mogą odpowiadać Springowi, teksty piszemy od nowa.
-- Z prywatnych bibliotek opiekuna (bulldozer i `org.optimus:implicits`) wolno przenosić koncepcje, algorytmy i podział na komponenty, ale nie kod 1:1. Przeniesiony kod dostaje formę Coilix: własne nazwy typów, metod, parametrów i kluczy configu, formatowanie i zasady z tego pliku (klamry, bez `var` i `null`, jeden typ na plik, Scaladoc po angielsku) i styl bezpośredni rdzenia zamiast cats-effect tam, gdzie oryginał używa `IO`. Testy pisze się od nowa, a ADR albo task wskazuje, z czego wzorowano rozwiązanie.
+- Z prywatnych bibliotek opiekuna (bulldozer i `org.optimus:implicits`) wolno przenosić koncepcje, algorytmy i podział na komponenty, ale nie kod 1:1. Przeniesiony kod dostaje formę Coilix: własne nazwy typów, metod, parametrów i kluczy configu, formatowanie i zasady z tego pliku (klamry, bez `var` i `null`, jeden typ na plik, Scaladoc po angielsku) i model efektów Coilix (ADR 0042): framework i brzegi aplikacji w `IO`, komponenty w tagless final, kontener synchroniczny. Testy pisze się od nowa, a ADR albo task wskazuje, z czego wzorowano rozwiązanie.
 - Słowa „Spring” nie używa się w nazwach typów, pakietów, modułów, artefaktów, kluczy configu ani tytułów dokumentacji. W opisach tylko opisowo („API modeled on Spring”), bez sugerowania powiązania z Broadcom (`docs/legal/spring-similarity.md`).
 
 ## Dokumentacja
