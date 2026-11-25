@@ -14,9 +14,6 @@ import PriceCheck from '!!raw-loader!@examples/scala/catseffect/PriceCheck.scala
 import CatsEffectApplication from '!!raw-loader!@examples/scala/catseffect/CatsEffectApplication.scala';
 import PriceCheckTest from '!!raw-loader!@examples/test/catseffect/PriceCheckTest.scala';
 import CatsEffectYaml from '!!raw-loader!@examples/resources/guides/cats-effect/application.yaml';
-import ShippingRates from '!!raw-loader!@examples/scala/catseffect/ShippingRates.scala';
-import ShippingQuotes from '!!raw-loader!@examples/scala/catseffect/ShippingQuotes.scala';
-import ShippingQuotesTest from '!!raw-loader!@examples/test/catseffect/ShippingQuotesTest.scala';
 
 This page shows how an application of Coilix runs cats-effect `IO`. Coilix creates the `IORuntime`, closes it with the application, and makes its compute pool the only compute pool of the application, so `IO` fibers and the tasks of Coilix do not compete for the processor in two pools.
 
@@ -54,18 +51,6 @@ Inject the runtime where a bean runs `IO`, here as a `using` parameter, so `unsa
 <CodeBlock language="scala" title="ExchangeRates.scala">{ExchangeRates}</CodeBlock>
 
 Run `IO` at the edge of your code, for example in a runner or a scheduled method, and keep the rest of the bean in `IO`.
-
-## Components in tagless final style
-
-Services and repositories can be written for any effect `F[_]`, with the type classes of cats-effect as context bounds. `IO` is the effect of the application: the container binds the type parameter of such a component to `IO` and gives its context bounds the `ioAsync` bean, the `Async[IO]` instance, which also serves `Sync[IO]`, `Temporal[IO]` and `Concurrent[IO]`. No `@Bean` method is needed:
-
-<CodeBlock language="scala" title="ShippingRates.scala">{ShippingRates}</CodeBlock>
-
-<CodeBlock language="scala" title="ShippingQuotes.scala">{ShippingQuotes}</CodeBlock>
-
-The beans are `ShippingRates[IO]` and `ShippingQuotes[IO]`, and other beans inject them with these types. The classes themselves stay free of `IO`, so a unit test can create them for another effect. A component can bind only one type parameter this way; the JVM does not keep the kind of a type parameter, so any type parameter that appears in the types of the constructor parameters is taken as the effect.
-
-<CodeBlock language="scala" title="ShippingQuotesTest.scala">{ShippingQuotesTest}</CodeBlock>
 
 ## Beans made by IO and Resource
 

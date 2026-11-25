@@ -64,11 +64,4 @@ trait CoilixModule {
    * At most one enabled module may give one.
    */
   def effectInterpreter: Option[EffectInterpreter] = None
-
-  /**
-   * The effect of the application, such as `cats.effect.IO`, to which the unbound type parameter of components written in
-   * tagless final style is bound ([[dev.coilix.context.EffectTypeBinding]]). Only one module of an application may give it,
-   * and the module should also register the type class instances of the effect, such as `Async[IO]`, as beans.
-   */
-  def effectType: Option[Class[?]] = None
 }
