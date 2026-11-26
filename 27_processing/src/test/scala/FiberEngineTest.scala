@@ -138,8 +138,8 @@ final class FiberEngineTest extends CatsEffectSuite {
           .chunkN(10)
           .evalMap(batch => IO(journal.add(s"saved ${batch.toList}")))
     }
-    (1 to 50).toList.foldLeft(IO.unit) { (previous, _) =>
-      previous *> shard.flatMap(stopping.run) *> IO(journal.startingWith("saved")).map { saved =>
+    (1 to 200).toList.foldLeft(IO.unit) { (previous, _) =>
+      previous *> shard.flatMap(stopping.run).timeout(5.seconds) *> IO(journal.startingWith("saved")).map { saved =>
         assertEquals(saved.lastOption, Some("saved List(1, 2, 3, 4, 5)"))
       }
     }
