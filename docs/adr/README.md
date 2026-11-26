@@ -48,8 +48,8 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0042](0042-effectful-runtime.md) | Runtime Coilix na IO, komponenty aplikacji w tagless final | proponowana, część o tagless final zastąpiona przez 0043 |
 | [0040](0040-diagnostics-module.md) | Moduł rdzenia diagnostics: zdrowie aplikacji i kontrole wątków | proponowana |
 | [0043](0043-io-resource-fs2.md) | Coilix na IO, Resource i fs2, bez Pekko i bez tagless final | proponowana |
-| [0045](0045-single-io-entry-point.md) | Jeden punkt wejścia aplikacji: CoilixIOApp | proponowana |
 | [0044](0044-processors-on-io.md) | Procesory tła na IO i fiberach | proponowana |
+| [0045](0045-single-io-entry-point.md) | Jeden punkt wejścia aplikacji: CoilixIOApp | proponowana |
 
 ## Nowa decyzja
 
