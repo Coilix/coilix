@@ -51,9 +51,9 @@ Mix `CoilixSuite` into a munit suite and describe the context with `CoilixTestSe
 
 The setup declared as a `given` is used by every `coilixTest` that names no setup. A test that needs something else passes its own, usually built from the given one, as the second test above does.
 
-`forApplication` scans the same packages as `Coilix.run` for that application. To scan other packages, start from `CoilixTestSetup.forPackages("com.example.billing")`.
+`forApplication` scans the same packages as the application itself. To scan other packages, start from `CoilixTestSetup.forPackages("com.example.billing")`.
 
-A test context differs from a running application in a few ways: it prints no banner and no startup log, registers no shutdown hook, and does not call the `ApplicationRunner` beans. Call `withRunners` when a test needs them.
+A test context differs from a running application in a few ways: it prints no banner and no startup log and does not call the `ApplicationRunner` beans. Call `withRunners` when a test needs them.
 
 ## Read from the context
 

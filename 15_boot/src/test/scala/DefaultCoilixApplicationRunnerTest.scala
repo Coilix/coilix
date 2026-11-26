@@ -3,31 +3,26 @@ package dev.coilix.boot
 import dev.coilix.boot.application.ArgumentsAwareBean
 import dev.coilix.boot.application.FixtureApplication
 import dev.coilix.boot.application.RunJournal
+import dev.coilix.boot.fixture.Clock
+import dev.coilix.boot.scan.CustomScanApplication
 import dev.coilix.config.ClasspathEnvironmentLoader
 import dev.coilix.config.ConfigFormat
 import dev.coilix.config.Environment
-import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
-import java.util.concurrent.atomic.AtomicReference
 import munit.FunSuite
 
 final class DefaultCoilixApplicationRunnerTest extends FunSuite {
-  private val hooked = AtomicReference(List.empty[ConfigurableApplicationContext])
-
-  private val registrar = new ShutdownHookRegistrar {
-    override def register(context: ConfigurableApplicationContext): Thread = {
-      val _ = hooked.updateAndGet(_ :+ context)
-      Thread(() => context.close())
-    }
-  }
-
   private val runner = DefaultCoilixApplicationRunner(
     SimpleArgumentsParser(),
     ClasspathEnvironmentLoader("runner", ConfigFormat.byPrecedence, getClass.getClassLoader),
-    components => StartupComponents.default(using components).copy(shutdownHooks = registrar)
+    components => StartupComponents.default(using components)
   )
 
-  private val context = runner.run[FixtureApplication.type](List("--name=Ann", "input.txt"))
+  private val application = runner.start[FixtureApplication.type](List("--name=Ann", "input.txt"), Nil)
+
+  private val context = application.context
+
+  override def afterAll(): Unit = context.close()
 
   test("scans the package of the application class") {
     assert(context.getBeanOption[RunJournal].isDefined)
@@ -49,33 +44,33 @@ final class DefaultCoilixApplicationRunnerTest extends FunSuite {
     assertEquals(context.getBean[Environment].get[String]("name"), Some("Ann"))
   }
 
-  test("runs the runners between the ContextReady and ApplicationStarted events") {
-    assertEquals(context.getBean[RunJournal].recorded, List("ready", "first", "second", "unordered:Ann", "started"))
+  test("returns an active context without running the runners") {
+    assertEquals((context.isActive, context.getBean[RunJournal].recorded), (true, Nil))
   }
 
-  test("registers a shutdown hook for the started context") {
-    assert(hooked.get.exists(_ eq context))
+  test("scans the packages declared by the application") {
+    val scanned = runner.start[CustomScanApplication.type](List("--name=Ann"), Nil)
+    try {
+      assertEquals(scanned.context.getBean[Clock].now, 42L)
+    } finally {
+      scanned.context.close()
+    }
   }
 
-  test("returns an active context") {
-    assert(context.isActive)
-  }
-
-  test("start builds the context with extra singletons, without runners, events or a shutdown hook") {
-    val token       = StartToken("till-1")
-    val application = runner.start[FixtureApplication.type](List("--name=Bob"), List(RegisteredBean.of[StartToken]("token", token)))
+  test("start builds the context with extra singletons") {
+    val token   = StartToken("till-1")
+    val started = runner.start[FixtureApplication.type](List("--name=Bob"), List(RegisteredBean.of[StartToken]("token", token)))
     try {
       assertEquals(
         (
-          application.context.getBean[StartToken] eq token,
-          application.context.getBean[RunJournal].recorded,
-          application.arguments.optionValue("name"),
-          hooked.get.exists(_ eq application.context)
+          started.context.getBean[StartToken] eq token,
+          started.context.getBean[RunJournal].recorded,
+          started.arguments.optionValue("name")
         ),
-        (true, Nil, Some("Bob"), false)
+        (true, Nil, Some("Bob"))
       )
     } finally {
-      application.context.close()
+      started.context.close()
     }
   }
 }

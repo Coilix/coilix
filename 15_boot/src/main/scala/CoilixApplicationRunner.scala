@@ -1,19 +1,15 @@
 package dev.coilix.boot
 
 import dev.coilix.config.EnvironmentLoader
-import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
 import scala.reflect.ClassTag
 
-/** Runs the startup sequence behind [[dev.coilix.boot.Coilix.run]]. */
+/** Builds the context of an application, the synchronous part of the start of a [[dev.coilix.boot.CoilixIOApp]]. */
 trait CoilixApplicationRunner {
 
-  /** Starts application `T` with `args`, as described in [[dev.coilix.boot.Coilix.run]]. */
-  def run[T: ClassTag](args: List[String]): ConfigurableApplicationContext
-
   /**
-   * Builds the context of application `T` like [[run]], with `singletons` as additional ready beans, but registers no shutdown
-   * hook and calls no runner, for a start that runs them itself, such as [[dev.coilix.boot.CoilixIOApp]].
+   * Builds the context of application `T` with `singletons` as additional ready beans and calls no runner, so the caller, such
+   * as [[dev.coilix.boot.CoilixIOStartup]], runs the runners and closes the context.
    *
    * @param singletons
    *   ready instances registered before the beans are created, such as a runtime that the caller owns
@@ -27,9 +23,8 @@ trait CoilixApplicationRunner {
 object CoilixApplicationRunner {
 
   /**
-   * The runner used by [[dev.coilix.boot.Coilix.run]]: a [[dev.coilix.boot.DefaultCoilixApplicationRunner]] with the default
-   * arguments parser and
-   * configuration loader. The other startup components are taken from the loaded configuration.
+   * The runner used by [[dev.coilix.boot.CoilixIOStartup]]: a [[dev.coilix.boot.DefaultCoilixApplicationRunner]] with the
+   * default arguments parser and configuration loader. The other startup components are taken from the loaded configuration.
    */
   def default: CoilixApplicationRunner =
     DefaultCoilixApplicationRunner(

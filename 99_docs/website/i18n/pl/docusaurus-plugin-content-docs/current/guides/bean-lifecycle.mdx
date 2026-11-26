@@ -28,7 +28,7 @@ Coilix uruchamia metody `@PostConstruct`, zanim przekaże bean jakiemukolwiek in
 
 Jeśli metoda `@PostConstruct` rzuci wyjątek, start aplikacji kończy się wyjątkiem `BeanCreationException`. Komunikat podaje nazwę beana i metody, a pierwotny wyjątek jest jego przyczyną.
 
-Kontekst aplikacji zamyka się przy zatrzymaniu JVM, na przykład po Ctrl+C, albo gdy wywołasz `close()` na kontekście zwróconym przez `Coilix.run`. Coilix uruchamia wtedy metody `@PreDestroy`, zaczynając od beana utworzonego jako ostatni. Bean jest więc niszczony przed beanami, od których zależy, i może z nich korzystać, gdy się zatrzymuje.
+Kontekst aplikacji zamyka się, gdy aplikacja się kończy, na przykład po `SIGTERM` albo Ctrl+C. Coilix uruchamia wtedy metody `@PreDestroy`, zaczynając od beana utworzonego jako ostatni. Bean jest więc niszczony przed beanami, od których zależy, i może z nich korzystać, gdy się zatrzymuje.
 
 Jeśli metoda `@PreDestroy` rzuci wyjątek, Coilix zapisuje go w logu jako ostrzeżenie i kontynuuje z pozostałymi metodami i beanami.
 

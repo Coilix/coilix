@@ -13,7 +13,7 @@ import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
 
 /**
- * Builds a test context the way `Coilix.run` builds an application, without the banner, the startup log and the shutdown hook.
+ * Builds a test context the way a `CoilixIOApp` builds an application, without the banner and the startup log.
  *
  * The configuration is loaded with the setup properties and profiles over the command-line options, so they win over every
  * other source. Fatal errors are only logged (`coilix.fatal-errors.action = log`), so a test does not end the JVM, unless the

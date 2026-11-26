@@ -14,12 +14,11 @@ final class StartupComponentsTest extends FunSuite {
   test("uses built-in components without configuration") {
     val components = StartupComponents.default(using ComponentProvider.builtIn)
     assertEquals(
-      List(components.resolver, components.invoker, components.startupLogger, components.shutdownHooks).map(_.getClass),
+      List(components.resolver, components.invoker, components.startupLogger).map(_.getClass),
       List(
         classOf[AnnotationBasePackageResolver],
         classOf[OrderedRunnerInvoker],
-        classOf[Slf4jStartupLogger],
-        classOf[RuntimeShutdownHookRegistrar]
+        classOf[Slf4jStartupLogger]
       )
     )
   }

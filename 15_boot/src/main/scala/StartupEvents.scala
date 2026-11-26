@@ -14,7 +14,7 @@ import scala.util.control.NonFatal
  * before them, [[dev.coilix.events.ApplicationStarted]] after them, and [[dev.coilix.events.ApplicationFailed]] when either
  * event or a runner fails.
  *
- * `Coilix.run` and the test contexts of the testkit start the same way. A context without the events module, disabled with
+ * A [[dev.coilix.boot.CoilixIOApp]] and the test contexts of the testkit start the same way. A context without the events module, disabled with
  * `coilix.modules.events.enabled = false`, publishes nothing.
  */
 @Slf4s

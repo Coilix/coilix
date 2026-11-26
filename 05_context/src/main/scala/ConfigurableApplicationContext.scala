@@ -3,7 +3,7 @@ package dev.coilix.context
 /**
  * An [[dev.coilix.context.ApplicationContext]] that the application can close.
  *
- * `Coilix.run` returns it and registers a shutdown hook that closes it when the JVM stops.
+ * A `CoilixIOApp` builds it and closes it when the application ends, also after a `SIGTERM`.
  */
 trait ConfigurableApplicationContext extends ApplicationContext with AutoCloseable {
 

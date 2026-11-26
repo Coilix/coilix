@@ -9,7 +9,7 @@ import java.nio.file.Paths
 import scala.util.Try
 
 /**
- * The options of the JVM that decide how the application behaves when memory runs out, checked when `Coilix.run` starts.
+ * The options of the JVM that decide how the application behaves when memory runs out, checked when an application starts.
  *
  * @param exitOnOutOfMemory
  *   whether `-XX:+ExitOnOutOfMemoryError` is set, or `None` when the JVM does not tell

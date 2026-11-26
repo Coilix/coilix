@@ -10,18 +10,15 @@ import dev.coilix.config.ComponentProvider
  * @param bootstrap
  *   builds the context
  * @param invoker
- *   calls the runners
+ *   calls the runners of test contexts
  * @param startupLogger
  *   logs the start and the startup time
- * @param shutdownHooks
- *   closes the context when the JVM stops
  */
 final case class StartupComponents(
   resolver:      BasePackageResolver,
   bootstrap:     CoilixBootstrap,
   invoker:       RunnerInvoker,
-  startupLogger: StartupLogger,
-  shutdownHooks: ShutdownHookRegistrar
+  startupLogger: StartupLogger
 )
 
 /** Factories for [[dev.coilix.boot.StartupComponents]]. */
@@ -33,7 +30,6 @@ object StartupComponents {
       BasePackageResolver.default,
       CoilixBootstrap.default,
       RunnerInvoker.default,
-      StartupLogger.default,
-      ShutdownHookRegistrar.default
+      StartupLogger.default
     )
 }

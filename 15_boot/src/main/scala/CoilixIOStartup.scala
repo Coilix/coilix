@@ -4,10 +4,12 @@ import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.Resource
 import cats.effect.unsafe.IORuntime
-import cats.syntax.foldable.*
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.boot.StartupEvents
 import dev.coilix.concurrency.CatsEffectSettings
+import dev.coilix.concurrency.FatalErrorHandler
+import dev.coilix.concurrency.FatalErrors
 import dev.coilix.context.RegisteredBean
 import scala.reflect.ClassTag
 
@@ -27,13 +29,17 @@ object CoilixIOStartup {
   private val runtimeBeanName = "ioRuntime"
 
   /**
-   * The context of application `T`, built with `runtime` as its `ioRuntime` bean, without running the runners.
+   * The context of application `T`, built with `runtime` as its `ioRuntime` bean, without running the runners. While the
+   * resource is in use, the [[dev.coilix.concurrency.FatalErrorHandler]] of the context is the default uncaught exception
+   * handler of the process, so a fatal error in any thread ends the application.
    *
    * @tparam T
    *   the class annotated with `@CoilixApplication`
    */
   def application[T: ClassTag](args: List[String], runtime: IORuntime): Resource[IO, StartedApplication] =
-    Resource.make(IO.blocking(built[T](args, runtime)))(application => IO.blocking(application.context.close()))
+    Resource
+      .make(IO.blocking(built[T](args, runtime)))(application => IO.blocking(application.context.close()))
+      .flatTap(application => fatalErrorsOf(application))
 
   /**
    * Starts application `T`, runs its runners and then, unless `coilix.cats-effect.exit-after-runners` is `true`, runs until it
@@ -60,6 +66,22 @@ object CoilixIOStartup {
       IO.blocking(StartupEvents.started(context)))
       .onError(failure => IO.blocking(StartupEvents.failure(context, failure)))
   }
+
+  private def fatalErrorsOf(application: StartedApplication): Resource[IO, Unit] =
+    application.context.getBeanOption[FatalErrorHandler].fold(Resource.unit[IO])(handler =>
+      Resource.make(IO(installed(handler)))(previous => IO(restored(previous))).void
+    )
+
+  private def installed(handler: FatalErrorHandler): Option[Thread.UncaughtExceptionHandler] = {
+    val previous = Option(Thread.getDefaultUncaughtExceptionHandler)
+    Thread.setDefaultUncaughtExceptionHandler(FatalErrors.uncaughtExceptionHandler(handler))
+    previous
+  }
+
+  /** Restores the previous default handler; `null`, the value of the JDK for none, when there was none. */
+  @SuppressWarnings(Array("org.wartremover.warts.Null"))
+  private def restored(previous: Option[Thread.UncaughtExceptionHandler]): Unit =
+    Thread.setDefaultUncaughtExceptionHandler(previous.orNull)
 
   private def built[T: ClassTag](args: List[String], runtime: IORuntime): StartedApplication =
     CoilixApplicationRunner.default.start[T](args, List(RegisteredBean.of[IORuntime](runtimeBeanName, runtime)))

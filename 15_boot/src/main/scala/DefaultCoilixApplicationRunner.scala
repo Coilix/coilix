@@ -5,22 +5,16 @@ import dev.coilix.common.ClassTags.runtimeTypeOf
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
-import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
 import scala.concurrent.duration.DurationLong
 import scala.concurrent.duration.FiniteDuration
 import scala.reflect.ClassTag
 
 /**
- * Runs the startup sequence: parses the arguments, loads the configuration with command-line options as overrides, logs the
- * start, builds the context, registers the shutdown hook, logs the startup time and calls the runners between the
- * [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] events. When the runners or the listeners of
- * these events fail, [[dev.coilix.events.ApplicationFailed]] is published and the context is closed before the exception is
- * rethrown. Options of the JVM that make the application fragile when memory runs out, described in
- * [[dev.coilix.boot.JvmMemoryOptions]], are logged at `WARN` level at the start.
- *
- * `start` runs the same sequence up to the startup time and returns the context with the arguments, without the shutdown hook,
- * the runners and their events.
+ * Builds the context of an application: parses the arguments, loads the configuration with command-line options as overrides,
+ * logs the start, builds the context and logs the startup time. Options of the JVM that make the application fragile when
+ * memory runs out, described in [[dev.coilix.boot.JvmMemoryOptions]], are logged at `WARN` level at the start. The runners and
+ * their events are left to the caller, such as [[dev.coilix.boot.CoilixIOStartup]].
  *
  * The arguments and the configuration are registered as beans named `applicationArguments` and `environment`. This is the
  * implementation returned by [[dev.coilix.boot.CoilixApplicationRunner.default]].
@@ -42,16 +36,10 @@ final class DefaultCoilixApplicationRunner(
   private val argumentsBeanName   = "applicationArguments"
   private val environmentBeanName = "environment"
 
-  override def run[T: ClassTag](args: List[String]): ConfigurableApplicationContext = {
-    val (startup, application) = started[T](args, Nil)
-    val _                      = startup.shutdownHooks.register(application.context)
-    StartupEvents.around(application.context)(startup.invoker.invoke(application.context, application.arguments))
-  }
-
   override def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): StartedApplication =
-    started[T](args, singletons)._2
+    started[T](args, singletons)
 
-  private def started[T: ClassTag](args: List[String], extra: List[RegisteredBean]): (StartupComponents, StartedApplication) = {
+  private def started[T: ClassTag](args: List[String], extra: List[RegisteredBean]): StartedApplication = {
     val startedAt   = System.nanoTime()
     val arguments   = parser.parse(args)
     val environment = environmentLoader.load(commandLineProperties(arguments))
@@ -60,7 +48,7 @@ final class DefaultCoilixApplicationRunner(
     JvmMemoryOptions.current.warnings.foreach(warning => log.warn(warning))
     val context     = startup.bootstrap.start(startup.resolver.resolve[T], Nil, singletons(arguments, environment) ++ extra)
     startup.startupLogger.started(applicationName[T], elapsedSince(startedAt))
-    (startup, StartedApplication(context, arguments))
+    StartedApplication(context, arguments)
   }
 
   private def commandLineProperties(arguments: ApplicationArguments): Map[String, String] =
