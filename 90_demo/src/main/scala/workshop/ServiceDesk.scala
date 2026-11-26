@@ -62,9 +62,14 @@ final class ServiceDesk(
   private def described(counts: Map[String, Int]): String =
     counts.toList.sorted.map((id, count) => s"$count x $id").mkString(", ")
 
-  /** The state of each shard of the fault code export on this replica, such as `0 Completed, 1 Running`. */
+  /**
+   * The state of each shard of the fault code export on this replica, such as `0 Completed, 1 Running`, or the reason why the
+   * manager has no such processor.
+   */
   def exportShards: IO[String] =
-    processors.status(WorkshopProcessor.FaultCodeExport).map(_.shards.map(shard => s"${shard.index} ${shard.state}").mkString(", "))
+    processors
+      .status(WorkshopProcessor.FaultCodeExport)
+      .fold(_.message, _.shards.map(shard => s"${shard.index} ${shard.state}").mkString(", "))
 
   /** The notes after the customer note is set and the internal note is cleared. */
   def updatedNotes: JobNotes =

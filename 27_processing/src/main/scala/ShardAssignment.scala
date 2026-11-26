@@ -1,7 +1,5 @@
 package dev.coilix.processing
 
-import dev.coilix.config.ConfigurationException
-
 /**
  * Decides which shards of a processor run on which replica of the application.
  *
@@ -40,16 +38,15 @@ object ShardAssignment {
   /**
    * The assignment with the name from the configuration: `round-robin`, `range`, `all` or `pinned`.
    *
-   * @throws dev.coilix.config.ConfigurationException
-   *   when the name is unknown
+   * @return
+   *   the assignment, or [[dev.coilix.processing.ProcessingSetupError.UnknownAssignment]] when the name is unknown
    */
-  def named(name: String, pinnedReplica: Int): ShardAssignment =
+  def named(name: String, pinnedReplica: Int): Either[ProcessingSetupError, ShardAssignment] =
     name match {
-      case "round-robin" => roundRobin
-      case "range"       => range
-      case "all"         => all
-      case "pinned"      => pinned(pinnedReplica)
-      case other         =>
-        throw ConfigurationException(s"Unknown shard assignment '$other', expected round-robin, range, all or pinned")
+      case "round-robin" => Right(roundRobin)
+      case "range"       => Right(range)
+      case "all"         => Right(all)
+      case "pinned"      => Right(pinned(pinnedReplica))
+      case other         => Left(ProcessingSetupError.UnknownAssignment(other))
     }
 }

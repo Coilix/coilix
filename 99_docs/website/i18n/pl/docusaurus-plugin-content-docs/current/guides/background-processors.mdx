@@ -95,7 +95,9 @@ Beany sterują procesorami przez `ProcessorManager`: `start`, `stop`, `restart` 
 
 <CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
 
-Operacje zwracają `IO`, wykonują się po kolei na fiberze sterującym menedżera i zmieniają tylko tę replikę. Uruchomienie działającego procesora albo zatrzymanie zatrzymanego niczego nie zmienia. Restart sharda, który działa na innej replice, kończy się błędem `ShardNotOwnedException` z repliką, która go ma.
+Operacje wykonują się po kolei na fiberze sterującym menedżera i zmieniają tylko tę replikę. Uruchomienie działającego procesora albo zatrzymanie zatrzymanego niczego nie zmienia. Zwracają `EitherT[IO, ProcessorError, A]`: identyfikator bez procesora daje `ProcessorError.NoSuchProcessor`, a restart sharda, który działa na innej replice, `ProcessorError.ShardNotOwned` z repliką, która go ma. O tym, co zrobić z błędem, decyduje wywołujący: może odpowiedzieć `404`, sprawdzić wynik przez `fold` albo `exists`, albo zakończyć efekt błędem przez `ProcessorError.raised`.
+
+Złe ustawienia, dwa procesory z tym samym identyfikatorem i procesor bez silnika zatrzymują start z podaniem przyczyny.
 
 ## Zamykanie
 

@@ -95,7 +95,9 @@ Beans control processors through the `ProcessorManager`: `start`, `stop`, `resta
 
 <CodeBlock language="scala" title="Maintenance.scala">{Maintenance}</CodeBlock>
 
-The operations return `IO`, run one at a time on the control fiber of the manager and change only this replica. Starting a running processor or stopping a stopped one changes nothing. Restarting a shard that another replica runs fails with `ShardNotOwnedException` with the replica that runs it.
+The operations run one at a time on the control fiber of the manager and change only this replica. Starting a running processor or stopping a stopped one changes nothing. They return `EitherT[IO, ProcessorError, A]`: an identifier without a processor gives `ProcessorError.NoSuchProcessor`, and restarting a shard that another replica runs gives `ProcessorError.ShardNotOwned` with the replica that runs it. The caller decides what to do with the error, for example answer with `404`, check it with `fold` or `exists`, or fail the effect with `ProcessorError.raised`.
+
+Invalid settings, two processors with the same identifier and a processor without an engine stop the startup with the reason.
 
 ## Closing
 

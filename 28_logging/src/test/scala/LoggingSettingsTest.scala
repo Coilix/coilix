@@ -1,6 +1,7 @@
 package dev.coilix.logging
 
 import com.typesafe.config.ConfigFactory
+import dev.coilix.config.ConfigError
 import dev.coilix.config.ConfigurationException
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
@@ -39,6 +40,15 @@ final class LoggingSettingsTest extends FunSuite {
 
   test("rejects an unknown level with the key that has it") {
     val error = intercept[ConfigurationException](settingsOf("""coilix.logging.levels { "org.apache" = loud }"""))
-    assert(error.getMessage.contains("coilix.logging.levels.org.apache is 'loud'"), error.getMessage)
+    assert(error.getMessage.contains("'coilix.logging.levels.org.apache'"), error.getMessage)
+    assert(error.getMessage.contains("'loud' is not one of"), error.getMessage)
+  }
+
+  test("returns an unknown root level as a configuration error") {
+    val environment = Environment.of(TypesafeConfigTree(ConfigFactory.parseString("coilix.logging.level = loud")))
+    assertEquals(
+      LoggingSettings.read(environment).left.map(_.getClass),
+      Left(classOf[ConfigError.InvalidValue])
+    )
   }
 }

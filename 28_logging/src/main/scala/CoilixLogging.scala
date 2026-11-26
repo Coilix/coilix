@@ -1,9 +1,7 @@
 package dev.coilix.logging
 
-import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import org.slf4j.LoggerFactory
-import scala.util.Try
 
 /**
  * The logging of the process when the `logging` module is the SLF4J provider: one [[dev.coilix.logging.CoilixLoggerFactory]],
@@ -28,8 +26,5 @@ object CoilixLogging {
   def isActive: Boolean = LoggerFactory.getILoggerFactory eq factory
 
   private def startupSettings: LoggingSettings =
-    EnvironmentLoader.default.load(Map.empty).toOption.flatMap(settingsOf).getOrElse(LoggingSettings())
-
-  private def settingsOf(environment: Environment): Option[LoggingSettings] =
-    Try(LoggingSettings.from(environment)).toOption
+    EnvironmentLoader.default.load(Map.empty).flatMap(LoggingSettings.read).getOrElse(LoggingSettings())
 }

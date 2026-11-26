@@ -1,5 +1,6 @@
 package dev.coilix.processing
 
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.cluster.ReplicaIdentity
 import dev.coilix.context.CollectedComponents
@@ -10,10 +11,10 @@ import scala.util.control.NonFatal
 /**
  * Creates the processors collected by the context and checks that they can run.
  *
- * Each class with `@Processor` is created once with its dependencies. Two processors with the same identifier, or a
- * processor that no engine or more than one engine runs, end the startup with
- * [[dev.coilix.processing.InvalidProcessorException]], and invalid settings with
- * [[dev.coilix.config.ConfigurationException]]. The processors created before such an error are closed.
+ * Each class with `@Processor` is created once with its dependencies. Two processors with the same identifier, a processor
+ * that no engine or more than one engine runs, and invalid settings are returned as a
+ * [[dev.coilix.processing.ProcessingSetupError]]. The processors created before such an error, or before a failure to
+ * create a processor, are closed.
  */
 @Slf4s
 private[processing] final class ProcessorAssembler(
@@ -23,18 +24,31 @@ private[processing] final class ProcessorAssembler(
   settings:  ProcessingSettings
 ) {
 
-  /** The processors ordered by name. */
-  def assemble(): List[ManagedProcessor] = {
+  /** The processors ordered by name, or the reason why they cannot run. */
+  def assemble(): Either[ProcessingSetupError, List[ManagedProcessor]] = {
     val components = created(collected.annotatedWith[Processor], Nil)
-    try {
-      val processors = validated(components).map(managed).sortBy(_.id.name)
-      warnAboutUnknownNames(processors.map(_.id))
-      processors
-    } catch {
-      case NonFatal(error) =>
-        components.foreach(_.close())
-        throw error
-    }
+    val assembled  =
+      try {
+        validated(components).flatMap(_.traverse(managed)).map(_.sortBy(_.id.name))
+      } catch {
+        case NonFatal(error) =>
+          components.foreach(_.close())
+          throw error
+      }
+    assembled.fold(error => closedAfter(components, error), processors => Right(warnedAbout(processors)))
+  }
+
+  private def closedAfter(
+    components: List[ManagedComponent[ProcessorDefinition]],
+    error:      ProcessingSetupError
+  ): Either[ProcessingSetupError, List[ManagedProcessor]] = {
+    components.foreach(_.close())
+    Left(error)
+  }
+
+  private def warnedAbout(processors: List[ManagedProcessor]): List[ManagedProcessor] = {
+    warnAboutUnknownNames(processors.map(_.id))
+    processors
   }
 
   private def created(
@@ -60,26 +74,34 @@ private[processing] final class ProcessorAssembler(
 
   private def validated(
     components: List[ManagedComponent[ProcessorDefinition]]
-  ): List[ManagedComponent[ProcessorDefinition]] = {
-    firstDuplicate(components).foreach(group => throw duplicated(group))
-    components
-  }
+  ): Either[ProcessingSetupError, List[ManagedComponent[ProcessorDefinition]]] =
+    firstDuplicate(components).map(duplicated).toLeft(components)
 
   private def firstDuplicate(
     components: List[ManagedComponent[ProcessorDefinition]]
   ): Option[List[ManagedComponent[ProcessorDefinition]]] =
     components.groupBy(_.instance.id.name).toList.sortBy(_._1).collectFirst { case (_, group) if group.size > 1 => group }
 
-  private def duplicated(duplicates: List[ManagedComponent[ProcessorDefinition]]): InvalidProcessorException =
-    InvalidProcessorException(
-      s"Processors ${duplicates.map(_.instance.getClass.getName).sorted.mkString(" and ")} have the same identifier " +
-        duplicates.head.instance.id.name
+  private def duplicated(duplicates: List[ManagedComponent[ProcessorDefinition]]): ProcessingSetupError =
+    ProcessingSetupError.DuplicateIdentifier(
+      duplicates.head.instance.id.name,
+      duplicates.map(_.instance.getClass.getName).sorted
     )
 
-  private def managed(component: ManagedComponent[ProcessorDefinition]): ManagedProcessor = {
+  private def managed(component: ManagedComponent[ProcessorDefinition]): Either[ProcessingSetupError, ManagedProcessor] = {
     val definition = component.instance
-    val resolved   = settings.of(definition.id).resolve(definition.id.name, definition.defaultShards, identity.replicaCount)
-    val engine     = engineOf(definition)
+    for {
+      resolved <- settings.of(definition.id).resolve(definition.id.name, definition.defaultShards, identity.replicaCount)
+      engine   <- engineOf(definition)
+    } yield managedWith(component, resolved, engine)
+  }
+
+  private def managedWith(
+    component: ManagedComponent[ProcessorDefinition],
+    resolved:  ResolvedProcessorSettings,
+    engine:    ProcessorEngine
+  ): ManagedProcessor = {
+    val definition = component.instance
     ManagedProcessor(
       ProcessorDescriptor(definition.id, definition.getClass, engine.name, resolved),
       component,
@@ -90,19 +112,12 @@ private[processing] final class ProcessorAssembler(
     )
   }
 
-  private def engineOf(definition: ProcessorDefinition): ProcessorEngine =
+  private def engineOf(definition: ProcessorDefinition): Either[ProcessingSetupError, ProcessorEngine] =
     engines.filter(_.supports(definition)) match {
-      case engine :: Nil => engine
-      case Nil           => throw InvalidProcessorException(s"${describe(definition)} has no engine: $noEngineHint")
-      case several       =>
-        throw InvalidProcessorException(s"${describe(definition)} has several engines: ${several.map(_.name).mkString(", ")}")
+      case engine :: Nil => Right(engine)
+      case Nil           => Left(ProcessingSetupError.NoEngine(definition.id.name, definition.getClass))
+      case several       => Left(ProcessingSetupError.SeveralEngines(definition.id.name, definition.getClass, several.map(_.name)))
     }
-
-  private def describe(definition: ProcessorDefinition): String =
-    s"Processor ${definition.id.name} (${definition.getClass.getName})"
-
-  private val noEngineHint: String =
-    "extend IOProcessor, or add the module that runs its style of processors"
 
   private def warnAboutUnknownNames(ids: List[ProcessorId]): Unit =
     settings.unknown(ids).foreach { name =>
