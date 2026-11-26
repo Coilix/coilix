@@ -22,10 +22,7 @@ final class TopologicalDependencyResolverTest extends FunSuite {
 
   test("orders dependencies before their dependants") {
     assertEquals(
-      resolver.resolve(
-        Definitions.of(classOf[DefaultGreetingService], classOf[EnglishGreeter], classOf[PolishGreeter]),
-        Nil
-      ).map(_.beanName),
+      resolved(Definitions.of(classOf[DefaultGreetingService], classOf[EnglishGreeter], classOf[PolishGreeter])).map(_.beanName),
       List("englishGreeter", "polishGreeter", "defaultGreetingService")
     )
   }
@@ -35,28 +32,39 @@ final class TopologicalDependencyResolverTest extends FunSuite {
       resolver.resolveLevels(
         Definitions.of(classOf[DefaultGreetingService], classOf[EnglishGreeter], classOf[PolishGreeter]),
         Nil
-      ).map(_.map(_.beanName)),
-      List(List("englishGreeter", "polishGreeter"), List("defaultGreetingService"))
+      ).map(_.map(_.map(_.beanName))),
+      Right(List(List("englishGreeter", "polishGreeter"), List("defaultGreetingService")))
     )
   }
 
   test("ignores optional dependencies without candidates") {
-    assertEquals(resolver.resolve(Definitions.of(classOf[DefaultGreetingService], classOf[PolishGreeter]), Nil).size, 2)
+    assertEquals(resolved(Definitions.of(classOf[DefaultGreetingService], classOf[PolishGreeter])).size, 2)
   }
 
   test("fails when a required dependency is missing") {
-    intercept[NoSuchBeanException](resolver.resolve(Definitions.of(classOf[DefaultGreetingService]), Nil))
+    assertEquals(
+      resolver.resolve(Definitions.of(classOf[DefaultGreetingService]), Nil),
+      Left(ContextError.MissingBean(
+        "No bean satisfies dependency 'dev.coilix.context.wiring.Greeter' required by 'defaultGreetingService'"
+      ))
+    )
   }
 
   test("accepts dependencies satisfied by provided types") {
     assertEquals(
-      resolver.resolve(Definitions.of(classOf[ContextAwareBean]), List(GenericType.of(classOf[DefaultApplicationContext]))).size,
-      1
+      resolver.resolve(
+        Definitions.of(classOf[ContextAwareBean]),
+        List(GenericType.of(classOf[DefaultApplicationContext]))
+      ).map(_.size),
+      Right(1)
     )
   }
 
   test("fails on circular dependencies") {
-    intercept[CircularDependencyException](resolver.resolve(Definitions.of(classOf[Chicken], classOf[Egg]), Nil))
+    assertEquals(
+      resolver.resolve(Definitions.of(classOf[Chicken], classOf[Egg]), Nil),
+      Left(ContextError.CircularDependency(List("chicken", "egg")))
+    )
   }
 
   test("orders an optional dependency before its dependant") {
@@ -72,9 +80,15 @@ final class TopologicalDependencyResolverTest extends FunSuite {
   }
 
   test("fails on a cycle through an optional dependency") {
-    intercept[CircularDependencyException](resolver.resolve(Definitions.of(classOf[Owl], classOf[Nest]), Nil))
+    assertEquals(
+      resolver.resolve(Definitions.of(classOf[Owl], classOf[Nest]), Nil).left.map(_.getClass.getSimpleName),
+      Left("CircularDependency")
+    )
   }
 
   private def names(classes: Class[?]*): List[String] =
-    resolver.resolve(Definitions.of(classes*), Nil).map(_.beanName)
+    resolved(Definitions.of(classes*)).map(_.beanName)
+
+  private def resolved(definitions: List[BeanDefinition]): List[BeanDefinition] =
+    resolver.resolve(definitions, Nil).fold(error => fail(error.message), identity)
 }

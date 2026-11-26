@@ -5,6 +5,7 @@ import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import dev.coilix.boot.CoilixIOStartup
+import dev.coilix.boot.StartupError
 import dev.coilix.testkit.effects.ioapp.IOAppJournal
 import dev.coilix.testkit.effects.ioapp.TillApplication
 import munit.FunSuite
@@ -24,8 +25,8 @@ final class CoilixIOStartupTest extends FunSuite {
   override def afterAll(): Unit = runtime.shutdown()
 
   test("registers the given runtime as the ioRuntime bean instead of creating one") {
-    val (sameRuntime, names) = CoilixIOStartup
-      .application[TillApplication.type](Nil, runtime)
+    val (sameRuntime, names) = StartupError
+      .raised(CoilixIOStartup.application[TillApplication.type](Nil, runtime))
       .use(application => IO((application.context.getBean[IORuntime] eq runtime, application.context.beanNames)))
       .unsafeRunSync()
     assertEquals((sameRuntime, names.contains("coilixIORuntime"), names.contains("ioTaskExecutor")), (true, false, true))
@@ -56,10 +57,14 @@ final class CoilixIOStartupTest extends FunSuite {
     assertEquals((failure.getMessage, IOAppJournal.all), ("the till does not add up", opened ++ closed))
   }
 
+  test("logs a startup error and ends with the error exit code") {
+    assertEquals(CoilixIOStartup.run[String](List(exitAfterRunners), runtime).unsafeRunSync(), ExitCode.Error)
+  }
+
   test("makes the fatal error handler the default uncaught exception handler while the application runs") {
     val previous        = Thread.getDefaultUncaughtExceptionHandler
-    val (during, after) = CoilixIOStartup
-      .application[TillApplication.type](Nil, runtime)
+    val (during, after) = StartupError
+      .raised(CoilixIOStartup.application[TillApplication.type](Nil, runtime))
       .use(_ => IO(Thread.getDefaultUncaughtExceptionHandler))
       .map(during => (during, Thread.getDefaultUncaughtExceptionHandler))
       .unsafeRunSync()

@@ -5,6 +5,7 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import dev.coilix.boot.CoilixIOApp
 import dev.coilix.boot.CoilixIOStartup
+import dev.coilix.boot.StartupError
 import dev.coilix.concurrency.ProcessTerminator
 import dev.coilix.context.ProxiedBean
 import dev.coilix.demo.access.ClaimSweeper
@@ -204,8 +205,8 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
   test("starts as a CoilixIOApp on the given runtime, runs the shift and closes after the runners") {
     val runtime = IORuntime.builder().build()
     try {
-      val sameRuntime = CoilixIOStartup
-        .application[DemoApplication.type](Nil, runtime)
+      val sameRuntime = StartupError
+        .raised(CoilixIOStartup.application[DemoApplication.type](Nil, runtime))
         .use(application => IO(application.context.getBean[IORuntime] eq runtime))
       val result      = sameRuntime.product(CoilixIOStartup.run[DemoApplication.type](Nil, runtime)).unsafeRunSync()(using runtime)
       assertEquals(result, (true, ExitCode.Success))

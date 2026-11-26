@@ -5,10 +5,12 @@ import cats.effect.IO
 import cats.effect.Resource
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
+import dev.coilix.annotation.Slf4s
 import dev.coilix.concurrency.CatsEffectSettings
 import dev.coilix.concurrency.FatalErrorHandler
 import dev.coilix.concurrency.FatalErrors
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.ResourceT
 import scala.reflect.ClassTag
 
 /**
@@ -22,6 +24,7 @@ import scala.reflect.ClassTag
  * `IO.blocking`. Nothing in the start runs `IO` outside the fiber of the application. A failing runner is published as [[dev.coilix.events.ApplicationFailed]] and fails the start after the context
  * closes.
  */
+@Slf4s
 object CoilixIOStartup {
 
   private val runtimeBeanName = "ioRuntime"
@@ -33,12 +36,14 @@ object CoilixIOStartup {
    *
    * @tparam T
    *   the class annotated with `@CoilixApplication`
+   * @return
+   *   the started application, or the [[dev.coilix.boot.StartupError]] of the [[dev.coilix.boot.CoilixApplicationRunner]]
    */
-  def application[T: ClassTag](args: List[String], runtime: IORuntime): Resource[IO, StartedApplication] =
+  def application[T: ClassTag](args: List[String], runtime: IORuntime): ResourceT[StartupError, StartedApplication] =
     CoilixApplicationRunner.default
       .start[T](args, List(RegisteredBean.of[IORuntime](runtimeBeanName, runtime)))
-      .evalTap(application => application.context.start)
-      .flatTap(application => fatalErrorsOf(application))
+      .semiflatTap(application => Resource.eval(application.context.start))
+      .semiflatTap(application => fatalErrorsOf(application))
 
   /**
    * Starts application `T`, runs its runners and then, unless `coilix.cats-effect.exit-after-runners` is `true`, runs until it
@@ -47,10 +52,15 @@ object CoilixIOStartup {
    * @tparam T
    *   the class annotated with `@CoilixApplication`
    * @return
-   *   [[cats.effect.ExitCode.Success]] after the context closes; a failure of the start or of a runner fails the `IO`
+   *   [[cats.effect.ExitCode.Success]] after the context closes, or [[cats.effect.ExitCode.Error]] after logging the
+   *   [[dev.coilix.boot.StartupError]] of an application that cannot start; a defect in the start or a failure of a runner fails
+   *   the `IO`
    */
   def run[T: ClassTag](args: List[String], runtime: IORuntime): IO[ExitCode] =
-    application[T](args, runtime).use(application => runners(application) *> awaited(application)).as(ExitCode.Success)
+    application[T](
+      args,
+      runtime
+    ).value.use(_.fold(failed, application => runners(application) *> awaited(application).as(ExitCode.Success)))
 
   /**
    * Runs the runners of `application` between the startup events, as [[run]] does.
@@ -60,6 +70,9 @@ object CoilixIOStartup {
    */
   def runners(application: StartedApplication): IO[Unit] =
     StartupEvents.around(application.context)(OrderedRunnerInvoker().invoke(application.context, application.arguments))
+
+  private def failed(error: StartupError): IO[ExitCode] =
+    logF.error(s"The application cannot start: ${error.message}").as(ExitCode.Error)
 
   private def fatalErrorsOf(application: StartedApplication): Resource[IO, Unit] =
     application.context.getBeanOption[FatalErrorHandler].fold(Resource.unit[IO])(handler =>

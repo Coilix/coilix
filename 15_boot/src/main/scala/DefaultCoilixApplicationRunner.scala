@@ -1,19 +1,25 @@
 package dev.coilix.boot
 
+import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.Resource
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.ClassTags.runtimeTypeOf
 import dev.coilix.config.ComponentProvider
+import dev.coilix.config.ConfigurationException
 import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.ResourceT
 import scala.reflect.ClassTag
 
 /**
  * Builds the context of an application: parses the arguments, loads the configuration with command-line options as overrides,
  * logs the start, builds the context as a `Resource` and logs the startup time. Parsing, loading and scanning run in
- * `IO.blocking`. Options of the JVM that make the application fragile when
+ * `IO.blocking`. A [[dev.coilix.config.ConfigurationException]] thrown while the configuration is loaded becomes a
+ * [[dev.coilix.boot.StartupError.Configuration]], and a class without `@CoilixApplication` a
+ * [[dev.coilix.boot.StartupError.NotABootApplication]]. Options of the JVM that make the application fragile when
  * memory runs out, described in [[dev.coilix.boot.JvmMemoryOptions]], are logged at `WARN` level at the start. The runners and
  * their events are left to the caller, such as [[dev.coilix.boot.CoilixIOStartup]].
  *
@@ -37,16 +43,29 @@ final class DefaultCoilixApplicationRunner(
   private val argumentsBeanName   = "applicationArguments"
   private val environmentBeanName = "environment"
 
-  override def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): Resource[IO, StartedApplication] =
+  override def start[T: ClassTag](
+    args:       List[String],
+    singletons: List[RegisteredBean]
+  ): ResourceT[StartupError, StartedApplication] =
     for {
-      startedAt   <- Resource.eval(IO.monotonic)
-      arguments   <- Resource.eval(IO(parser.parse(args)))
-      environment <- Resource.eval(IO.blocking(environmentLoader.load(commandLineProperties(arguments))))
-      startup     <- Resource.eval(IO.blocking(starting[T](environment)))
-      context     <- startup.bootstrap.start(startup.resolver.resolve[T], Nil, startupBeans(arguments, environment) ++ singletons)
-      elapsed     <- Resource.eval(IO.monotonic.map(_ - startedAt))
-      _           <- Resource.eval(IO(startup.startupLogger.started(applicationName[T], elapsed)))
+      startedAt    <- lifted(IO.monotonic)
+      arguments    <- lifted(IO(parser.parse(args)))
+      environment  <- loaded(arguments)
+      startup      <- lifted(IO.blocking(starting[T](environment)))
+      basePackages <- EitherT.fromEither[[x] =>> Resource[IO, x]](startup.resolver.resolve[T])
+      context      <- startup.bootstrap.start(basePackages, Nil, startupBeans(arguments, environment) ++ singletons)
+      elapsed      <- lifted(IO.monotonic.map(_ - startedAt))
+      _            <- lifted(IO(startup.startupLogger.started(applicationName[T], elapsed)))
     } yield StartedApplication(context, arguments)
+
+  private def lifted[A](effect: IO[A]): ResourceT[StartupError, A] =
+    EitherT.liftF(Resource.eval(effect))
+
+  private def loaded(arguments: ApplicationArguments): ResourceT[StartupError, Environment] =
+    EitherT(
+      Resource.eval(IO.blocking(environmentLoader.load(commandLineProperties(arguments))).attemptNarrow[ConfigurationException])
+    )
+      .leftMap(StartupError.Configuration(_))
 
   private def starting[T: ClassTag](environment: Environment): StartupComponents = {
     val startup = assemble(ComponentProvider.from(environment))

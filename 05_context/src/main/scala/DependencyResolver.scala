@@ -12,24 +12,27 @@ trait DependencyResolver {
    *
    * @param provided
    *   types of beans that already exist, which no definition has to wait for
-   * @throws dev.coilix.context.NoSuchBeanException
-   *   if a required dependency matches neither a definition nor a provided type
-   * @throws dev.coilix.context.CircularDependencyException
-   *   if the definitions depend on each other in a cycle
+   * @return
+   *   a [[dev.coilix.context.ContextError.MissingBean]] when a required dependency matches neither a definition nor a provided
+   *   type, a [[dev.coilix.context.ContextError.AmbiguousBean]] when several match, and a
+   *   [[dev.coilix.context.ContextError.CircularDependency]] when the definitions depend on each other in a cycle
    */
-  def resolve(definitions: List[BeanDefinition], provided: List[GenericType]): List[BeanDefinition]
+  def resolve(definitions: List[BeanDefinition], provided: List[GenericType]): Either[ContextError, List[BeanDefinition]]
 
   /**
    * `definitions` grouped by dependency level, from the lowest: each bean depends only on provided types and on beans of lower
    * levels. The flattened levels are a valid creation order. By default every bean of [[resolve]] is a level of its own.
    *
-   * @throws dev.coilix.context.NoSuchBeanException
-   *   if a required dependency matches neither a definition nor a provided type
-   * @throws dev.coilix.context.CircularDependencyException
-   *   if the definitions depend on each other in a cycle
+   * @return
+   *   a [[dev.coilix.context.ContextError.MissingBean]] when a required dependency matches neither a definition nor a provided
+   *   type, a [[dev.coilix.context.ContextError.AmbiguousBean]] when several match, and a
+   *   [[dev.coilix.context.ContextError.CircularDependency]] when the definitions depend on each other in a cycle
    */
-  def resolveLevels(definitions: List[BeanDefinition], provided: List[GenericType]): List[List[BeanDefinition]] =
-    resolve(definitions, provided).map(List(_))
+  def resolveLevels(
+    definitions: List[BeanDefinition],
+    provided:    List[GenericType]
+  ): Either[ContextError, List[List[BeanDefinition]]] =
+    resolve(definitions, provided).map(_.map(List(_)))
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.DependencyResolver]]. */

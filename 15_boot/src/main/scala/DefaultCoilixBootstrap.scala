@@ -1,7 +1,9 @@
 package dev.coilix.boot
 
+import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.Resource
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.GenericType
 import dev.coilix.context.ApplicationContextBuilder
@@ -14,8 +16,8 @@ import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.Dependency
 import dev.coilix.context.EffectInterpreter
 import dev.coilix.context.ModuleLoader
-import dev.coilix.context.NoSuchBeanException
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.ResourceT
 import java.lang.annotation.Annotation
 
 /**
@@ -25,7 +27,7 @@ import java.lang.annotation.Annotation
  * builds the context. The names of replaced beans are dropped from [[dev.coilix.context.BeanDefinition.dependsOn]] of the
  * others, because the replacement is a ready instance. The [[dev.coilix.context.EffectInterpreter]] of the enabled module that
  * gives one creates the beans made by effects; two such modules stop the start with a
- * [[dev.coilix.boot.ConflictingEffectInterpretersException]].
+ * [[dev.coilix.boot.StartupError.ConflictingEffectInterpreters]].
  *
  * When the modules collect annotations, the classes marked with them, found in the base packages or among the module
  * components, become the `collectedComponents` bean made by the [[dev.coilix.context.ComponentCollector]] instead of beans. Each
@@ -58,41 +60,43 @@ final class DefaultCoilixBootstrap(
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean],
     replacements:     BeanReplacements
-  ): Resource[IO, ConfigurableApplicationContext] =
-    Resource
-      .eval(IO.blocking(planned(basePackages, extraDefinitions, singletons, replacements)))
-      .flatMap((definitions, interpreter) => builder.create(definitions, singletons, interpreter))
-      .evalTap(context => logF.info(s"Context ready with beans: ${context.beanNames.mkString(", ")}"))
+  ): ResourceT[StartupError, ConfigurableApplicationContext] =
+    EitherT(Resource.eval(IO.blocking(planned(basePackages, extraDefinitions, singletons, replacements))))
+      .flatMap((definitions, interpreter) => builder.create(definitions, singletons, interpreter).leftMap(StartupError.Context(_)))
+      .semiflatTap(context => Resource.eval(logF.info(s"Context ready with beans: ${context.beanNames.mkString(", ")}")))
 
   private def planned(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean],
     replacements:     BeanReplacements
-  ): (List[BeanDefinition], Option[EffectInterpreter]) = {
+  ): Either[StartupError, (List[BeanDefinition], Option[EffectInterpreter])] = {
     val loaded      = modules.load()
     val annotations = loaded.flatMap(_.collects).distinct
     val collected   = collectedClasses(basePackages, loaded, annotations)
     val processed   = processedBy(loaded)(discovered(basePackages) ++ fromModules(loaded, annotations))
-    val beans       = kept(processed, replacements) ++ extraDefinitions
-    checkCollected(beans, singletons, collected, annotations)
-    (beans ++ collectedDefinition(collected, annotations), effectInterpreter(loaded))
+    for {
+      discovered  <- kept(processed, replacements)
+      beans        = discovered ++ extraDefinitions
+      _           <- checkCollected(beans, singletons, collected, annotations)
+      interpreter <- effectInterpreter(loaded)
+    } yield (beans ++ collectedDefinition(collected, annotations), interpreter)
   }
 
-  private def effectInterpreter(loaded: List[CoilixModule]): Option[EffectInterpreter] =
+  private def effectInterpreter(loaded: List[CoilixModule]): Either[StartupError, Option[EffectInterpreter]] =
     loaded.filter(_.effectInterpreter.isDefined) match {
-      case Nil           => None
-      case module :: Nil => module.effectInterpreter
-      case modules       => throw ConflictingEffectInterpretersException(modules.map(_.name))
+      case Nil           => Right(None)
+      case module :: Nil => Right(module.effectInterpreter)
+      case modules       => Left(StartupError.ConflictingEffectInterpreters(modules.map(_.name)))
     }
 
   private def processedBy(loaded: List[CoilixModule])(definitions: List[BeanDefinition]): List[BeanDefinition] =
     loaded.flatMap(_.definitionProcessors).foldLeft(definitions)((current, processor) => current.map(processor.process))
 
-  private def kept(definitions: List[BeanDefinition], replacements: BeanReplacements): List[BeanDefinition] =
+  private def kept(definitions: List[BeanDefinition], replacements: BeanReplacements): Either[StartupError, List[BeanDefinition]] =
     replacements.unmatched(definitions) match {
-      case Nil       => withoutReplaced(definitions, definitions.filter(definition => replaced(definition, replacements)))
-      case unmatched => throw UnmatchedBeanReplacementException(unmatched)
+      case Nil       => Right(withoutReplaced(definitions, definitions.filter(definition => replaced(definition, replacements))))
+      case unmatched => Left(StartupError.UnmatchedBeanReplacement(unmatched))
     }
 
   private def withoutReplaced(definitions: List[BeanDefinition], replaced: List[BeanDefinition]): List[BeanDefinition] = {
@@ -138,33 +142,26 @@ final class DefaultCoilixBootstrap(
     singletons:  List[RegisteredBean],
     collected:   List[Class[?]],
     annotations: List[Class[? <: Annotation]]
-  ): Unit = {
-    beans.find(bean => collected.contains(bean.beanClass)).foreach(bean => throw conflict(bean.beanClass, annotations))
-    beans.foreach(checkDependencies(beans.map(_.beanType) ++ singletons.map(_.beanType), collected, annotations))
-  }
+  ): Either[StartupError, Unit] =
+    beans.find(bean => collected.contains(bean.beanClass)).map(bean => conflict(bean.beanClass, annotations)).toLeft(()) *>
+      beans.traverse_(checkDependencies(beans.map(_.beanType) ++ singletons.map(_.beanType), collected, annotations))
 
   private def checkDependencies(
     beanTypes:   List[GenericType],
     collected:   List[Class[?]],
     annotations: List[Class[? <: Annotation]]
-  )(bean: BeanDefinition): Unit =
+  )(bean: BeanDefinition): Either[StartupError, Unit] =
     bean.dependencies.collect { case Dependency.Required(beanType) if !beanTypes.exists(beanType.isAssignableFrom) => beanType }
       .flatMap(beanType => collected.find(componentClass => beanType.isAssignableFrom(GenericType.of(componentClass))))
-      .foreach(componentClass => throw notABean(bean, componentClass, annotations))
+      .headOption
+      .map(componentClass => notABean(bean, componentClass, annotations))
+      .toLeft(())
 
-  private def conflict(componentClass: Class[?], annotations: List[Class[? <: Annotation]]): CollectedComponentConflictException =
-    CollectedComponentConflictException(componentClass, annotationOf(componentClass, annotations))
+  private def conflict(componentClass: Class[?], annotations: List[Class[? <: Annotation]]): StartupError =
+    StartupError.CollectedComponentConflict(componentClass, annotationOf(componentClass, annotations))
 
-  private def notABean(
-    bean:           BeanDefinition,
-    componentClass: Class[?],
-    annotations:    List[Class[? <: Annotation]]
-  ): NoSuchBeanException =
-    new NoSuchBeanException(
-      s"Bean '${bean.beanName}' requires '${componentClass.getName}', which is marked with " +
-        s"@${annotationOf(componentClass, annotations)} and collected by a module, so it is not a bean. " +
-        "Inject the module bean that manages it instead"
-    )
+  private def notABean(bean: BeanDefinition, componentClass: Class[?], annotations: List[Class[? <: Annotation]]): StartupError =
+    StartupError.CollectedComponentRequired(bean.beanName, componentClass, annotationOf(componentClass, annotations))
 
   private def annotationOf(componentClass: Class[?], annotations: List[Class[? <: Annotation]]): String =
     annotations.filter(componentClass.isAnnotationPresent).map(_.getSimpleName).mkString(", @")

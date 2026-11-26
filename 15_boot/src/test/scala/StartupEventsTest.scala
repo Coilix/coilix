@@ -9,6 +9,7 @@ import dev.coilix.config.ComponentProvider
 import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.ContextError
 import dev.coilix.events.EventsModule
 import munit.CatsEffectSuite
 
@@ -54,5 +55,10 @@ final class StartupEventsTest extends CatsEffectSuite {
     ConcurrencyModule().components ++ EventsModule().components ++ beanClasses
 
   private def contextOf(beanClasses: List[Class[?]]): Resource[IO, ConfigurableApplicationContext] =
-    ApplicationContextBuilder.default.create(beanClasses.flatMap(BeanDefinitionFactory.default.create), Nil, None).evalTap(_.start)
+    ContextError.raised(ApplicationContextBuilder.default.create(
+      beanClasses.flatMap(BeanDefinitionFactory.default.create),
+      Nil,
+      None
+    ))
+      .evalTap(_.start)
 }

@@ -8,12 +8,19 @@ import dev.coilix.config.ConfigPath
 trait CandidateSelector {
 
   /**
-   * The candidate to use for `requested`, or `None` when no candidate is assignable to it.
+   * The candidate to use for `requested`, `None` when no candidate is assignable to it, or a
+   * [[dev.coilix.context.ContextError.AmbiguousBean]] when several candidates match and none can be chosen.
+   */
+  def choose[A <: BeanDescriptor](requested: GenericType, candidates: List[A]): Either[ContextError.AmbiguousBean, Option[A]]
+
+  /**
+   * The candidate chosen by [[dev.coilix.context.CandidateSelector.choose]], for lookups that throw.
    *
    * @throws dev.coilix.context.AmbiguousBeanException
    *   if several candidates match and none can be chosen
    */
-  def select[A <: BeanDescriptor](requested: GenericType, candidates: List[A]): Option[A]
+  final def select[A <: BeanDescriptor](requested: GenericType, candidates: List[A]): Option[A] =
+    choose(requested, candidates).fold(error => throw error.exception, identity)
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.CandidateSelector]]. */

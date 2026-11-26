@@ -1,8 +1,11 @@
 package dev.coilix.context
 
+import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.Resource
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
+import dev.coilix.common.CoilixException
 import java.util.concurrent.atomic.AtomicReference
 
 /**
@@ -10,10 +13,11 @@ import java.util.concurrent.atomic.AtomicReference
  *
  * The context itself is provided as `applicationContext`, before the given singletons. The plan from the
  * [[dev.coilix.context.ContextPlanner]] is checked before any bean is created: an effectful bean, whose factory or lifecycle
- * method returns an effect, stops the build with an [[dev.coilix.context.EffectfulBeanException]] unless an
- * [[dev.coilix.context.EffectInterpreter]] is given. A bean created by the builder itself whose instance turns out to have a
- * lifecycle method returning an effect, declared only on its implementation, stops the build with a
- * [[dev.coilix.context.BeanCreationException]]. The
+ * method returns an effect, stops the build with a [[dev.coilix.context.ContextError.EffectfulBeans]] unless an
+ * [[dev.coilix.context.EffectInterpreter]] is given. A [[dev.coilix.common.CoilixException]] thrown while beans are created, for
+ * example a [[dev.coilix.context.BeanCreationException]] for a bean created by the builder itself whose instance turns out to
+ * have a lifecycle method returning an effect, declared only on its implementation, becomes a
+ * [[dev.coilix.context.ContextError.CreationFailed]]; any other failure fails the resource. The
  * interpreter opens the levels of the plan from the first one with such a bean as a `Resource`, and the context releases it when
  * it closes, before it destroys the other beans; when it fails, the beans created before are destroyed. Planning and the
  * factories run in `IO.blocking`, because they use reflection and call constructors that may block. Each other bean is
@@ -48,20 +52,19 @@ final class DefaultApplicationContextBuilder(
     definitions: List[BeanDefinition],
     singletons:  List[RegisteredBean],
     interpreter: Option[EffectInterpreter]
-  ): Resource[IO, ConfigurableApplicationContext] =
-    Resource.make(created(definitions, singletons, interpreter))(_.shutdown)
+  ): ResourceT[ContextError, ConfigurableApplicationContext] =
+    EitherT(Resource.make(created(definitions, singletons, interpreter).value)(_.traverse_(_.shutdown)))
 
   private def created(
     definitions: List[BeanDefinition],
     singletons:  List[RegisteredBean],
     interpreter: Option[EffectInterpreter]
-  ): IO[ConfigurableApplicationContext] =
-    IO.defer {
-      val beans   = AtomicReference(Option.empty[(BeanRegistry, IO[Unit])])
+  ): EitherT[IO, ContextError, ConfigurableApplicationContext] =
+    EitherT.liftF(IO(AtomicReference(Option.empty[(BeanRegistry, IO[Unit])]))).flatMap { beans =>
       val context = DefaultApplicationContext(registryOf(beans), destroyer, releaseOf(beans))
-      IO.blocking(planner.plan(definitions, contextBean(context) :: singletons))
+      EitherT(IO.blocking(planner.plan(definitions, contextBean(context) :: singletons)))
         .flatMap(plan => executed(plan, interpreter))
-        .flatMap(opened => IO(beans.set(Some(opened))))
+        .semiflatMap(opened => IO(beans.set(Some(opened))))
         .as(context)
     }
 
@@ -71,9 +74,12 @@ final class DefaultApplicationContextBuilder(
   private def releaseOf(beans: AtomicReference[Option[(BeanRegistry, IO[Unit])]]): IO[Unit] =
     IO(beans.get).flatMap(_.fold(IO.unit)(_._2))
 
-  private def executed(plan: ContextPlan, interpreter: Option[EffectInterpreter]): IO[(BeanRegistry, IO[Unit])] = {
+  private def executed(
+    plan:        ContextPlan,
+    interpreter: Option[EffectInterpreter]
+  ): EitherT[IO, ContextError, (BeanRegistry, IO[Unit])] = {
     val completion = RegistryCompletion()
-    execute(plan, interpreter, completion).flatTap((registry, _) => IO(completion.complete(registry)))
+    execute(plan, interpreter, completion).semiflatTap((registry, _) => IO(completion.complete(registry)))
   }
 
   private def contextBean(context: ApplicationContext): RegisteredBean =
@@ -83,24 +89,36 @@ final class DefaultApplicationContextBuilder(
     plan:        ContextPlan,
     interpreter: Option[EffectInterpreter],
     completion:  RegistryCompletion
-  ): IO[(BeanRegistry, IO[Unit])] = {
+  ): EitherT[IO, ContextError, (BeanRegistry, IO[Unit])] = {
     val effects             = interpreter.filter(_ => plan.effectful.nonEmpty)
     val (direct, effectful) = plan.levels.span(_.forall(!_.isEffectful))
-    IO.raiseWhen(plan.effectful.nonEmpty && effects.isEmpty)(EffectfulBeanException(plan.effectful)) *>
-      IO.blocking {
-        warnAboutPrototypes(plan.creationOrder)
-        direct.flatten.foldLeft(provided(plan, completion))(created)
-      }.flatMap(registry => effects.fold(IO.pure((registry, IO.unit)))(interpreted(effectful, registry)))
+    EitherT.cond[IO](plan.effectful.isEmpty || effects.nonEmpty, (), ContextError.EffectfulBeans(plan.effectful)) *>
+      reported(IO.blocking(createdDirectly(plan, direct.flatten, completion)))
+        .flatMap(registry => effects.fold(EitherT.rightT[IO, ContextError]((registry, IO.unit)))(interpreted(effectful, registry)))
   }
+
+  private def createdDirectly(
+    plan:        ContextPlan,
+    definitions: List[BeanDefinition],
+    completion:  RegistryCompletion
+  ): BeanRegistry = {
+    warnAboutPrototypes(plan.creationOrder)
+    definitions.foldLeft(provided(plan, completion))(created)
+  }
+
+  private def reported[A](creation: IO[A]): EitherT[IO, ContextError, A] =
+    EitherT(creation.attemptNarrow[CoilixException]).leftMap(ContextError.CreationFailed(_))
 
   private def provided(plan: ContextPlan, completion: RegistryCompletion): BeanRegistry =
     plan.provided.foldLeft(ImmutableBeanRegistry.empty(selector, completion))(_.register(_))
 
   private def interpreted(levels: List[List[BeanDefinition]], registry: BeanRegistry)(
     interpreter: EffectInterpreter
-  ): IO[(BeanRegistry, IO[Unit])] =
-    IO.defer(interpreter.interpret(levels, registry, instantiator, destroyer).allocated)
-      .onError(_ => IO.blocking(destroyer.destroy(registry.beans)))
+  ): EitherT[IO, ContextError, (BeanRegistry, IO[Unit])] =
+    reported(
+      IO.defer(interpreter.interpret(levels, registry, instantiator, destroyer).allocated)
+        .onError(_ => IO.blocking(destroyer.destroy(registry.beans)))
+    )
 
   private def created(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =
     if (definition.creation.atStartup) registry.register(instantiated(definition, registry))

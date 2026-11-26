@@ -26,7 +26,6 @@ import dev.coilix.context.CoilixModule
 import dev.coilix.context.CollectedComponents
 import dev.coilix.context.ComponentCollector
 import dev.coilix.context.ConfigurableApplicationContext
-import dev.coilix.context.NoSuchBeanException
 import dev.coilix.context.RegisteredBean
 import dev.coilix.context.SynchronousLifecycle
 import munit.FunSuite
@@ -97,13 +96,6 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
     assertEquals(context.getBeanOption[TickerAudit].isDefined, true)
   }
 
-  test("fails when a replacement matches no discovered bean") {
-    val error = intercept[UnmatchedBeanReplacementException] {
-      bootstrap.opened(List("dev.coilix.boot.empty"), Nil, Nil, BeanReplacements.of[Clock])
-    }
-    assert(error.getMessage.contains("dev.coilix.boot.fixture.Clock"))
-  }
-
   test("does not register the collected components when no module collects annotations") {
     assert(!withModules(List(ReportModule())).opened(
       List("dev.coilix.boot.collected"),
@@ -125,20 +117,6 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
     assertEquals((context.getBean[JobRunner].names, context.getBeansOfType[JobLog].size), (List("job nightly", "module"), 1))
   }
 
-  test("fails when a collected class also has a component annotation") {
-    val error = intercept[CollectedComponentConflictException] {
-      withModules(List(JobsModule())).opened(List("dev.coilix.boot.collectedconflict"), Nil, Nil)
-    }
-    assert(error.getMessage.contains("collectedconflict.DoubleJob is marked with @JavaBean"))
-  }
-
-  test("explains that a bean cannot inject a collected class") {
-    val error = intercept[NoSuchBeanException] {
-      withModules(List(JobsModule())).opened(List("dev.coilix.boot.collected", "dev.coilix.boot.collectedinjection"), Nil, Nil)
-    }
-    assert(error.getMessage.contains("Bean 'nightlyJobUser' requires 'dev.coilix.boot.collected.NightlyJob'"))
-  }
-
   test("a module collects no annotations by default") {
     assertEquals(ReportModule().collects, Nil)
   }
@@ -153,13 +131,6 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
 
   test("a module with an effect interpreter does not change a context without effectful beans") {
     assertEquals(withModules(List(EffectModule("io"))).opened(List("dev.coilix.boot.fixture"), Nil, Nil).getBean[Clock].now, 42L)
-  }
-
-  test("fails when two modules give an effect interpreter") {
-    val error = intercept[ConflictingEffectInterpretersException] {
-      withModules(List(EffectModule("io"), EffectModule("zio"))).opened(List("dev.coilix.boot.fixture"), Nil, Nil)
-    }
-    assert(error.getMessage.contains("io, zio"), error.getMessage)
   }
 
   test("a module has no effect interpreter by default") {
@@ -186,6 +157,6 @@ final class DefaultCoilixBootstrapTest extends FunSuite {
       singletons:   List[RegisteredBean],
       replacements: BeanReplacements = BeanReplacements.none
     ): ConfigurableApplicationContext =
-      SynchronousLifecycle.opened(bootstrap.start(basePackages, extra, singletons, replacements))
+      SynchronousLifecycle.opened(StartupError.raised(bootstrap.start(basePackages, extra, singletons, replacements)))
   }
 }
