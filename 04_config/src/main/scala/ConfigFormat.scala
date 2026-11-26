@@ -12,10 +12,10 @@ trait ConfigFormat {
   /**
    * Reads the file at `url` into a Typesafe Config `Config`.
    *
-   * @throws com.typesafe.config.ConfigException
-   *   if the file is not valid in this format
+   * @return
+   *   the configuration, or a [[dev.coilix.config.ConfigError.Unparsable]] if the file is not valid in this format
    */
-  def parse(url: URL): Config
+  def parse(url: URL): Either[ConfigError, Config]
 }
 
 /** Built-in configuration formats. */

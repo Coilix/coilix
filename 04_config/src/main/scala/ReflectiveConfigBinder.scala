@@ -1,10 +1,9 @@
 package dev.coilix.config
 
+import cats.syntax.all.*
 import dev.coilix.annotation.Autowired
 import dev.coilix.common.CoilixException
-import dev.coilix.config.enums.EnumDefinition
 import dev.coilix.config.enums.EnumResolver
-import dev.coilix.config.valuetype.ValueTypeDefinition
 import dev.coilix.config.valuetype.ValueTypeResolver
 import java.lang.reflect.Constructor
 import java.lang.reflect.InvocationTargetException
@@ -45,7 +44,9 @@ import scala.util.Try
  * final case class MailSettings(host: String, port: Int = 25, connectTimeout: FiniteDuration)
  * ```
  *
- * Every failure is reported as a [[dev.coilix.config.ConfigurationException]] that names the path.
+ * Every failure is returned as a [[dev.coilix.config.ConfigError]] that names the path. An exception thrown by the
+ * constructor of a bound class becomes a [[dev.coilix.config.ConfigError.CreationFailed]], and a value rejected by a value
+ * type or an enum an [[dev.coilix.config.ConfigError.InvalidValue]].
  *
  * @param scalars
  *   reader for single values
@@ -66,109 +67,117 @@ final class ReflectiveConfigBinder(
   enums:       EnumResolver      = EnumResolver.default
 ) extends ConfigBinder {
 
+  private type Bound[A] = Either[ConfigError, A]
+
   private val classKey = "class"
 
-  override def bind(tree: ConfigTree, path: String, targetType: Type): AnyRef =
+  override def bind(tree: ConfigTree, path: String, targetType: Type): Bound[AnyRef] =
     targetType match {
       case parameterized: ParameterizedType => bindGeneric(tree, path, rawClassOf(parameterized), typeArguments(parameterized))
       case targetClass:   Class[?]          => bindGeneric(tree, path, targetClass, Nil)
       case _ => bindGeneric(tree, path, classOf[AnyRef], Nil)
     }
 
-  private def bindGeneric(tree: ConfigTree, path: String, raw: Class[?], arguments: List[Type]): AnyRef =
+  private def bindGeneric(tree: ConfigTree, path: String, raw: Class[?], arguments: List[Type]): Bound[AnyRef] =
     if (raw == classOf[Option[?]]) bindOption(tree, path, argument(arguments, 0))
-    else if (!tree.contains(path)) throw missing(path, raw)
+    else if (!tree.contains(path)) Left(ConfigError.Missing(path, raw))
     else if (classOf[Map[?, ?]].isAssignableFrom(raw)) bindMap(tree, path, argument(arguments, 1))
     else if (classOf[Iterable[?]].isAssignableFrom(raw)) bindCollection(tree, path, raw, argument(arguments, 0))
     else bindClass(tree, path, raw)
 
-  private def bindClass(tree: ConfigTree, path: String, target: Class[?]): AnyRef =
+  private def bindClass(tree: ConfigTree, path: String, target: Class[?]): Bound[AnyRef] =
     if (valueTypes.isValueType(target)) bindValueType(tree, path, target)
     else if (enums.isEnum(target)) bindEnum(tree, path, target)
-    else if (hasClassKey(tree, path)) construct(tree, path, configuredClass(tree, path, target))
+    else if (hasClassKey(tree, path)) configuredClass(tree, path, target).flatMap(construct(tree, path, _))
     else if (scalars.supports(target)) scalars.read(tree, path, target)
     else if (target == classOf[AnyRef]) tree.anyRef(path)
     else if (tree.isSection(path)) construct(tree, path, target)
-    else throw ConfigurationException(s"Cannot bind configuration '$path' to ${target.getName}")
+    else Left(ConfigError.UnsupportedTarget(path, target))
 
-  private def bindValueType(tree: ConfigTree, path: String, target: Class[?]): AnyRef =
-    converted(path, target)(createValueType(tree, path, valueTypes.resolve(target)))
+  private def bindValueType(tree: ConfigTree, path: String, target: Class[?]): Bound[AnyRef] =
+    for {
+      definition <- checked(path, target)(valueTypes.resolve(target))
+      inner      <- bind(tree, path, definition.innerType)
+      value      <- checked(path, target)(definition.create(inner))
+    } yield value
 
-  private def createValueType(tree: ConfigTree, path: String, definition: ValueTypeDefinition): AnyRef =
-    definition.create(bind(tree, path, definition.innerType))
+  private def bindEnum(tree: ConfigTree, path: String, target: Class[?]): Bound[AnyRef] =
+    for {
+      definition <- checked(path, target)(enums.resolve(target))
+      name       <- tree.string(path)
+      value      <- checked(path, target)(definition.valueOf(name))
+    } yield value
 
-  private def bindEnum(tree: ConfigTree, path: String, target: Class[?]): AnyRef =
-    converted(path, target)(findCase(tree, path, enums.resolve(target)))
-
-  private def findCase(tree: ConfigTree, path: String, definition: EnumDefinition): AnyRef =
-    definition.valueOf(tree.string(path))
-
-  private def converted(path: String, target: Class[?])(conversion: => AnyRef): AnyRef =
+  private def checked[A](path: String, target: Class[?])(conversion: => A): Bound[A] =
     try {
-      conversion
+      Right(conversion)
     } catch {
-      case error: CoilixException if !error.isInstanceOf[ConfigurationException] =>
-        throw ConfigurationException(s"Cannot bind configuration '$path' to ${target.getName}: ${error.getMessage}")
+      case error: CoilixException => Left(ConfigError.InvalidValue(path, target, error.getMessage))
     }
 
-  private def bindOption(tree: ConfigTree, path: String, element: Type): Option[AnyRef] =
-    Option.when(tree.contains(path))(bind(tree, path, element))
+  private def bindOption(tree: ConfigTree, path: String, element: Type): Bound[AnyRef] =
+    if (tree.contains(path)) bind(tree, path, element).map(Some(_))
+    else Right(None)
 
-  private def bindMap(tree: ConfigTree, path: String, valueType: Type): Map[String, AnyRef] =
-    tree.keys(path).map(key => key -> bind(tree, tree.child(path, key), valueType)).toMap
+  private def bindMap(tree: ConfigTree, path: String, valueType: Type): Bound[AnyRef] =
+    tree.keys(path).flatMap(_.traverse(key => bind(tree, tree.child(path, key), valueType).tupleLeft(key))).map(_.toMap)
 
-  private def bindCollection(tree: ConfigTree, path: String, raw: Class[?], element: Type): AnyRef =
-    collectionOf(path, raw, tree.elements(path).map(bind(_, ConfigTree.elementKey, element)))
+  private def bindCollection(tree: ConfigTree, path: String, raw: Class[?], element: Type): Bound[AnyRef] =
+    tree.elements(path).flatMap(_.traverse(bind(_, ConfigTree.elementKey, element))).flatMap(collectionOf(path, raw, _))
 
-  private def collectionOf(path: String, raw: Class[?], values: List[AnyRef]): AnyRef =
-    if (raw.isAssignableFrom(classOf[List[?]])) values
-    else if (raw.isAssignableFrom(classOf[Vector[?]])) values.toVector
-    else if (raw.isAssignableFrom(classOf[Set[?]])) values.toSet
-    else throw ConfigurationException(s"Cannot bind configuration '$path' to collection ${raw.getName}")
+  private def collectionOf(path: String, raw: Class[?], values: List[AnyRef]): Bound[AnyRef] =
+    if (raw.isAssignableFrom(classOf[List[?]])) Right(values)
+    else if (raw.isAssignableFrom(classOf[Vector[?]])) Right(values.toVector)
+    else if (raw.isAssignableFrom(classOf[Set[?]])) Right(values.toSet)
+    else Left(ConfigError.UnsupportedCollection(path, raw))
 
   private def hasClassKey(tree: ConfigTree, path: String): Boolean =
     tree.isSection(path) && tree.contains(tree.child(path, classKey))
 
-  private def configuredClass(tree: ConfigTree, path: String, expected: Class[?]): Class[?] =
-    assignable(path, expected, loadClass(path, tree.string(tree.child(path, classKey))))
+  private def configuredClass(tree: ConfigTree, path: String, expected: Class[?]): Bound[Class[?]] =
+    tree.string(tree.child(path, classKey)).flatMap(loadClass(path, _)).flatMap(assignable(path, expected, _))
 
-  private def loadClass(path: String, className: String): Class[?] =
-    Try(Class.forName(className, false, classLoader))
-      .getOrElse(throw ConfigurationException(s"Class '$className' configured at '$path.$classKey' cannot be loaded"))
+  private def loadClass(path: String, className: String): Bound[Class[?]] =
+    Try(Class.forName(className, false, classLoader)).toOption.toRight(ConfigError.UnknownClass(path, className))
 
-  private def assignable(path: String, expected: Class[?], actual: Class[?]): Class[?] =
-    if (expected.isAssignableFrom(actual)) actual
-    else throw ConfigurationException(s"Class '${actual.getName}' configured at '$path.$classKey' is not a ${expected.getName}")
+  private def assignable(path: String, expected: Class[?], actual: Class[?]): Bound[Class[?]] =
+    Either.cond(expected.isAssignableFrom(actual), actual, ConfigError.IncompatibleClass(path, actual, expected))
 
-  private def construct(tree: ConfigTree, path: String, target: Class[?]): AnyRef = {
-    val constructor = constructorOf(path, target)
-    instantiate(path, constructor, constructor.getParameters.toList.zipWithIndex.map(argumentFor(tree, path, target)))
-  }
+  private def construct(tree: ConfigTree, path: String, target: Class[?]): Bound[AnyRef] =
+    for {
+      constructor <- constructorOf(path, target)
+      arguments   <- constructor.getParameters.toList.zipWithIndex.traverse(argumentFor(tree, path, target))
+      instance    <- instantiate(path, constructor, arguments)
+    } yield instance
 
-  private def constructorOf(path: String, target: Class[?]): Constructor[?] =
-    if (target.isInterface || Modifier.isAbstract(target.getModifiers)) throw abstractTarget(path, target)
+  private def constructorOf(path: String, target: Class[?]): Bound[Constructor[?]] =
+    if (target.isInterface || Modifier.isAbstract(target.getModifiers)) Left(ConfigError.AbstractTarget(path, target))
     else selectConstructor(path, target)
 
-  private def selectConstructor(path: String, target: Class[?]): Constructor[?] =
+  private def selectConstructor(path: String, target: Class[?]): Bound[Constructor[?]] =
     target.getConstructors.toList match {
-      case single :: Nil => single
-      case many          => many.find(_.isAnnotationPresent(classOf[Autowired])).getOrElse(throw ambiguousConstructor(path, target))
+      case single :: Nil => Right(single)
+      case many          => autowired(many).toRight(ConfigError.AmbiguousConstructor(path, target))
     }
 
-  private def argumentFor(tree: ConfigTree, path: String, owner: Class[?])(parameter: Parameter, index: Int): AnyRef =
+  private def autowired(constructors: List[Constructor[?]]): Option[Constructor[?]] =
+    constructors.find(_.isAnnotationPresent(classOf[Autowired]))
+
+  private def argumentFor(tree: ConfigTree, path: String, owner: Class[?])(parameter: Parameter, index: Int): Bound[AnyRef] =
     parameterPath(tree, path, parameter.getName)
       .map(found => bind(tree, found, parameter.getParameterizedType))
-      .orElse(defaults.find(owner, index))
+      .orElse(defaults.find(owner, index).map(Right(_)))
       .getOrElse(bind(tree, tree.child(path, PropertyNames.kebabCase(parameter.getName)), parameter.getParameterizedType))
 
   private def parameterPath(tree: ConfigTree, path: String, name: String): Option[String] =
     PropertyNames.candidates(name).map(tree.child(path, _)).find(tree.contains)
 
-  private def instantiate(path: String, constructor: Constructor[?], arguments: List[AnyRef]): AnyRef =
+  private def instantiate(path: String, constructor: Constructor[?], arguments: List[AnyRef]): Bound[AnyRef] =
     try {
-      constructor.newInstance(arguments*)
+      Right(constructor.newInstance(arguments*))
     } catch {
-      case error: InvocationTargetException => throw creationFailed(path, constructor.getDeclaringClass, error.getCause)
+      case error: InvocationTargetException =>
+        Left(ConfigError.CreationFailed(path, constructor.getDeclaringClass, error.getCause))
     }
 
   private def rawClassOf(parameterized: ParameterizedType): Class[?] =
@@ -182,18 +191,4 @@ final class ReflectiveConfigBinder(
 
   private def argument(arguments: List[Type], index: Int): Type =
     arguments.lift(index).getOrElse(classOf[AnyRef])
-
-  private def missing(path: String, target: Class[?]): ConfigurationException =
-    ConfigurationException(s"Missing configuration '$path' (expected ${target.getName})")
-
-  private def abstractTarget(path: String, target: Class[?]): ConfigurationException =
-    ConfigurationException(
-      s"Configuration '$path' binds to abstract type ${target.getName}, set '$path.$classKey' to a concrete class"
-    )
-
-  private def ambiguousConstructor(path: String, target: Class[?]): ConfigurationException =
-    ConfigurationException(s"${target.getName} bound at '$path' needs one public constructor or one marked @Autowired")
-
-  private def creationFailed(path: String, target: Class[?], cause: Throwable): ConfigurationException =
-    ConfigurationException(s"Cannot create ${target.getName} from configuration '$path': $cause")
 }

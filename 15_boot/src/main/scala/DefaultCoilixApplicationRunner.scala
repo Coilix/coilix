@@ -7,7 +7,6 @@ import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.ClassTags.runtimeTypeOf
 import dev.coilix.config.ComponentProvider
-import dev.coilix.config.ConfigurationException
 import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.RegisteredBean
@@ -17,7 +16,7 @@ import scala.reflect.ClassTag
 /**
  * Builds the context of an application: parses the arguments, loads the configuration with command-line options as overrides,
  * logs the start, builds the context as a `Resource` and logs the startup time. Parsing, loading and scanning run in
- * `IO.blocking`. A [[dev.coilix.config.ConfigurationException]] thrown while the configuration is loaded becomes a
+ * `IO.blocking`. A [[dev.coilix.config.ConfigError]] returned while the configuration is loaded becomes a
  * [[dev.coilix.boot.StartupError.Configuration]], and a class without `@CoilixApplication` a
  * [[dev.coilix.boot.StartupError.NotABootApplication]]. Options of the JVM that make the application fragile when
  * memory runs out, described in [[dev.coilix.boot.JvmMemoryOptions]], are logged at `WARN` level at the start. The runners and
@@ -62,9 +61,7 @@ final class DefaultCoilixApplicationRunner(
     EitherT.liftF(Resource.eval(effect))
 
   private def loaded(arguments: ApplicationArguments): ResourceT[StartupError, Environment] =
-    EitherT(
-      Resource.eval(IO.blocking(environmentLoader.load(commandLineProperties(arguments))).attemptNarrow[ConfigurationException])
-    )
+    EitherT(Resource.eval(IO.blocking(environmentLoader.load(commandLineProperties(arguments)))))
       .leftMap(StartupError.Configuration(_))
 
   private def starting[T: ClassTag](environment: Environment): StartupComponents = {

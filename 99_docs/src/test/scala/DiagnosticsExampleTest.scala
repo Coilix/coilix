@@ -1,5 +1,6 @@
 package com.example
 
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -14,7 +15,7 @@ class DiagnosticsExampleTest extends munit.FunSuite {
 
   test("the guide configuration checks every 5 seconds and shuts down after a deadlock") {
     val url      = resources.resolve("guides/diagnostics/application.yaml").toUri.toURL
-    val settings = DiagnosticsSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url))))
+    val settings = DiagnosticsSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow)))
     assertEquals(
       (settings.interval, settings.threads.onDeadlock, settings.threads.blockedAfter, settings.threads.warningCount),
       (5.seconds, DeadlockAction.Shutdown, 30.seconds, 1000)

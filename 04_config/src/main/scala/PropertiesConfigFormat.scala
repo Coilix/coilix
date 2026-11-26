@@ -1,6 +1,7 @@
 package dev.coilix.config
 
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigSyntax
@@ -11,6 +12,9 @@ final class PropertiesConfigFormat extends ConfigFormat {
 
   override def extensions: List[String] = List("properties")
 
-  override def parse(url: URL): Config =
-    ConfigFactory.parseURL(url, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.PROPERTIES))
+  override def parse(url: URL): Either[ConfigError, Config] =
+    ConfigFormats.parsed[ConfigException](url)(ConfigFactory.parseURL(
+      url,
+      ConfigParseOptions.defaults().setSyntax(ConfigSyntax.PROPERTIES)
+    ))
 }

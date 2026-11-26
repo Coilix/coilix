@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.processing.ShopProcessor
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -14,7 +15,7 @@ class ProcessingExampleTest extends munit.FunSuite {
 
   test("the guide configuration sets the shards, the assignment and the restart policy") {
     val url      = resources.resolve("guides/processing/application.yaml").toUri.toURL
-    val settings = ProcessingSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url))))
+    val settings = ProcessingSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow)))
     val invoices = settings.of(ShopProcessor.InvoiceExport).resolve("invoice-export", defaultShards = 2, replicaCount = 3)
     val watch    = settings.of(ShopProcessor.OrderWatch).resolve("order-watch", defaultShards = 1, replicaCount = 3)
     assertEquals(settings.shutdownTimeout, 20.seconds)

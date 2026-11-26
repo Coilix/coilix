@@ -8,10 +8,10 @@ trait EnvironmentLoader {
    *
    * @param overrides
    *   values from the command line, keyed by configuration path
-   * @throws dev.coilix.config.ConfigurationException
-   *   if a configuration file cannot be read
+   * @return
+   *   the environment, or the [[dev.coilix.config.ConfigError]] if a configuration source cannot be parsed or resolved
    */
-  def load(overrides: Map[String, String]): Environment
+  def load(overrides: Map[String, String]): Either[ConfigError, Environment]
 }
 
 /** Factories for [[dev.coilix.config.EnvironmentLoader]]. */

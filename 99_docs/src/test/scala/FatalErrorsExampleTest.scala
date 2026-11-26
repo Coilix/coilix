@@ -2,6 +2,7 @@ package com.example
 
 import dev.coilix.concurrency.FatalErrorAction
 import dev.coilix.concurrency.FatalErrorSettings
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -15,7 +16,7 @@ class FatalErrorsExampleTest extends munit.FunSuite {
   test("the guide configuration shuts down with exit code 70 and waits 20 seconds for closing") {
     val url = resources.resolve("guides/fatal-errors/application.yaml").toUri.toURL
     assertEquals(
-      FatalErrorSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url)))),
+      FatalErrorSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow))),
       FatalErrorSettings(FatalErrorAction.Shutdown, 70, 20.seconds)
     )
   }

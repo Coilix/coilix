@@ -17,18 +17,18 @@ final class DefaultScalarReaderTest extends FunSuite {
   }
 
   test("converts values to the requested type") {
-    assertEquals(reader.read(tree, "number", classOf[Int]), Int.box(7))
-    assertEquals(reader.read(tree, "number", classOf[Long]), Long.box(7L))
-    assertEquals(reader.read(tree, "number", classOf[String]), "7")
-    assertEquals(reader.read(tree, "flag", classOf[Boolean]), Boolean.box(true))
+    assertEquals(reader.read(tree, "number", classOf[Int]), Right(Int.box(7)))
+    assertEquals(reader.read(tree, "number", classOf[Long]), Right(Long.box(7L)))
+    assertEquals(reader.read(tree, "number", classOf[String]), Right("7"))
+    assertEquals(reader.read(tree, "flag", classOf[Boolean]), Right(Boolean.box(true)))
   }
 
   test("reads durations") {
-    assertEquals(reader.read(tree, "timeout", classOf[FiniteDuration]), 2.minutes)
-    assertEquals(reader.read(tree, "timeout", classOf[java.time.Duration]), java.time.Duration.ofMinutes(2))
+    assertEquals(reader.read(tree, "timeout", classOf[FiniteDuration]), Right(2.minutes))
+    assertEquals(reader.read(tree, "timeout", classOf[java.time.Duration]), Right(java.time.Duration.ofMinutes(2)))
   }
 
-  test("fails for an unsupported type") {
-    intercept[ConfigurationException](reader.read(tree, "text", classOf[Thread]))
+  test("returns an error for an unsupported type") {
+    assertEquals(reader.read(tree, "text", classOf[Thread]), Left(ConfigError.UnsupportedScalar("text", classOf[Thread])))
   }
 }

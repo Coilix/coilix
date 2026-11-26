@@ -1,5 +1,6 @@
 package dev.coilix.logging
 
+import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import org.slf4j.LoggerFactory
 import scala.util.Try
@@ -27,5 +28,8 @@ object CoilixLogging {
   def isActive: Boolean = LoggerFactory.getILoggerFactory eq factory
 
   private def startupSettings: LoggingSettings =
-    Try(LoggingSettings.from(EnvironmentLoader.default.load(Map.empty))).getOrElse(LoggingSettings())
+    EnvironmentLoader.default.load(Map.empty).toOption.flatMap(settingsOf).getOrElse(LoggingSettings())
+
+  private def settingsOf(environment: Environment): Option[LoggingSettings] =
+    Try(LoggingSettings.from(environment)).toOption
 }

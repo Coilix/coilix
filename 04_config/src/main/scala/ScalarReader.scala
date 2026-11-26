@@ -9,8 +9,8 @@ trait ScalarReader {
   /**
    * Reads the value at `path` as `targetType`, boxing primitive types.
    *
-   * @throws dev.coilix.config.ConfigurationException
-   *   if `targetType` is not supported or the value cannot be converted
+   * @return
+   *   the value, or a [[dev.coilix.config.ConfigError]] if `targetType` is not supported or the value cannot be converted
    */
-  def read(tree: ConfigTree, path: String, targetType: Class[?]): AnyRef
+  def read(tree: ConfigTree, path: String, targetType: Class[?]): Either[ConfigError, AnyRef]
 }

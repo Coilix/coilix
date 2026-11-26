@@ -1,5 +1,6 @@
 package com.example
 
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -13,7 +14,7 @@ class LoggingExampleTest extends munit.FunSuite {
 
   test("the guide configuration sets the root level, the levels by package and asynchronous writing") {
     val url      = resources.resolve("guides/logging/application.yaml").toUri.toURL
-    val settings = LoggingSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url))))
+    val settings = LoggingSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow)))
     assertEquals(
       (settings.level, settings.levels, settings.async),
       (

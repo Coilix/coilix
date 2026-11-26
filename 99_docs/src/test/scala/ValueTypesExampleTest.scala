@@ -1,6 +1,7 @@
 package com.example
 
 import com.typesafe.config.ConfigFactory
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.ConfigurationException
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
@@ -17,7 +18,7 @@ class ValueTypesExampleTest extends munit.FunSuite {
 
   test("the guide configuration binds to ShopSettings") {
     val url      = resources.resolve("guides/value-types/application.yaml").toUri.toURL
-    val settings = Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url))).bind("shop", classOf[ShopSettings])
+    val settings = Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow)).bind("shop", classOf[ShopSettings])
     assertEquals(
       settings,
       ShopSettings(Port(8080), ShopMode.ReadOnly, Secret("local-test-key"), List(Port(8081), Port(8082)))

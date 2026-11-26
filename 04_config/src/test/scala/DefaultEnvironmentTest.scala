@@ -40,4 +40,19 @@ final class DefaultEnvironmentTest extends FunSuite {
   test("is empty by default") {
     assert(!Environment.empty.contains("app"))
   }
+
+  test("returns the error of a value that cannot be converted") {
+    assert(environment.lookup[Int]("app.name").left.exists(_.isInstanceOf[ConfigError.Unreadable]))
+  }
+
+  test("binds a value without throwing") {
+    assertEquals(environment.binding("app.port", classOf[Int]), Right(Int.box(8080)))
+  }
+
+  test("returns a missing placeholder without a default as an error") {
+    assertEquals(
+      environment.evaluate(ValueExpression.parse("${app.missing}"), classOf[String]),
+      Left(ConfigError.Missing("app.missing", classOf[String]))
+    )
+  }
 }
