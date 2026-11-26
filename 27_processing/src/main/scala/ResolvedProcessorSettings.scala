@@ -1,5 +1,7 @@
 package dev.coilix.processing
 
+import scala.concurrent.duration.FiniteDuration
+
 /**
  * The effective settings of one processor, after the configuration, the code and the defaults of Coilix.
  *
@@ -13,11 +15,14 @@ package dev.coilix.processing
  *   whether the processor starts with the application
  * @param policy
  *   how its shards are supervised
+ * @param drainTimeout
+ *   how long the work of a shard may run after the stop signal before it is cancelled; without it half of the stop timeout
  */
 final case class ResolvedProcessorSettings(
-  shardCount: Int,
-  slotCount:  Int,
-  assignment: ShardAssignment,
-  enabled:    Boolean,
-  policy:     SupervisionPolicy
+  shardCount:   Int,
+  slotCount:    Int,
+  assignment:   ShardAssignment,
+  enabled:      Boolean,
+  policy:       SupervisionPolicy,
+  drainTimeout: Option[FiniteDuration] = None
 )

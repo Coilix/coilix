@@ -47,6 +47,17 @@ final class ProcessingSettingsTest extends FunSuite {
     assertEquals(resolved.assignment.replicasOf(0, 1, 2), List(1))
   }
 
+  test("reads drain-timeout per processor with the defaults as fallback") {
+    val settings = settingsOf("coilix.processors { defaults.drain-timeout = 20s, exporter.drain-timeout = 3s }")
+    val drains   = List(TestProcessor.Ticker, TestProcessor.Exporter).map(id =>
+      settings.of(id).resolve(id.name, defaultShards = 1, replicaCount = 1).drainTimeout
+    )
+    assertEquals(
+      (drains, ProcessingSettings().of(TestProcessor.Ticker).resolve("ticker", 1, 1).drainTimeout),
+      (List(Some(20.seconds), Some(3.seconds)), None)
+    )
+  }
+
   test("reports the configured names that belong to no processor") {
     val settings = settingsOf("coilix.processors { tikcer.shards = 2, ticker.shards = 2 }")
     assertEquals(settings.unknown(List(TestProcessor.Ticker)), List("tikcer"))
@@ -61,5 +72,6 @@ final class ProcessingSettingsTest extends FunSuite {
       "Processor ticker is pinned to replic"
     )
     assert(rejected("coilix.processors.ticker.on-completion = later").contains("unknown on-completion 'later'"))
+    assert(rejected("coilix.processors.ticker.drain-timeout = -2s").endsWith("it must be positive"))
   }
 }

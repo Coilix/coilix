@@ -2,6 +2,7 @@ package dev.coilix.processing
 
 import dev.coilix.config.ConfigurationException
 import dev.coilix.config.Environment
+import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
@@ -25,6 +26,9 @@ import scala.concurrent.duration.FiniteDuration
  *   `stop` (the default) or `restart`
  * @param completionDelay
  *   the delay of `on-completion = restart`, 1 second by default
+ * @param drainTimeout
+ *   how long the work of a shard may run after the stop signal, for example to finish the elements a
+ *   [[dev.coilix.processing.StreamProcessor]] has already read, before it is cancelled; half of the stop timeout by default
  * @param restart
  *   the restart policy
  */
@@ -36,6 +40,7 @@ final case class ProcessorSettings(
   enabled:         Option[Boolean]        = None,
   onCompletion:    Option[String]         = None,
   completionDelay: Option[FiniteDuration] = None,
+  drainTimeout:    Option[FiniteDuration] = None,
   restart:         RestartSettings        = RestartSettings()
 ) {
 
@@ -49,6 +54,7 @@ final case class ProcessorSettings(
       enabled.orElse(fallback.enabled),
       onCompletion.orElse(fallback.onCompletion),
       completionDelay.orElse(fallback.completionDelay),
+      drainTimeout.orElse(fallback.drainTimeout),
       restart.orElse(fallback.restart)
     )
 
@@ -67,13 +73,17 @@ final case class ProcessorSettings(
       slotCount,
       ShardAssignment.named(assignment.getOrElse(ShardAssignment.roundRobin.name), pinnedReplica.getOrElse(0)),
       enabled.getOrElse(true),
-      SupervisionPolicy(restart.policy, completion(name))
+      SupervisionPolicy(restart.policy, completion(name)),
+      drainTimeout
     )
   }
 
   private def validate(name: String, shardCount: Int, slotCount: Int, replicaCount: Int): Unit = {
     if (shardCount < 1) throw invalid(name, s"has $shardCount shards, at least 1 is needed")
     if (slotCount < shardCount) throw invalid(name, s"has $shardCount shards but only $slotCount slots")
+    drainTimeout.filter(_ <= Duration.Zero).foreach(timeout =>
+      throw invalid(name, s"has drain-timeout $timeout, it must be positive")
+    )
     pinnedReplica.filter(replica => replica < 0 || replica >= replicaCount).foreach { replica =>
       throw invalid(name, s"is pinned to replica $replica, but the application has replicas 0 to ${replicaCount - 1}")
     }
@@ -106,6 +116,7 @@ object ProcessorSettings {
       enabled         = environment.get[Boolean](s"$path.enabled"),
       onCompletion    = environment.get[String](s"$path.on-completion"),
       completionDelay = environment.get[FiniteDuration](s"$path.completion-delay"),
+      drainTimeout    = environment.get[FiniteDuration](s"$path.drain-timeout"),
       restart         = RestartSettings.read(environment, s"$path.restart")
     )
 }

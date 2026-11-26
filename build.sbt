@@ -284,6 +284,7 @@ lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
     libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
     libraryDependencies += Dependencies.munitCatsEffect % Test,
     Test / fork                                        := true,
+    Test / parallelExecution                           := false,
     run / fork                                         := true,
     run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
     run / outputStrategy                               := Some(StdoutOutput)

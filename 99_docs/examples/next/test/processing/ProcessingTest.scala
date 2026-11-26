@@ -33,6 +33,16 @@ class ProcessingTest extends CatsEffectSuite with CoilixIOSuite {
     }
   }
 
+  coilixTest("stopping the order loading saves the batch it has already read") {
+    for {
+      read   <- within(IO(bean[OrderFeed].readCount == 3))
+      result <- bean[ProcessorManager].stop(ShopProcessor.OrderLoading)
+    } yield {
+      assert(read && result.isComplete)
+      assertEquals(bean[OrderStore].saved, List(bean[OrderFeed].incoming))
+    }
+  }
+
   private def within(condition: IO[Boolean]): IO[Boolean] =
     condition.ifM(IO.pure(true), IO.sleep(10.millis) *> within(condition)).timeoutTo(5.seconds, IO.pure(false))
 }
