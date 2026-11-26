@@ -9,4 +9,6 @@ object ShopProcessor {
   case object InvoiceExport extends ShopProcessor
 
   case object OrderWatch extends ShopProcessor
+
+  case object OrderLoading extends ShopProcessor
 }

@@ -13,3 +13,5 @@ coilix:
     order-watch:
       assignment: pinned
       pinned-replica: 0
+    order-loading:
+      drain-timeout: 10s

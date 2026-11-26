@@ -3,6 +3,7 @@ package dev.coilix.demo
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import dev.coilix.demo.vehicle.Vin
+import dev.coilix.demo.workshop.CheckInLog
 import dev.coilix.demo.workshop.FaultCodeExport
 import dev.coilix.demo.workshop.FaultLedger
 import dev.coilix.demo.workshop.ModuleCensus
@@ -43,9 +44,21 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
       assertEquals(bean[FaultLedger].faults, Map(vin -> List("P0301", "P0420", "C0035"), Vin("TMBJJ7NE8J0000002") -> Nil))
       assertEquals(
         processors.topology.processors.map(processor => (processor.id, processor.shards.map(_.shard))),
-        List((WorkshopProcessor.FaultCodeExport, List(0, 1)))
+        List((WorkshopProcessor.FaultCodeExport, List(0, 1)), (WorkshopProcessor.VehicleCheckIn, List(0)))
       )
       assertEquals((beanOption[FaultCodeExport], shards), (None, "0 Completed, 1 Completed"))
+    }
+  }
+
+  coilixTest("saves the batch of checked-in vehicles waiting in the stream when the processor stops") {
+    val checkIns = bean[CheckInLog]
+    for {
+      arrived <- awaitArrivals(checkIns)
+      before  <- IO(checkIns.batches)
+      result  <- bean[ProcessorManager].stop(WorkshopProcessor.VehicleCheckIn)
+    } yield {
+      assert(arrived && result.isComplete, s"$result after ${checkIns.arrivals}")
+      assertEquals((before, checkIns.batches), (Nil, List(List(vin, Vin("TMBJJ7NE8J0000002")))))
     }
   }
 
@@ -63,6 +76,11 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
   }
 
   private val vin = Vin("WVWZZZ1KZ6W000001")
+
+  private def awaitArrivals(checkIns: CheckInLog): IO[Boolean] =
+    IO(checkIns.arrivals.size == 2)
+      .flatMap(done => if (done) IO.pure(true) else IO.sleep(10.millis) *> awaitArrivals(checkIns))
+      .timeoutTo(5.seconds, IO.pure(false))
 
   private def completed(processors: ProcessorManager): IO[Boolean] =
     processors

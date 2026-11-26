@@ -1,6 +1,6 @@
 # 0044: Procesory tła na IO i fiberach
 
-- Status: proponowana
+- Status: proponowana, uzupełniona przez [0048](0048-stream-processors-with-draining.md) (styl strumieniowy i `drain-timeout`)
 - Data: 2026-11-26
 - Task: COILIX-00032 (krok 4, część 1), COILIX-00031 (krok 3)
 

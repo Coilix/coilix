@@ -9,6 +9,7 @@ import CodeBlock from '@theme/CodeBlock';
 import ShopProcessor from '!!raw-loader!@examples/scala/processing/ShopProcessor.scala';
 import InvoiceExport from '!!raw-loader!@examples/scala/processing/InvoiceExport.scala';
 import OrderWatch from '!!raw-loader!@examples/scala/processing/OrderWatch.scala';
+import OrderLoading from '!!raw-loader!@examples/scala/processing/OrderLoading.scala';
 import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.scala';
 import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
 import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
@@ -45,7 +46,17 @@ Praca, która sama się nie kończy, sprawdza `shard.stopRequested` między krok
 
 <CodeBlock language="scala" title="OrderWatch.scala">{OrderWatch}</CodeBlock>
 
-Shard, który nie zatrzyma się w połowie czasu na zatrzymanie, jest anulowany. Praca w obszarze nieanulowalnym, która działa jeszcze po całym czasie, zostaje porzucona z wpisem w logu.
+Shard, który nie zatrzyma się w `drain-timeout` swojego procesora, domyślnie w połowie czasu na zatrzymanie, jest anulowany. Praca w obszarze nieanulowalnym, która działa jeszcze po całym czasie, zostaje porzucona z wpisem w logu.
+
+## Przetwarzaj strumień
+
+`StreamProcessor[A]` opisuje pracę jako przepływ fs2: `source` daje elementy sharda jako `Stream[IO, A]`, a `flow` przetwarza je jako `Pipe`. Coilix wstawia sygnał zatrzymania sharda zaraz za źródłem. Zatrzymanie kończy źródło przy następnym elemencie, a elementy już przeczytane idą dalej przez przepływ, który kończy się tak, jakby skończyło się źródło: ostatnia paczka zostaje wysłana i zapisana, zatwierdzenia się kończą. Nic, co już przeczytano, nie ginie, o ile przepływ skończy się w `drain-timeout`. Po tym czasie przepływ jest anulowany.
+
+Ten procesor zapisuje zamówienia paczkami po 50 albo co 5 sekund. Jego źródło nigdy się nie kończy, więc przy zamykaniu aplikacji paczka czekająca w `groupWithin` zostaje zapisana, zanim shard się zatrzyma:
+
+<CodeBlock language="scala" title="OrderLoading.scala">{OrderLoading}</CodeBlock>
+
+Źródło, które skończy się samo, kończy pracę, a dalej decyduje `on-completion`, tak jak dla `IOProcessor`. Błąd w źródle albo w przepływie restartuje shard według jego polityki restartów.
 
 `prepare` działa przed każdym startem sharda, np. żeby odtworzyć jego offsety. `onAcquired` i `onReleased` mówią, kiedy ta replika przejmuje i oddaje shard, z powodem: `Shutdown`, `Stopped`, `Completed` albo `Failed`.
 
@@ -69,7 +80,8 @@ Liczba shardów to `shards` procesora albo `defaultShards` jego klasy. Pozostał
 - `shards` nie może być większe niż `slots`,
 - `enabled: false` zostawia procesor zatrzymany, dopóki nie uruchomi się go przez menedżera, a `autostart: false` zostawia bezczynne wszystkie procesory,
 - `on-completion` to `stop`, domyślnie, więc shard, którego praca się skończyła, przechodzi w `Completed`, albo `restart`, który uruchamia go ponownie po `completion-delay`,
-- `shutdown-timeout` to czas, przez który zatrzymanie procesora i zamykanie aplikacji czekają na jego shardy.
+- `shutdown-timeout` to czas, przez który zatrzymanie procesora i zamykanie aplikacji czekają na jego shardy,
+- `drain-timeout` to czas, przez który praca sharda może jeszcze działać po sygnale zatrzymania, np. żeby zapisać to, co przeczytał strumień, zanim zostanie anulowana; domyślnie połowa czasu na zatrzymanie.
 
 Klucz pod `coilix.processors`, który nie pasuje do żadnego procesora, jest logowany przy starcie jako ostrzeżenie.
 

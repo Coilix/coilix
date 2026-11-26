@@ -3,9 +3,12 @@ package dev.coilix.processing
 import cats.effect.IO
 import dev.coilix.cluster.Member
 import dev.coilix.processing.Journal.awaitUntil
+import fs2.Pipe
+import fs2.Stream
 import java.time.Instant
 import munit.CatsEffectSuite
 import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.FiniteDuration
 
 final class FiberEngineTest extends CatsEffectSuite {
 
@@ -14,6 +17,9 @@ final class FiberEngineTest extends CatsEffectSuite {
   private val engine = ResourceFunFixture(FiberEngine.resource)
 
   private def shard: IO[Shard] = Shard.create(TestProcessor.Ticker, SlotSet(0, 1, 4), replica)
+
+  private def drainingShard(drainTimeout: FiniteDuration): IO[Shard] =
+    Shard.create(TestProcessor.Ticker, SlotSet(0, 1, 4), replica, Some(drainTimeout))
 
   private def recording(journal: Journal): WorkerEvents =
     new WorkerEvents {
@@ -34,11 +40,21 @@ final class FiberEngineTest extends CatsEffectSuite {
       override def run(shard: Shard): IO[Unit] = work(shard)
     }
 
-  private def started(engine: FiberEngine, definition: IOProcessor, journal: Journal): IO[RunningWorker] =
+  private def streaming(elements: Stream[IO, Int], through: Pipe[IO, Int, Unit]): StreamProcessor[Int] =
+    new StreamProcessor[Int] {
+      override val id: ProcessorId = TestProcessor.Ticker
+
+      override def source(shard: Shard): Stream[IO, Int] = elements
+
+      override def flow(shard: Shard): Pipe[IO, Int, Unit] = through
+    }
+
+  private def started(engine: FiberEngine, definition: ProcessorDefinition, journal: Journal): IO[RunningWorker] =
     shard.flatMap(engine.start(definition, _, recording(journal)))
 
-  engine.test("runs only IO processors") { engine =>
+  engine.test("runs IO and stream processors") { engine =>
     assert(engine.supports(processor(_ => IO.unit)))
+    assert(engine.supports(streaming(Stream.empty, _.drain)))
     assert(!engine.supports(new ProcessorDefinition { override val id: ProcessorId = TestProcessor.Orphan }))
   }
 
@@ -90,6 +106,45 @@ final class FiberEngineTest extends CatsEffectSuite {
       _       <- awaitUntil(journal.contains("prepared"))
       outcome <- worker.stop(100.millis)
     } yield assertEquals(outcome, StopOutcome.Abandoned)
+  }
+
+  engine.test("finishes the elements a stream processor has already read before it stops") { engine =>
+    val journal = Journal()
+    val batched = streaming(
+      Stream.emits(1 to 5) ++ Stream.never[IO],
+      _.evalTap(element => IO(journal.add(s"read $element"))).chunkN(10).evalMap(batch => IO(journal.add(s"saved ${batch.toList}")))
+    )
+    for {
+      worker  <- started(engine, batched, journal)
+      _       <- awaitUntil(journal.contains("read 5"))
+      outcome <- worker.stop(1.second)
+      ended   <- awaitUntil(journal.contains("finished"))
+    } yield {
+      assertEquals(outcome, StopOutcome.Stopped)
+      assert(ended, journal.all)
+      assertEquals(journal.startingWith("saved"), Vector("saved List(1, 2, 3, 4, 5)"))
+    }
+  }
+
+  engine.test("completes a stream processor whose source ends") { engine =>
+    val journal = Journal()
+    val finite  = streaming(Stream.emits(1 to 3), _.evalMap(element => IO(journal.add(s"saved $element"))))
+    started(engine, finite, journal) *>
+      awaitUntil(journal.all == Vector("prepared", "saved 1", "saved 2", "saved 3", "finished")).map(assert(_, journal.all))
+  }
+
+  engine.test("cancels a stream processor whose flow does not end within the drain timeout") { engine =>
+    val journal = Journal()
+    val hanging =
+      streaming(Stream.emit(1), _.evalMap(_ => IO(journal.add("taken")) *> IO.never[Unit].onCancel(IO(journal.add("cancelled")))))
+    for {
+      worker  <- drainingShard(100.millis).flatMap(engine.start(hanging, _, recording(journal)))
+      _       <- awaitUntil(journal.contains("taken"))
+      outcome <- worker.stop(10.seconds).timed
+    } yield {
+      assertEquals((outcome._2, journal.contains("cancelled")), (StopOutcome.Stopped, true))
+      assert(outcome._1 < 5.seconds, s"stopped after ${outcome._1}")
+    }
   }
 
   test("cancels running work when the engine closes") {

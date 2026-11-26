@@ -9,6 +9,7 @@ import CodeBlock from '@theme/CodeBlock';
 import ShopProcessor from '!!raw-loader!@examples/scala/processing/ShopProcessor.scala';
 import InvoiceExport from '!!raw-loader!@examples/scala/processing/InvoiceExport.scala';
 import OrderWatch from '!!raw-loader!@examples/scala/processing/OrderWatch.scala';
+import OrderLoading from '!!raw-loader!@examples/scala/processing/OrderLoading.scala';
 import Maintenance from '!!raw-loader!@examples/scala/processing/Maintenance.scala';
 import ProcessingYaml from '!!raw-loader!@examples/resources/guides/processing/application.yaml';
 import ProcessingTest from '!!raw-loader!@examples/test/processing/ProcessingTest.scala';
@@ -45,7 +46,17 @@ Work that never ends by itself checks `shard.stopRequested` between steps, or wa
 
 <CodeBlock language="scala" title="OrderWatch.scala">{OrderWatch}</CodeBlock>
 
-A shard that does not stop within half of the stop timeout is cancelled. Work in an uncancelable region that still runs after the whole timeout is abandoned and logged.
+A shard that does not stop within `drain-timeout` of its processor, by default half of the stop timeout, is cancelled. Work in an uncancelable region that still runs after the whole timeout is abandoned and logged.
+
+## Process a stream
+
+A `StreamProcessor[A]` describes the work as an fs2 flow: `source` gives the elements of a shard as a `Stream[IO, A]`, and `flow` processes them as a `Pipe`. Coilix puts the stop signal of the shard right after the source. Stopping ends the source at the next element, while the elements already read go on through the flow, which then ends as if the source had ended: the last batch is emitted and saved, commits finish. Nothing already read is lost, as long as the flow ends within `drain-timeout`; after it, the flow is cancelled.
+
+This loading saves orders in batches of 50 or every 5 seconds. Its source never ends, so when the application closes, the batch that waits in `groupWithin` is saved before the shard stops:
+
+<CodeBlock language="scala" title="OrderLoading.scala">{OrderLoading}</CodeBlock>
+
+A source that ends by itself completes the work, and `on-completion` decides what happens next, as for an `IOProcessor`. A failure in the source or in the flow restarts the shard under its restart policy.
 
 `prepare` runs before every start of a shard, for example to restore its offsets. `onAcquired` and `onReleased` tell when this replica takes over and gives up a shard, with the reason: `Shutdown`, `Stopped`, `Completed` or `Failed`.
 
@@ -69,7 +80,8 @@ The number of shards is `shards` of the processor, or `defaultShards` of its cla
 - `shards` must not be more than `slots`,
 - `enabled: false` leaves the processor stopped until it is started through the manager, and `autostart: false` leaves every processor idle,
 - `on-completion` is `stop`, the default, so a shard whose work ends becomes `Completed`, or `restart`, which starts it again after `completion-delay`,
-- `shutdown-timeout` is how long stopping a processor, and closing the application, waits for its shards.
+- `shutdown-timeout` is how long stopping a processor, and closing the application, waits for its shards,
+- `drain-timeout` is how long the work of a shard may still run after the stop signal, for example to save what a stream has read, before it is cancelled; by default half of the stop timeout.
 
 A key under `coilix.processors` that matches no processor is logged as a warning at startup.
 

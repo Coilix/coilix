@@ -41,6 +41,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "catsEffectConfiguration",
         "catsEffectSettings",
         "certificationAccessPolicy",
+        "checkInLog",
         "claimSweeper",
         "clock",
         "clusterConfiguration",

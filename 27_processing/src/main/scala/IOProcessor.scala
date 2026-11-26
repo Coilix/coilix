@@ -7,7 +7,8 @@ import cats.effect.IO
  *
  * When [[dev.coilix.processing.IOProcessor.run]] ends while the shard is not stopping, the work is complete and
  * `on-completion` decides what happens next. When it fails, the restart policy restarts it. Stopping the shard completes
- * [[dev.coilix.processing.Shard.stopped]], waits half of the stop timeout for the work to end and then cancels it, so work
+ * [[dev.coilix.processing.Shard.stopped]], waits `drain-timeout` of the processor (by default half of the stop timeout) for
+ * the work to end and then cancels it, so work
  * that finishes its current step on [[dev.coilix.processing.Shard.stopRequested]] ends cleanly, and other work is
  * cancelled. Blocking calls go through `IO.blocking` or `IO.onBlockingExecutor`:
  *

@@ -167,7 +167,7 @@ case class DefaultProcessorManager(
       run       <- runOf(key)
       processor  = byId(key.id)
       generation = run.generation + 1
-      shard     <- Shard.create(processor.id, run.shard.slots, identity.self)
+      shard     <- Shard.create(processor.id, run.shard.slots, identity.self, processor.settings.drainTimeout)
       _         <- update(key, _.copy(shard = shard, generation = generation, worker = None))
       started   <- control.outside(processor.engine.start(processor.definition, shard, eventsOf(key, generation))).attempt
       _         <- started.fold(crashed(key, generation, FailureStage.Prepare, _), keepWorker(key, _))
@@ -284,7 +284,7 @@ object DefaultProcessorManager {
   ): IO[List[(ShardKey, ShardRun)]] = {
     val state = if (processor.settings.enabled) WorkerState.Idle else WorkerState.Stopped
     processor.shards.traverse { slots =>
-      Shard.create(processor.id, slots, identity.self).map(shard =>
+      Shard.create(processor.id, slots, identity.self, processor.settings.drainTimeout).map(shard =>
         ShardKey(processor.id, slots.shard) -> ShardRun(ShardSupervision(state, now), shard)
       )
     }

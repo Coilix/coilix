@@ -3,6 +3,7 @@ package dev.coilix.processing
 import cats.effect.Deferred
 import cats.effect.IO
 import dev.coilix.cluster.Member
+import scala.concurrent.duration.FiniteDuration
 
 /**
  * One shard of a processor that runs on this replica: its index, its slots, the replica that runs it and the signal that
@@ -25,8 +26,17 @@ import dev.coilix.cluster.Member
  *   the replica that runs the shard
  * @param stopSignal
  *   completed when the shard is asked to stop
+ * @param drainTimeout
+ *   how long the work may run after the stop signal before it is cancelled, from `drain-timeout` of the processor; without it
+ *   half of the stop timeout
  */
-case class Shard(processor: ProcessorId, slots: SlotSet, replica: Member, stopSignal: Deferred[IO, Unit]) {
+case class Shard(
+  processor:    ProcessorId,
+  slots:        SlotSet,
+  replica:      Member,
+  stopSignal:   Deferred[IO, Unit],
+  drainTimeout: Option[FiniteDuration] = None
+) {
 
   /** The index of the shard, from 0 until [[dev.coilix.processing.Shard.count]]. */
   def index: Int = slots.shard
@@ -53,7 +63,12 @@ case class Shard(processor: ProcessorId, slots: SlotSet, replica: Member, stopSi
 /** Creation of [[dev.coilix.processing.Shard]] values. */
 object Shard {
 
-  /** A shard that is not stopping yet. */
-  def create(processor: ProcessorId, slots: SlotSet, replica: Member): IO[Shard] =
-    Deferred[IO, Unit].map(signal => Shard(processor, slots, replica, signal))
+  /** A shard that is not stopping yet, with the `drain-timeout` of its processor. */
+  def create(
+    processor:    ProcessorId,
+    slots:        SlotSet,
+    replica:      Member,
+    drainTimeout: Option[FiniteDuration] = None
+  ): IO[Shard] =
+    Deferred[IO, Unit].map(signal => Shard(processor, slots, replica, signal, drainTimeout))
 }
