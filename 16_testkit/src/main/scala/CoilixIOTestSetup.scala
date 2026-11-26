@@ -33,9 +33,9 @@ object CoilixIOTestSetup {
     def withIORuntime(runtime: IORuntime): CoilixTestSetup =
       setup.withBean(TestBean(runtimeBeanName, TypeInfo[IORuntime].genericType, runtime, replaces = false))
 
-    /** The context of this setup as a `Resource`: built in `IO.blocking` when acquired and closed when released. */
+    /** The context of this setup as a `Resource`: built in `IO.blocking` when acquired and shut down in `IO` when released. */
     def resource(using factory: TestContextFactory = TestContextFactory.default): Resource[IO, ConfigurableApplicationContext] =
-      Resource.make(IO.blocking(factory.create(setup)))(context => IO.blocking(context.close()))
+      Resource.make(IO.blocking(factory.create(setup)))(_.shutdown)
 
     /**
      * Builds the context, runs `body` with the context given to it and closes the context afterwards, also when `body` fails or

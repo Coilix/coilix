@@ -1,5 +1,6 @@
 package dev.coilix.concurrency
 
+import cats.effect.IO
 import dev.coilix.annotation.Scheduled
 import dev.coilix.annotation.Slf4s
 import dev.coilix.config.Environment
@@ -39,15 +40,15 @@ final class ScheduledMethodRegistrar(scheduler: TaskScheduler, environment: Opti
    * @throws dev.coilix.concurrency.InvalidScheduledMethodException
    *   if a method takes parameters, is static, cannot be made accessible, or has a missing or invalid duration
    */
-  override def onContextStarted(context: ApplicationContext): Unit = {
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO {
     val scheduled = context.createdBeans.flatMap(bean => methodsOf(bean.beanName, ProxiedBean.unwrap(bean.instance)))
     val _         = tasks.updateAndGet(_ ++ scheduled.map(schedule))
   }
 
   override def closingPhase: ClosingPhase = ClosingPhase.Producers
 
-  override def onContextClosing(): Unit =
-    tasks.getAndSet(Nil).foreach(_.cancel())
+  override def onContextClosing: IO[Unit] =
+    IO(tasks.getAndSet(Nil).foreach(_.cancel()))
 
   /** The number of scheduled methods that are not cancelled yet. */
   def activeTasks: Int = tasks.get.count(!_.isCancelled)

@@ -1,17 +1,19 @@
 package dev.coilix.context
 
+import cats.effect.IO
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.TypeInfo
 import java.util.concurrent.atomic.AtomicBoolean
-import scala.util.Try
 
 /**
  * An application context backed by a [[dev.coilix.context.BeanRegistry]].
  *
  * The registry is passed by name, so the context can exist before its beans and be injected into them. Closing the context
- * logs a message at `INFO` level, calls [[dev.coilix.context.ContextLifecycleListener.onContextClosing]] on the listener
- * beans phase by phase in the order of [[dev.coilix.context.ClosingPhase]], and then destroys the beans with the
- * [[dev.coilix.context.BeanDestroyer]].
+ * logs a message at `INFO` level, runs [[dev.coilix.context.ContextLifecycleListener.onContextClosing]] of the listener beans
+ * phase by phase in the order of [[dev.coilix.context.ClosingPhase]], and then destroys the beans with the
+ * [[dev.coilix.context.BeanDestroyer]]. `close()` runs the listeners on the `IORuntime` bean of the context, or on the global
+ * runtime of cats-effect when the context has none, and destroys the beans on the calling thread.
  *
  * @param registry
  *   the beans of the context, evaluated on first access
@@ -44,18 +46,29 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
 
   override def isActive: Boolean = active.get
 
-  override def close(): Unit =
-    if (active.compareAndSet(true, false)) destroyBeans()
+  override def start: IO[Unit] =
+    listeners.traverse_(_.onContextStarted(this))
 
-  private def destroyBeans(): Unit = {
-    log.info("Closing application context")
-    val listeners = createdBeans.map(_.instance).collect { case listener: ContextLifecycleListener => listener }.reverse
-    ClosingPhase.values.toList.foreach(phase => listeners.filter(_.closingPhase == phase).foreach(notifyClosing))
-    destroyer.destroy(registry.beans)
+  override def shutdown: IO[Unit] =
+    IO(active.compareAndSet(true, false)).ifM(closingListeners *> IO.blocking(destroyer.destroy(registry.beans)), IO.unit)
+
+  override def close(): Unit =
+    if (active.compareAndSet(true, false)) {
+      closingListeners.unsafeRunSync()(using SynchronousLifecycle.runtimeOf(this))
+      destroyer.destroy(registry.beans)
+    }
+
+  private def closingListeners: IO[Unit] = {
+    val reversed = listeners.reverse
+    logF.info("Closing application context") *>
+      ClosingPhase.values.toList.traverse_(phase => reversed.filter(_.closingPhase == phase).traverse_(notifyClosing))
   }
 
-  private def notifyClosing(listener: ContextLifecycleListener): Unit =
-    Try(listener.onContextClosing()).failed.foreach(failure =>
-      log.warn(s"Context listener ${listener.getClass.getName} failed while the context was closing", failure)
+  private def listeners: List[ContextLifecycleListener] =
+    createdBeans.map(_.instance).collect { case listener: ContextLifecycleListener => listener }
+
+  private def notifyClosing(listener: ContextLifecycleListener): IO[Unit] =
+    listener.onContextClosing.handleErrorWith(failure =>
+      logF.warn(s"Context listener ${listener.getClass.getName} failed while the context was closing", failure)
     )
 }

@@ -17,9 +17,8 @@ import scala.util.control.NonFatal
  * created with the [[dev.coilix.context.BeanInstantiator]], at once for an eager bean, and as a
  * [[dev.coilix.context.DeferredBean]] created on lookup for a lazy bean or a prototype. A singleton that requires a prototype
  * directly gets one instance of it, which is logged as a warning, because it usually means a missing `Provider`. When every
- * eager bean exists, the
- * [[dev.coilix.context.ContextLifecycleListener]] beans are notified in creation order. A failing listener closes the context
- * and its exception stops the build.
+ * eager bean exists, the context is returned without notifying the [[dev.coilix.context.ContextLifecycleListener]] beans; its
+ * owner runs [[dev.coilix.context.ConfigurableApplicationContext.start]].
  *
  * This is the default [[dev.coilix.context.ApplicationContextBuilder]].
  *
@@ -42,7 +41,7 @@ final class DefaultApplicationContextBuilder(
 
   private val contextBeanName = "applicationContext"
 
-  override def build(
+  override def create(
     definitions: List[BeanDefinition],
     singletons:  List[RegisteredBean],
     interpreter: Option[EffectInterpreter]
@@ -51,7 +50,7 @@ final class DefaultApplicationContextBuilder(
     lazy val beans:   InterpretedBeans               =
       executed(planner.plan(definitions, contextBean(context) :: singletons), interpreter)
     val _ = beans
-    started(context)
+    context
   }
 
   private def releasing(beans: => InterpretedBeans): BeanDestroyer =
@@ -66,18 +65,6 @@ final class DefaultApplicationContextBuilder(
     completion.complete(beans.registry)
     beans
   }
-
-  private def started(context: ConfigurableApplicationContext): ConfigurableApplicationContext =
-    try {
-      context.createdBeans.map(
-        _.instance
-      ).collect { case listener: ContextLifecycleListener => listener }.foreach(_.onContextStarted(context))
-      context
-    } catch {
-      case NonFatal(failure) =>
-        context.close()
-        throw failure
-    }
 
   private def contextBean(context: ApplicationContext): RegisteredBean =
     RegisteredBean.ofClass(contextBeanName, context.getClass, context)

@@ -1,6 +1,7 @@
 package dev.coilix.concurrency
 package scheduled
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.ClosingPhase
@@ -15,7 +16,7 @@ final class EventDrainWatcher(registrar: ScheduledMethodRegistrar) extends Conte
 
   override def closingPhase: ClosingPhase = ClosingPhase.Events
 
-  override def onContextStarted(context: ApplicationContext): Unit = ()
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.unit
 
-  override def onContextClosing(): Unit = tasksAtDrain.set(Some(registrar.activeTasks))
+  override def onContextClosing: IO[Unit] = IO(tasksAtDrain.set(Some(registrar.activeTasks)))
 }

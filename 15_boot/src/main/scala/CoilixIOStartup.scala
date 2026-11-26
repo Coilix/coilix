@@ -17,8 +17,9 @@ import scala.reflect.ClassTag
  * Starts an application in `IO`, as [[dev.coilix.boot.CoilixIOApp]] does.
  *
  * The context is a `Resource`: it is built with the given runtime registered as the `ioRuntime` bean, so the beans of the
- * concurrency module do not create a runtime of their own, and it closes when the resource is released, also when the fiber is
- * cancelled. The runners run between [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] in the order
+ * concurrency module do not create a runtime of their own, its [[dev.coilix.context.ContextLifecycleListener]] beans start in
+ * `IO` when it is acquired, and it shuts down in `IO` when the resource is released, also when the fiber is cancelled or a
+ * listener fails to start. The runners run between [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] in the order
  * of [[dev.coilix.boot.OrderedRunner.all]]: an [[dev.coilix.boot.IOApplicationRunner]] as its `IO`, any other runner in
  * `IO.blocking`. A failing runner is published as [[dev.coilix.events.ApplicationFailed]] and fails the start after the context
  * closes.
@@ -38,7 +39,8 @@ object CoilixIOStartup {
    */
   def application[T: ClassTag](args: List[String], runtime: IORuntime): Resource[IO, StartedApplication] =
     Resource
-      .make(IO.blocking(built[T](args, runtime)))(application => IO.blocking(application.context.close()))
+      .make(IO.blocking(built[T](args, runtime)))(application => application.context.shutdown)
+      .evalTap(application => application.context.start)
       .flatTap(application => fatalErrorsOf(application))
 
   /**

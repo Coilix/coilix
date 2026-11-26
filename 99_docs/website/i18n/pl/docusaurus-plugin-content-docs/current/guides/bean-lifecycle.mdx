@@ -44,7 +44,7 @@ Nazwa, która nie pasuje do żadnego beana, zatrzymuje start aplikacji wyjątkie
 
 ## Reagowanie na cały kontekst
 
-Bean, który potrzebuje wszystkich pozostałych beanów albo musi zatrzymać swoją pracę przed zniszczeniem jakiegokolwiek beana, implementuje `ContextLifecycleListener`. Coilix wywołuje `onContextStarted`, gdy istnieją już wszystkie beany, a `onContextClosing` przy zamykaniu kontekstu, przed pierwszą metodą `@PreDestroy`.
+Bean, który potrzebuje wszystkich pozostałych beanów albo musi zatrzymać swoją pracę przed zniszczeniem jakiegokolwiek beana, implementuje `ContextLifecycleListener`. Obie metody zwracają `cats.effect.IO[Unit]`: Coilix uruchamia `onContextStarted`, gdy istnieją już wszystkie beany, a `onContextClosing` przy zamykaniu kontekstu, przed pierwszą metodą `@PreDestroy`. Słuchacze działają jeden po drugim, więc słuchacz może w swoim `IO` poczekać, aż jego praca się zatrzyma. Wywołania blokujące opakowuje się w `IO.blocking`, tak jak w poniższym outboksie.
 
 Zamykanie przechodzi przez cztery fazy, niezależnie od kolejności tworzenia beanów:
 
@@ -57,4 +57,4 @@ Dopiero potem działają metody `@PreDestroy`. W obrębie jednej fazy pierwszy j
 
 <CodeBlock language="scala" title="lifecycle/OrderOutbox.scala">{OrderOutbox}</CodeBlock>
 
-Jeśli `onContextStarted` rzuci wyjątek, Coilix zamyka kontekst i start aplikacji się kończy. Jeśli wyjątek rzuci `onContextClosing`, Coilix zapisuje go w logu jako ostrzeżenie i kontynuuje zamykanie.
+Jeśli `IO` z `onContextStarted` zakończy się błędem, Coilix zamyka kontekst i start aplikacji się kończy. Jeśli błędem zakończy się `IO` z `onContextClosing`, Coilix zapisuje go w logu jako ostrzeżenie i kontynuuje zamykanie.

@@ -1,6 +1,7 @@
 package com.example
 package lifecycle
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.ClosingPhase
@@ -17,8 +18,9 @@ class OrderOutbox(mailer: MailSender) extends ContextLifecycleListener {
 
   override def closingPhase: ClosingPhase = ClosingPhase.Events
 
-  override def onContextStarted(context: ApplicationContext): Unit = ()
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.unit
 
-  override def onContextClosing(): Unit =
+  override def onContextClosing: IO[Unit] = IO.blocking {
     Iterator.continually(Option(pending.poll())).takeWhile(_.isDefined).flatten.foreach(mailer.send("shop@example.com", _))
+  }
 }

@@ -11,6 +11,7 @@ import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.SynchronousLifecycle
 
 /**
  * Builds a test context the way a `CoilixIOApp` builds an application, without the banner and the startup log.
@@ -40,11 +41,13 @@ final class DefaultTestContextFactory(
     val arguments   = parser.parse(setup.arguments)
     val environment = environmentLoader.load(safeDefaults ++ commandLineProperties(arguments) ++ setup.configurationOverrides)
     val startup     = assemble(ComponentProvider.from(environment))
-    val context     = startup.bootstrap.start(
-      setup.packages(startup.resolver),
-      Nil,
-      singletons(arguments, environment) ++ setup.beans.map(registered),
-      BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
+    val context     = SynchronousLifecycle.started(
+      startup.bootstrap.start(
+        setup.packages(startup.resolver),
+        Nil,
+        singletons(arguments, environment) ++ setup.beans.map(registered),
+        BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
+      )
     )
     StartupEvents.around(context)(if (setup.runners) startup.invoker.invoke(context, arguments))
   }

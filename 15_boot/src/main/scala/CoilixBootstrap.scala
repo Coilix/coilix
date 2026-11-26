@@ -16,7 +16,9 @@ trait CoilixBootstrap {
 
   /**
    * Builds the context from the components in `basePackages`, the enabled modules, the `extraDefinitions` and the ready
-   * `singletons`.
+   * `singletons`. The [[dev.coilix.context.ContextLifecycleListener]] beans are not notified yet: the caller runs
+   * [[dev.coilix.context.ConfigurableApplicationContext.start]] in `IO`, or starts the context with
+   * [[dev.coilix.context.SynchronousLifecycle.started]].
    *
    * @throws dev.coilix.context.NoSuchBeanException
    *   if a required dependency has no matching bean

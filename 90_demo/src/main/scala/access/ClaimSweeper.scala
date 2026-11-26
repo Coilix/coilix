@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package access
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Slf4s
 import dev.coilix.annotation.Value
@@ -33,7 +34,7 @@ final class ClaimSweeper(
 
   override def closingPhase: ClosingPhase = ClosingPhase.Producers
 
-  override def onContextStarted(context: ApplicationContext): Unit = ()
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.unit
 
-  override def onContextClosing(): Unit = sweep.cancel()
+  override def onContextClosing: IO[Unit] = IO(sweep.cancel())
 }

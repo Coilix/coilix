@@ -1,5 +1,6 @@
 package dev.coilix.diagnostics
 
+import cats.effect.IO
 import dev.coilix.annotation.Slf4s
 import dev.coilix.concurrency.FatalErrorHandler
 import dev.coilix.context.ApplicationContext
@@ -48,7 +49,7 @@ final class DiagnosticsMonitor(
   private val reacted   = AtomicBoolean(false)
   private val scheduler = AtomicReference(Option.empty[ScheduledExecutorService])
 
-  override def onContextStarted(context: ApplicationContext): Unit = {
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.blocking {
     round()
     val executor = Executors.newSingleThreadScheduledExecutor(runnable => diagnosticsThread(runnable))
     val period   = settings.interval.toMillis
@@ -56,8 +57,8 @@ final class DiagnosticsMonitor(
     scheduler.set(Some(executor))
   }
 
-  override def onContextClosing(): Unit =
-    scheduler.getAndSet(None).foreach(_.shutdownNow())
+  override def onContextClosing: IO[Unit] =
+    IO(scheduler.getAndSet(None).foreach(_.shutdownNow()))
 
   /** Runs one round of diagnostics now and returns its findings; the diagnostics thread calls it every interval. */
   def runChecks(): List[Finding] = {

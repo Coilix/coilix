@@ -13,6 +13,7 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.events.listeners.ArchivingListener
 import dev.coilix.events.listeners.AsyncJournal
 import dev.coilix.events.listeners.CancellingListener
@@ -119,12 +120,12 @@ final class DefaultEventBusTest extends FunSuite {
         ImmediateScheduler(),
         context.getBean[EventsSettings]
       )
-      bus.onContextStarted(context)
+      bus.onContextStarted(context).unsafeRunSync()(using SynchronousLifecycle.runtimeOf(context))
       bus.publish(OrderEvent.Placed(1))
       assert(context.getBean[FlakyNotifier].delivered.await(5, TimeUnit.SECONDS))
       assert(bus.awaitIdle(5.seconds))
       assertEquals((context.getBean[FlakyNotifier].attempts.get, bus.pendingDeliveries), (3, 0))
-      bus.onContextClosing()
+      bus.onContextClosing.unsafeRunSync()(using SynchronousLifecycle.runtimeOf(context))
     }
   }
 

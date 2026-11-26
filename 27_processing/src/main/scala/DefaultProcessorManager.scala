@@ -4,7 +4,6 @@ import cats.effect.IO
 import cats.effect.Ref
 import cats.effect.Resource
 import cats.effect.std.Supervisor
-import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.cluster.ReplicaIdentity
@@ -31,8 +30,7 @@ case class DefaultProcessorManager(
   settings:   ProcessingSettings,
   runs:       Ref[IO, Map[ShardKey, ShardRun]],
   control:    ControlLoop,
-  supervisor: Supervisor[IO],
-  runtime:    IORuntime
+  supervisor: Supervisor[IO]
 ) extends ProcessorManager
     with ContextLifecycleListener {
 
@@ -78,11 +76,9 @@ case class DefaultProcessorManager(
       .call(stopShards(managed.flatMap(keysOf), ReleaseReason.Shutdown, settings.shutdownTimeout).map(resultsOf))
       .flatMap(_.filterNot(_.isComplete).traverse_(logIncomplete))
 
-  override def onContextStarted(context: ApplicationContext): Unit =
-    startEnabled.unsafeRunSync()(using runtime)
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = startEnabled
 
-  override def onContextClosing(): Unit =
-    stopForShutdown.unsafeRunSync()(using runtime)
+  override def onContextClosing: IO[Unit] = stopForShutdown
 
   private def logIncomplete(result: StopResult): IO[Unit] =
     logF.warn(
@@ -263,15 +259,14 @@ object DefaultProcessorManager {
     collected: CollectedComponents,
     engines:   List[ProcessorEngine],
     identity:  ReplicaIdentity,
-    settings:  ProcessingSettings,
-    runtime:   IORuntime
+    settings:  ProcessingSettings
   ): Resource[IO, DefaultProcessorManager] =
     for {
       managed    <- Resource.make(IO.blocking(ProcessorAssembler(collected, engines, identity, settings).assemble()))(closed)
       supervisor <- Supervisor[IO](await = false)
       control    <- ControlLoop.resource
       runs       <- Resource.eval(initialRuns(managed, identity).flatMap(Ref.of[IO, Map[ShardKey, ShardRun]]))
-    } yield DefaultProcessorManager(managed, identity, settings, runs, control, supervisor, runtime)
+    } yield DefaultProcessorManager(managed, identity, settings, runs, control, supervisor)
 
   private def closed(managed: List[ManagedProcessor]): IO[Unit] =
     managed.traverse_(processor =>
