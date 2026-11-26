@@ -244,7 +244,7 @@ final class DefaultEventBusTest extends FunSuite {
     assertEquals(
       (closing.map(_.getMessage), closed),
       (
-        Some(s"Cannot publish an event of type ${classOf[OrderEvent.Placed].getName}, the context is closing"),
+        Some(s"Cannot publish an event of type ${classOf[OrderEvent.Cancelled].getName}, the context is closing"),
         s"Cannot publish an event of type ${classOf[OrderEvent.Placed].getName}, the context is closed"
       )
     )
@@ -267,7 +267,7 @@ final class DefaultEventBusTest extends FunSuite {
 
   @tailrec
   private def rejection(bus: EventBus, deadline: Long): Option[EventBusClosedException] =
-    Try(bus.publish(OrderEvent.Placed(2))).failed.toOption match {
+    Try(bus.publish(OrderEvent.Cancelled(2))).failed.toOption match {
       case Some(failure: EventBusClosedException) => Some(failure)
       case _ if System.nanoTime > deadline        => None
       case _                                      =>
