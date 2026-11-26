@@ -36,6 +36,7 @@ Backlog kolejnych etapów implementacji. Jeden plik to jeden task. Identyfikator
 | COILIX-00030 | [Diagnostyka i błędy fatalne](COILIX-00030_diagnostics_and_fatal_errors.md) | wysoki | w toku (krok 1 z 3: błędy fatalne wyłączają aplikację, ADR 0027; w kroku 2 eksperyment z zakleszczeniami wątków wirtualnych zrobiony, ADR 0039, i moduł `09_diagnostics` ze zdrowiem i kontrolami wątków platformowych, ADR 0040; zostały wątki wirtualne) |
 | COILIX-00031 | [Runtime na `IO`, komponenty aplikacji w tagless final](COILIX-00031_effectful_runtime.md) | najwyższy | w trakcie: krok 1 (ADR 0042) i połączenie cats-effect z rdzeniem z kroku 7; krok 2 (wiązanie `F[_]` z `IO`) wycofany przez COILIX-00032 (ADR 0043); dalej krok 3: `processing` na `IO` z fs2 |
 | COILIX-00032 | [IO, Resource i fs2 zamiast Pekko i tagless final](COILIX-00032_io_resource_fs2.md) | najwyższy | w trakcie: kroki 1–3 (ADR 0043, usunięcie wiązania `F[_]`, usunięcie Pekko i fs2 w rdzeniu), krok 4 w toku (część 1: procesory na `IO` i fiberach, ADR 0044), dalej część 2: `StreamProcessor` z opróżnianiem |
+| COILIX-00033 | [Logowanie: logF i backend z poziomami z configu](COILIX-00033_logging.md) | najwyższy | w trakcie: krok 1 (ADR 0046, `logF` z `@Slf4s`), dalej krok 2: moduł `logging` |
 
 Zależności między taskami:
 

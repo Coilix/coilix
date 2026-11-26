@@ -85,10 +85,8 @@ case class DefaultProcessorManager(
     stopForShutdown.unsafeRunSync()(using runtime)
 
   private def logIncomplete(result: StopResult): IO[Unit] =
-    IO(
-      log.warn(
-        s"Shards ${result.abandoned.mkString(", ")} of processor ${result.id.name} did not stop within ${settings.shutdownTimeout}"
-      )
+    logF.warn(
+      s"Shards ${result.abandoned.mkString(", ")} of processor ${result.id.name} did not stop within ${settings.shutdownTimeout}"
     )
 
   private def processorOf(id: ProcessorId): IO[ManagedProcessor] =
@@ -126,11 +124,9 @@ case class DefaultProcessorManager(
   private def logTopology(processor: ManagedProcessor): IO[Unit] = {
     val resolved = processor.settings
     val shards   = if (processor.shards.isEmpty) "no shards" else s"shards ${processor.shards.map(_.shard).mkString(", ")}"
-    IO(
-      log.info(
-        s"Processor ${processor.id.name} runs $shards of ${resolved.shardCount} on replica ${identity.self.index} of " +
-          s"${identity.replicaCount} (${resolved.slotCount} slots, ${resolved.assignment.name}, ${processor.engine.name})"
-      )
+    logF.info(
+      s"Processor ${processor.id.name} runs $shards of ${resolved.shardCount} on replica ${identity.self.index} of " +
+        s"${identity.replicaCount} (${resolved.slotCount} slots, ${resolved.assignment.name}, ${processor.engine.name})"
     )
   }
 
@@ -198,7 +194,7 @@ case class DefaultProcessorManager(
     isCurrent(key, generation).ifM(reportCrash(key, stage, error), IO.unit)
 
   private def reportCrash(key: ShardKey, stage: FailureStage, error: Throwable): IO[Unit] =
-    IO(log.warn(s"Shard $key failed in stage $stage", error)) *>
+    logF.warn(s"Shard $key failed in stage $stage", error) *>
       IO.realTimeInstant.flatMap(now => handle(key, WorkerEvent.Crashed(FailureInfo.of(stage, error, now))))
 
   private def stopWorker(key: ShardKey, timeout: FiniteDuration): IO[Unit] =
@@ -207,12 +203,12 @@ case class DefaultProcessorManager(
       handle(key, WorkerEvent.WorkerStopped)
 
   private def logAbandoned(key: ShardKey, outcome: StopOutcome, timeout: FiniteDuration): IO[Unit] =
-    IO.whenA(outcome == StopOutcome.Abandoned)(IO(log.warn(s"Shard $key did not stop within $timeout and was left behind")))
+    IO.whenA(outcome == StopOutcome.Abandoned)(logF.warn(s"Shard $key did not stop within $timeout and was left behind"))
 
   private def scheduleRestart(key: ShardKey, delay: FiniteDuration): IO[Unit] =
     for {
       run   <- runOf(key)
-      _     <- IO(log.info(s"Shard $key starts again in ${delay.toMillis} ms"))
+      _     <- logF.info(s"Shard $key starts again in ${delay.toMillis} ms")
       due    = IO.sleep(delay) *> control.post(handleCurrent(key, run.generation, WorkerEvent.RestartDue))
       fiber <- control.outside(supervisor.supervise(due))
       _     <- update(key, _.copy(restart = Option(fiber)))
@@ -252,7 +248,7 @@ case class DefaultProcessorManager(
   }
 
   private def guarded(what: String)(task: IO[Unit]): IO[Unit] =
-    task.handleErrorWith(error => IO(log.error(s"$what failed", error)))
+    task.handleErrorWith(error => logF.error(s"$what failed", error))
 }
 
 /** Creation of the [[dev.coilix.processing.DefaultProcessorManager]]. */
@@ -280,7 +276,7 @@ object DefaultProcessorManager {
   private def closed(managed: List[ManagedProcessor]): IO[Unit] =
     managed.traverse_(processor =>
       IO.blocking(processor.component.close())
-        .handleErrorWith(error => IO(log.error(s"Closing processor ${processor.id.name} failed", error)))
+        .handleErrorWith(error => logF.error(s"Closing processor ${processor.id.name} failed", error))
     )
 
   private def initialRuns(managed: List[ManagedProcessor], identity: ReplicaIdentity): IO[Map[ShardKey, ShardRun]] =

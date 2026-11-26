@@ -25,6 +25,6 @@ final class RecallBriefing(board: RecallBoard) extends IOApplicationRunner {
   def isDone: Boolean = done.get
 
   override def run(arguments: ApplicationArguments): IO[Unit] =
-    IO(board.pinned.getOrElse("No recall notices")).flatMap(notice => IO(log.info(s"Morning briefing: $notice"))) *>
+    IO(board.pinned.getOrElse("No recall notices")).flatMap(notice => logF.info(s"Morning briefing: $notice")) *>
       IO(done.set(true))
 }

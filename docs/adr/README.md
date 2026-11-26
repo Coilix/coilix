@@ -50,6 +50,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0043](0043-io-resource-fs2.md) | Coilix na IO, Resource i fs2, bez Pekko i bez tagless final | proponowana |
 | [0044](0044-processors-on-io.md) | Procesory tła na IO i fiberach | proponowana |
 | [0045](0045-single-io-entry-point.md) | Jeden punkt wejścia aplikacji: CoilixIOApp | proponowana |
+| [0046](0046-logging.md) | Logowanie: logF z @Slf4s i własny backend SLF4J | proponowana |
 
 ## Nowa decyzja
 

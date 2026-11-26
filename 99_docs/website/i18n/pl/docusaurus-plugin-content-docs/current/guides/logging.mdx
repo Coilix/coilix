@@ -1,0 +1,23 @@
+---
+id: logging
+title: Logowanie
+description: Loguj ze zwykłego kodu przez log, a z kodu w IO przez logF; oba pola dodaje @Slf4s.
+sidebar_position: 14
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import PaymentAudit from '!!raw-loader!@examples/scala/logging/PaymentAudit.scala';
+
+Ta strona pokazuje, jak klasa aplikacji Coilix loguje. `@Slf4s` dodaje do oznaczonej klasy albo obiektu dwa prywatne pola: `log`, czyli zwykły `Logger` SLF4J, i `logF`, ten sam logger z metodami, które zwracają `IO[Unit]`. Kod napisany w `IO` używa `logF`, więc żadnego wywołania logu nie trzeba opakowywać w `IO(...)`.
+
+## Logowanie z IO i ze zwykłego kodu
+
+<CodeBlock language="scala" title="PaymentAudit.scala">{PaymentAudit}</CodeBlock>
+
+`logF` ma `trace`, `debug`, `info`, `warn` i `error`, każde z opcjonalnym wyjątkiem. Nic nie trafia do logu, dopóki `IO` się nie wykona, a wiadomość powstaje tylko wtedy, gdy jej poziom jest włączony, więc wiadomość `debug` nic nie kosztuje przy wyłączonym debugu. W kodzie, który nie działa w `IO`, np. w metodzie `@PostConstruct` zwracającej `Unit`, używaj `log`.
+
+Klasa, która deklaruje własne `log`, nie dostaje żadnego z pól, a klasa z własnym `logF` je zachowuje.
+
+## Backend logowania
+
+Log idzie przez SLF4J, więc backend, np. Logback albo Log4j 2, wybiera aplikacja. Biblioteki, które logują przez SLF4J, piszą do tego samego backendu.

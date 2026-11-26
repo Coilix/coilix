@@ -53,12 +53,12 @@ final class ShutdownTimeouts(settings: CatsEffectSettings, environment: Option[E
     limit:      FiniteDuration,
     cancel:     IO[Unit]
   ): IO[Outcome[IO, Throwable, Unit]] =
-    cancel.start *> IO(log.warn(s"Finalizer of bean '${definition.beanName}' took longer than $limit and was cancelled"))
+    cancel.start *> logF.warn(s"Finalizer of bean '${definition.beanName}' took longer than $limit and was cancelled")
       .as(Outcome.canceled[IO, Throwable, Unit])
 
   private def reported(definition: BeanDefinition)(outcome: Outcome[IO, Throwable, Unit]): IO[Unit] =
     outcome match {
-      case Outcome.Errored(failure) => IO(log.warn(s"Finalizer of bean '${definition.beanName}' failed", failure))
+      case Outcome.Errored(failure) => logF.warn(s"Finalizer of bean '${definition.beanName}' failed", failure)
       case _                        => IO.unit
     }
 }

@@ -26,10 +26,10 @@ final class RecallBoard(bulletin: RecallBulletin) {
   /** Pins the recall bulletin to the board. */
   @PostConstruct
   def pin(): IO[Unit] =
-    IO(notice.set(Some(s"Recall bulletin ${bulletin.issue}"))) *> IO(log.info(s"Pinned recall bulletin ${bulletin.issue}"))
+    IO(notice.set(Some(s"Recall bulletin ${bulletin.issue}"))) *> logF.info(s"Pinned recall bulletin ${bulletin.issue}")
 
   /** Takes the bulletin down. */
   @PreDestroy
   def takeDown(): IO[Unit] =
-    IO(notice.set(None)) *> IO(log.info(s"Took down recall bulletin ${bulletin.issue}"))
+    IO(notice.set(None)) *> logF.info(s"Took down recall bulletin ${bulletin.issue}")
 }

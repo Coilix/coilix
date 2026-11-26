@@ -147,13 +147,17 @@ def featureGroup(id: String): Seq[Setting[?]] =
 
 lazy val common = scalaModule("common", "01_common", "dev.coilix.common")
   .settings(coreGroup)
-  .settings(description := "Shared types and extensions for Coilix")
+  .settings(
+    description := "Shared types and extensions for Coilix, with the logger in IO that @Slf4s adds as logF",
+    libraryDependencies ++= Seq(Dependencies.catsEffect, Dependencies.slf4jApi, Dependencies.munitCatsEffect % Test)
+  )
 
 lazy val annotations = javaModule("annotations", "02_annotations", "dev[.]coilix[.]annotation")
   .settings(coreGroup)
   .settings(description := "Runtime annotations for Coilix components, configuration and logging")
 
 lazy val slf4sPlugin = scalaModule("slf4s-plugin", "03_slf4s_plugin", "dev.coilix.slf4s")
+  .dependsOn(common % Test)
   .settings(coreGroup)
   .settings(
     description                         := "Scala 3 compiler plugin that adds an SLF4J logger to classes annotated with @Slf4s",

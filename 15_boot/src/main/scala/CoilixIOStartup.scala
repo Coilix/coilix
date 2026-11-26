@@ -87,7 +87,7 @@ object CoilixIOStartup {
     CoilixApplicationRunner.default.start[T](args, List(RegisteredBean.of[IORuntime](runtimeBeanName, runtime)))
 
   private def runOne(application: StartedApplication, entry: OrderedRunner): IO[Unit] =
-    IO(log.debug(s"Running ${entry.runner.getClass.getSimpleName}")) *>
+    logF.debug(s"Running ${entry.runner.getClass.getSimpleName}") *>
       (entry.runner match {
         case runner: IOApplicationRunner => runner.run(application.arguments)
         case _ => IO.blocking(entry.run(application.arguments))

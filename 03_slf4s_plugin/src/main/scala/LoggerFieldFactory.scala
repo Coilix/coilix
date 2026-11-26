@@ -16,4 +16,10 @@ trait LoggerFieldFactory {
    *   source file the definition belongs to, used for positions in compiler messages
    */
   def create(loggerName: String, source: SourceFile)(using Context): ValDef
+
+  /**
+   * An untyped definition of the field [[dev.coilix.slf4s.LoggerField.effectfulName]], which wraps the field `log` in a logger
+   * whose calls are `IO` values, or `None` when such a logger is not on the classpath of the compilation.
+   */
+  def createEffectful(source: SourceFile)(using Context): Option[ValDef]
 }
