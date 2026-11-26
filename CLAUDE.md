@@ -43,13 +43,7 @@ Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium
 
 `99_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `99_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
-Moduły `data`, `web`, `security`, `processing` i `logging` są opcjonalne (zasady w `docs/architecture/modularity.md`):
-
-- `common`, `annotations`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot` i `testkit` nie zależą od modułów funkcji (`data`, `web`, `security`, `processing`, `logging`) ani nie odwołują się do ich klas.
-- Moduły funkcji nie zależą od siebie nawzajem. Połączenie dwóch funkcji trafia do osobnego modułu integracyjnego.
-- Moduł funkcji podłącza się przez `CoilixModule` i `META-INF/services/dev.coilix.context.CoilixModule`, a nie przez zależność `boot` od niego. Aplikacja wyłącza moduł kluczem `coilix.modules.<nazwa>.enabled = false`.
-- Build sprawdza te zasady zadaniem `checkModuleLayers` (`project/ModuleLayers.scala`), uruchamianym przy kompilacji roota, więc także przy `sbt testFull`.
-- Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji.
+Moduły `data`, `web`, `security`, `processing` i `logging` są opcjonalne: rdzeń (`01`–`16`) nie zależy od nich ani od ich klas, moduły funkcji nie zależą od siebie nawzajem (połączenie idzie do modułu integracyjnego), a moduł funkcji podłącza się przez `CoilixModule` w `META-INF/services` i wyłącza kluczem `coilix.modules.<nazwa>.enabled = false`. Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji. Pilnuje tego `checkModuleLayers` przy `sbt testFull`, szczegóły w `docs/architecture/modularity.md`.
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy (`demo` i puste moduły funkcji do czasu pierwszej implementacji), dostaje `.settings(unpublished)`, czyli `publish / skip := true` bez bazy MiMa.
 Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/main/scala`, bez katalogów pakietu.
@@ -58,7 +52,7 @@ Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jedny
 
 ## Narzędzia
 
-Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru poziomu, nie są publikowane (`unpublished`) i nie podlegają `checkModuleLayers` (ADR 0038).
+Skrypt `tools/sbt-lite.sh` uruchamia sbt z krótkim podsumowaniem zamiast pełnego wyjścia (sekcja „Praca agenta”). Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru poziomu, nie są publikowane (`unpublished`) i nie podlegają `checkModuleLayers` (ADR 0038).
 
 | Katalog | Projekt sbt | Pakiet | Zawartość |
 |---|---|---|---|
@@ -135,13 +129,11 @@ Dokumentację API generuje Scaladoc (moduły Scali) i Javadoc (`02_annotations`)
 
 ## Wersjonowanie
 
-Standard jest w `docs/architecture/versioning.md`: SemVer, `early-semver` i grupy wydań z osobnymi wersjami (ADR 0011). Rdzeń (`common`, `annotations`, `slf4s-plugin`, `config`, `context`, `concurrency`, `cluster`, `events`, `diagnostics`, `boot`, `testkit`) ma jedną wersję z tagu `core-vX.Y.Z`, każdy moduł funkcji własną z tagu `<moduł>-vX.Y.Z`.
+Standard jest w `docs/architecture/versioning.md` (SemVer, `early-semver`, grupy wydań z tagami `core-vX.Y.Z` i `<moduł>-vX.Y.Z`, ADR 0011).
 
-- Nowy moduł rdzenia dostaje w `build.sbt` `.settings(coreGroup)`, a nowy moduł funkcji `.settings(featureGroup("<id>"))` i wpis `<id>` na liście w `ReleaseGroups.buildSettings(...)`.
-
-- Zmiana niezgodna (usunięcie lub zmiana publicznego API, w tym klas `Default*` i kluczy configu `coilix.*`) w fazie `0.x` podnosi `MINOR`, a od `1.0.0` `MAJOR`.
-- Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
-- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej grupy wydań, której moduły zmienia (`core` albo moduł funkcji), z ID taska i oznaczeniem **BREAKING** z opisem migracji przy zmianie niezgodnej. Format opisuje `changelog/README.md`, a sprawdza `npm run check` w `99_docs/website` (ADR 0011).
+- Nowy moduł rdzenia dostaje w `build.sbt` `.settings(coreGroup)`, a nowy moduł funkcji `.settings(featureGroup("<id>"))` i wpis `<id>` w `ReleaseGroups.buildSettings(...)`.
+- Zmiana niezgodna (publiczne API, w tym klasy `Default*` i klucze `coilix.*`) w fazie `0.x` podnosi `MINOR`. Przed usunięciem publicznego elementu najpierw `@deprecated("use X instead", since = "<następna wersja>")`.
+- Każda zmiana widoczna dla użytkownika dostaje wpis w `changelog/<grupa>/unreleased.md` każdej zmienionej grupy wydań, z ID taska i **BREAKING** z opisem migracji przy zmianie niezgodnej (format: `changelog/README.md`).
 
 ## Proces i gałęzie
 
@@ -149,7 +141,6 @@ Pełna procedura jest w `docs/process/development.md`: trunk-based z gałęzią 
 
 - Nie commituje się bezpośrednio na `master`. Każdy task idzie na gałęzi `feature/COILIX-NNNNN-opis` (poprawka: `fix/...`) od aktualnego `master` i trafia na `master` przez PR scalany przez „Squash and merge” (ADR 0008). Jeden PR to jedna funkcja albo jedna poprawka.
 - `master` zawsze kompiluje się i przechodzi `sbt testFull`. Niegotowa funkcja czeka na gałęzi albo jest dzielona na samodzielne kroki.
-- Wydanie to podpisany tag `<grupa>-vX.Y.Z` na `master` po scaleniu PR z `npm run prepare-release -- <grupa> <wersja>`. Gałąź `series/<grupa>-X.Y` powstaje dopiero, gdy trzeba wydać poprawkę starszej linii.
 - Przed PR: `sbt testFull doc demo/run` i definicja ukończenia z `docs/process/development.md`.
 
 ## Taski
@@ -170,18 +161,17 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 
 - `sbt testFull` uruchamia wszystkie testy (`sbt test` w sbt 2 to `testQuick` z cache).
 - `sbt demo/run` uruchamia demo.
-- `sbt testCoverage` uruchamia testy z pomiarem pokrycia i przerywa się poniżej progu (90% instrukcji, 80% gałęzi). Raport HTML: `target/out/jvm/scala-<wersja>/coilix/scoverage-report/index.html`. Cache dyskowy sbt 2 przywraca klasy z instrumentacją bez katalogów `scoverage-data`, więc lokalnie trzeba podać pusty katalog cache: `sbt --sbt-cache <pusty katalog> testCoverage`. `demo` i plugin kompilatora są wyłączone z pomiaru.
 - `sbt scalafmtAll scalafmtSbt javafmtAll` formatuje cały kod i pliki buildu, a `sbt checkFormat` tylko sprawdza formatowanie (tak jak CI).
 - `sbt checkLicenses` sprawdza licencje zależności `compile` i `runtime`.
-- `sbt doc` generuje dokumentację API każdego modułu do `target/out/jvm/scala-<wersja>/coilix-<moduł>/api` (`02_annotations`: `target/out/jvm/u/coilix-annotations/api`).
-- `sbt docs/apiSite` buduje jedną stronę Scaladoc publikowanych modułów z Javadoc adnotacji w `javadoc/` do `target/out/jvm/scala-<wersja>/coilix-docs/api-site`.
-- `sbt docs/testFull` kompiluje przykłady z `99_docs/examples/next/` i wczytuje ich pliki konfiguracji.
-- W `99_docs/website` (Node.js z `.nvmrc`): `npm ci` instaluje zależności, `npm test` uruchamia testy skryptów strony, `npm run check` sprawdza strony, pliki `changelog/` i licencje npm, `npm run build` buduje stronę w obu językach, `npm start` uruchamia podgląd (`-- --locale pl` dla polskiego).
-- `sbt version` pokazuje wersję każdego modułu wyliczoną z tagów jego grupy (sbt-dynver), a `sbt "show releaseGroup"` grupę modułu. Wersji nie wpisuje się ręcznie.
-- `sbt mimaReportBinaryIssues` sprawdza kompatybilność binarną z poprzednim wydaniem tej samej linii.
-- `sbt "releaseVerify <grupa> <wersja>"` sprawdza przed wydaniem moduły grupy (wersja z tagu, testy, licencje, MiMa, `checkReleasedCore`). W `99_docs/website` `npm run prepare-release -- <grupa> <wersja>` przygotowuje PR wydania (`docs/process/development.md`).
-- Wspólne konfiguracje uruchomieniowe IntelliJ są w `.run/` (`Demo` oraz `sbt testFull`, `sbt checkFormat`, `sbt demo/run`, `sbt doc`). Nową konfigurację dla wszystkich zapisuje się tam przez „Store as project file”.
-- Styl kodu IntelliJ jest w `.idea/codeStyles/`: formatowanie Scali (Ctrl+Alt+L) idzie przez scalafmt z `.scalafmt.conf`, a kod generowany przez IDE ma klamry zamiast składni wcięć.
+- `sbt doc` generuje dokumentację API (zepsute linki: sekcja „Dokumentacja”).
 - Gdy działa sbt uruchomione przez IntelliJ, sbt z terminala trzeba odpalać z `-Dsbt.server.autostart=false`.
-- W workflowach GitHuba każde wywołanie sbt ma `--server`, a powłoka to `bash` z `pipefail` (`defaults.run.shell`). Runner sbt 2 domyślnie używa cienkiego klienta, który nie przyjmuje kilku komend naraz i poddaje się, gdy serwer startuje dłużej niż 300 s, a bez `pipefail` `sbt ... | tee` przechodzi mimo błędu. Wywołanie sbt w workflowie idzie przez `.github/scripts/sbt-retry.sh <log> <argumenty>`, który powtarza komendę tylko po błędzie pobierania (np. HTTP 429 z Maven Central), a zależności są w cache `sbt-deps-*` z `restore-keys` (ADR 0023). Wyjątkiem jest publikacja (`ci-release`), której nie powtarza się automatycznie.
-- IntelliJ buduje własnym kompilatorem (nie przez sbt shell, bo sbt 2 nie kopiuje zasobów do `classes`). Jar pluginu `@Slf4s` tworzy tylko sbt. Jar ma stałą nazwę `coilix-slf4s-plugin.jar` (niezależną od wersji z gita). Gdy IntelliJ zgłasza `No plugin in path ...coilix-slf4s-plugin.jar`, trzeba uruchomić `sbt slf4s-plugin/package`. Jeśli jar istnieje, a błąd zostaje, trzeba zrestartować serwer kompilacji Scali w IntelliJ (trzyma starą wersję jara po przebudowie przez sbt).
+- Pokrycie (`testCoverage`), strona dokumentacji (`docs/apiSite`, `npm` w `99_docs/website`), wersje i wydania (`releaseVerify`, MiMa), konfiguracja IntelliJ (`.run/`, `No plugin in path ...coilix-slf4s-plugin.jar`) i sbt w workflowach GitHuba (`--server`, `sbt-retry.sh`) są w `docs/process/tooling.md`. Czytaj go, gdy task tego dotyczy.
+
+## Praca agenta
+
+- Kierunek modelu efektów wyznaczają ADR 0042 i 0043: `IO`, `Resource` i fs2, bez tagless final i bez Pekko. Plan, notatka albo wznowiona sesja, które mówią inaczej, są nieaktualne.
+- Przy „co dalej?” najpierw sprawdź stan: `git status --short --branch`, otwarte PR-y (`gh pr list --state open`) i status taska w `tasks/README.md`. Dopiero potem proponuj następny krok.
+- Konflikty, rebase i kolejność zależnych PR-ów obsługuje skill `resolve-pr-conflicts` (`.claude/skills/resolve-pr-conflicts/SKILL.md`). Uruchamiaj go po scaleniu PR-a, od którego zależy inny, i zanim wypchniesz gałąź zbudowaną na innej gałęzi.
+- sbt uruchamiaj przez `tools/sbt-lite.sh <argumenty sbt>` (np. `tools/sbt-lite.sh testFull doc`), a nie przez gołe `sbt`. Skrypt zapisuje pełne wyjście do `target/sbt-lite/last.log` i wypisuje tylko wynik, liczby testów, a przy błędzie nieudane testy i pierwsze linie `[error]`. Szczegóły czytaj z logu (`grep -n -A20 "<test albo plik>" target/sbt-lite/last.log`), bez ponownego uruchamiania sbt. Gołe `sbt` tylko wtedy, gdy potrzebny jest interaktywny shell albo wyjście w trakcie działania.
+- Walidację raportuj z nazwą komendy i wynikiem (przeszło / co padło).
+- W jednej procedurze używaj jednej powłoki (Bash z ukośnikami w ścieżkach). Błąd środowiska (ścieżka, powłoka, zablokowany port sbt) sprawdź, zanim powtórzysz komendę.

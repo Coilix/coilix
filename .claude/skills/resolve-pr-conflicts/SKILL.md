@@ -110,15 +110,15 @@ If the files did not change, the earlier verification still holds:
 git diff --stat <old head of the branch> HEAD
 ```
 
-An empty diff means the tree is the same as before the rebase. Otherwise run the checks from `CLAUDE.md`. When IntelliJ runs its own sbt, add `-Dsbt.server.autostart=false`:
+An empty diff means the tree is the same as before the rebase. Otherwise run the checks from `CLAUDE.md` through `tools/sbt-lite.sh`, which prints only the result, the test counts and the failures, and keeps the full output in `target/sbt-lite/last.log` (it already adds `-Dsbt.server.autostart=false`):
 
 ```bash
-sbt -Dsbt.server.autostart=false scalafmtAll testFull
-sbt -Dsbt.server.autostart=false doc demo/run          # when src/main or the demo changed
+tools/sbt-lite.sh scalafmtAll testFull
+tools/sbt-lite.sh doc demo/run                         # when src/main or the demo changed
 (cd 99_docs/website && npm run check)                  # when docs, changelog or guides changed
 ```
 
-Count the modules in the output: every module must report `Passed: Total …` and none `Failed`.
+`sbt-lite: OK` with `0 failed, 0 errors` means every module passed. On a failure read the details from the log (`grep -n -A20 "<test or file>" target/sbt-lite/last.log`) instead of running sbt again.
 
 ## 5. Publish
 
