@@ -160,20 +160,21 @@ enum ConfigError {
   /** The description of this error, naming the configuration path and what was expected. */
   def message: String =
     this match {
-      case Unparsable(source, reason)                 => s"Cannot parse configuration $source: $reason"
-      case Unresolved(reason)                         => s"Cannot resolve configuration: $reason"
-      case Unreadable(path, reason)                   => s"Cannot read configuration '$path': $reason"
-      case Missing(path, target)                      => s"Missing configuration '$path' (expected ${target.getName})"
-      case UnsupportedScalar(path, target)            => s"Cannot read configuration '$path' as ${target.getName}"
-      case UnsupportedTarget(path, target)            => s"Cannot bind configuration '$path' to ${target.getName}"
-      case UnsupportedCollection(path, collection)    => s"Cannot bind configuration '$path' to collection ${collection.getName}"
-      case InvalidValue(path, target, reason)         => s"Cannot bind configuration '$path' to ${target.getName}: $reason"
-      case UnknownClass(path, className)              => s"Class '$className' configured at '$path.class' cannot be loaded"
+      case Unparsable(source, reason)                  => s"Cannot parse configuration $source: $reason"
+      case Unresolved(reason)                          => s"Cannot resolve configuration: $reason"
+      case Unreadable(path, reason)                    => s"Cannot read configuration '$path': $reason"
+      case Missing(path, target)                       => s"Missing configuration '$path' (expected ${target.getName})"
+      case UnsupportedScalar(path, target)             => s"Cannot read configuration '$path' as ${target.getName}"
+      case UnsupportedTarget(path, target)             => s"Cannot bind configuration '$path' to ${target.getName}"
+      case UnsupportedCollection(path, collection)     => s"Cannot bind configuration '$path' to collection ${collection.getName}"
+      case InvalidValue(path, target, reason)          => s"Cannot bind configuration '$path' to ${target.getName}: $reason"
+      case UnknownClass(path, className)               => s"Class '$className' configured at '$path.class' cannot be loaded"
       case IncompatibleClass(path, configured, target) => incompatible(path, configured, target)
-      case AbstractTarget(path, target)               => abstractTarget(path, target)
-      case AmbiguousConstructor(path, target)         => s"${target.getName} bound at '$path' needs one public constructor or one marked @Autowired"
-      case CreationFailed(path, target, cause)        => s"Cannot create ${target.getName} from configuration '$path': $cause"
-      case TypeMismatch(path, actual, target)         => s"Configuration '$path' is ${actual.getName}, not ${target.getName}"
+      case AbstractTarget(path, target)                => abstractTarget(path, target)
+      case AmbiguousConstructor(path, target)          =>
+        s"${target.getName} bound at '$path' needs one public constructor or one marked @Autowired"
+      case CreationFailed(path, target, cause)         => s"Cannot create ${target.getName} from configuration '$path': $cause"
+      case TypeMismatch(path, actual, target)          => s"Configuration '$path' is ${actual.getName}, not ${target.getName}"
     }
 
   /** The exception that reports this error to code that throws. */
