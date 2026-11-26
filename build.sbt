@@ -31,7 +31,7 @@ ThisBuild / developers           := List(
   )
 )
 
-ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "processing"))
+ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "processing", "logging"))
 
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
@@ -242,6 +242,19 @@ lazy val processing = slf4sModule("processing", "27_processing", "dev.coilix.pro
     libraryDependencies += Dependencies.munitCatsEffect % Test
   )
 
+lazy val logging = slf4sModule("logging", "28_logging", "dev.coilix.logging")
+  .dependsOn(context, testkit % Test)
+  .settings(featureGroup("logging"))
+  .settings(
+    description                                        :=
+      "Logging backend of Coilix: the SLF4J provider with levels by package from coilix.logging, changed at runtime, and one format for every library",
+    libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
+    libraryDependencies ++= Dependencies.loggingBridges,
+    libraryDependencies += Dependencies.munitCatsEffect % Test,
+    Test / fork                                        := true,
+    Test / parallelExecution                           := false
+  )
+
 lazy val security = slf4sModule("security", "22_security", "dev.coilix.security")
   .dependsOn(context)
   .settings(featureGroup("security"))
@@ -264,13 +277,13 @@ lazy val testkit = slf4sModule("testkit", "16_testkit", "dev.coilix.testkit")
   )
 
 lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
-  .dependsOn(boot, cluster, processing, testkit % Test)
+  .dependsOn(boot, cluster, processing, logging, testkit % Test)
   .settings(unpublished)
   .settings(
     coverageEnabled                                    := false,
     libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
-    libraryDependencies ++= Dependencies.log4jSlf4j,
     libraryDependencies += Dependencies.munitCatsEffect % Test,
+    Test / fork                                        := true,
     run / fork                                         := true,
     run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
     run / outputStrategy                               := Some(StdoutOutput)
@@ -286,7 +299,7 @@ def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
 lazy val docs = slf4sModule("docs", "99_docs", "com.example")
-  .dependsOn(boot, cluster, processing, testkit % Test)
+  .dependsOn(boot, cluster, processing, logging, testkit % Test)
   .settings(unpublished)
   .settings(
     description                                        := "Compiled examples and the combined API documentation of the Coilix documentation site",
@@ -295,7 +308,7 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
     Compile / unmanagedResourceDirectories             := Seq(baseDirectory.value / "examples" / "next" / "resources"),
     libraryDependencies += Dependencies.munitCatsEffect % Test,
     Test / unmanagedSourceDirectories += baseDirectory.value / "examples" / "next" / "test",
-    libraryDependencies += Dependencies.slf4jSimple,
+    libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
     run / fork                                         := true,
     run / outputStrategy                               := Some(StdoutOutput),
     Test / fork                                        := true,
@@ -312,7 +325,8 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (diagnostics / Compile / tastyFiles).value,
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value,
-        (processing / Compile / tastyFiles).value
+        (processing / Compile / tastyFiles).value,
+        (logging / Compile / tastyFiles).value
       ).flatten
     ),
     Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
@@ -343,6 +357,7 @@ lazy val modules: Seq[ProjectReference] =
     security,
     processingAnnotations,
     processing,
+    logging,
     boot,
     testkit,
     demo,
@@ -358,7 +373,7 @@ lazy val root = (project in file("."))
       ModuleLayers.check(
         buildDependencies.value,
         coreModules.map(_.id),
-        Seq(data, web, security, processing).map(_.id)
+        Seq(data, web, security, processing, logging).map(_.id)
       )
     ),
     Compile / compile := Def.uncached((Compile / compile).dependsOn(checkModuleLayers).value)

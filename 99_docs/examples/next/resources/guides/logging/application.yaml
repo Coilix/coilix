@@ -1,0 +1,8 @@
+coilix:
+  logging:
+    level: info
+    levels:
+      org.apache.kafka: warn
+      com.example.noisy: off
+      com.example.billing.Invoices: debug
+    async: true

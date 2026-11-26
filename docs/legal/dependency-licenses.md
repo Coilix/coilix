@@ -17,10 +17,12 @@
 | `org.reflections:reflections` | 0.10.2 | WTFPL **lub** Apache-2.0 (do wyboru) | `context` | tak, korzystamy z Apache-2.0 |
 | `org.javassist:javassist` (przez reflections) | 3.28.0-GA | MPL-1.1 **lub** LGPL-2.1 **lub** Apache-2.0 (do wyboru) | `context` | tak, korzystamy z Apache-2.0 |
 | `com.google.code.findbugs:jsr305` (przez reflections) | 3.0.2 | Apache-2.0 | `context` | tak |
-| `org.typelevel:cats-effect_3`, `cats-effect-kernel_3`, `cats-effect-std_3` | 3.7.1 | Apache-2.0 | `concurrency` | tak |
+| `org.typelevel:cats-effect_3`, `cats-effect-kernel_3`, `cats-effect-std_3` | 3.7.1 | Apache-2.0 | `common`, `concurrency` | tak |
 | `org.typelevel:cats-core_3`, `cats-kernel_3` (przez cats-effect) | 2.13.0 | MIT | `concurrency` | tak |
 | `co.fs2:fs2-core_3` | 3.16.0 | MIT | `concurrency` | tak |
 | `org.scodec:scodec-bits_3` (przez fs2-core) | 1.2.5 | BSD-3-Clause | `concurrency` | tak |
+| `org.slf4j:jul-to-slf4j`, `jcl-over-slf4j` | 2.0.20 | MIT, Apache-2.0 | `logging` | tak |
+| `org.apache.logging.log4j:log4j-to-slf4j`, `log4j-api` | 2.26.1 | Apache-2.0 | `logging` | tak |
 
 `sbt dependencyLicenseInfo` pokazuje tylko pierwszą licencję z POM-a (dla javassist MPL 1.1, dla reflections WTFPL). Pełne listy z POM-ów potwierdzają, że obie biblioteki dają też Apache-2.0.
 
@@ -42,7 +44,7 @@ Nie są dystrybuowane z naszymi artefaktami, więc nie nakładają obowiązków 
 |---|---|
 | `org.scalameta:munit` | Apache-2.0 |
 | `org.slf4j:slf4j-simple` (testy) | MIT |
-| `org.apache.logging.log4j:log4j-slf4j2-impl`, `log4j-core`, `log4j-api` (demo, testy `concurrency`, bo `slf4j-simple` ma MDC, które niczego nie przechowuje) | Apache-2.0 |
+| `org.apache.logging.log4j:log4j-slf4j2-impl`, `log4j-core`, `log4j-api` (testy `concurrency`, bo `slf4j-simple` ma MDC, które niczego nie przechowuje) | Apache-2.0 |
 | `org.wartremover:wartremover` (moduł narzędziowy `tools/warts`, niepublikowany) | Apache-2.0 |
 | sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage, sbt-java-formatter, google-java-format | Apache-2.0 |
 

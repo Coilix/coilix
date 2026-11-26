@@ -9,7 +9,10 @@ import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.RecallBoard
 import dev.coilix.demo.workshop.RecallBriefing
 import dev.coilix.demo.workshop.ServiceDesk
+import dev.coilix.demo.workshop.TroubleshootingDesk
 import dev.coilix.demo.workshop.WorkshopProcessor
+import dev.coilix.logging.LogLevel
+import dev.coilix.logging.LogLevels
 import dev.coilix.processing.ProcessorManager
 import dev.coilix.processing.WorkerState
 import dev.coilix.testkit.CoilixIOSuite
@@ -44,6 +47,15 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
       )
       assertEquals((beanOption[FaultCodeExport], shards), (None, "0 Completed, 1 Completed"))
     }
+  }
+
+  coilixTest("turns the logs of the processors up and down at runtime, and reads the levels of application.yaml") {
+    val desk = bean[TroubleshootingDesk]
+    for {
+      during     <- desk.investigateProcessors
+      after      <- desk.closeInvestigation
+      reflection <- bean[LogLevels].levelOf("org.reflections.Reflections")
+    } yield assertEquals((during, after, reflection), (LogLevel.Debug, LogLevel.Info, LogLevel.Warn))
   }
 
   coilixTest("the workshop runs its effects on the runtime of the test") {

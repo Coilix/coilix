@@ -7,6 +7,8 @@ sidebar_position: 14
 
 import CodeBlock from '@theme/CodeBlock';
 import PaymentAudit from '!!raw-loader!@examples/scala/logging/PaymentAudit.scala';
+import LoggingYaml from '!!raw-loader!@examples/resources/guides/logging/application.yaml';
+import Troubleshooting from '!!raw-loader!@examples/scala/logging/Troubleshooting.scala';
 
 This page shows how a class of a Coilix application logs. `@Slf4s` adds two private fields to the annotated class or object: `log`, a plain SLF4J `Logger`, and `logF`, the same logger with methods that return `IO[Unit]`. Code written in `IO` uses `logF`, so no log call has to be wrapped in `IO(...)`.
 
@@ -20,4 +22,32 @@ A class that declares its own `log` gets neither field, and a class that declare
 
 ## Logging backend
 
-The log goes through SLF4J, so the application chooses the backend, such as Logback or Log4j 2. Libraries that log through SLF4J write to the same backend.
+The log goes through SLF4J. Add `coilix-logging` to make Coilix the backend:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-logging" % "<version>"
+```
+
+Every library of the application then logs in the same format as your code: libraries that use SLF4J directly, and libraries that use `java.util.logging`, the Log4j 2 API or Commons Logging, which the module bridges to SLF4J. An entry shows the time, the level, the thread, the shortened name of the logger, the message and the MDC, with the stack trace of an exception below it:
+
+```text
+2026-11-26 14:03:22.123 INFO  [io-compute-3] c.e.l.PaymentAudit - Recorded payment P-7 of 120.00 {order=7}
+```
+
+Without the module, the application keeps its own backend, such as Logback or Log4j 2. Do not add another backend next to `coilix-logging`.
+
+## Levels and silenced loggers
+
+Set the levels under `coilix.logging`. A name under `levels` is a package or a class: it applies to everything below it, and the longest matching name wins. `off` silences a logger or a whole package:
+
+<CodeBlock language="yaml" title="application.yaml">{LoggingYaml}</CodeBlock>
+
+`colors: false` writes plain text, for example for a log collector, and `async: true` writes the log on a background thread, so logging does not wait for the console. In HOCON, quote names with dots, such as `"org.apache.kafka" = warn`.
+
+## Change levels at runtime
+
+The `LogLevels` bean reads and changes the levels while the application runs. A change takes effect at once, also for loggers that already exist, and lasts until the next change or the end of the process:
+
+<CodeBlock language="scala" title="Troubleshooting.scala">{Troubleshooting}</CodeBlock>
+
+`reset` removes the level of a name, so it follows the closest package with a level again, and `setRoot` changes the level of every logger without its own.
