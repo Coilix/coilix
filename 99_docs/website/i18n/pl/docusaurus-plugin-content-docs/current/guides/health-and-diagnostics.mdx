@@ -22,6 +22,8 @@ Bean `Health` odpowiada na dwa pytania:
 
 Każda odpowiedź to `Up`, `Degraded` albo `Down`. Odpowiedzi biorą się z beanów `HealthIndicator`. Wskaźnik ma nazwę, rodzaj (`Liveness` albo `Readiness`) i bieżący stan z powodem. Liveness to najgorszy stan wskaźników liveness, a readiness to najgorszy stan wszystkich wskaźników, bo aplikacja, która nie żyje, nie jest też gotowa.
 
+Wbudowany wskaźnik gotowości `startup` jest `Down`, dopóki aplikacja startuje, i przechodzi na `Up`, gdy skończą się jej runnery, więc load balancer nie kieruje ruchu do aplikacji, która jeszcze się rozgrzewa. Po nieudanym starcie jest `Down` z błędem jako powodem.
+
 Wskaźnik dodaje się jako bean. Ten mówi, że sklep nie jest gotowy, gdy na magazyn czeka za dużo zmian stanów:
 
 <CodeBlock language="scala" title="StockHealth.scala">{StockHealth}</CodeBlock>

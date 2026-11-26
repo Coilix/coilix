@@ -47,6 +47,8 @@
 - `CoilixIOApp` starts an application as an `IOApp`: its runtime, with `coilix.concurrency.compute.threads` compute threads, is the `ioRuntime` bean, the runners run in `IO` and the application runs until it is cancelled, which closes the context. `coilix.cats-effect.exit-after-runners = true` closes and ends it after the runners. `CoilixIOStartup` gives the same start as a `Resource` and an `IO` for a given runtime. When the context already has an `IORuntime`, Coilix creates no runtime of its own (COILIX-00020).
 - `coilix-testkit` supports tests in `IO`, with munit-cats-effect as a provided dependency: `CoilixIOSuite` for a `CatsEffectSuite` registers `coilixTest` bodies that return `IO` and get a fresh context, whose `ioRuntime` bean is the runtime of the suite. `setup.useIO { ... }`, `setup.resource` and `setup.withIORuntime(runtime)` use a `CoilixTestSetup` in `IO` (COILIX-00020).
 - fs2 is part of the core: `coilix-concurrency` depends on `fs2-core`, so applications can write streams as `fs2.Stream[IO, _]` running on the compute pool of the cats-effect runtime (COILIX-00032).
+- The `startup` readiness indicator is `Down` while the application starts and `Up` after its runners, and `Down` again after a failed start (COILIX-00031).
+- `CoilixIOApp` logs the process identifier at the start, a line when it is asked to stop and a failed start once before ending with exit code 1. Warnings of cats-effect about a starved compute pool and failures it reports go to the log, and `coilix.cats-effect.blocked-thread-detection` turns on the detection of blocked compute threads (COILIX-00031).
 
 ### Changed
 

@@ -143,7 +143,7 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     workshop.replaceBean[Notifier](notifier).withRunners.withSynchronousEvents.use {
       assertEquals(
         (
-          recordedEvents[AnyRef].map(_.getClass.getSimpleName),
+          recordedEvents[AnyRef].map(_.getClass.getSimpleName).filterNot(_ == "HealthChanged"),
           recordedEvents[InspectionFinished].map(_.steps),
           notifier.messages.size
         ),

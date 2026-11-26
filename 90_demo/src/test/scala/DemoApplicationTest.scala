@@ -105,6 +105,8 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "shiftStatistics",
         "silentNotifier",
         "staffNotifications",
+        "startupHealthIndicator",
+        "startupHealthListener",
         "taskScheduler",
         "testerCrashDrill",
         "threadCountCheck",

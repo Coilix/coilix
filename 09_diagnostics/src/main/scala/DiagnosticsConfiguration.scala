@@ -9,7 +9,7 @@ import dev.coilix.events.EventPublisher
 import java.time.Clock
 
 /**
- * The beans of the diagnostics module: `diagnosticsSettings`, `health`, the `threads` health indicator, the built-in
+ * The beans of the diagnostics module: `diagnosticsSettings`, `health`, the `threads` and `startup` health indicators, the built-in
  * [[dev.coilix.diagnostics.ThreadCheck]]s, `findingReporter` and `diagnosticsMonitor`.
  */
 @Configuration
@@ -28,6 +28,15 @@ final class DiagnosticsConfiguration {
   /** The `threads` liveness indicator, which goes `Down` after a deadlock when `on-deadlock` is `report`. */
   @Bean
   def threadsHealthIndicator(): SettableHealthIndicator = SettableHealthIndicator("threads", HealthKind.Liveness)
+
+  /** The `startup` readiness indicator, `Down` until the runners of the application have finished. */
+  @Bean
+  def startupHealthIndicator(): StartupHealthIndicator = StartupHealthIndicator()
+
+  /** Moves the `startup` indicator when the start ends. */
+  @Bean
+  def startupHealthListener(indicator: StartupHealthIndicator, health: Health): StartupHealthListener =
+    StartupHealthListener(indicator, health)
 
   /** Finds deadlocked platform threads. */
   @Bean

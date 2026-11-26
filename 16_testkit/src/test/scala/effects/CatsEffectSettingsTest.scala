@@ -29,4 +29,11 @@ final class CatsEffectSettingsTest extends FunSuite {
     )
     assertEquals((CatsEffectSettings().exitAfterRunners, configured.exitAfterRunners), (false, true))
   }
+
+  test("leaves the detection of blocked threads off by default and reads coilix.cats-effect.blocked-thread-detection") {
+    val configured = CatsEffectSettings.from(
+      Environment.of(TypesafeConfigTree(ConfigFactory.parseString("coilix.cats-effect.blocked-thread-detection = true")))
+    )
+    assertEquals((CatsEffectSettings().blockedThreadDetection, configured.blockedThreadDetection), (false, true))
+  }
 }
