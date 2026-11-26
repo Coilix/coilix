@@ -9,6 +9,9 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.events.ApplicationFailed
+import dev.coilix.events.ApplicationStarted
+import dev.coilix.events.EventPublisher
 import dev.coilix.events.EventsModule
 import munit.FunSuite
 import scala.concurrent.duration.DurationInt
@@ -19,13 +22,30 @@ final class DiagnosticsModuleTest extends FunSuite {
 
   test("registers the health, the threads indicator, the built-in checks and the monitor") {
     withContext("") { context =>
-      assertEquals(context.getBean[Health].indicators.map(_.name), List("threads"))
+      assertEquals(context.getBean[Health].indicators.map(_.name), List("startup", "threads"))
       assertEquals(context.getBean[Health].liveness, HealthStatus.Up)
       assertEquals(
         context.getBeansOfType[ThreadCheck].map(_.getClass.getSimpleName).sorted,
         List("DeadlockCheck", "LongBlockedCheck", "ThreadCountCheck", "ThreadGrowthCheck")
       )
       assert(context.getBean[FindingReporter].isInstanceOf[LoggingFindingReporter])
+    }
+  }
+
+  test("keeps readiness Down until the application has started and after a failed start") {
+    withContext("") { context =>
+      val health    = context.getBean[Health]
+      val publisher = context.getBean[EventPublisher]
+      health.refresh()
+      val starting  = health.readiness
+      publisher.publish(ApplicationStarted(context))
+      val started   = (health.readiness, health.liveness)
+      publisher.publish(ApplicationFailed(context, IllegalStateException("no database")))
+      assertEquals(
+        (starting, started, health.readiness),
+        (HealthStatus.Down, (HealthStatus.Up, HealthStatus.Up), HealthStatus.Down)
+      )
+      assert(health.indicators.exists(_.state.reason.contains("no database")), health.indicators)
     }
   }
 

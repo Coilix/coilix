@@ -12,6 +12,7 @@ import scala.concurrent.duration.FiniteDuration
  *   cats-effect:
  *     shutdown-timeout: 1m
  *     exit-after-runners: true
+ *     blocked-thread-detection: true
  * ```
  *
  * @param shutdownTimeout
@@ -20,8 +21,14 @@ import scala.concurrent.duration.FiniteDuration
  * @param exitAfterRunners
  *   whether an application started by a `CoilixIOApp` of the boot module closes and ends after its runners, as a batch job,
  *   instead of running until it is cancelled
+ * @param blockedThreadDetection
+ *   whether the runtime of a `CoilixIOApp` warns when a compute thread blocks, which costs a little on every blocking call
  */
-final case class CatsEffectSettings(shutdownTimeout: FiniteDuration = 30.seconds, exitAfterRunners: Boolean = false)
+final case class CatsEffectSettings(
+  shutdownTimeout:        FiniteDuration = 30.seconds,
+  exitAfterRunners:       Boolean        = false,
+  blockedThreadDetection: Boolean        = false
+)
 
 /** Reading of [[dev.coilix.concurrency.CatsEffectSettings]] from the configuration. */
 object CatsEffectSettings {

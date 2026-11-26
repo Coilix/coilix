@@ -22,6 +22,8 @@ The `Health` bean answers two questions:
 
 Each answer is `Up`, `Degraded` or `Down`. The answers come from `HealthIndicator` beans. An indicator has a name, a kind (`Liveness` or `Readiness`) and a current state with a reason. Liveness is the worst state of the liveness indicators, and readiness is the worst state of all indicators, because an application that is not alive is not ready either.
 
+The built-in `startup` readiness indicator is `Down` while the application starts and turns `Up` when its runners have finished, so a load balancer sends no traffic to an application that is still warming up. After a failed start it is `Down` with the failure as the reason.
+
 Add an indicator as a bean. This one makes the shop not ready while too many stock changes wait for the warehouse:
 
 <CodeBlock language="scala" title="StockHealth.scala">{StockHealth}</CodeBlock>
