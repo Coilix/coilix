@@ -5,8 +5,6 @@ import cats.effect.IO
 import cats.effect.Resource
 import cats.effect.unsafe.IORuntime
 import cats.syntax.all.*
-import dev.coilix.annotation.Slf4s
-import dev.coilix.boot.StartupEvents
 import dev.coilix.concurrency.CatsEffectSettings
 import dev.coilix.concurrency.FatalErrorHandler
 import dev.coilix.concurrency.FatalErrors
@@ -21,10 +19,9 @@ import scala.reflect.ClassTag
  * `IO` when it is acquired, and it shuts down in `IO` when the resource is released, also when the fiber is cancelled or a
  * listener fails to start. The runners run between [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] in the order
  * of [[dev.coilix.boot.OrderedRunner.all]]: an [[dev.coilix.boot.IOApplicationRunner]] as its `IO`, any other runner in
- * `IO.blocking`. A failing runner is published as [[dev.coilix.events.ApplicationFailed]] and fails the start after the context
+ * `IO.blocking`. Nothing in the start runs `IO` outside the fiber of the application. A failing runner is published as [[dev.coilix.events.ApplicationFailed]] and fails the start after the context
  * closes.
  */
-@Slf4s
 object CoilixIOStartup {
 
   private val runtimeBeanName = "ioRuntime"
@@ -38,8 +35,8 @@ object CoilixIOStartup {
    *   the class annotated with `@CoilixApplication`
    */
   def application[T: ClassTag](args: List[String], runtime: IORuntime): Resource[IO, StartedApplication] =
-    Resource
-      .make(IO.blocking(built[T](args, runtime)))(application => application.context.shutdown)
+    CoilixApplicationRunner.default
+      .start[T](args, List(RegisteredBean.of[IORuntime](runtimeBeanName, runtime)))
       .evalTap(application => application.context.start)
       .flatTap(application => fatalErrorsOf(application))
 
@@ -61,13 +58,8 @@ object CoilixIOStartup {
    * @return
    *   an `IO` that fails with the failure of a runner or of a listener of the startup events
    */
-  def runners(application: StartedApplication): IO[Unit] = {
-    val context = application.context
-    (IO.blocking(StartupEvents.ready(context)) *>
-      OrderedRunner.all(context).traverse_(runner => runOne(application, runner)) *>
-      IO.blocking(StartupEvents.started(context)))
-      .onError(failure => IO.blocking(StartupEvents.failure(context, failure)))
-  }
+  def runners(application: StartedApplication): IO[Unit] =
+    StartupEvents.around(application.context)(OrderedRunnerInvoker().invoke(application.context, application.arguments))
 
   private def fatalErrorsOf(application: StartedApplication): Resource[IO, Unit] =
     application.context.getBeanOption[FatalErrorHandler].fold(Resource.unit[IO])(handler =>
@@ -84,16 +76,6 @@ object CoilixIOStartup {
   @SuppressWarnings(Array("org.wartremover.warts.Null"))
   private def restored(previous: Option[Thread.UncaughtExceptionHandler]): Unit =
     Thread.setDefaultUncaughtExceptionHandler(previous.orNull)
-
-  private def built[T: ClassTag](args: List[String], runtime: IORuntime): StartedApplication =
-    CoilixApplicationRunner.default.start[T](args, List(RegisteredBean.of[IORuntime](runtimeBeanName, runtime)))
-
-  private def runOne(application: StartedApplication, entry: OrderedRunner): IO[Unit] =
-    logF.debug(s"Running ${entry.runner.getClass.getSimpleName}") *>
-      (entry.runner match {
-        case runner: IOApplicationRunner => runner.run(application.arguments)
-        case _ => IO.blocking(entry.run(application.arguments))
-      })
 
   private def awaited(application: StartedApplication): IO[Unit] =
     if (settingsOf(application).exitAfterRunners) IO.unit else IO.never

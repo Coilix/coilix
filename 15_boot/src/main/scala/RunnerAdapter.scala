@@ -1,5 +1,6 @@
 package dev.coilix.boot
 
+import cats.effect.IO
 import dev.coilix.context.ApplicationContext
 
 /**
@@ -14,10 +15,10 @@ import dev.coilix.context.ApplicationContext
  * final class ScriptRunnerAdapter extends RunnerAdapter {
  *   override def runners(context: ApplicationContext): List[AnyRef] = context.getBeansOfType[Script]
  *
- *   override def run(runner: AnyRef, arguments: ApplicationArguments): Unit =
+ *   override def run(runner: AnyRef, arguments: ApplicationArguments): IO[Unit] =
  *     runner match {
- *       case script: Script => script.execute(arguments.nonOptionArgs)
- *       case _              => ()
+ *       case script: Script => IO.blocking(script.execute(arguments.nonOptionArgs))
+ *       case _              => IO.unit
  *     }
  * }
  * ```
@@ -27,6 +28,6 @@ trait RunnerAdapter {
   /** The runners of this kind in `context`, in creation order. */
   def runners(context: ApplicationContext): List[AnyRef]
 
-  /** Runs `runner`, one of [[runners]], and returns when it finishes. */
-  def run(runner: AnyRef, arguments: ApplicationArguments): Unit
+  /** Runs `runner`, one of [[runners]]; the `IO` completes when it finishes and fails when it fails. */
+  def run(runner: AnyRef, arguments: ApplicationArguments): IO[Unit]
 }

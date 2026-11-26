@@ -1,5 +1,6 @@
 package dev.coilix.boot
 
+import cats.effect.IO
 import dev.coilix.annotation.Order
 import dev.coilix.context.ApplicationContext
 
@@ -10,9 +11,9 @@ import dev.coilix.context.ApplicationContext
  * @param runner
  *   the runner bean, whose class carries its `@Order`
  * @param run
- *   runs the runner and returns when it finishes
+ *   runs the runner; an [[dev.coilix.boot.ApplicationRunner]] runs in `IO.blocking`
  */
-final case class OrderedRunner(runner: AnyRef, run: ApplicationArguments => Unit)
+final case class OrderedRunner(runner: AnyRef, run: ApplicationArguments => IO[Unit])
 
 /** The runners of a context in the order in which they run. */
 object OrderedRunner {
@@ -29,7 +30,7 @@ object OrderedRunner {
   }
 
   private def plain(context: ApplicationContext): List[OrderedRunner] =
-    context.getBeansOfType[ApplicationRunner].map(runner => OrderedRunner(runner, runner.run))
+    context.getBeansOfType[ApplicationRunner].map(runner => OrderedRunner(runner, arguments => IO.blocking(runner.run(arguments))))
 
   private def adapted(context: ApplicationContext)(adapter: RunnerAdapter): List[OrderedRunner] =
     adapter.runners(context).map(runner => OrderedRunner(runner, arguments => adapter.run(runner, arguments)))

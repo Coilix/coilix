@@ -12,9 +12,9 @@ import dev.coilix.context.DefaultApplicationContext
 import dev.coilix.context.ImmutableBeanRegistry
 import dev.coilix.context.PrimaryCandidateSelector
 import dev.coilix.context.RegisteredBean
-import munit.FunSuite
+import munit.CatsEffectSuite
 
-final class OrderedRunnerInvokerTest extends FunSuite {
+final class OrderedRunnerInvokerTest extends CatsEffectSuite {
 
   test("runs runners by their order with unordered ones last") {
     val journal = RunJournal()
@@ -24,8 +24,9 @@ final class OrderedRunnerInvokerTest extends FunSuite {
         .register(bean("secondRunner", SecondRunner(journal)))
         .register(bean("firstRunner", FirstRunner(journal)))
     )
-    OrderedRunnerInvoker().invoke(context, SimpleArgumentsParser().parse(List("--name=Ann")))
-    assertEquals(journal.recorded, List("first", "second", "unordered:Ann"))
+    OrderedRunnerInvoker().invoke(context, SimpleArgumentsParser().parse(List("--name=Ann"))).map(_ =>
+      assertEquals(journal.recorded, List("first", "second", "unordered:Ann"))
+    )
   }
 
   test("runs the runners of adapters in one list with the other runners") {
@@ -39,10 +40,8 @@ final class OrderedRunnerInvokerTest extends FunSuite {
       .register(bean("firstRunner", FirstRunner(journal)))
       .register(bean("scriptRunnerAdapter", ScriptRunnerAdapter()))
     val context  = DefaultApplicationContext(registry)
-    OrderedRunnerInvoker().invoke(context, SimpleArgumentsParser().parse(List("--name=Ann", "nightly")))
-    assertEquals(
-      journal.recorded,
-      List("first", "second", "between:nightly", "unordered script:nightly", "unordered:Ann")
+    OrderedRunnerInvoker().invoke(context, SimpleArgumentsParser().parse(List("--name=Ann", "nightly"))).map(_ =>
+      assertEquals(journal.recorded, List("first", "second", "between:nightly", "unordered script:nightly", "unordered:Ann"))
     )
   }
 

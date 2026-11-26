@@ -46,11 +46,11 @@ Aplikacja żyje wtedy w głównym fiberze `IOApp`:
 
 ## Uruchamianie IO
 
-Wstrzyknij runtime tam, gdzie bean uruchamia `IO`, tutaj jako parametr `using`, żeby `unsafeRunSync` i inne wywołania go znalazły:
+Bean opisuje swoją pracę jako `IO` i ją zwraca, a Coilix ją uruchamia: w `IOApplicationRunner`, procesorze tła, odbiorcy zdarzeń, metodzie `@Scheduled` albo metodzie cyklu życia. Wywołanie blokujące idzie do wykonawcy blokującego przez `IO.onBlockingExecutor`:
 
 <CodeBlock language="scala" title="ExchangeRates.scala">{ExchangeRates}</CodeBlock>
 
-Uruchamiaj `IO` na brzegu swojego kodu, np. w runnerze albo metodzie `@Scheduled`, a resztę beana trzymaj w `IO`.
+Nie wołaj w beanach `unsafeRunSync` ani innych metod `unsafeRun*`: sam Coilix nie uruchamia `IO` poza fiberem, od startu kontekstu do jego zamknięcia. Kod poza `IO`, np. test synchroniczny, uruchamia je na własnym brzegu, tak jak testkit.
 
 ## Beany z IO i Resource
 

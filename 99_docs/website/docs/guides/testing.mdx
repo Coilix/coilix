@@ -104,6 +104,6 @@ The context is built before the first test of the suite and closed after the las
 
 ## The explicit form
 
-Every helper above has an explicit counterpart. `CoilixFixtures` gives munit fixtures that pass the context as a parameter, and `TestContextFactory.default.create(setup)` returns an open context that the caller closes:
+Every helper above has an explicit counterpart. `CoilixFixtures` gives munit fixtures that pass the context as a parameter, `TestContextFactory.default.create(setup)` returns an open context that the caller closes, and `TestContextFactory.default.resource(setup)` gives the same context as a `Resource` for code in `IO`:
 
 <CodeBlock language="scala" title="WelcomeMailFixtureTest.scala">{WelcomeMailFixtureTest}</CodeBlock>

@@ -1,5 +1,7 @@
 package dev.coilix.boot
 
+import cats.effect.IO
+import cats.effect.Resource
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.ConfigPath
 import dev.coilix.context.ApplicationContextBuilder
@@ -15,42 +17,39 @@ import dev.coilix.context.RegisteredBean
 trait CoilixBootstrap {
 
   /**
-   * Builds the context from the components in `basePackages`, the enabled modules, the `extraDefinitions` and the ready
-   * `singletons`. The [[dev.coilix.context.ContextLifecycleListener]] beans are not notified yet: the caller runs
+   * The context built from the components in `basePackages`, the enabled modules, the `extraDefinitions` and the ready
+   * `singletons`, as a `Resource` released by [[dev.coilix.context.ConfigurableApplicationContext.shutdown]]. The
+   * [[dev.coilix.context.ContextLifecycleListener]] beans are not notified yet: the caller runs
    * [[dev.coilix.context.ConfigurableApplicationContext.start]] in `IO`, or starts the context with
    * [[dev.coilix.context.SynchronousLifecycle.started]].
    *
-   * @throws dev.coilix.context.NoSuchBeanException
-   *   if a required dependency has no matching bean
-   * @throws dev.coilix.context.CircularDependencyException
-   *   if beans depend on each other in a cycle
+   * @return
+   *   a resource that fails with a [[dev.coilix.context.NoSuchBeanException]] when a required dependency has no matching bean and
+   *   with a [[dev.coilix.context.CircularDependencyException]] when beans depend on each other in a cycle
    */
   final def start(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean]
-  ): ConfigurableApplicationContext =
+  ): Resource[IO, ConfigurableApplicationContext] =
     start(basePackages, extraDefinitions, singletons, BeanReplacements.none)
 
   /**
-   * Builds the context like the other `start`, but leaves out the discovered beans that `replacements` replace, so the ready
+   * The context like the other `start`, but without the discovered beans that `replacements` replace, so the ready
    * `singletons` take their place. The `extraDefinitions` are never left out.
    *
-   * @throws dev.coilix.boot.UnmatchedBeanReplacementException
-   *   if a replaced type matches no bean discovered by scanning or in modules
-   * @throws dev.coilix.boot.CollectedComponentConflictException
-   *   if a class has a component annotation and an annotation collected by a module
-   * @throws dev.coilix.context.NoSuchBeanException
-   *   if a required dependency has no matching bean
-   * @throws dev.coilix.context.CircularDependencyException
-   *   if beans depend on each other in a cycle
+   * @return
+   *   a resource that fails like the other `start`, also with an [[dev.coilix.boot.UnmatchedBeanReplacementException]] when a
+   *   replaced type matches no bean discovered by scanning or in modules and with a
+   *   [[dev.coilix.boot.CollectedComponentConflictException]] when a class has a component annotation and an annotation
+   *   collected by a module
    */
   def start(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean],
     replacements:     BeanReplacements
-  ): ConfigurableApplicationContext
+  ): Resource[IO, ConfigurableApplicationContext]
 }
 
 /** Configuration path and default implementation of [[dev.coilix.boot.CoilixBootstrap]]. */

@@ -46,11 +46,11 @@ The application then lives in the main fiber of the `IOApp`:
 
 ## Run IO
 
-Inject the runtime where a bean runs `IO`, here as a `using` parameter, so `unsafeRunSync` and other calls find it:
+A bean describes its work as `IO` and returns it, and Coilix runs it: in an `IOApplicationRunner`, a background processor, an event listener, a `@Scheduled` method or a lifecycle method. A blocking call goes to the blocking executor through `IO.onBlockingExecutor`:
 
 <CodeBlock language="scala" title="ExchangeRates.scala">{ExchangeRates}</CodeBlock>
 
-Run `IO` at the edge of your code, for example in a runner or a scheduled method, and keep the rest of the bean in `IO`.
+Do not call `unsafeRunSync` or other `unsafeRun*` methods in beans: Coilix itself does not run `IO` outside a fiber, from the start of the context to its shutdown. Code outside `IO`, such as a synchronous test, runs it at its own edge, as the testkit does.
 
 ## Beans made by IO and Resource
 

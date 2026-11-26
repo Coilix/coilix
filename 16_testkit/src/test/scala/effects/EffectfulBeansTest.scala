@@ -6,6 +6,7 @@ import dev.coilix.boot.OrderedRunnerInvoker
 import dev.coilix.concurrency.InvalidEffectfulBeanException
 import dev.coilix.context.BeanCreationException
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
 import dev.coilix.testkit.effects.failing.FailureJournal
@@ -90,7 +91,8 @@ final class EffectfulBeansTest extends FunSuite with CoilixContextOps {
 
   test("runs IO runners and plain runners in one list by their order") {
     val journal = setup("warmup").use {
-      OrderedRunnerInvoker().invoke(summon[ConfigurableApplicationContext], ApplicationArguments(Nil, Map.empty, List("today")))
+      val context = summon[ConfigurableApplicationContext]
+      SynchronousLifecycle.run(context, OrderedRunnerInvoker().invoke(context, ApplicationArguments(Nil, Map.empty, List("today"))))
       bean[WarmupJournal]
     }
     assertEquals(journal.all.filterNot(_.startsWith("cache")).take(3), List("prices for today", "report", "audit"))

@@ -1,22 +1,37 @@
 package dev.coilix.testkit
 
+import cats.effect.IO
+import cats.effect.Resource
 import dev.coilix.boot.SimpleArgumentsParser
 import dev.coilix.boot.StartupComponents
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.SynchronousLifecycle
 
 /** Builds the application context of a test from a [[dev.coilix.testkit.CoilixTestSetup]]. */
 trait TestContextFactory {
 
   /**
-   * Builds and returns an open context. The caller closes it, which [[dev.coilix.testkit.CoilixFixtures]] does after the test.
+   * The started context of `setup` as a `Resource`, released by [[dev.coilix.context.ConfigurableApplicationContext.shutdown]].
+   *
+   * @return
+   *   a resource that fails with an [[dev.coilix.boot.UnmatchedBeanReplacementException]] when a replaced bean type matches no
+   *   bean of the application, and with a [[dev.coilix.common.CoilixException]] when the configuration or the beans are invalid,
+   *   for example when a dependency is missing
+   */
+  def resource(setup: CoilixTestSetup): Resource[IO, ConfigurableApplicationContext]
+
+  /**
+   * Opens [[dev.coilix.testkit.TestContextFactory.resource]] with [[dev.coilix.context.SynchronousLifecycle.opened]], for a
+   * synchronous suite. The caller closes the context, which [[dev.coilix.testkit.CoilixFixtures]] does after the test.
    *
    * @throws dev.coilix.boot.UnmatchedBeanReplacementException
    *   if a replaced bean type matches no bean of the application
    * @throws dev.coilix.common.CoilixException
    *   if the configuration or the beans are invalid, for example when a dependency is missing
    */
-  def create(setup: CoilixTestSetup): ConfigurableApplicationContext
+  final def create(setup: CoilixTestSetup): ConfigurableApplicationContext =
+    SynchronousLifecycle.opened(resource(setup))
 }
 
 /** Factories for [[dev.coilix.testkit.TestContextFactory]]. */

@@ -1,5 +1,7 @@
 package dev.coilix.boot
 
+import cats.effect.IO
+import cats.effect.Resource
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.GenericType
 import dev.coilix.context.ApplicationContextBuilder
@@ -27,8 +29,8 @@ import java.lang.annotation.Annotation
  *
  * When the modules collect annotations, the classes marked with them, found in the base packages or among the module
  * components, become the `collectedComponents` bean made by the [[dev.coilix.context.ComponentCollector]] instead of beans. Each
- * scanned package, each replaced bean and the names of all beans are logged at `INFO` level. The returned context is not
- * started: its owner runs [[dev.coilix.context.ConfigurableApplicationContext.start]]. This is the default
+ * scanned package, each replaced bean and the names of all beans are logged at `INFO` level. Scanning and planning run in
+ * `IO.blocking`. The context is not started: its owner runs [[dev.coilix.context.ConfigurableApplicationContext.start]]. This is the default
  * [[dev.coilix.boot.CoilixBootstrap]].
  *
  * @param scanner
@@ -56,14 +58,25 @@ final class DefaultCoilixBootstrap(
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean],
     replacements:     BeanReplacements
-  ): ConfigurableApplicationContext = {
+  ): Resource[IO, ConfigurableApplicationContext] =
+    Resource
+      .eval(IO.blocking(planned(basePackages, extraDefinitions, singletons, replacements)))
+      .flatMap((definitions, interpreter) => builder.create(definitions, singletons, interpreter))
+      .evalTap(context => logF.info(s"Context ready with beans: ${context.beanNames.mkString(", ")}"))
+
+  private def planned(
+    basePackages:     List[String],
+    extraDefinitions: List[BeanDefinition],
+    singletons:       List[RegisteredBean],
+    replacements:     BeanReplacements
+  ): (List[BeanDefinition], Option[EffectInterpreter]) = {
     val loaded      = modules.load()
     val annotations = loaded.flatMap(_.collects).distinct
     val collected   = collectedClasses(basePackages, loaded, annotations)
     val processed   = processedBy(loaded)(discovered(basePackages) ++ fromModules(loaded, annotations))
     val beans       = kept(processed, replacements) ++ extraDefinitions
     checkCollected(beans, singletons, collected, annotations)
-    ready(builder.create(beans ++ collectedDefinition(collected, annotations), singletons, effectInterpreter(loaded)))
+    (beans ++ collectedDefinition(collected, annotations), effectInterpreter(loaded))
   }
 
   private def effectInterpreter(loaded: List[CoilixModule]): Option[EffectInterpreter] =
@@ -155,9 +168,4 @@ final class DefaultCoilixBootstrap(
 
   private def annotationOf(componentClass: Class[?], annotations: List[Class[? <: Annotation]]): String =
     annotations.filter(componentClass.isAnnotationPresent).map(_.getSimpleName).mkString(", @")
-
-  private def ready(context: ConfigurableApplicationContext): ConfigurableApplicationContext = {
-    log.info(s"Context ready with beans: ${context.beanNames.mkString(", ")}")
-    context
-  }
 }

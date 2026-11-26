@@ -1,6 +1,8 @@
 package dev.coilix.context
 package effects
 
+import cats.effect.IO
+import cats.effect.Resource
 import java.util.concurrent.atomic.AtomicReference
 
 final class LaterInterpreter(failing: Boolean = false) extends EffectInterpreter {
@@ -13,11 +15,12 @@ final class LaterInterpreter(failing: Boolean = false) extends EffectInterpreter
     registry:     BeanRegistry,
     instantiator: BeanInstantiator,
     destroyer:    BeanDestroyer
-  ): InterpretedBeans = {
-    record(s"levels ${levels.map(_.map(_.beanName).mkString("+")).mkString(", ")}")
-    if (failing) throw IllegalStateException("effect failed")
-    InterpretedBeans(levels.flatten.foldLeft(registry)(created(instantiator)), () => record("released"))
-  }
+  ): Resource[IO, BeanRegistry] =
+    Resource.make(IO {
+      record(s"levels ${levels.map(_.map(_.beanName).mkString("+")).mkString(", ")}")
+      if (failing) throw IllegalStateException("effect failed")
+      levels.flatten.foldLeft(registry)(created(instantiator))
+    })(_ => IO(record("released")))
 
   private def created(instantiator: BeanInstantiator)(registry: BeanRegistry, definition: BeanDefinition): BeanRegistry =
     registry.register(instantiator.complete(definition, valueOf(instantiator.produce(definition, registry))))

@@ -264,7 +264,10 @@ lazy val security = slf4sModule("security", "22_security", "dev.coilix.security"
 lazy val boot = slf4sModule("boot", "15_boot", "dev.coilix.boot")
   .dependsOn(context, concurrency, applicationEvents, diagnostics)
   .settings(coreGroup)
-  .settings(description := "Application startup for Coilix")
+  .settings(
+    description                                        := "Application startup for Coilix",
+    libraryDependencies += Dependencies.munitCatsEffect % Test
+  )
 
 lazy val testkit = slf4sModule("testkit", "16_testkit", "dev.coilix.testkit")
   .dependsOn(boot)
