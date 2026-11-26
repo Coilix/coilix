@@ -126,6 +126,25 @@ final class FiberEngineTest extends CatsEffectSuite {
     }
   }
 
+  engine.test("finishes an element the flow is processing when the stop signal comes") { engine =>
+    val journal  = Journal()
+    val stopping = new StreamProcessor[Int] {
+      override val id: ProcessorId = TestProcessor.Ticker
+
+      override def source(shard: Shard): Stream[IO, Int] = Stream.emits(1 to 5) ++ Stream.never[IO]
+
+      override def flow(shard: Shard): Pipe[IO, Int, Unit] =
+        _.evalTap(element => IO.whenA(element == 5)(shard.requestStop *> IO.cede))
+          .chunkN(10)
+          .evalMap(batch => IO(journal.add(s"saved ${batch.toList}")))
+    }
+    (1 to 50).toList.foldLeft(IO.unit) { (previous, _) =>
+      previous *> shard.flatMap(stopping.run) *> IO(journal.startingWith("saved")).map { saved =>
+        assertEquals(saved.lastOption, Some("saved List(1, 2, 3, 4, 5)"))
+      }
+    }
+  }
+
   engine.test("completes a stream processor whose source ends") { engine =>
     val journal = Journal()
     val finite  = streaming(Stream.emits(1 to 3), _.evalMap(element => IO(journal.add(s"saved $element"))))
