@@ -1,32 +1,37 @@
 package dev.coilix.context
 
+import cats.effect.IO
+import cats.effect.Resource
 import cats.effect.unsafe.IORuntime
-import scala.util.control.NonFatal
 
 /**
- * Starts a context outside `IO`, for code that has no fiber to run [[dev.coilix.context.ConfigurableApplicationContext.start]]
- * on, such as [[dev.coilix.context.ApplicationContextBuilder.build]] and the synchronous suites of the testkit. An application
- * started by `CoilixIOApp` does not use it.
+ * The only place where Coilix runs `IO` outside a fiber: for code that has no fiber to run it on, such as
+ * [[dev.coilix.context.ApplicationContextBuilder.build]], `close()` of a context and the synchronous suites of the testkit. An
+ * application started by `CoilixIOApp` does not use it.
  */
 object SynchronousLifecycle {
 
   /**
-   * Runs [[dev.coilix.context.ConfigurableApplicationContext.start]] of `context` and blocks until it completes, on the
-   * `IORuntime` bean of the context or, when the context has none, on the global runtime of cats-effect. A failure closes the
-   * context and is rethrown.
+   * Opens `context` on the global runtime of cats-effect, runs [[dev.coilix.context.ConfigurableApplicationContext.start]] and
+   * blocks until both complete. A failing start shuts the context down and is rethrown.
    *
    * @return
-   *   the same context, started
+   *   the context, started; `close()` releases it
    */
-  def started(context: ConfigurableApplicationContext): ConfigurableApplicationContext =
-    try {
-      context.start.unsafeRunSync()(using runtimeOf(context))
-      context
-    } catch {
-      case NonFatal(failure) =>
-        context.close()
-        throw failure
-    }
+  def started(context: Resource[IO, ConfigurableApplicationContext]): ConfigurableApplicationContext =
+    opened(context.evalTap(_.start))
+
+  /**
+   * Opens `context` on the global runtime of cats-effect and blocks until it is open. The release of the resource is dropped, so
+   * it must do no more than [[dev.coilix.context.ConfigurableApplicationContext.shutdown]], which `close()` of the context does.
+   * A failure of the resource is rethrown after the resource has released what it opened.
+   */
+  def opened(context: Resource[IO, ConfigurableApplicationContext]): ConfigurableApplicationContext =
+    context.allocated.map(_._1).unsafeRunSync()(using IORuntime.global)
+
+  /** Runs `effect` on the runtime of `context` and blocks until it completes, rethrowing its failure. */
+  def run[A](context: ApplicationContext, effect: IO[A]): A =
+    effect.unsafeRunSync()(using runtimeOf(context))
 
   /** The `IORuntime` bean of `context`, or the global runtime of cats-effect when the context has none. */
   def runtimeOf(context: ApplicationContext): IORuntime =

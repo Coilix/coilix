@@ -135,10 +135,11 @@ final class FiberEngineTest extends CatsEffectSuite {
 
   engine.test("cancels a stream processor whose flow does not end within the drain timeout") { engine =>
     val journal = Journal()
-    val hanging = streaming(Stream.emit(1), _.evalMap(_ => IO.never[Unit].onCancel(IO(journal.add("cancelled")))))
+    val hanging =
+      streaming(Stream.emit(1), _.evalMap(_ => IO(journal.add("taken")) *> IO.never[Unit].onCancel(IO(journal.add("cancelled")))))
     for {
       worker  <- drainingShard(100.millis).flatMap(engine.start(hanging, _, recording(journal)))
-      _       <- awaitUntil(journal.contains("prepared"))
+      _       <- awaitUntil(journal.contains("taken"))
       outcome <- worker.stop(10.seconds).timed
     } yield {
       assertEquals((outcome._2, journal.contains("cancelled")), (StopOutcome.Stopped, true))

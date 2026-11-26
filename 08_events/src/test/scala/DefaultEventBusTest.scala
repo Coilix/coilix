@@ -120,12 +120,12 @@ final class DefaultEventBusTest extends FunSuite {
         ImmediateScheduler(),
         context.getBean[EventsSettings]
       )
-      bus.onContextStarted(context).unsafeRunSync()(using SynchronousLifecycle.runtimeOf(context))
+      SynchronousLifecycle.run(context, bus.onContextStarted(context))
       bus.publish(OrderEvent.Placed(1))
       assert(context.getBean[FlakyNotifier].delivered.await(5, TimeUnit.SECONDS))
       assert(bus.awaitIdle(5.seconds))
       assertEquals((context.getBean[FlakyNotifier].attempts.get, bus.pendingDeliveries), (3, 0))
-      bus.onContextClosing.unsafeRunSync()(using SynchronousLifecycle.runtimeOf(context))
+      SynchronousLifecycle.run(context, bus.onContextClosing)
     }
   }
 

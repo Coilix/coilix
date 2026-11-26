@@ -37,7 +37,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0029](0029-context-propagation.md) | Przekazywanie kontekstu wątku do zadań | proponowana |
 | [0030](0030-prototype-and-lazy-beans.md) | Beany prototype i leniwe w niemutowalnym rejestrze | proponowana |
 | [0031](0031-cats-effect-runtime.md) | Runtime cats-effect jako jedyna pula obliczeniowa | proponowana |
-| [0032](0032-effectful-beans.md) | Beany z IO i Resource przez interpreter planu z modułu | proponowana |
+| [0032](0032-effectful-beans.md) | Beany z IO i Resource przez interpreter planu z modułu | proponowana, uzupełniona przez 0049 |
 | [0033](0033-effectful-lifecycle-and-runners.md) | Cykl życia i runnery w IO | proponowana |
 | [0034](0034-coilix-io-app.md) | CoilixIOApp z runtime'em IOApp jako beanem | proponowana |
 | [0035](0035-testkit-cats-effect.md) | Moduł testkit-cats-effect | proponowana |
@@ -53,6 +53,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0046](0046-logging.md) | Logowanie: logF z @Slf4s i własny backend SLF4J | proponowana |
 | [0047](0047-lifecycle-listeners-in-io.md) | Słuchacze cyklu życia kontekstu w IO | proponowana |
 | [0048](0048-stream-processors-with-draining.md) | Procesory strumieniowe z opróżnianiem | proponowana |
+| [0049](0049-context-in-resource-without-unsafe-run.md) | Kontekst w `Resource`, runnery w `IO`, jedna granica synchroniczna | proponowana |
 
 ## Nowa decyzja
 

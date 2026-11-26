@@ -12,17 +12,24 @@ import java.util.concurrent.atomic.AtomicBoolean
  * The registry is passed by name, so the context can exist before its beans and be injected into them. Closing the context
  * logs a message at `INFO` level, runs [[dev.coilix.context.ContextLifecycleListener.onContextClosing]] of the listener beans
  * phase by phase in the order of [[dev.coilix.context.ClosingPhase]], and then destroys the beans with the
- * [[dev.coilix.context.BeanDestroyer]]. `close()` runs the listeners on the `IORuntime` bean of the context, or on the global
- * runtime of cats-effect when the context has none, and destroys the beans on the calling thread.
+ * [[dev.coilix.context.BeanDestroyer]], after `release`, which closes the beans opened by an
+ * [[dev.coilix.context.EffectInterpreter]]. The beans are destroyed also when a listener or `release` fails. `close()` runs the
+ * listeners and `release` with [[dev.coilix.context.SynchronousLifecycle.run]] and destroys the beans on the calling thread, so
+ * an `IORuntime` bean is not shut down while it runs them.
  *
  * @param registry
- *   the beans of the context, evaluated on first access
+ *   the beans of the context, evaluated on each access
  * @param destroyer
  *   destroys the beans when the context closes
+ * @param release
+ *   closes the beans opened by an effect interpreter, once, before the other beans are destroyed
  */
 @Slf4s
-final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: BeanDestroyer = PreDestroyInvoker())
-    extends ConfigurableApplicationContext {
+final class DefaultApplicationContext(
+  registry: => BeanRegistry,
+  destroyer: BeanDestroyer = PreDestroyInvoker(),
+  release:   IO[Unit]      = IO.unit
+) extends ConfigurableApplicationContext {
 
   private val active = AtomicBoolean(true)
 
@@ -50,13 +57,17 @@ final class DefaultApplicationContext(registry: => BeanRegistry, destroyer: Bean
     listeners.traverse_(_.onContextStarted(this))
 
   override def shutdown: IO[Unit] =
-    IO(active.compareAndSet(true, false)).ifM(closingListeners *> IO.blocking(destroyer.destroy(registry.beans)), IO.unit)
+    IO(active.compareAndSet(true, false)).ifM(closing.guarantee(IO.blocking(destroyed())), IO.unit)
 
   override def close(): Unit =
     if (active.compareAndSet(true, false)) {
-      closingListeners.unsafeRunSync()(using SynchronousLifecycle.runtimeOf(this))
-      destroyer.destroy(registry.beans)
+      try SynchronousLifecycle.run(this, closing)
+      finally destroyed()
     }
+
+  private def closing: IO[Unit] = closingListeners *> release
+
+  private def destroyed(): Unit = destroyer.destroy(registry.beans)
 
   private def closingListeners: IO[Unit] = {
     val reversed = listeners.reverse

@@ -104,6 +104,6 @@ Kontekst powstaje przed pierwszym testem suite'u i jest zamykany po ostatnim.
 
 ## Wersja jawna
 
-Każdy helper powyżej ma jawny odpowiednik. `CoilixFixtures` daje fixture munit, które przekazują kontekst jako parametr, a `TestContextFactory.default.create(setup)` zwraca otwarty kontekst, który zamyka wywołujący:
+Każdy helper powyżej ma jawny odpowiednik. `CoilixFixtures` daje fixture munit, które przekazują kontekst jako parametr, `TestContextFactory.default.create(setup)` zwraca otwarty kontekst, który zamyka wywołujący, a `TestContextFactory.default.resource(setup)` daje ten sam kontekst jako `Resource` dla kodu w `IO`:
 
 <CodeBlock language="scala" title="WelcomeMailFixtureTest.scala">{WelcomeMailFixtureTest}</CodeBlock>

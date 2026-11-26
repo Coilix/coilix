@@ -1,22 +1,25 @@
 package dev.coilix.boot
 
+import cats.effect.IO
+import cats.effect.Resource
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.RegisteredBean
 import scala.reflect.ClassTag
 
-/** Builds the context of an application, the synchronous part of the start of a [[dev.coilix.boot.CoilixIOApp]]. */
+/** Builds the context of an application, the first part of the start of a [[dev.coilix.boot.CoilixIOApp]]. */
 trait CoilixApplicationRunner {
 
   /**
-   * Builds the context of application `T` with `singletons` as additional ready beans and calls no runner, so the caller, such
-   * as [[dev.coilix.boot.CoilixIOStartup]], runs the runners and closes the context.
+   * The context of application `T` with `singletons` as additional ready beans, as a `Resource` released by
+   * [[dev.coilix.context.ConfigurableApplicationContext.shutdown]]. It calls no runner and does not start the context, so the
+   * caller, such as [[dev.coilix.boot.CoilixIOStartup]], starts it and runs the runners.
    *
    * @param singletons
    *   ready instances registered before the beans are created, such as a runtime that the caller owns
    * @return
-   *   the context, whose runners the caller runs and which the caller closes
+   *   the context with the parsed arguments
    */
-  def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): StartedApplication
+  def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): Resource[IO, StartedApplication]
 }
 
 /** Factories for [[dev.coilix.boot.CoilixApplicationRunner]]. */

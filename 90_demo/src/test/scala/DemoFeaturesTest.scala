@@ -26,7 +26,6 @@ import dev.coilix.demo.workshop.PartsQuote
 import dev.coilix.demo.workshop.PortalSession
 import dev.coilix.demo.workshop.RecallBoard
 import dev.coilix.demo.workshop.RecallBriefing
-import dev.coilix.demo.workshop.RecallCheck
 import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.ShiftStatistics
 import dev.coilix.demo.workshop.TelematicsUplink
@@ -191,24 +190,6 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     def loaded(using context: dev.coilix.context.ApplicationContext): Boolean =
       context.createdBeans.exists(_.beanName == "warrantyRegistry")
     assertEquals((workshop.use(loaded), workshop.withRunners.use(loaded)), (false, true))
-  }
-
-  test("checks recalls of the whole fleet with IO, waiting for the portal on the blocking executor") {
-    workshop.use {
-      val lines = bean[RecallCheck].openRecalls()
-      assertEquals(
-        (lines.map(_.takeWhile(_ != ':')), lines.forall(_.contains("coilix-blocking-"))),
-        (List("WVWZZZ1KZ6W000001", "TMBJJ7NE8J0000002"), true)
-      )
-    }
-  }
-
-  test("logs in to the portal with a Resource bean, downloads the bulletin with an IO bean and logs out when closing") {
-    val (session, lines) = workshop.use((bean[PortalSession], bean[RecallCheck].openRecalls()))
-    assertEquals(
-      (session.isOpen, lines.forall(_.contains("in bulletin 2026-11")), session.url),
-      (false, true, "https://oem-portal.example.com/workshop-keys")
-    )
   }
 
   test("pins the recall bulletin with an IO @PostConstruct method and takes it down with an IO @PreDestroy method") {

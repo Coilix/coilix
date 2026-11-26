@@ -14,7 +14,7 @@ final class ContextLifecycleIOTest extends CatsEffectSuite {
   private given ComponentProvider = ComponentProvider.builtIn
 
   private def created(classes: Class[?]*): IO[ConfigurableApplicationContext] =
-    IO.blocking(ApplicationContextBuilder.default.create(Definitions.of((classOf[Journal] +: classes)*), Nil, None))
+    ApplicationContextBuilder.default.create(Definitions.of((classOf[Journal] +: classes)*), Nil, None).allocated.map(_._1)
 
   test("create leaves the listeners to start in IO") {
     for {

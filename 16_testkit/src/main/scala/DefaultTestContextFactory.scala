@@ -1,5 +1,7 @@
 package dev.coilix.testkit
 
+import cats.effect.IO
+import cats.effect.Resource
 import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ArgumentsParser
 import dev.coilix.boot.BeanReplacements
@@ -11,7 +13,6 @@ import dev.coilix.config.Environment
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
-import dev.coilix.context.SynchronousLifecycle
 
 /**
  * Builds a test context the way a `CoilixIOApp` builds an application, without the banner and the startup log.
@@ -22,7 +23,7 @@ import dev.coilix.context.SynchronousLifecycle
  * the setup are registered under their names, next to an [[dev.coilix.testkit.EventRecorder]] named `eventRecorder`. The context
  * publishes [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] like an application, with the runners
  * between them when the setup asks for them. When the runners or the listeners of these events fail, the context is closed
- * before the error is rethrown. This is the implementation returned by [[dev.coilix.testkit.TestContextFactory.default]].
+ * before the resource fails. This is the implementation returned by [[dev.coilix.testkit.TestContextFactory.default]].
  *
  * @param parser
  *   splits the command-line arguments
@@ -37,20 +38,30 @@ final class DefaultTestContextFactory(
   assemble: ComponentProvider => StartupComponents
 ) extends TestContextFactory {
 
-  override def create(setup: CoilixTestSetup): ConfigurableApplicationContext = {
-    val arguments   = parser.parse(setup.arguments)
-    val environment = environmentLoader.load(safeDefaults ++ commandLineProperties(arguments) ++ setup.configurationOverrides)
-    val startup     = assemble(ComponentProvider.from(environment))
-    val context     = SynchronousLifecycle.started(
-      startup.bootstrap.start(
-        setup.packages(startup.resolver),
-        Nil,
-        singletons(arguments, environment) ++ setup.beans.map(registered),
-        BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
-      )
-    )
-    StartupEvents.around(context)(if (setup.runners) startup.invoker.invoke(context, arguments))
-  }
+  override def resource(setup: CoilixTestSetup): Resource[IO, ConfigurableApplicationContext] =
+    for {
+      arguments   <- Resource.eval(IO(parser.parse(setup.arguments)))
+      environment <- Resource.eval(IO.blocking(environmentLoader.load(properties(setup, arguments))))
+      startup     <- Resource.eval(IO(assemble(ComponentProvider.from(environment))))
+      context     <- startup.bootstrap.start(
+                       setup.packages(startup.resolver),
+                       Nil,
+                       singletons(arguments, environment) ++ setup.beans.map(registered),
+                       BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
+                     )
+      _           <- Resource.eval(context.start *> StartupEvents.around(context)(runners(setup, startup, context, arguments)))
+    } yield context
+
+  private def properties(setup: CoilixTestSetup, arguments: ApplicationArguments): Map[String, String] =
+    safeDefaults ++ commandLineProperties(arguments) ++ setup.configurationOverrides
+
+  private def runners(
+    setup:     CoilixTestSetup,
+    startup:   StartupComponents,
+    context:   ConfigurableApplicationContext,
+    arguments: ApplicationArguments
+  ): IO[Unit] =
+    if (setup.runners) startup.invoker.invoke(context, arguments) else IO.unit
 
   private val safeDefaults: Map[String, String] = Map(FatalErrorSettings.path + ".action" -> "log")
 

@@ -1,21 +1,23 @@
 package dev.coilix.context
 
+import cats.effect.IO
+import cats.effect.Resource
+
 /**
  * Creates the beans of a [[dev.coilix.context.ContextPlan]] from the first level that has a bean made by an effect, for an effect
  * module such as `coilix-concurrency`.
  *
- * The [[dev.coilix.context.ApplicationContextBuilder]] creates the levels before that one itself, so beans the interpreter needs,
- * such as the runtime of the effect, already exist in `registry`. A module gives its interpreter through
- * [[dev.coilix.context.CoilixModule.effectInterpreter]].
+ * The [[dev.coilix.context.ApplicationContextBuilder]] creates the levels before that one itself, so beans the interpreter needs
+ * already exist in `registry`. A module gives its interpreter through [[dev.coilix.context.CoilixModule.effectInterpreter]].
  */
 trait EffectInterpreter {
 
   /**
-   * Creates the beans of `levels`, each level after the previous one, and adds them to `registry`.
+   * The beans of `levels`, each level after the previous one, added to `registry`, as a `Resource`.
    *
-   * The returned [[dev.coilix.context.InterpretedBeans]] releases what the interpreter opened, including the `@PreDestroy`
-   * methods of the beans it created, so these beans are registered without destroy methods. When creation fails, the
-   * interpreter releases what it opened before it throws.
+   * Releasing the resource closes what the interpreter opened, including the `@PreDestroy` methods of the beans it created, so
+   * these beans are registered without destroy methods. The context releases it once when it closes, before it destroys the beans
+   * created without the interpreter. When creation fails, the resource releases what it opened before it fails.
    *
    * @param levels
    *   the remaining beans grouped by dependency level, as in [[dev.coilix.context.ContextPlan.levels]]
@@ -31,5 +33,5 @@ trait EffectInterpreter {
     registry:     BeanRegistry,
     instantiator: BeanInstantiator,
     destroyer:    BeanDestroyer
-  ): InterpretedBeans
+  ): Resource[IO, BeanRegistry]
 }
