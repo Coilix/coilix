@@ -2,6 +2,17 @@
 
 Szczegóły narzędzi, których nie trzeba znać przy każdym tasku. Najczęstsze komendy są w `CLAUDE.md` w sekcji „Komendy”.
 
+## Krótkie wyjście sbt
+
+`tools/sbt-lite.sh <argumenty sbt>` uruchamia sbt (z `--server` i `-Dsbt.server.autostart=false`, więc działa obok sbt z IntelliJ), zapisuje całe wyjście do `target/sbt-lite/last.log` i wypisuje tylko:
+
+- wynik i czas (`sbt-lite: OK` albo `sbt-lite: FAILED (exit N)`),
+- zsumowane liczby testów,
+- przy błędzie nieudane testy (suite i test z miejscem asercji) i pierwsze linie `[error]` (limit `SBT_LITE_ERRORS`, domyślnie 40),
+- zawsze problemy, które nie przerywają sbt, a przerywają CI (zepsute linki Scaladoc, `-Werror` javadoc).
+
+`tools/sbt-lite.sh --summary [log]` streszcza zapisany log jeszcze raz. Pełne szczegóły są w logu, więc nie trzeba drugi raz uruchamiać sbt.
+
 ## Pokrycie testami
 
 `sbt testCoverage` uruchamia testy z pomiarem pokrycia i przerywa się poniżej progu (90% instrukcji, 80% gałęzi). Raport HTML: `target/out/jvm/scala-<wersja>/coilix/scoverage-report/index.html`. `demo` i plugin kompilatora są wyłączone z pomiaru.

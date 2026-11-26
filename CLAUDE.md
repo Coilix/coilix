@@ -52,7 +52,7 @@ Importy są zawsze pełne (`import dev.coilix.context.wiring.Greeter`), po jedny
 
 ## Narzędzia
 
-Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru poziomu, nie są publikowane (`unpublished`) i nie podlegają `checkModuleLayers` (ADR 0038).
+Skrypt `tools/sbt-lite.sh` uruchamia sbt z krótkim podsumowaniem zamiast pełnego wyjścia (sekcja „Praca agenta”). Moduły narzędziowe w `tools/` nie są częścią frameworka: nie mają numeru poziomu, nie są publikowane (`unpublished`) i nie podlegają `checkModuleLayers` (ADR 0038).
 
 | Katalog | Projekt sbt | Pakiet | Zawartość |
 |---|---|---|---|
@@ -172,5 +172,6 @@ Taski mają identyfikatory `COILIX-NNNNN` (plik `tasks/COILIX-NNNNN_nazwa.md`). 
 - Kierunek modelu efektów wyznaczają ADR 0042 i 0043: `IO`, `Resource` i fs2, bez tagless final i bez Pekko. Plan, notatka albo wznowiona sesja, które mówią inaczej, są nieaktualne.
 - Przy „co dalej?” najpierw sprawdź stan: `git status --short --branch`, otwarte PR-y (`gh pr list --state open`) i status taska w `tasks/README.md`. Dopiero potem proponuj następny krok.
 - Konflikty, rebase i kolejność zależnych PR-ów obsługuje skill `pr-conflicts` (`.claude/skills/pr-conflicts/SKILL.md`). Uruchamiaj go po scaleniu PR-a, od którego zależy inny, i zanim wypchniesz gałąź zbudowaną na innej gałęzi.
-- Walidację raportuj z nazwą komendy i wynikiem (przeszło / co padło). Długie wyjście sbt filtruj (`tail`, `grep -E "error|warn|Failed|Passed"`), zamiast wczytywać całe.
+- sbt uruchamiaj przez `tools/sbt-lite.sh <argumenty sbt>` (np. `tools/sbt-lite.sh testFull doc`), a nie przez gołe `sbt`. Skrypt zapisuje pełne wyjście do `target/sbt-lite/last.log` i wypisuje tylko wynik, liczby testów, a przy błędzie nieudane testy i pierwsze linie `[error]`. Szczegóły czytaj z logu (`grep -n -A20 "<test albo plik>" target/sbt-lite/last.log`), bez ponownego uruchamiania sbt. Gołe `sbt` tylko wtedy, gdy potrzebny jest interaktywny shell albo wyjście w trakcie działania.
+- Walidację raportuj z nazwą komendy i wynikiem (przeszło / co padło).
 - W jednej procedurze używaj jednej powłoki (Bash z ukośnikami w ścieżkach). Błąd środowiska (ścieżka, powłoka, zablokowany port sbt) sprawdź, zanim powtórzysz komendę.

@@ -66,12 +66,12 @@ git diff --name-only origin/master...HEAD | cut -d/ -f1 | sort -u
 Uruchom testy tych modułów i modułów od nich zależnych (wyższy numer), z nazwami projektów sbt z tabeli w `CLAUDE.md`:
 
 ```sh
-sbt -Dsbt.server.autostart=false "checkFormat" "<projekt>/testFull" "<zależny>/testFull" doc
+tools/sbt-lite.sh checkFormat <projekt>/testFull <zależny>/testFull doc
 ```
 
-Gdy konflikt dotyczył `build.sbt`, `project/` albo modułu rdzenia `01`–`16`, uruchom pełne `sbt -Dsbt.server.autostart=false testFull doc demo/run`.
+Gdy konflikt dotyczył `build.sbt`, `project/` albo modułu rdzenia `01`–`16`, uruchom pełne `tools/sbt-lite.sh testFull doc demo/run`.
 
-Raportuj komendę i wynik (przeszło / co padło).
+Skrypt wypisuje tylko podsumowanie. Przy błędzie szczegóły czytaj z `target/sbt-lite/last.log` (`grep -n -A20`), nie uruchamiaj sbt ponownie bez zmian. Raportuj komendę i wynik (przeszło / co padło).
 
 ## 6. Wypchnięcie
 
