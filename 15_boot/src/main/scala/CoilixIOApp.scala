@@ -46,27 +46,25 @@ trait CoilixIOApp extends IOApp {
 
   /** Logs a warning when the compute pool is starved, for example by blocking calls outside `IO.blocking`. */
   override protected def onCpuStarvationWarn(metrics: CpuStarvationWarningMetrics): IO[Unit] =
-    IO(
-      CoilixIOApp.log.warn(
-        s"The compute pool is starved: a fiber waited ${metrics.clockDrift.toMillis} ms longer than expected " +
-          s"(threshold ${metrics.starvationThreshold}); look for blocking calls outside IO.blocking"
-      )
+    CoilixIOApp.logF.warn(
+      s"The compute pool is starved: a fiber waited ${metrics.clockDrift.toMillis} ms longer than expected " +
+        s"(threshold ${metrics.starvationThreshold}); look for blocking calls outside IO.blocking"
     )
 
   /** Logs a failure that the runtime cannot hand to any fiber. */
   override protected def reportFailure(error: Throwable): IO[Unit] =
-    IO(CoilixIOApp.log.error("A failure escaped the error handling of a fiber", error))
+    CoilixIOApp.logF.error("A failure escaped the error handling of a fiber", error)
 
   /** Starts the application annotated with `@CoilixApplication` that extends this trait. */
   final override def run(args: List[String]): IO[ExitCode] =
-    IO(CoilixIOApp.log.info(s"$applicationName runs as process ${ProcessHandle.current.pid} on Java ${Runtime.version}")) *>
+    CoilixIOApp.logF.info(s"$applicationName runs as process ${ProcessHandle.current.pid} on Java ${Runtime.version}") *>
       CoilixIOStartup
         .run(args, runtime)(using ClassTag(getClass))
-        .onCancel(IO(CoilixIOApp.log.info(s"$applicationName was asked to stop and closes")))
+        .onCancel(CoilixIOApp.logF.info(s"$applicationName was asked to stop and closes"))
         .handleErrorWith(failed)
 
   private def failed(error: Throwable): IO[ExitCode] =
-    IO(CoilixIOApp.log.error(s"$applicationName ended with an error: ${error.getMessage}", error)).as(ExitCode.Error)
+    CoilixIOApp.logF.error(s"$applicationName ended with an error: ${error.getMessage}", error).as(ExitCode.Error)
 
   private def applicationName: String = getClass.getSimpleName.stripSuffix("$")
 }
