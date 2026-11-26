@@ -3,6 +3,7 @@ package dev.coilix.slf4s
 import dotty.tools.dotc.ast.untpd
 import dotty.tools.dotc.ast.untpd.*
 import dotty.tools.dotc.core.Contexts.Context
+import dotty.tools.dotc.core.Names.TermName
 import dotty.tools.dotc.util.SourceFile
 
 /**
@@ -58,15 +59,22 @@ final class LoggerInjectingTreeTransformer(
   private def withLogger(definition: MemberDef, body: List[Tree], path: List[String], source: SourceFile)(using
     Context
   ): List[Tree] =
-    if (needsLogger(definition, body)) fieldFactory.create(path.mkString("."), source) :: body
+    if (needsLogger(definition, body)) loggerFields(path, body, source) ++ body
     else body
 
-  private def needsLogger(definition: MemberDef, body: List[Tree])(using Context): Boolean =
-    detector.isAnnotated(definition) && !body.exists(isLoggerField)
+  private def loggerFields(path: List[String], body: List[Tree], source: SourceFile)(using Context): List[Tree] =
+    fieldFactory.create(path.mkString("."), source) :: effectfulField(body, source).toList
 
-  private def isLoggerField(tree: Tree): Boolean =
+  private def effectfulField(body: List[Tree], source: SourceFile)(using Context): Option[Tree] =
+    if (body.exists(isNamed(_, LoggerField.effectfulName))) None else fieldFactory.createEffectful(source)
+
+  private def needsLogger(definition: MemberDef, body: List[Tree])(using Context): Boolean =
+    detector.isAnnotated(definition) && !body.exists(isNamed(_, LoggerField.name))
+
+  private def isNamed(tree: Tree, name: TermName): Boolean =
     tree match {
-      case field: ValDef => field.name == LoggerField.name
+      case field:  ValDef => field.name == name
+      case method: DefDef => method.name == name
       case _ => false
     }
 

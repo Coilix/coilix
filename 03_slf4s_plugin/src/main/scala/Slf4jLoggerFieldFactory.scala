@@ -5,6 +5,7 @@ import dotty.tools.dotc.core.Constants.Constant
 import dotty.tools.dotc.core.Contexts.Context
 import dotty.tools.dotc.core.Decorators.*
 import dotty.tools.dotc.core.Flags
+import dotty.tools.dotc.core.Symbols.getClassIfDefined
 import dotty.tools.dotc.util.SourceFile
 
 /**
@@ -20,6 +21,22 @@ final class Slf4jLoggerFieldFactory extends LoggerFieldFactory {
     ValDef(LoggerField.name, InferredTypeTree(), getLogger(loggerName))
       .withMods(EmptyModifiers.withFlags(Flags.Private | Flags.Final))
   }
+
+  override def createEffectful(source: SourceFile)(using Context): Option[ValDef] = {
+    given SourceFile = source
+    Option.when(getClassIfDefined(effectfulLoggerClass).exists) {
+      ValDef(LoggerField.effectfulName, InferredTypeTree(), Apply(effectfulLogger, List(Ident(LoggerField.name))))
+        .withMods(EmptyModifiers.withFlags(Flags.Private | Flags.Final))
+    }
+  }
+
+  private val effectfulLoggerClass = "dev.coilix.common.logging.IOLogger"
+
+  private def effectfulLogger(using Context, SourceFile): Tree =
+    Select(
+      Select(Select(Select(rootDot("dev".toTermName), "coilix".toTermName), "common".toTermName), "logging".toTermName),
+      "IOLogger".toTermName
+    )
 
   private def getLogger(loggerName: String)(using Context, SourceFile): Tree =
     Apply(Select(loggerFactory, "getLogger".toTermName), List(Literal(Constant(loggerName))))

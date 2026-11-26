@@ -49,6 +49,7 @@
 - fs2 is part of the core: `coilix-concurrency` depends on `fs2-core`, so applications can write streams as `fs2.Stream[IO, _]` running on the compute pool of the cats-effect runtime (COILIX-00032).
 - The `startup` readiness indicator is `Down` while the application starts and `Up` after its runners, and `Down` again after a failed start (COILIX-00031).
 - `CoilixIOApp` logs the process identifier at the start, a line when it is asked to stop and a failed start once before ending with exit code 1. Warnings of cats-effect about a starved compute pool and failures it reports go to the log, and `coilix.cats-effect.blocked-thread-detection` turns on the detection of blocked compute threads (COILIX-00031).
+- `@Slf4s` also adds `logF`, an `IOLogger` whose `trace`, `debug`, `info`, `warn` and `error` return `IO[Unit]` and build the message only when the level is enabled, so code in `IO` logs without wrapping `log` in `IO(...)` (COILIX-00033).
 
 ### Changed
 

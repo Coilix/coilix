@@ -36,4 +36,35 @@ $annotation@Slf4s class Annotated { def logger: org.slf4j.Logger = log }
       Nil
     )
   }
+
+  test("annotated class gets a logger in IO named logF when IOLogger is on the classpath") {
+    assertEquals(
+      SnippetCompiler(withEffectfulLogger = true).errors(
+        s"$annotation@Slf4s class Annotated { def hello: cats.effect.IO[Unit] = logF.info(\"hello\") }"
+      ),
+      Nil
+    )
+  }
+
+  test("annotated object gets a logger in IO named logF") {
+    assertEquals(
+      SnippetCompiler(withEffectfulLogger = true).errors(
+        s"$annotation@Slf4s object Annotated { def hello: cats.effect.IO[Unit] = logF.warn(\"hello\") }"
+      ),
+      Nil
+    )
+  }
+
+  test("no logF is added when IOLogger is not on the classpath") {
+    assert(compiler.errors(s"$annotation@Slf4s class Annotated { def hello = logF }").nonEmpty)
+  }
+
+  test("explicitly declared logF member is kept") {
+    assertEquals(
+      SnippetCompiler(withEffectfulLogger = true).errors(
+        s"$annotation@Slf4s class Custom { val logF: Int = 1; def size: Int = logF + 1 }"
+      ),
+      Nil
+    )
+  }
 }

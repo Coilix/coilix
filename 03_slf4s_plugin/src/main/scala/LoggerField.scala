@@ -8,4 +8,7 @@ object LoggerField {
 
   /** Name of the field: `log`. */
   val name: TermName = "log".toTermName
+
+  /** The name of the field with the logger in `IO`, `logF`. */
+  val effectfulName: TermName = "logF".toTermName
 }

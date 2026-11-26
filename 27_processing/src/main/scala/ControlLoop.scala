@@ -24,7 +24,7 @@ private[processing] case class ControlLoop(queue: Queue[IO, IO[Unit]], inside: I
 
   /** Runs the task on the loop later, logging its failure. */
   def post(task: IO[Unit]): IO[Unit] =
-    queue.offer(task.handleErrorWith(error => IO(log.error("An operation of the processor manager failed", error))))
+    queue.offer(task.handleErrorWith(error => logF.error("An operation of the processor manager failed", error)))
 
   /** Runs the task so that fibers it starts are not taken for the loop. */
   def outside[A](task: IO[A]): IO[A] =
