@@ -2,7 +2,6 @@ package dev.coilix.processing
 
 import cats.effect.IO
 import cats.effect.Resource
-import cats.effect.unsafe.IORuntime
 import dev.coilix.annotation.Bean
 import dev.coilix.annotation.Configuration
 import dev.coilix.cluster.ReplicaIdentity
@@ -31,8 +30,7 @@ final class ProcessingConfiguration {
     collected: CollectedComponents,
     engines:   List[ProcessorEngine],
     identity:  ReplicaIdentity,
-    settings:  ProcessingSettings,
-    runtime:   IORuntime
+    settings:  ProcessingSettings
   ): Resource[IO, DefaultProcessorManager] =
-    DefaultProcessorManager.resource(collected, engines, identity, settings, runtime)
+    DefaultProcessorManager.resource(collected, engines, identity, settings)
 }

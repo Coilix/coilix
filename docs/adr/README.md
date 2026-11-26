@@ -29,7 +29,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0021](0021-cluster-replica-identity.md) | Moduł `cluster` i tożsamość repliki | proponowana |
 | [0022](0022-definition-processors-and-async-proxies.md) | Procesory definicji z modułów i proxy dla `@Async` | proponowana |
 | [0023](0023-ci-caching.md) | Cache i pomijanie kroków w CI bez pomijania testów | proponowana |
-| [0024](0024-closing-phases-and-retry-policy.md) | Fazy zamykania kontekstu i wspólna polityka ponowień | proponowana |
+| [0024](0024-closing-phases-and-retry-policy.md) | Fazy zamykania kontekstu i wspólna polityka ponowień | proponowana, częściowo zastąpiona przez 0047 |
 | [0025](0025-in-memory-application-events.md) | Lekkie zdarzenia aplikacji tylko w pamięci | proponowana |
 | [0026](0026-framework-events-and-testkit.md) | Zdarzenia frameworka i zdarzenia w testkicie | proponowana |
 | [0027](0027-fatal-errors-shut-down.md) | Błąd fatalny wyłącza aplikację | proponowana |
@@ -51,6 +51,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0044](0044-processors-on-io.md) | Procesory tła na IO i fiberach | proponowana |
 | [0045](0045-single-io-entry-point.md) | Jeden punkt wejścia aplikacji: CoilixIOApp | proponowana |
 | [0046](0046-logging.md) | Logowanie: logF z @Slf4s i własny backend SLF4J | proponowana |
+| [0047](0047-lifecycle-listeners-in-io.md) | Słuchacze cyklu życia kontekstu w IO | proponowana |
 
 ## Nowa decyzja
 

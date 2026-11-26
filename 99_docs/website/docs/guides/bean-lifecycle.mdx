@@ -44,7 +44,7 @@ A name that matches no bean stops the startup with `NoSuchBeanException`, and a 
 
 ## React to the whole context
 
-A bean that needs every other bean, or that must stop its work before any bean is destroyed, implements `ContextLifecycleListener`. Coilix calls `onContextStarted` once all beans exist, and `onContextClosing` when the context closes, before the first `@PreDestroy` method.
+A bean that needs every other bean, or that must stop its work before any bean is destroyed, implements `ContextLifecycleListener`. Both methods return `cats.effect.IO[Unit]`: Coilix runs `onContextStarted` once all beans exist, and `onContextClosing` when the context closes, before the first `@PreDestroy` method. The listeners run one after another, so a listener can wait for its work to stop within its own `IO`. Wrap blocking calls in `IO.blocking`, as the outbox below does.
 
 The closing goes through four phases, whatever the order in which the beans were created:
 
@@ -57,4 +57,4 @@ Only then do the `@PreDestroy` methods run. Within one phase, the listener creat
 
 <CodeBlock language="scala" title="lifecycle/OrderOutbox.scala">{OrderOutbox}</CodeBlock>
 
-If `onContextStarted` throws an exception, Coilix closes the context and the startup stops. If `onContextClosing` throws, Coilix logs it as a warning and goes on with the closing.
+If the `IO` of `onContextStarted` fails, Coilix closes the context and the startup stops. If the `IO` of `onContextClosing` fails, Coilix logs it as a warning and goes on with the closing.

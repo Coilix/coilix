@@ -13,6 +13,7 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.events.listeners.ArchivingListener
 import dev.coilix.events.listeners.AsyncJournal
 import dev.coilix.events.listeners.CancellingListener
@@ -119,12 +120,12 @@ final class DefaultEventBusTest extends FunSuite {
         ImmediateScheduler(),
         context.getBean[EventsSettings]
       )
-      bus.onContextStarted(context)
+      bus.onContextStarted(context).unsafeRunSync()(using SynchronousLifecycle.runtimeOf(context))
       bus.publish(OrderEvent.Placed(1))
       assert(context.getBean[FlakyNotifier].delivered.await(5, TimeUnit.SECONDS))
       assert(bus.awaitIdle(5.seconds))
       assertEquals((context.getBean[FlakyNotifier].attempts.get, bus.pendingDeliveries), (3, 0))
-      bus.onContextClosing()
+      bus.onContextClosing.unsafeRunSync()(using SynchronousLifecycle.runtimeOf(context))
     }
   }
 
@@ -243,7 +244,7 @@ final class DefaultEventBusTest extends FunSuite {
     assertEquals(
       (closing.map(_.getMessage), closed),
       (
-        Some(s"Cannot publish an event of type ${classOf[OrderEvent.Placed].getName}, the context is closing"),
+        Some(s"Cannot publish an event of type ${classOf[OrderEvent.Cancelled].getName}, the context is closing"),
         s"Cannot publish an event of type ${classOf[OrderEvent.Placed].getName}, the context is closed"
       )
     )
@@ -266,7 +267,7 @@ final class DefaultEventBusTest extends FunSuite {
 
   @tailrec
   private def rejection(bus: EventBus, deadline: Long): Option[EventBusClosedException] =
-    Try(bus.publish(OrderEvent.Placed(2))).failed.toOption match {
+    Try(bus.publish(OrderEvent.Cancelled(2))).failed.toOption match {
       case Some(failure: EventBusClosedException) => Some(failure)
       case _ if System.nanoTime > deadline        => None
       case _                                      =>

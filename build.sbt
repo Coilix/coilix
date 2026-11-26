@@ -184,7 +184,7 @@ lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
   .settings(coreGroup)
   .settings(
     description := "Coilix IoC container",
-    libraryDependencies += Dependencies.reflections
+    libraryDependencies ++= Seq(Dependencies.reflections, Dependencies.munitCatsEffect % Test)
   )
 
 lazy val concurrency = slf4sModule("concurrency", "06_concurrency", "dev.coilix.concurrency")

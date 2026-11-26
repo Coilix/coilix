@@ -27,7 +27,8 @@ import java.lang.annotation.Annotation
  *
  * When the modules collect annotations, the classes marked with them, found in the base packages or among the module
  * components, become the `collectedComponents` bean made by the [[dev.coilix.context.ComponentCollector]] instead of beans. Each
- * scanned package, each replaced bean and the names of all beans are logged at `INFO` level. This is the default
+ * scanned package, each replaced bean and the names of all beans are logged at `INFO` level. The returned context is not
+ * started: its owner runs [[dev.coilix.context.ConfigurableApplicationContext.start]]. This is the default
  * [[dev.coilix.boot.CoilixBootstrap]].
  *
  * @param scanner
@@ -62,7 +63,7 @@ final class DefaultCoilixBootstrap(
     val processed   = processedBy(loaded)(discovered(basePackages) ++ fromModules(loaded, annotations))
     val beans       = kept(processed, replacements) ++ extraDefinitions
     checkCollected(beans, singletons, collected, annotations)
-    ready(builder.build(beans ++ collectedDefinition(collected, annotations), singletons, effectInterpreter(loaded)))
+    ready(builder.create(beans ++ collectedDefinition(collected, annotations), singletons, effectInterpreter(loaded)))
   }
 
   private def effectInterpreter(loaded: List[CoilixModule]): Option[EffectInterpreter] =

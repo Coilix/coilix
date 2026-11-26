@@ -1,10 +1,10 @@
 package dev.coilix.events
 
+import cats.effect.IO
 import dev.coilix.annotation.Slf4s
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.ClosingPhase
 import dev.coilix.context.ContextLifecycleListener
-import scala.util.control.NonFatal
 
 /**
  * Publishes [[dev.coilix.events.ContextClosing]] in the [[dev.coilix.context.ClosingPhase.Announcement]] phase, so listeners hear
@@ -19,14 +19,11 @@ import scala.util.control.NonFatal
 @Slf4s
 final class ContextClosingPublisher(publisher: EventPublisher, context: ApplicationContext) extends ContextLifecycleListener {
 
-  override def onContextStarted(context: ApplicationContext): Unit = ()
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.unit
 
   override def closingPhase: ClosingPhase = ClosingPhase.Announcement
 
-  override def onContextClosing(): Unit =
-    try {
-      publisher.publish(ContextClosing(context))
-    } catch {
-      case NonFatal(failure) => log.error("A listener failed on ContextClosing", failure)
-    }
+  override def onContextClosing: IO[Unit] =
+    IO.blocking(publisher.publish(ContextClosing(context)))
+      .handleErrorWith(failure => logF.error("A listener failed on ContextClosing", failure))
 }

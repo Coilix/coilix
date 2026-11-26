@@ -9,12 +9,12 @@ package dev.coilix.context
  *
  * ```scala
  * @Component
- * final class OutboxFlusher(outbox: Outbox) extends ContextLifecycleListener {
+ * case class OutboxFlusher(outbox: Outbox) extends ContextLifecycleListener {
  *   override def closingPhase: ClosingPhase = ClosingPhase.Events
  *
- *   override def onContextStarted(context: ApplicationContext): Unit = ()
+ *   override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.unit
  *
- *   override def onContextClosing(): Unit = outbox.flush()
+ *   override def onContextClosing: IO[Unit] = outbox.flush
  * }
  * ```
  */

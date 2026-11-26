@@ -1,6 +1,6 @@
 # 0024: Fazy zamykania kontekstu i wspólna polityka ponowień
 
-- Status: proponowana
+- Status: proponowana, częściowo zastąpiona przez [0047](0047-lifecycle-listeners-in-io.md) (metody słuchacza w `IO`)
 - Data: 2026-11-20
 - Task: COILIX-00016 (krok 1)
 

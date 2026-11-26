@@ -1,5 +1,6 @@
 package dev.coilix.events
 
+import cats.effect.IO
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.GenericType
 import dev.coilix.common.TypeInfo
@@ -84,7 +85,7 @@ final class DefaultEventBus(
    * @throws dev.coilix.events.InvalidEventListenerException
    *   if a listener cannot be called with events
    */
-  override def onContextStarted(context: ApplicationContext): Unit = {
+  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.blocking {
     val found = context.createdBeans.flatMap(bean => listenersOf(bean.beanName, bean.instance))
     registered.set(found.sortBy(_.info.name))
     logListeners(registered.get.map(_.info))
@@ -96,7 +97,7 @@ final class DefaultEventBus(
 
   override def closingPhase: ClosingPhase = ClosingPhase.Events
 
-  override def onContextClosing(): Unit = {
+  override def onContextClosing: IO[Unit] = IO.blocking {
     discardEarly()
     state.set(EventBusState.Closing)
     logAbandoned("waiting for a retry", cancelRetries())

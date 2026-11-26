@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Slf4s
 import dev.coilix.context.ApplicationContext
@@ -22,15 +23,11 @@ final class WorkshopOpening(properties: WorkshopProperties) extends ContextLifec
   /** Whether the workshop is open. */
   def isOpen: Boolean = open.get
 
-  override def onContextStarted(context: ApplicationContext): Unit = {
-    open.set(true)
-    log.info(s"${properties.name} is open with ${context.beanNames.size} beans")
-  }
+  override def onContextStarted(context: ApplicationContext): IO[Unit] =
+    IO(open.set(true)) *> logF.info(s"${properties.name} is open with ${context.beanNames.size} beans")
 
   override def closingPhase: ClosingPhase = ClosingPhase.Resources
 
-  override def onContextClosing(): Unit = {
-    open.set(false)
-    log.info(s"${properties.name} is closing")
-  }
+  override def onContextClosing: IO[Unit] =
+    IO(open.set(false)) *> logF.info(s"${properties.name} is closing")
 }
