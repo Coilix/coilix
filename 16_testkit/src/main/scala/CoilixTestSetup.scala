@@ -119,9 +119,12 @@ final case class CoilixTestSetup(
 /** Starting points for a [[dev.coilix.testkit.CoilixTestSetup]]. */
 object CoilixTestSetup {
 
-  /** Scans the packages of application `T`, annotated with `@CoilixApplication`, as a `CoilixIOApp` does. */
+  /**
+   * Scans the packages of application `T`, annotated with `@CoilixApplication`, as a `CoilixIOApp` does. A class without the
+   * annotation fails the test with a [[dev.coilix.boot.NotABootApplicationException]] when the context is created.
+   */
   def forApplication[T: ClassTag]: CoilixTestSetup =
-    empty(_.resolve[T])
+    empty(_.resolve[T].fold(error => throw error.exception, identity))
 
   /** Scans the given packages and their subpackages. */
   def forPackages(first: String, more: String*): CoilixTestSetup =

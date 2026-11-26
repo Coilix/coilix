@@ -1,9 +1,8 @@
 package dev.coilix.boot
 
-import cats.effect.IO
-import cats.effect.Resource
 import dev.coilix.config.EnvironmentLoader
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.ResourceT
 import scala.reflect.ClassTag
 
 /** Builds the context of an application, the first part of the start of a [[dev.coilix.boot.CoilixIOApp]]. */
@@ -17,9 +16,11 @@ trait CoilixApplicationRunner {
    * @param singletons
    *   ready instances registered before the beans are created, such as a runtime that the caller owns
    * @return
-   *   the context with the parsed arguments
+   *   the context with the parsed arguments, or a [[dev.coilix.boot.StartupError]] when the application cannot start, such as a
+   *   [[dev.coilix.boot.StartupError.Configuration]] when the configuration cannot be loaded or the error of the
+   *   [[dev.coilix.boot.CoilixBootstrap]]
    */
-  def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): Resource[IO, StartedApplication]
+  def start[T: ClassTag](args: List[String], singletons: List[RegisteredBean]): ResourceT[StartupError, StartedApplication]
 }
 
 /** Factories for [[dev.coilix.boot.CoilixApplicationRunner]]. */

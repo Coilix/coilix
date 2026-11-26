@@ -40,7 +40,7 @@ The application then lives in the main fiber of the `IOApp`:
 - the runtime of the `IOApp` is the `ioRuntime` bean, with `coilix.concurrency.compute.threads` compute threads, so it stays the only compute pool. The number of threads is read before the command-line arguments, so set it in a configuration file, a system property or an environment variable,
 - Coilix builds the context, runs the runners as described in [Runners in IO](#runners-in-io) and waits until the application is cancelled, for example by `SIGTERM` or Ctrl+C. Cancelling closes the context, so resources close in the reverse order of opening,
 - with `coilix.cats-effect.exit-after-runners: true` the application closes and ends after its runners, which suits batch jobs,
-- if the start or a runner fails, the context closes, the failure is logged once and the application ends with exit code 1,
+- if the start or a runner fails, the context closes, the failure is logged once and the application ends with exit code 1. An application that cannot start because of its own setup, such as a missing bean, a dependency cycle or a configuration that cannot be loaded, logs only the reason, without a stack trace,
 - the log shows the process identifier at the start and a line when the application is asked to stop,
 - warnings of cats-effect about a starved compute pool and failures it cannot hand to a fiber go to the log. `coilix.cats-effect.blocked-thread-detection: true` also warns when a compute thread blocks, at a small cost on every blocking call.
 

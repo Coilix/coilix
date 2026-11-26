@@ -54,6 +54,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0047](0047-lifecycle-listeners-in-io.md) | Słuchacze cyklu życia kontekstu w IO | proponowana |
 | [0048](0048-stream-processors-with-draining.md) | Procesory strumieniowe z opróżnianiem | proponowana |
 | [0049](0049-context-in-resource-without-unsafe-run.md) | Kontekst w `Resource`, runnery w `IO`, jedna granica synchroniczna | proponowana |
+| [0050](0050-typed-startup-errors.md) | Błędy typowane w `EitherT`, decyzja o rzuceniu w warstwie wyższej | proponowana |
 
 ## Nowa decyzja
 

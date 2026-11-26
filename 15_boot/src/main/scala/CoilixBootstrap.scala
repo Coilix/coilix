@@ -1,7 +1,5 @@
 package dev.coilix.boot
 
-import cats.effect.IO
-import cats.effect.Resource
 import dev.coilix.config.ComponentProvider
 import dev.coilix.config.ConfigPath
 import dev.coilix.context.ApplicationContextBuilder
@@ -12,6 +10,7 @@ import dev.coilix.context.ComponentCollector
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.ModuleLoader
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.ResourceT
 
 /** Scans for components and builds the application context. */
 trait CoilixBootstrap {
@@ -24,14 +23,16 @@ trait CoilixBootstrap {
    * [[dev.coilix.context.SynchronousLifecycle.started]].
    *
    * @return
-   *   a resource that fails with a [[dev.coilix.context.NoSuchBeanException]] when a required dependency has no matching bean and
-   *   with a [[dev.coilix.context.CircularDependencyException]] when beans depend on each other in a cycle
+   *   the context, or a [[dev.coilix.boot.StartupError]] when it cannot be built: a
+   *   [[dev.coilix.boot.StartupError.ConflictingEffectInterpreters]] when several modules give an effect interpreter, and a
+   *   [[dev.coilix.boot.StartupError.Context]] with the [[dev.coilix.context.ContextError]] of the container, for example when a
+   *   required dependency has no matching bean
    */
   final def start(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean]
-  ): Resource[IO, ConfigurableApplicationContext] =
+  ): ResourceT[StartupError, ConfigurableApplicationContext] =
     start(basePackages, extraDefinitions, singletons, BeanReplacements.none)
 
   /**
@@ -39,17 +40,17 @@ trait CoilixBootstrap {
    * `singletons` take their place. The `extraDefinitions` are never left out.
    *
    * @return
-   *   a resource that fails like the other `start`, also with an [[dev.coilix.boot.UnmatchedBeanReplacementException]] when a
-   *   replaced type matches no bean discovered by scanning or in modules and with a
-   *   [[dev.coilix.boot.CollectedComponentConflictException]] when a class has a component annotation and an annotation
-   *   collected by a module
+   *   the context or an error like the other `start`, also a [[dev.coilix.boot.StartupError.UnmatchedBeanReplacement]] when a
+   *   replaced type matches no bean discovered by scanning or in modules, a
+   *   [[dev.coilix.boot.StartupError.CollectedComponentConflict]] when a class has a component annotation and an annotation
+   *   collected by a module, and a [[dev.coilix.boot.StartupError.CollectedComponentRequired]] when a bean requires such a class
    */
   def start(
     basePackages:     List[String],
     extraDefinitions: List[BeanDefinition],
     singletons:       List[RegisteredBean],
     replacements:     BeanReplacements
-  ): Resource[IO, ConfigurableApplicationContext]
+  ): ResourceT[StartupError, ConfigurableApplicationContext]
 }
 
 /** Configuration path and default implementation of [[dev.coilix.boot.CoilixBootstrap]]. */

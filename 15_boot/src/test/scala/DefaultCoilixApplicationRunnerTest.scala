@@ -6,11 +6,13 @@ import dev.coilix.boot.application.FixtureApplication
 import dev.coilix.boot.application.RunJournal
 import dev.coilix.boot.fixture.Clock
 import dev.coilix.boot.scan.CustomScanApplication
+import dev.coilix.boot.scan.NotAnnotatedApplication
 import dev.coilix.config.ClasspathEnvironmentLoader
 import dev.coilix.config.ConfigFormat
 import dev.coilix.config.Environment
 import dev.coilix.context.RegisteredBean
 import munit.CatsEffectSuite
+import scala.reflect.ClassTag
 
 final class DefaultCoilixApplicationRunnerTest extends CatsEffectSuite {
   private val runner = DefaultCoilixApplicationRunner(
@@ -20,7 +22,7 @@ final class DefaultCoilixApplicationRunnerTest extends CatsEffectSuite {
   )
 
   private val application =
-    ResourceSuiteLocalFixture("application", runner.start[FixtureApplication.type](List("--name=Ann", "input.txt"), Nil))
+    ResourceSuiteLocalFixture("application", started[FixtureApplication.type](List("--name=Ann", "input.txt"), Nil))
 
   override def munitFixtures = List(application)
 
@@ -51,14 +53,14 @@ final class DefaultCoilixApplicationRunnerTest extends CatsEffectSuite {
   }
 
   test("scans the packages declared by the application") {
-    runner.start[CustomScanApplication.type](List("--name=Ann"), Nil).use(scanned =>
+    started[CustomScanApplication.type](List("--name=Ann"), Nil).use(scanned =>
       IO(assertEquals(scanned.context.getBean[Clock].now, 42L))
     )
   }
 
   test("start builds the context with extra singletons") {
     val token = StartToken("till-1")
-    runner.start[FixtureApplication.type](List("--name=Bob"), List(RegisteredBean.of[StartToken]("token", token))).use(started =>
+    started[FixtureApplication.type](List("--name=Bob"), List(RegisteredBean.of[StartToken]("token", token))).use(started =>
       IO(
         assertEquals(
           (
@@ -73,8 +75,17 @@ final class DefaultCoilixApplicationRunnerTest extends CatsEffectSuite {
   }
 
   test("closes the context when the resource is released") {
-    runner.start[FixtureApplication.type](Nil, Nil).use(started => IO.pure(started.context)).map(context =>
+    started[FixtureApplication.type](Nil, Nil).use(started => IO.pure(started.context)).map(context =>
       assertEquals(context.isActive, false)
     )
   }
+
+  test("gives a startup error for a class without @CoilixApplication") {
+    runner.start[NotAnnotatedApplication.type](Nil, Nil).value.use(result =>
+      IO(assertEquals(result.left.toOption, Some(StartupError.NotABootApplication(classOf[NotAnnotatedApplication.type]))))
+    )
+  }
+
+  private def started[T: ClassTag](args: List[String], singletons: List[RegisteredBean]) =
+    StartupError.raised(runner.start[T](args, singletons))
 }

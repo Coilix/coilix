@@ -29,7 +29,14 @@ final class PrimaryCandidateSelectorTest extends FunSuite {
     assertEquals(selector.select(GenericType.of(classOf[Greeter]), greeters).map(_.beanName), Some("polishGreeter"))
   }
 
-  test("fails when many candidates match and none is primary") {
+  test("gives an ambiguity error when many candidates match and none is primary") {
+    assertEquals(
+      selector.choose(GenericType.of(classOf[Greeter]), english ++ english.map(_.copy(beanName = "other"))).left.map(_.candidates),
+      Left(List("englishGreeter", "other"))
+    )
+  }
+
+  test("select throws the ambiguity error") {
     intercept[AmbiguousBeanException](selector.select(
       GenericType.of(classOf[Greeter]),
       english ++ english.map(_.copy(beanName = "other"))

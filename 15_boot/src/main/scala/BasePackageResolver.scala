@@ -8,12 +8,10 @@ import scala.reflect.ClassTag
 trait BasePackageResolver {
 
   /**
-   * The packages to scan for application class `T`. Subpackages are scanned too.
-   *
-   * @throws dev.coilix.boot.NotABootApplicationException
-   *   if `T` is not a Coilix application
+   * The packages to scan for application class `T`, or a [[dev.coilix.boot.StartupError.NotABootApplication]] when `T` is not a
+   * Coilix application. Subpackages are scanned too.
    */
-  def resolve[T: ClassTag]: List[String]
+  def resolve[T: ClassTag]: Either[StartupError, List[String]]
 }
 
 /** Configuration path and default implementation of [[dev.coilix.boot.BasePackageResolver]]. */

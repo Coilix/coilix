@@ -8,17 +8,16 @@ import scala.reflect.ClassTag
  * Reads the packages to scan from `@CoilixApplication.scanBasePackages`, or uses the package of the application class when
  * the attribute is empty.
  *
- * Throws [[dev.coilix.boot.NotABootApplicationException]] when the class is not annotated with `@CoilixApplication`. This is the
- * default [[dev.coilix.boot.BasePackageResolver]].
+ * Gives a [[dev.coilix.boot.StartupError.NotABootApplication]] when the class is not annotated with `@CoilixApplication`. This
+ * is the default [[dev.coilix.boot.BasePackageResolver]].
  */
 final class AnnotationBasePackageResolver extends BasePackageResolver {
 
-  override def resolve[T: ClassTag]: List[String] =
-    basePackages(runtimeTypeOf[T], annotationOf(runtimeTypeOf[T]))
+  override def resolve[T: ClassTag]: Either[StartupError, List[String]] =
+    annotationOf(runtimeTypeOf[T]).map(annotation => basePackages(runtimeTypeOf[T], annotation))
 
-  private def annotationOf(applicationClass: Class[?]): CoilixApplication =
-    Option(applicationClass.getAnnotation(classOf[CoilixApplication]))
-      .getOrElse(throw NotABootApplicationException(applicationClass))
+  private def annotationOf(applicationClass: Class[?]): Either[StartupError, CoilixApplication] =
+    Option(applicationClass.getAnnotation(classOf[CoilixApplication])).toRight(StartupError.NotABootApplication(applicationClass))
 
   private def basePackages(applicationClass: Class[?], annotation: CoilixApplication): List[String] =
     annotation.scanBasePackages.toList match {

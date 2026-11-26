@@ -40,7 +40,7 @@ Aplikacja żyje wtedy w głównym fiberze `IOApp`:
 - runtime `IOApp` jest beanem `ioRuntime` z `coilix.concurrency.compute.threads` wątkami obliczeniowymi, więc zostaje jedyną pulą obliczeniową. Liczba wątków jest czytana przed argumentami wiersza poleceń, więc ustaw ją w pliku konfiguracji, właściwości systemowej albo zmiennej środowiskowej,
 - Coilix buduje kontekst, uruchamia runnery tak jak w sekcji [Runnery w IO](#runnery-w-io) i czeka, aż aplikacja zostanie anulowana, np. przez `SIGTERM` albo Ctrl+C. Anulowanie zamyka kontekst, więc zasoby zamykają się w odwrotnej kolejności otwarcia,
 - z `coilix.cats-effect.exit-after-runners: true` aplikacja zamyka się i kończy po runnerach, co pasuje do zadań wsadowych,
-- jeśli start albo runner się nie powiedzie, kontekst się zamyka, błąd trafia raz do logu, a aplikacja kończy się kodem wyjścia 1,
+- jeśli start albo runner się nie powiedzie, kontekst się zamyka, błąd trafia raz do logu, a aplikacja kończy się kodem wyjścia 1. Aplikacja, która nie może wystartować z powodu własnej konfiguracji, np. braku beana, cyklu zależności albo konfiguracji, której nie da się wczytać, loguje tylko przyczynę, bez stosu wywołań,
 - log pokazuje identyfikator procesu przy starcie i wpis, gdy aplikacja dostaje polecenie zatrzymania,
 - ostrzeżenia cats-effect o zagłodzonej puli obliczeniowej i błędy, których nie da się przekazać żadnemu fiberowi, trafiają do logu. `coilix.cats-effect.blocked-thread-detection: true` ostrzega też, gdy wątek obliczeniowy się blokuje, kosztem niewielkiego narzutu przy każdym wywołaniu blokującym.
 

@@ -1,6 +1,7 @@
 package dev.coilix.testkit
 
 import dev.coilix.boot.BasePackageResolver
+import dev.coilix.boot.StartupError
 import dev.coilix.common.GenericType
 import dev.coilix.testkit.fixture.FixtureApplication
 import dev.coilix.testkit.fixture.Greeter
@@ -10,7 +11,7 @@ import scala.reflect.ClassTag
 
 final class CoilixTestSetupTest extends FunSuite {
   private object NoPackages extends BasePackageResolver {
-    override def resolve[T: ClassTag]: List[String] = Nil
+    override def resolve[T: ClassTag]: Either[StartupError, List[String]] = Right(Nil)
   }
 
   private val base = CoilixTestSetup.forApplication[FixtureApplication.type]

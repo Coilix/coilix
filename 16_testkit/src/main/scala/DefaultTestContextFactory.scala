@@ -6,6 +6,7 @@ import dev.coilix.boot.ApplicationArguments
 import dev.coilix.boot.ArgumentsParser
 import dev.coilix.boot.BeanReplacements
 import dev.coilix.boot.StartupComponents
+import dev.coilix.boot.StartupError
 import dev.coilix.boot.StartupEvents
 import dev.coilix.concurrency.FatalErrorSettings
 import dev.coilix.config.ComponentProvider
@@ -23,7 +24,9 @@ import dev.coilix.context.RegisteredBean
  * the setup are registered under their names, next to an [[dev.coilix.testkit.EventRecorder]] named `eventRecorder`. The context
  * publishes [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] like an application, with the runners
  * between them when the setup asks for them. When the runners or the listeners of these events fail, the context is closed
- * before the resource fails. This is the implementation returned by [[dev.coilix.testkit.TestContextFactory.default]].
+ * before the resource fails. A test is the top layer of its context, so a [[dev.coilix.boot.StartupError]] fails the resource
+ * with its [[dev.coilix.boot.StartupError.exception]]. This is the implementation returned by
+ * [[dev.coilix.testkit.TestContextFactory.default]].
  *
  * @param parser
  *   splits the command-line arguments
@@ -43,11 +46,14 @@ final class DefaultTestContextFactory(
       arguments   <- Resource.eval(IO(parser.parse(setup.arguments)))
       environment <- Resource.eval(IO.blocking(environmentLoader.load(properties(setup, arguments))))
       startup     <- Resource.eval(IO(assemble(ComponentProvider.from(environment))))
-      context     <- startup.bootstrap.start(
-                       setup.packages(startup.resolver),
-                       Nil,
-                       singletons(arguments, environment) ++ setup.beans.map(registered),
-                       BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
+      packages    <- Resource.eval(IO(setup.packages(startup.resolver)))
+      context     <- StartupError.raised(
+                       startup.bootstrap.start(
+                         packages,
+                         Nil,
+                         singletons(arguments, environment) ++ setup.beans.map(registered),
+                         BeanReplacements(setup.beans.filter(_.replaces).map(_.beanType))
+                       )
                      )
       _           <- Resource.eval(context.start *> StartupEvents.around(context)(runners(setup, startup, context, arguments)))
     } yield context

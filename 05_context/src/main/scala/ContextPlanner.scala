@@ -13,12 +13,11 @@ trait ContextPlanner {
    *   all bean definitions, in the order of scanning
    * @param provided
    *   ready instances registered before any bean is created, such as the context itself
-   * @throws dev.coilix.context.NoSuchBeanException
-   *   if a required dependency has no matching bean
-   * @throws dev.coilix.context.CircularDependencyException
-   *   if beans depend on each other in a cycle
+   * @return
+   *   the error of the [[dev.coilix.context.DependencyResolver]] when the definitions cannot be ordered, for example a
+   *   [[dev.coilix.context.ContextError.MissingBean]] or a [[dev.coilix.context.ContextError.CircularDependency]]
    */
-  def plan(definitions: List[BeanDefinition], provided: List[RegisteredBean]): ContextPlan
+  def plan(definitions: List[BeanDefinition], provided: List[RegisteredBean]): Either[ContextError, ContextPlan]
 }
 
 /** Configuration path and default implementation of [[dev.coilix.context.ContextPlanner]]. */
