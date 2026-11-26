@@ -42,6 +42,10 @@ workshop:
           kind: brakes
 
 coilix:
+  logging:
+    level: info
+    levels:
+      org.reflections: warn
   cats-effect:
     exit-after-runners: true
   events:

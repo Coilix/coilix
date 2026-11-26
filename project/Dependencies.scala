@@ -11,6 +11,16 @@ object Dependencies {
   val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect" % "2.2.1"
   val fs2Core:         ModuleID = "co.fs2"         %% "fs2-core"          % "3.16.0"
 
+  /**
+   * Bridges that send java.util.logging, the Log4j 2 API and Commons Logging to SLF4J, so libraries that use them log through
+   * the logging module.
+   */
+  val loggingBridges: Seq[ModuleID] = Seq(
+    "org.slf4j"                % "jul-to-slf4j"   % "2.0.20",
+    "org.slf4j"                % "jcl-over-slf4j" % "2.0.20",
+    "org.apache.logging.log4j" % "log4j-to-slf4j" % "2.26.1"
+  )
+
   /** Log4j 2 behind SLF4J, with a working MDC, for the demo and the tests of MDC propagation. */
   val log4jSlf4j: Seq[ModuleID] = Seq(
     "org.apache.logging.log4j" % "log4j-slf4j2-impl" % "2.26.1",

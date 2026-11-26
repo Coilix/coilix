@@ -7,6 +7,8 @@ sidebar_position: 14
 
 import CodeBlock from '@theme/CodeBlock';
 import PaymentAudit from '!!raw-loader!@examples/scala/logging/PaymentAudit.scala';
+import LoggingYaml from '!!raw-loader!@examples/resources/guides/logging/application.yaml';
+import Troubleshooting from '!!raw-loader!@examples/scala/logging/Troubleshooting.scala';
 
 Ta strona pokazuje, jak klasa aplikacji Coilix loguje. `@Slf4s` dodaje do oznaczonej klasy albo obiektu dwa prywatne pola: `log`, czyli zwykły `Logger` SLF4J, i `logF`, ten sam logger z metodami, które zwracają `IO[Unit]`. Kod napisany w `IO` używa `logF`, więc żadnego wywołania logu nie trzeba opakowywać w `IO(...)`.
 
@@ -20,4 +22,32 @@ Klasa, która deklaruje własne `log`, nie dostaje żadnego z pól, a klasa z w�
 
 ## Backend logowania
 
-Log idzie przez SLF4J, więc backend, np. Logback albo Log4j 2, wybiera aplikacja. Biblioteki, które logują przez SLF4J, piszą do tego samego backendu.
+Log idzie przez SLF4J. Dodaj `coilix-logging`, żeby backendem był Coilix:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-logging" % "<version>"
+```
+
+Wtedy każda biblioteka aplikacji loguje w tym samym formacie co twój kod: biblioteki, które używają SLF4J bezpośrednio, i biblioteki na `java.util.logging`, API Log4j 2 albo Commons Logging, które moduł kieruje do SLF4J. Wpis pokazuje czas, poziom, wątek, skróconą nazwę loggera, wiadomość i MDC, a pod nim stack trace wyjątku:
+
+```text
+2026-11-26 14:03:22.123 INFO  [io-compute-3] c.e.l.PaymentAudit - Recorded payment P-7 of 120.00 {order=7}
+```
+
+Bez modułu aplikacja zostaje przy własnym backendzie, np. Logback albo Log4j 2. Nie dodawaj innego backendu obok `coilix-logging`.
+
+## Poziomy i wyciszone loggery
+
+Poziomy ustawia się pod `coilix.logging`. Nazwa w `levels` to pakiet albo klasa: dotyczy wszystkiego pod nią, a wygrywa najdłuższa pasująca nazwa. `off` wycisza logger albo cały pakiet:
+
+<CodeBlock language="yaml" title="application.yaml">{LoggingYaml}</CodeBlock>
+
+`colors: false` zapisuje zwykły tekst, np. dla zbieracza logów, a `async: true` zapisuje log w wątku w tle, więc logowanie nie czeka na konsolę. W HOCON nazwy z kropkami ujmij w cudzysłów, np. `"org.apache.kafka" = warn`.
+
+## Zmiana poziomów w trakcie działania
+
+Bean `LogLevels` czyta i zmienia poziomy w działającej aplikacji. Zmiana działa od razu, także dla istniejących loggerów, i trwa do następnej zmiany albo do końca procesu:
+
+<CodeBlock language="scala" title="Troubleshooting.scala">{Troubleshooting}</CodeBlock>
+
+`reset` usuwa poziom nazwy, więc znowu obowiązuje najbliższy pakiet z poziomem, a `setRoot` zmienia poziom wszystkich loggerów bez własnego.
