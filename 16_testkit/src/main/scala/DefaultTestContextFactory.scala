@@ -24,8 +24,8 @@ import dev.coilix.context.RegisteredBean
  * the setup are registered under their names, next to an [[dev.coilix.testkit.EventRecorder]] named `eventRecorder`. The context
  * publishes [[dev.coilix.events.ContextReady]] and [[dev.coilix.events.ApplicationStarted]] like an application, with the runners
  * between them when the setup asks for them. When the runners or the listeners of these events fail, the context is closed
- * before the resource fails. A test is the top layer of its context, so a [[dev.coilix.boot.StartupError]] fails the resource
- * with its [[dev.coilix.boot.StartupError.exception]]. This is the implementation returned by
+ * before the resource fails. A test is the top layer of its context, so a [[dev.coilix.boot.StartupError]] or a
+ * [[dev.coilix.config.ConfigError]] fails the resource with its exception. This is the implementation returned by
  * [[dev.coilix.testkit.TestContextFactory.default]].
  *
  * @param parser
@@ -44,7 +44,7 @@ final class DefaultTestContextFactory(
   override def resource(setup: CoilixTestSetup): Resource[IO, ConfigurableApplicationContext] =
     for {
       arguments   <- Resource.eval(IO(parser.parse(setup.arguments)))
-      environment <- Resource.eval(IO.blocking(environmentLoader.load(properties(setup, arguments))))
+      environment <- Resource.eval(loaded(setup, arguments))
       startup     <- Resource.eval(IO(assemble(ComponentProvider.from(environment))))
       packages    <- Resource.eval(IO(setup.packages(startup.resolver)))
       context     <- StartupError.raised(
@@ -57,6 +57,9 @@ final class DefaultTestContextFactory(
                      )
       _           <- Resource.eval(context.start *> StartupEvents.around(context)(runners(setup, startup, context, arguments)))
     } yield context
+
+  private def loaded(setup: CoilixTestSetup, arguments: ApplicationArguments): IO[Environment] =
+    IO.blocking(environmentLoader.load(properties(setup, arguments))).flatMap(loaded => IO.fromEither(loaded.left.map(_.exception)))
 
   private def properties(setup: CoilixTestSetup, arguments: ApplicationArguments): Map[String, String] =
     safeDefaults ++ commandLineProperties(arguments) ++ setup.configurationOverrides

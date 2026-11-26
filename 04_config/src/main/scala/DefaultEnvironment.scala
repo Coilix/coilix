@@ -1,6 +1,8 @@
 package dev.coilix.config
 
+import cats.syntax.all.*
 import dev.coilix.common.ClassTags.runtimeTypeOf
+import dev.coilix.config.ConfigError.orThrow
 import java.lang.reflect.Type
 import scala.reflect.ClassTag
 
@@ -18,27 +20,26 @@ final class DefaultEnvironment(tree: ConfigTree, binder: ConfigBinder) extends E
     tree.contains(path)
 
   override def activeProfiles: List[String] =
-    Profiles.active(tree)
+    Profiles.active(tree).orThrow
 
-  override def get[T: ClassTag](path: String): Option[T] =
-    Option.when(contains(path))(typed[T](path, bind(path, runtimeTypeOf[T])))
+  override def lookup[T: ClassTag](path: String): Either[ConfigError, Option[T]] =
+    Option.when(contains(path))(binding(path, runtimeTypeOf[T]).flatMap(typed[T](path, _))).sequence
 
-  override def bind(path: String, targetType: Type): AnyRef =
+  override def binding(path: String, targetType: Type): Either[ConfigError, AnyRef] =
     binder.bind(tree, path, targetType)
 
-  override def resolve(expression: ValueExpression, targetType: Type): AnyRef =
+  override def evaluate(expression: ValueExpression, targetType: Type): Either[ConfigError, AnyRef] =
     expression match {
-      case ValueExpression.Literal(value)            =>
-        binder.bind(ConfigTree.empty.withFallback(Map(literalKey -> value)), literalKey, targetType)
+      case ValueExpression.Literal(value)            => binder.bind(literal(value), literalKey, targetType)
       case ValueExpression.Placeholder(key, default) => binder.bind(withDefault(key, default), key, targetType)
     }
+
+  private def literal(value: String): ConfigTree =
+    ConfigTree.empty.withFallback(Map(literalKey -> value))
 
   private def withDefault(key: String, default: Option[String]): ConfigTree =
     default.fold(tree)(value => tree.withFallback(Map(key -> value)))
 
-  private def typed[T: ClassTag](path: String, value: AnyRef): T =
-    summon[ClassTag[T]].unapply(value).getOrElse(throw mismatch(path, value))
-
-  private def mismatch[T: ClassTag](path: String, value: AnyRef): ConfigurationException =
-    ConfigurationException(s"Configuration '$path' is ${value.getClass.getName}, not ${runtimeTypeOf[T].getName}")
+  private def typed[T: ClassTag](path: String, value: AnyRef): Either[ConfigError, T] =
+    summon[ClassTag[T]].unapply(value).toRight(ConfigError.TypeMismatch(path, value.getClass, runtimeTypeOf[T]))
 }

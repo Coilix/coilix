@@ -1,5 +1,6 @@
 package dev.coilix.config
 
+import dev.coilix.config.ConfigError.orThrow
 import java.time.Duration
 import munit.FunSuite
 
@@ -27,34 +28,38 @@ final class TypesafeConfigTreeTest extends FunSuite {
   }
 
   test("lists the keys of a section") {
-    assertEquals(tree.keys("app"), List("dotted.key", "enabled", "name", "port", "ratio", "servers", "timeout"))
+    assertEquals(tree.keys("app").orThrow, List("dotted.key", "enabled", "name", "port", "ratio", "servers", "timeout"))
   }
 
   test("exposes list elements as trees") {
-    assertEquals(tree.elements("app.servers").map(_.string(ConfigTree.elementKey)), List("a", "b"))
+    assertEquals(tree.elements("app.servers").orThrow.map(_.string(ConfigTree.elementKey)), List(Right("a"), Right("b")))
   }
 
   test("quotes keys when joining paths") {
-    assertEquals(tree.int(tree.child("app", "dotted.key")), 1)
+    assertEquals(tree.int(tree.child("app", "dotted.key")), Right(1))
   }
 
   test("reads typed values") {
-    assertEquals(tree.string("app.name"), "demo")
-    assertEquals(tree.int("app.port"), 8080)
-    assertEquals(tree.long("app.port"), 8080L)
-    assertEquals(tree.double("app.ratio"), 0.5)
-    assertEquals(tree.boolean("app.enabled"), true)
-    assertEquals(tree.duration("app.timeout"), Duration.ofSeconds(5))
-    assertEquals(tree.anyRef("app.port"), Int.box(8080))
+    assertEquals(tree.string("app.name"), Right("demo"))
+    assertEquals(tree.int("app.port"), Right(8080))
+    assertEquals(tree.long("app.port"), Right(8080L))
+    assertEquals(tree.double("app.ratio"), Right(0.5))
+    assertEquals(tree.boolean("app.enabled"), Right(true))
+    assertEquals(tree.duration("app.timeout"), Right(Duration.ofSeconds(5)))
+    assertEquals(tree.anyRef("app.port"), Right(Int.box(8080)))
   }
 
-  test("reports wrong types as configuration errors") {
-    intercept[ConfigurationException](tree.int("app.name"))
+  test("returns wrong types as configuration errors") {
+    assert(tree.int("app.name").left.exists(_.isInstanceOf[ConfigError.Unreadable]))
+  }
+
+  test("has no value at a malformed path") {
+    assert(!tree.contains("app..name"))
   }
 
   test("falls back to given values") {
     val extended = tree.withFallback(Map("app.name" -> "other", "app.extra" -> "x"))
-    assertEquals((extended.string("app.name"), extended.string("app.extra")), ("demo", "x"))
+    assertEquals((extended.string("app.name"), extended.string("app.extra")), (Right("demo"), Right("x")))
   }
 
   test("is empty by default") {

@@ -8,6 +8,7 @@ import dev.coilix.boot.fixture.Clock
 import dev.coilix.boot.scan.CustomScanApplication
 import dev.coilix.boot.scan.NotAnnotatedApplication
 import dev.coilix.config.ClasspathEnvironmentLoader
+import dev.coilix.config.ConfigError
 import dev.coilix.config.ConfigFormat
 import dev.coilix.config.Environment
 import dev.coilix.context.RegisteredBean
@@ -84,6 +85,18 @@ final class DefaultCoilixApplicationRunnerTest extends CatsEffectSuite {
     runner.start[NotAnnotatedApplication.type](Nil, Nil).value.use(result =>
       IO(assertEquals(result.left.toOption, Some(StartupError.NotABootApplication(classOf[NotAnnotatedApplication.type]))))
     )
+  }
+
+  test("gives a startup error with the configuration error when the configuration cannot be loaded") {
+    val broken = DefaultCoilixApplicationRunner(
+      SimpleArgumentsParser(),
+      ClasspathEnvironmentLoader("broken-runner", ConfigFormat.byPrecedence, getClass.getClassLoader),
+      components => StartupComponents.default(using components)
+    )
+    broken.start[FixtureApplication.type](Nil, Nil).value.use {
+      case Left(StartupError.Configuration(ConfigError.Unresolved(reason))) => IO(assert(reason.contains("missing.key"), reason))
+      case other                                                            => IO(fail(s"Expected a configuration error, got $other"))
+    }
   }
 
   private def started[T: ClassTag](args: List[String], singletons: List[RegisteredBean]) =

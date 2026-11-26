@@ -1,5 +1,7 @@
 package dev.coilix.config
 
+import dev.coilix.config.ConfigError.orThrow
+
 /**
  * Chooses the implementation of a replaceable framework component.
  *
@@ -37,10 +39,20 @@ trait ComponentProvider {
    *
    * `default` is evaluated only when it is used.
    *
+   * @return
+   *   the component, or the [[dev.coilix.config.ConfigError]] if the path is set but the component cannot be created from it
+   */
+  def lookup[T: ConfigPath](default: => T): Either[ConfigError, T]
+
+  /**
+   * Returns the component configured at the [[dev.coilix.config.ConfigPath]] of `T`, or `default` when that path is not set,
+   * as [[dev.coilix.config.ComponentProvider.lookup]] does.
+   *
    * @throws dev.coilix.config.ConfigurationException
    *   if the path is set but the component cannot be created from it
    */
-  def get[T: ConfigPath](default: => T): T
+  final def get[T: ConfigPath](default: => T): T =
+    lookup[T](default).orThrow
 }
 
 /** Factories for [[dev.coilix.config.ComponentProvider]]. */

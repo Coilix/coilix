@@ -1,6 +1,7 @@
 package com.example
 
 import dev.coilix.concurrency.CatsEffectSettings
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -14,7 +15,7 @@ class CatsEffectExampleTest extends munit.FunSuite {
   test("the guide configuration sets the limit for finalizers of effectful beans") {
     val url = resources.resolve("guides/cats-effect/application.yaml").toUri.toURL
     assertEquals(
-      CatsEffectSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url)))),
+      CatsEffectSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow))),
       CatsEffectSettings(shutdownTimeout = 1.minute)
     )
   }

@@ -4,7 +4,7 @@ import cats.effect.IO
 import cats.effect.Resource
 import dev.coilix.common.CoilixException
 import dev.coilix.common.GenericType
-import dev.coilix.config.ConfigurationException
+import dev.coilix.config.ConfigError
 import dev.coilix.context.ContextError
 import dev.coilix.context.NoSuchBeanException
 import dev.coilix.context.ResourceT
@@ -69,10 +69,10 @@ enum StartupError {
   /**
    * The configuration of the application cannot be loaded.
    *
-   * @param failure
-   *   the error reported while the configuration was loaded
+   * @param error
+   *   the error returned while the configuration was loaded
    */
-  case Configuration(failure: ConfigurationException)
+  case Configuration(error: ConfigError)
 
   /**
    * The context cannot be planned or created.
@@ -90,7 +90,7 @@ enum StartupError {
       case UnmatchedBeanReplacement(types)                             => UnmatchedBeanReplacementException(types)
       case CollectedComponentConflict(componentClass, names)           => CollectedComponentConflictException(componentClass, names)
       case CollectedComponentRequired(beanName, componentClass, names) => notABean(beanName, componentClass, names)
-      case Configuration(failure)                                      => failure
+      case Configuration(error)                                        => error.exception
       case Context(error)                                              => error.exception
     }
 

@@ -5,6 +5,7 @@ import com.typesafe.config.ConfigFactory
 import java.net.URL
 import org.snakeyaml.engine.v2.api.Load
 import org.snakeyaml.engine.v2.api.LoadSettings
+import org.snakeyaml.engine.v2.exceptions.YamlEngineException
 import scala.jdk.CollectionConverters.*
 import scala.util.Using
 
@@ -17,8 +18,11 @@ final class YamlConfigFormat extends ConfigFormat {
 
   override def extensions: List[String] = List("yaml", "yml")
 
-  override def parse(url: URL): Config =
-    Using.resource(url.openStream())(stream => toConfig(url, Load(LoadSettings.builder().build()).loadFromInputStream(stream)))
+  override def parse(url: URL): Either[ConfigError, Config] =
+    ConfigFormats.parsed[YamlEngineException](url)(Using.resource(url.openStream())(loaded(url)))
+
+  private def loaded(url: URL)(stream: java.io.InputStream): Config =
+    toConfig(url, Load(LoadSettings.builder().build()).loadFromInputStream(stream))
 
   private def toConfig(url: URL, document: Any): Config =
     document match {

@@ -30,11 +30,12 @@ import scala.reflect.ClassTag
  * `coilix.cats-effect.blocked-thread-detection = true` makes the runtime warn when a compute thread blocks, at a small cost.
  *
  * The number of compute threads and the detection of blocked threads are read before the command-line arguments are known, so
- * they come from the configuration files, system properties and environment variables, not from command-line options.
+ * they come from the configuration files, system properties and environment variables, not from command-line options. When
+ * the configuration cannot be loaded, the runtime starts with the defaults and the start reports the error.
  */
 trait CoilixIOApp extends IOApp {
 
-  private lazy val environment: Environment = EnvironmentLoader.default.load(Map.empty)
+  private lazy val environment: Environment = EnvironmentLoader.default.load(Map.empty).getOrElse(Environment.empty)
 
   /** The number of compute threads from `coilix.concurrency.compute.threads`, by default one per processor. */
   override protected def computeWorkerThreadCount: Int =

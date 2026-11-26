@@ -9,28 +9,25 @@ import scala.jdk.DurationConverters.*
  */
 final class DefaultScalarReader extends ScalarReader {
 
-  private type Read = (ConfigTree, String) => AnyRef
+  private type Read = (ConfigTree, String) => Either[ConfigError, AnyRef]
 
   private val readers: Map[Class[?], Read] = Map(
     classOf[String]             -> ((tree, path) => tree.string(path)),
-    classOf[Int]                -> ((tree, path) => Int.box(tree.int(path))),
-    classOf[java.lang.Integer]  -> ((tree, path) => Int.box(tree.int(path))),
-    classOf[Long]               -> ((tree, path) => Long.box(tree.long(path))),
-    classOf[java.lang.Long]     -> ((tree, path) => Long.box(tree.long(path))),
-    classOf[Double]             -> ((tree, path) => Double.box(tree.double(path))),
-    classOf[java.lang.Double]   -> ((tree, path) => Double.box(tree.double(path))),
-    classOf[Boolean]            -> ((tree, path) => Boolean.box(tree.boolean(path))),
-    classOf[java.lang.Boolean]  -> ((tree, path) => Boolean.box(tree.boolean(path))),
+    classOf[Int]                -> ((tree, path) => tree.int(path).map(Int.box)),
+    classOf[java.lang.Integer]  -> ((tree, path) => tree.int(path).map(Int.box)),
+    classOf[Long]               -> ((tree, path) => tree.long(path).map(Long.box)),
+    classOf[java.lang.Long]     -> ((tree, path) => tree.long(path).map(Long.box)),
+    classOf[Double]             -> ((tree, path) => tree.double(path).map(Double.box)),
+    classOf[java.lang.Double]   -> ((tree, path) => tree.double(path).map(Double.box)),
+    classOf[Boolean]            -> ((tree, path) => tree.boolean(path).map(Boolean.box)),
+    classOf[java.lang.Boolean]  -> ((tree, path) => tree.boolean(path).map(Boolean.box)),
     classOf[java.time.Duration] -> ((tree, path) => tree.duration(path)),
-    classOf[FiniteDuration]     -> ((tree, path) => tree.duration(path).toScala)
+    classOf[FiniteDuration]     -> ((tree, path) => tree.duration(path).map(_.toScala))
   )
 
   override def supports(targetType: Class[?]): Boolean =
     readers.contains(targetType)
 
-  override def read(tree: ConfigTree, path: String, targetType: Class[?]): AnyRef =
-    readers.get(targetType).map(_(tree, path)).getOrElse(throw unsupported(path, targetType))
-
-  private def unsupported(path: String, targetType: Class[?]): ConfigurationException =
-    ConfigurationException(s"Cannot read configuration '$path' as ${targetType.getName}")
+  override def read(tree: ConfigTree, path: String, targetType: Class[?]): Either[ConfigError, AnyRef] =
+    readers.get(targetType).toRight(ConfigError.UnsupportedScalar(path, targetType)).flatMap(_(tree, path))
 }

@@ -10,10 +10,10 @@ trait ConfigBinder {
    *
    * `targetType` may be a parameterized type such as `Option[Int]` or `List[MailSettings]`, so that type arguments are known.
    *
-   * @throws dev.coilix.config.ConfigurationException
-   *   if the value is missing or cannot be converted
+   * @return
+   *   the bound object, or a [[dev.coilix.config.ConfigError]] if the value is missing or cannot be converted
    */
-  def bind(tree: ConfigTree, path: String, targetType: Type): AnyRef
+  def bind(tree: ConfigTree, path: String, targetType: Type): Either[ConfigError, AnyRef]
 }
 
 /** Factories for [[dev.coilix.config.ConfigBinder]]. */

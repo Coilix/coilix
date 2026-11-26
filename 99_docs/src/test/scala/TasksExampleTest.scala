@@ -4,6 +4,7 @@ import dev.coilix.concurrency.BlockingSettings
 import dev.coilix.concurrency.ComputeSettings
 import dev.coilix.concurrency.ConcurrencySettings
 import dev.coilix.concurrency.SchedulerSettings
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -17,7 +18,7 @@ class TasksExampleTest extends munit.FunSuite {
   test("the guide configuration sets the compute pool, the blocking executor and the scheduler") {
     val url = resources.resolve("guides/tasks/application.yaml").toUri.toURL
     assertEquals(
-      ConcurrencySettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url)))),
+      ConcurrencySettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow))),
       ConcurrencySettings(
         ComputeSettings(threads         = 4),
         BlockingSettings(maxConcurrency = Some(20), shutdownTimeout = 1.minute),

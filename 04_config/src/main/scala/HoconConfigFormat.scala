@@ -1,6 +1,7 @@
 package dev.coilix.config
 
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigParseOptions
 import com.typesafe.config.ConfigSyntax
@@ -11,6 +12,9 @@ final class HoconConfigFormat extends ConfigFormat {
 
   override def extensions: List[String] = List("conf")
 
-  override def parse(url: URL): Config =
-    ConfigFactory.parseURL(url, ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF))
+  override def parse(url: URL): Either[ConfigError, Config] =
+    ConfigFormats.parsed[ConfigException](url)(ConfigFactory.parseURL(
+      url,
+      ConfigParseOptions.defaults().setSyntax(ConfigSyntax.CONF)
+    ))
 }

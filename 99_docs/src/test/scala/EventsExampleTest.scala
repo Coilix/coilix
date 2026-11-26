@@ -1,6 +1,7 @@
 package com.example
 
 import dev.coilix.concurrency.RetryPolicy
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import dev.coilix.config.TypesafeConfigTree
 import dev.coilix.config.YamlConfigFormat
@@ -15,7 +16,7 @@ class EventsExampleTest extends munit.FunSuite {
 
   test("the guide configuration sets the shutdown timeout and the retries of the mailer") {
     val url      = resources.resolve("guides/events/application.yaml").toUri.toURL
-    val settings = EventsSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url))))
+    val settings = EventsSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow)))
     assertEquals(
       (settings.shutdownTimeout, settings.listener("confirmationMailer", "onOrderPlaced")),
       (20.seconds, EventListenerSettings(RetryPolicy(maxAttempts = 3, initialDelay = 500.millis)))

@@ -1,5 +1,6 @@
 package com.example
 
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.ConfigFormat
 import java.nio.file.Files
 import java.nio.file.Path
@@ -27,5 +28,5 @@ class ExampleConfigurationTest extends munit.FunSuite {
     file.getFileName.toString.split('.').lastOption.getOrElse("")
 
   private def assertParses(file: Path): Unit =
-    formatOf(file).foreach(format => assert(!format.parse(file.toUri.toURL).isEmpty, s"$file is empty"))
+    formatOf(file).foreach(format => assert(!format.parse(file.toUri.toURL).orThrow.isEmpty, s"$file is empty"))
 }

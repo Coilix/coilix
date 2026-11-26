@@ -1,5 +1,6 @@
 package dev.coilix.config
 
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.enums.Mode
 import dev.coilix.config.enums.Plan
 import dev.coilix.config.enums.Shape
@@ -13,6 +14,9 @@ import munit.FunSuite
 final class ReflectiveConfigBinderTypesTest extends FunSuite {
   private val binder = ConfigBinder.default
 
+  private def bound(tree: ConfigTree, path: String, targetType: java.lang.reflect.Type): AnyRef =
+    binder.bind(tree, path, targetType).orThrow
+
   private val serverTree = ConfigTrees.parse(
     """server {
       |  port = 8080
@@ -25,18 +29,18 @@ final class ReflectiveConfigBinderTypesTest extends FunSuite {
 
   test("binds value types and enums inside a class") {
     assertEquals(
-      binder.bind(serverTree, "server", classOf[ServerSettings]),
+      bound(serverTree, "server", classOf[ServerSettings]),
       ServerSettings(Port(8080), Mode.ReadOnly, Secret("s3cr3t"), List(Mode.Fast, Mode.Safe), Tags(List("blue", "green")), None)
     )
   }
 
   test("binds a single value type and a single enum") {
-    assertEquals(binder.bind(serverTree, "server.port", classOf[Port]), Port(8080))
-    assertEquals(binder.bind(ConfigTrees.parse("plan = FREE"), "plan", classOf[Plan]), Plan.Basic)
+    assertEquals(bound(serverTree, "server.port", classOf[Port]), Port(8080))
+    assertEquals(bound(ConfigTrees.parse("plan = FREE"), "plan", classOf[Plan]), Plan.Basic)
   }
 
   test("reports a value rejected by the value type with the path") {
-    val error = intercept[ConfigurationException](binder.bind(ConfigTrees.parse("port = 0"), "port", classOf[Port]))
+    val error = intercept[ConfigurationException](bound(ConfigTrees.parse("port = 0"), "port", classOf[Port]))
     assertEquals(
       error.getMessage,
       "Cannot bind configuration 'port' to dev.coilix.config.valuetype.Port: " +
@@ -45,11 +49,11 @@ final class ReflectiveConfigBinderTypesTest extends FunSuite {
   }
 
   test("reports an inner value of the wrong type") {
-    intercept[ConfigurationException](binder.bind(ConfigTrees.parse("port = eighty"), "port", classOf[Port]))
+    intercept[ConfigurationException](bound(ConfigTrees.parse("port = eighty"), "port", classOf[Port]))
   }
 
   test("reports an unknown enum name with the path and the allowed names") {
-    val error = intercept[ConfigurationException](binder.bind(ConfigTrees.parse("mode = slow"), "mode", classOf[Mode]))
+    val error = intercept[ConfigurationException](bound(ConfigTrees.parse("mode = slow"), "mode", classOf[Mode]))
     assertEquals(
       error.getMessage,
       "Cannot bind configuration 'mode' to dev.coilix.config.enums.Mode: " +
@@ -59,7 +63,7 @@ final class ReflectiveConfigBinderTypesTest extends FunSuite {
 
   test("reports an invalid value type or enum definition with the path") {
     val tree = ConfigTrees.parse("value = 1")
-    assert(intercept[ConfigurationException](binder.bind(tree, "value", classOf[Coordinates])).getMessage.contains("'value'"))
-    assert(intercept[ConfigurationException](binder.bind(tree, "value", classOf[Shape])).getMessage.contains("'value'"))
+    assert(intercept[ConfigurationException](bound(tree, "value", classOf[Coordinates])).getMessage.contains("'value'"))
+    assert(intercept[ConfigurationException](bound(tree, "value", classOf[Shape])).getMessage.contains("'value'"))
   }
 }

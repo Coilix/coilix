@@ -33,7 +33,7 @@
 
 9. Moduły kontenera, których migracja nie przepisuje (`common`, `config`, `context`, `boot`, `testkit`): zamiana klas (także `final case class`) na `case class` z konstruktorem szczegółowym i `apply` w obiekcie towarzyszącym według zasady z `CLAUDE.md`.
 
-10. Błędy typowane: przewidywalne błędy jako typ warstwy w `Either` i `EitherT`, rzucenie albo kod wyjścia w warstwie najwyższej. Kontener (`ContextError`) i start (`StartupError`) zrobione (ADR 0050); dalej konfiguracja, `processing` i `events`.
+10. Błędy typowane: przewidywalne błędy jako typ warstwy w `Either` i `EitherT`, rzucenie albo kod wyjścia w warstwie najwyższej. Kontener (`ContextError`) i start (`StartupError`) zrobione (ADR 0050), konfiguracja (`ConfigError`) zrobiona (ADR 0051); dalej `processing` i `events`.
 
 Każdy krok aktualizuje przewodniki w obu językach, demo i ADR-y, które zastępuje, a przepisywane klasy od razu są `case class` według zasady z `CLAUDE.md`.
 
