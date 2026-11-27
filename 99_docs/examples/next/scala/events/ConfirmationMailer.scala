@@ -1,6 +1,7 @@
 package com.example
 package events
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import java.util.concurrent.atomic.AtomicReference
@@ -11,8 +12,7 @@ final class ConfirmationMailer {
 
   def sentMails: List[String] = sent.get
 
-  @EventListener(async = true, blocking = true)
-  def onOrderPlaced(event: OrderPlaced): Unit = {
-    val _ = sent.updateAndGet(_ :+ s"Order ${event.orderId} confirmed for ${event.customer}")
-  }
+  @EventListener(async = true)
+  def onOrderPlaced(event: OrderPlaced): IO[Unit] =
+    IO.blocking(sent.updateAndGet(_ :+ s"Order ${event.orderId} confirmed for ${event.customer}")).void
 }

@@ -6,6 +6,7 @@ import dev.coilix.concurrency.FatalErrorHandler
 import dev.coilix.concurrency.LoggingFatalErrorHandler
 import dev.coilix.concurrency.ShutdownFatalErrorHandler
 import dev.coilix.context.ApplicationContext
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.events.ApplicationFailed
 import dev.coilix.events.ApplicationStarted
 import dev.coilix.events.ContextReady
@@ -93,7 +94,7 @@ final class DefaultTestContextFactoryTest extends FunSuite with CoilixContextOps
 
   test("publishes the startup events and records every event") {
     base.use {
-      bean[EventPublisher].publish(Visit("Ann"))
+      published(Visit("Ann"))
       assertEquals(
         (recordedEvents[ContextReady].size, recordedEvents[ApplicationStarted].size, recordedEvents[Visit]),
         (1, 1, List(Visit("Ann")))
@@ -113,16 +114,16 @@ final class DefaultTestContextFactoryTest extends FunSuite with CoilixContextOps
 
   test("awaitEvents waits for asynchronous listeners") {
     base.use {
-      bean[EventPublisher].publish(Visit("Ann"))
+      published(Visit("Ann"))
       assert(awaitEvents())
       assertEquals(bean[GuestBook].guests, List("Ann"))
     }
   }
 
-  test("withSynchronousEvents runs asynchronous listeners in the thread of the test") {
+  test("withSynchronousEvents runs asynchronous listeners before the publication ends") {
     base.withSynchronousEvents.use {
-      bean[EventPublisher].publish(Visit("Ann"))
-      assertEquals(bean[GuestBook].threads, List(Thread.currentThread.getName))
+      published(Visit("Ann"))
+      assertEquals(bean[GuestBook].guests, List("Ann"))
     }
   }
 
@@ -152,4 +153,7 @@ final class DefaultTestContextFactoryTest extends FunSuite with CoilixContextOps
   test("scans only the given packages") {
     CoilixTestSetup.forPackages("dev.coilix.testkit.fixture").use(assertEquals(welcome, "Hello, Ann"))
   }
+
+  private def published(visit: Visit)(using current: ApplicationContext): Unit =
+    SynchronousLifecycle.run(current, current.getBean[EventPublisher].publish(visit))
 }

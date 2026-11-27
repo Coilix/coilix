@@ -1,5 +1,6 @@
 package dev.coilix.diagnostics
 
+import cats.effect.IO
 import dev.coilix.annotation.EventListener
 import dev.coilix.events.ApplicationFailed
 import dev.coilix.events.ApplicationStarted
@@ -11,14 +12,10 @@ import dev.coilix.events.ApplicationStarted
 case class StartupHealthListener(indicator: StartupHealthIndicator, health: Health) {
 
   @EventListener
-  private def onStarted(event: ApplicationStarted): Unit = {
-    indicator.started()
-    health.refresh()
-  }
+  private def onStarted(event: ApplicationStarted): IO[Unit] =
+    IO(indicator.started()) *> health.refresh()
 
   @EventListener
-  private def onFailed(event: ApplicationFailed): Unit = {
-    indicator.failed(String.valueOf(event.failure.getMessage))
-    health.refresh()
-  }
+  private def onFailed(event: ApplicationFailed): IO[Unit] =
+    IO(indicator.failed(String.valueOf(event.failure.getMessage))) *> health.refresh()
 }

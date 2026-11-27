@@ -1,6 +1,7 @@
 package dev.coilix.events
 package listeners
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.events.model.OrderEvent
 
@@ -8,5 +9,5 @@ import dev.coilix.events.model.OrderEvent
 final class OrderAudit extends ApplicationEventListener[OrderEvent] {
   val events: Recorder[OrderEvent] = Recorder()
 
-  override def onEvent(event: OrderEvent): Unit = events.record(event)
+  override def onEvent(event: OrderEvent): IO[Unit] = IO(events.record(event))
 }

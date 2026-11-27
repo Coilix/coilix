@@ -1,5 +1,7 @@
 package dev.coilix.diagnostics
 
+import cats.effect.IO
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.events.EventPublisher
 import java.util.concurrent.atomic.AtomicReference
@@ -25,11 +27,16 @@ final class DefaultHealth(sources: List[HealthIndicator], publisher: EventPublis
 
   override def indicators: List[IndicatorReport] = current.get
 
-  override def refresh(): Unit = {
+  override def refresh(): IO[Unit] =
+    IO(changes()).flatMap(_.traverse_(announced))
+
+  private def changes(): List[HealthChanged] = {
     val next     = sources.map(reportOf).sortBy(_.name)
     val previous = current.getAndSet(next)
-    announce(HealthKind.Liveness, livenessOf(previous), livenessOf(next), next.filter(_.kind == HealthKind.Liveness))
-    announce(HealthKind.Readiness, readinessOf(previous), readinessOf(next), next)
+    List(
+      changed(HealthKind.Liveness, livenessOf(previous), livenessOf(next), next.filter(_.kind == HealthKind.Liveness)),
+      changed(HealthKind.Readiness, readinessOf(previous), readinessOf(next), next)
+    ).flatten
   }
 
   private def reportOf(indicator: HealthIndicator): IndicatorReport =
@@ -47,12 +54,24 @@ final class DefaultHealth(sources: List[HealthIndicator], publisher: EventPublis
 
   private def readinessOf(reports: List[IndicatorReport]): HealthStatus = HealthStatus.worst(reports.map(_.state.status))
 
-  private def announce(kind: HealthKind, previous: HealthStatus, next: HealthStatus, counted: List[IndicatorReport]): Unit =
-    if (previous != next) {
-      val reasons = counted.filter(_.state.status != HealthStatus.Up).map(report => s"${report.name}: ${report.state.reason}")
-      log.info(s"$kind changed from $previous to $next${describe(reasons)}")
-      publisher.publish(HealthChanged(kind, previous, next, reasons))
-    }
+  private def changed(
+    kind:     HealthKind,
+    previous: HealthStatus,
+    next:     HealthStatus,
+    counted:  List[IndicatorReport]
+  ): Option[HealthChanged] =
+    Option.when(previous != next)(
+      HealthChanged(
+        kind,
+        previous,
+        next,
+        counted.filter(_.state.status != HealthStatus.Up).map(report => s"${report.name}: ${report.state.reason}")
+      )
+    )
+
+  private def announced(change: HealthChanged): IO[Unit] =
+    logF.info(s"${change.kind} changed from ${change.previous} to ${change.current}${describe(change.reasons)}") *>
+      publisher.publish(change)
 
   private def describe(reasons: List[String]): String =
     if (reasons.isEmpty) "" else reasons.mkString(" (", ", ", ")")

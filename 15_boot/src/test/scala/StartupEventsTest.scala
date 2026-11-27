@@ -58,7 +58,7 @@ final class StartupEventsTest extends CatsEffectSuite {
     ContextError.raised(ApplicationContextBuilder.default.create(
       beanClasses.flatMap(BeanDefinitionFactory.default.create),
       Nil,
-      None
+      ConcurrencyModule().effectInterpreter
     ))
       .evalTap(_.start)
 }

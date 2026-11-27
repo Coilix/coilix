@@ -1,6 +1,7 @@
 package com.example
 package events
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.events.ApplicationStarted
@@ -14,8 +15,8 @@ final class ShopStatus {
   def isOpen: Boolean = open.get
 
   @EventListener
-  def onApplicationStarted(event: ApplicationStarted): Unit = open.set(true)
+  def onApplicationStarted(event: ApplicationStarted): IO[Unit] = IO(open.set(true))
 
   @EventListener
-  def onContextClosing(event: ContextClosing): Unit = open.set(false)
+  def onContextClosing(event: ContextClosing): IO[Unit] = IO(open.set(false))
 }

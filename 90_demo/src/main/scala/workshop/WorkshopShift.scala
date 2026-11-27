@@ -1,11 +1,12 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Order
 import dev.coilix.annotation.Slf4s
 import dev.coilix.boot.ApplicationArguments
-import dev.coilix.boot.ApplicationRunner
+import dev.coilix.boot.IOApplicationRunner
 import dev.coilix.context.Provider
 import dev.coilix.demo.access.AuthToken
 import dev.coilix.demo.access.Mechanic
@@ -19,7 +20,6 @@ import dev.coilix.events.EventPublisher
 import java.time.Clock
 import org.slf4j.MDC
 import scala.util.Try
-import scala.util.Using
 
 /**
  * Runs the inspection job: a mechanic asks for access, gets a signed token and works through the steps on the vehicle.
@@ -27,11 +27,12 @@ import scala.util.Using
  * `--mechanic=M-003` picks another mechanic and `--vin=...` another vehicle. Runs first because of `@Order(1)`. The
  * optional [[dev.coilix.demo.workshop.TelematicsUplink]] has no bean, so it is injected as `None`. The
  * [[dev.coilix.demo.workshop.Notifier]] depends on the active profile: `--coilix.profiles.active=dev` logs notifications.
- * At the end it publishes [[dev.coilix.demo.workshop.InspectionFinished]], which
+ * The runner is an `IOApplicationRunner`: the work on the vehicle runs in `IO.blocking`, and at the end it publishes
+ * [[dev.coilix.demo.workshop.InspectionFinished]], which
  * [[dev.coilix.demo.workshop.ShiftStatistics]] counts and [[dev.coilix.demo.workshop.StaffNotifications]] sends to the staff;
  * `tryPublish` returns a closed context as an error, which the shift logs instead of failing.
- * The inspection runs with the vehicle under the `job` key of the MDC, which Coilix carries to the asynchronous notification,
- * so its log lines show the job too.
+ * The inspection runs with the vehicle under the `job` key of the MDC, set in the fiber of the runner, so the asynchronous
+ * notification, a fiber started from it, and its log lines show the job too.
  * Each inspection gets a new [[dev.coilix.demo.workshop.InspectionSheet]] from `sheets`.
  */
 @Component
@@ -46,12 +47,12 @@ final class WorkshopShift(
   notifier:   Notifier,
   events:     EventPublisher,
   sheets:     Provider[InspectionSheet]
-) extends ApplicationRunner {
+) extends IOApplicationRunner {
 
-  override def run(arguments: ApplicationArguments): Unit =
+  override def run(arguments: ApplicationArguments): IO[Unit] =
     (mechanic(arguments), vehicle(arguments)) match {
       case (Some(mechanic), Some(vehicle)) => inspect(mechanic, vehicle)
-      case _                               => log.warn("Unknown mechanic or vehicle, check --mechanic and --vin")
+      case _                               => logF.warn("Unknown mechanic or vehicle, check --mechanic and --vin")
     }
 
   private def mechanic(arguments: ApplicationArguments): Option[Mechanic] =
@@ -60,11 +61,17 @@ final class WorkshopShift(
   private def vehicle(arguments: ApplicationArguments): Option[Vehicle] =
     arguments.optionValue("vin").fold(registry.all.headOption)(vin => Try(Vin(vin)).toOption.flatMap(registry.find))
 
-  private def inspect(mechanic: Mechanic, vehicle: Vehicle): Unit =
-    Using.resource(MDC.putCloseable("job", s"inspection-${vehicle.vin.value}"))(_ => runInspection(mechanic, vehicle))
+  private def inspect(mechanic: Mechanic, vehicle: Vehicle): IO[Unit] =
+    IO(MDC.put("job", s"inspection-${vehicle.vin.value}")) *>
+      IO.blocking(inspected(mechanic, vehicle)).flatMap(reported(mechanic, vehicle, _)).guarantee(IO(MDC.remove("job")))
 
-  private def runInspection(mechanic: Mechanic, vehicle: Vehicle): Unit = {
-    val steps     = ServiceJob.inspection.filter(step => vehicle.modules.contains(step.module))
+  private def reported(mechanic: Mechanic, vehicle: Vehicle, steps: Int): IO[Unit] =
+    events
+      .tryPublish(InspectionFinished(mechanic.name, vehicle.vin, steps))
+      .valueOrF(error => logF.warn(s"The inspection is not reported: ${error.message}"))
+
+  private def inspected(mechanic: Mechanic, vehicle: Vehicle): Int = {
+    val steps = ServiceJob.inspection.filter(step => vehicle.modules.contains(step.module))
     log.info(
       s"${properties.name}: ${mechanic.name} (${mechanic.certification}) starts an inspection of ${vehicle.model} ${vehicle.vin.value}"
     )
@@ -73,15 +80,12 @@ final class WorkshopShift(
       vehicle,
       steps.map(_.grant).toSet,
       clock.instant()
-    ).fold(error     => log.warn(s"Access refused: $error"), token => work(vehicle, token, steps, sheets.get()))
+    ).fold(error => log.warn(s"Access refused: $error"), token => work(vehicle, token, steps, sheets.get()))
     uplink.fold(
       log.info("No telematics uplink, the job report stays in the workshop")
     )(_.send(s"Inspection of ${vehicle.vin.value} done"))
     log.info(s"Notifications: ${notifier.description}")
-    events
-      .tryPublish(InspectionFinished(mechanic.name, vehicle.vin, steps.size))
-      .left
-      .foreach(error => log.warn(s"The inspection is not reported: ${error.message}"))
+    steps.size
   }
 
   private def work(vehicle: Vehicle, token: AuthToken, steps: List[ServiceStep], sheet: InspectionSheet): Unit = {

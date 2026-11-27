@@ -1,5 +1,7 @@
 package dev.coilix.diagnostics
 
+import cats.data.EitherT
+import cats.effect.IO
 import dev.coilix.common.TypeInfo
 import dev.coilix.events.EventPublisher
 import dev.coilix.events.PublishError
@@ -10,10 +12,8 @@ final class RecordingPublisher extends EventPublisher {
 
   private val published = AtomicReference(List.empty[Any])
 
-  override def tryPublish[E: TypeInfo](event: E): Either[PublishError, Unit] = {
-    val _ = published.updateAndGet(_ :+ event)
-    Right(())
-  }
+  override def tryPublish[E: TypeInfo](event: E): EitherT[IO, PublishError, Unit] =
+    EitherT.right(IO(published.updateAndGet(_ :+ event)).void)
 
   /** The published events, oldest first. */
   def events: List[Any] = published.get

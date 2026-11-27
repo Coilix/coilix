@@ -1,7 +1,7 @@
 ---
 id: application-events
 title: Application events
-description: Let beans react to what other beans do with EventPublisher and @EventListener, synchronously or on the task executor.
+description: Let beans react to what other beans do with EventPublisher and @EventListener, in IO, in the fiber of the publisher or on fibers of their own.
 sidebar_position: 8
 ---
 
@@ -22,7 +22,7 @@ Events live only in the memory of the running application. An event that is stil
 
 ## Publish an event
 
-An event is any value, usually a case class. Inject `EventPublisher` and pass it the event:
+An event is any value, usually a case class. Inject `EventPublisher` and pass it the event. `publish` returns `IO[Unit]`, so the event is published when the effect runs:
 
 <CodeBlock language="scala" title="OrderPlaced.scala">{OrderPlaced}</CodeBlock>
 
@@ -34,7 +34,7 @@ A bean that keeps the publisher as a `using` parameter calls `Events.publish` in
 
 ## Listen for events
 
-Annotate a method that takes the event as its only parameter with `@EventListener`. The method may be private and must return `Unit`:
+Annotate a method that takes the event as its only parameter with `@EventListener`. The method may be private and must return `IO[Unit]`:
 
 <CodeBlock language="scala" title="SalesStatistics.scala">{SalesStatistics}</CodeBlock>
 
@@ -44,17 +44,17 @@ A bean can also extend `ApplicationEventListener` with the event type. The type 
 
 A listener receives events of its type and of every subtype, so a listener of a sealed trait receives each of its cases. Type arguments count too: a listener of `Changed[Customer]` does not receive `Changed[Product]`.
 
-Coilix finds the listeners when every bean of the application exists. An event published earlier, for example in a constructor, waits and is delivered right after the start. A listener method that takes more or fewer than one parameter, returns a value, or has the same name as another listener method of its bean stops the startup with `InvalidEventListenerException`.
+Coilix finds the listeners when every bean of the application exists. An event published earlier, for example in a `@PostConstruct` method that returns `IO[Unit]`, waits and is delivered right after the start. A listener method that takes more or fewer than one parameter, returns something other than `IO`, or has the same name as another listener method of its bean stops the startup with `InvalidEventListenerException`.
 
 ## Synchronous and asynchronous listeners
 
-By default a listener runs in the thread of the publisher, before `publish` returns. When the checkout gets control back, the statistics and the points are already updated. If a listener throws an exception, the other synchronous listeners still run, and `publish` then throws the first exception with the others attached as suppressed.
+By default the effect of a listener runs in the fiber of the publisher, before the effect of `publish` ends. When the checkout goes on, the statistics and the points are already updated. If a listener fails, the other synchronous listeners still run, and `publish` then fails with the first error with the others attached as suppressed.
 
 Set `async = true` when the publisher should not wait, for example for a mail:
 
 <CodeBlock language="scala" title="ConfirmationMailer.scala">{ConfirmationMailer}</CodeBlock>
 
-An asynchronous listener runs later on a thread of the `TaskExecutor`, the compute pool described in [Background tasks and scheduling](tasks-and-scheduling.mdx). A listener that waits, like the mailer above for the mail server, also sets `blocking = true` and runs on the `BlockingExecutor`, so it does not hold a compute thread while it waits. A bean that implements `ApplicationEventListener` overrides `async` and `blocking` instead. Asynchronous listeners start only after every synchronous listener has succeeded. Their exceptions do not reach the publisher; Coilix logs them as errors. Asynchronous deliveries run in no particular order, even for one listener. When order matters, use a synchronous listener.
+An asynchronous listener runs on a fiber of its own, which starts with the MDC of the publisher when the application uses `coilix-logging` (see [Logging](logging.mdx)). A listener that waits, like the mailer above for the mail server, wraps the call in `IO.blocking`, so it does not hold a compute thread while it waits. A bean that implements `ApplicationEventListener` overrides `async` instead. Asynchronous listeners start only after every synchronous listener has succeeded. Their errors do not reach the publisher; Coilix logs them. Asynchronous deliveries run in no particular order, even for one listener. When order matters, use a synchronous listener.
 
 ## Retry an asynchronous listener
 
@@ -69,9 +69,9 @@ A listener that implements `ApplicationEventListener` uses `onEvent` as its meth
 Coilix first publishes `ContextClosing`, described below. Then `@Scheduled` methods and other sources of new work stop. After that, in the `Events` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context), the event bus:
 
 1. refuses events published from outside listeners, so no code counts on a delivery that would not happen: `publish` throws `EventBusClosedException`, and `tryPublish` returns `PublishError.Closing` or `PublishError.Closed`, so code that may run during closing decides itself what to do, for example log the event it could not publish,
-2. cancels retries that are still waiting,
+2. ends the retries that are still waiting,
 3. waits for the running asynchronous listeners, including the ones that receive events published by other listeners in the meantime,
-4. after `coilix.events.shutdown-timeout` (10 seconds by default) interrupts the listeners that still run and logs how many deliveries of each listener were abandoned.
+4. after `coilix.events.shutdown-timeout` (10 seconds by default) cancels the listeners that still run and logs how many deliveries of each listener were abandoned.
 
 Only then are the beans destroyed, so a listener never uses a closed bean. In Kubernetes, keep `terminationGracePeriodSeconds` longer than the shutdown timeouts of the events and of the executor together.
 
@@ -90,14 +90,14 @@ The shop below opens when the application has started and closes as soon as it s
 
 <CodeBlock language="scala" title="ShopStatus.scala">{ShopStatus}</CodeBlock>
 
-An exception of a listener of `ContextReady` or `ApplicationStarted` stops the startup like an exception of a runner. An exception of a listener of `ContextClosing` or `ApplicationFailed` is only logged, so the closing goes on. The application waits for asynchronous listeners of `ContextClosing` like for every other asynchronous delivery. A failure while the beans are created is not published as `ApplicationFailed`, because no listener exists yet.
+An error of a listener of `ContextReady` or `ApplicationStarted` stops the startup like an error of a runner. An error of a listener of `ContextClosing` or `ApplicationFailed` is only logged, so the closing goes on. The application waits for asynchronous listeners of `ContextClosing` like for every other asynchronous delivery. A failure while the beans are created is not published as `ApplicationFailed`, because no listener exists yet.
 
 ## Test code that uses events
 
 The event bus works in tests as in the application, and a test context publishes the events of the framework too. The testkit adds three helpers:
 
 - `recordedEvents[E]` returns the events of type `E` published in the test so far, including the events of the framework,
-- `awaitEvents()` waits until no asynchronous listener runs, by default for at most 5 seconds, and returns `false` when the time runs out,
-- `withSynchronousEvents` on the setup runs asynchronous listeners in the thread of the test, so their effects are visible right after `publish`. Their exceptions are still only logged, and retries follow at once, without waiting.
+- `awaitEvents()` waits until no asynchronous listener runs, by default for at most 5 seconds, and returns `false` when the time runs out; a test in `IO` calls `awaitIdle` of the `EventBus` bean instead,
+- `withSynchronousEvents` on the setup runs asynchronous listeners in the fiber of the publisher, so their effects are visible right after `publish`. Their exceptions are still only logged, and retries follow at once, without waiting.
 
 <CodeBlock language="scala" title="EventsTest.scala">{EventsTest}</CodeBlock>

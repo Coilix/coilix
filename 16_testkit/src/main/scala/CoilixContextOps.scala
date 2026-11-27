@@ -4,6 +4,7 @@ import dev.coilix.boot.ApplicationArguments
 import dev.coilix.common.TypeInfo
 import dev.coilix.config.Environment
 import dev.coilix.context.ApplicationContext
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.events.EventBus
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
@@ -64,13 +65,14 @@ trait CoilixContextOps {
   def recordedEvents[E: TypeInfo](using current: ApplicationContext): List[E] = current.getBean[EventRecorder].eventsOf[E]
 
   /**
-   * Waits until no asynchronous event listener runs or waits for a retry, like [[dev.coilix.events.EventBus.awaitIdle]].
+   * Waits until no asynchronous event listener runs or waits for a retry, like [[dev.coilix.events.EventBus.awaitIdle]], blocking
+   * the calling thread. Tests in `IO` use `EventBus.awaitIdle` instead.
    *
    * @return
    *   `true` when the listeners finished, `false` when `timeout` passed first
    */
   def awaitEvents(timeout: FiniteDuration = 5.seconds)(using current: ApplicationContext): Boolean =
-    current.getBean[EventBus].awaitIdle(timeout)
+    SynchronousLifecycle.run(current, current.getBean[EventBus].awaitIdle(timeout))
 }
 
 /** The helpers of [[dev.coilix.testkit.CoilixContextOps]] for import, outside a suite that mixes the trait in. */

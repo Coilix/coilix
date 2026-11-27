@@ -1,5 +1,6 @@
 package dev.coilix.testkit
 
+import cats.effect.IO
 import dev.coilix.common.TypeInfo
 import dev.coilix.events.ApplicationEventListener
 import java.util.concurrent.atomic.AtomicReference
@@ -21,9 +22,8 @@ import java.util.concurrent.atomic.AtomicReference
 final class EventRecorder extends ApplicationEventListener[AnyRef] {
   private val recorded = AtomicReference(List.empty[AnyRef])
 
-  override def onEvent(event: AnyRef): Unit = {
-    val _ = recorded.updateAndGet(_ :+ event)
-  }
+  override def onEvent(event: AnyRef): IO[Unit] =
+    IO(recorded.updateAndGet(_ :+ event)).void
 
   /** Every recorded event, oldest first. */
   def events: List[AnyRef] = recorded.get

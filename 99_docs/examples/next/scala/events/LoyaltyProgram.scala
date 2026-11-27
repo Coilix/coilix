@@ -1,6 +1,7 @@
 package com.example
 package events
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.events.ApplicationEventListener
 import java.util.concurrent.atomic.AtomicReference
@@ -11,8 +12,8 @@ final class LoyaltyProgram extends ApplicationEventListener[OrderPlaced] {
 
   def pointsOf(customer: String): Int = points.get.getOrElse(customer, 0)
 
-  override def onEvent(event: OrderPlaced): Unit = {
+  override def onEvent(event: OrderPlaced): IO[Unit] = {
     val earned = event.total.toInt / 10
-    val _      = points.updateAndGet(all => all.updated(event.customer, all.getOrElse(event.customer, 0) + earned))
+    IO(points.updateAndGet(all => all.updated(event.customer, all.getOrElse(event.customer, 0) + earned))).void
   }
 }

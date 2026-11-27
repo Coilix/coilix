@@ -24,6 +24,6 @@ final class ContextClosingPublisher(publisher: EventPublisher, context: Applicat
   override def closingPhase: ClosingPhase = ClosingPhase.Announcement
 
   override def onContextClosing: IO[Unit] =
-    IO.blocking(publisher.publish(ContextClosing(context)))
+    publisher.publish(ContextClosing(context))
       .handleErrorWith(failure => logF.error("A listener failed on ContextClosing", failure))
 }

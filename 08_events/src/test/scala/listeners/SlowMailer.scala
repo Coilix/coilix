@@ -1,6 +1,7 @@
 package dev.coilix.events
 package listeners
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.events.model.OrderEvent
@@ -15,13 +16,7 @@ final class SlowMailer(server: MailServer) {
 
   val sent: Recorder[(Int, Boolean)] = Recorder()
 
-  val threads: Recorder[String] = Recorder()
-
   @EventListener(async = true)
-  def onPlaced(event: OrderEvent.Placed): Unit = {
-    threads.record(Thread.currentThread.getName)
-    started.countDown()
-    val _ = release.await(10, TimeUnit.SECONDS)
-    sent.record((event.id, server.isOpen))
-  }
+  def onPlaced(event: OrderEvent.Placed): IO[Unit] =
+    IO(started.countDown()) *> IO.interruptible(release.await(10, TimeUnit.SECONDS)) *> IO(sent.record((event.id, server.isOpen)))
 }

@@ -1,5 +1,6 @@
 package dev.coilix.events
 
+import cats.effect.unsafe.implicits.global
 import dev.coilix.common.GenericType
 import dev.coilix.events.invalid.GenericListener
 import dev.coilix.events.invalid.LambdaListener
@@ -18,7 +19,7 @@ final class ReflectiveEventListenerScannerTest extends FunSuite {
   test("finds a private annotated method and calls it with an event") {
     val journal  = OrderJournal()
     val listener = found("orderJournal", journal).loneElement
-    listener.invoke(OrderEvent.Placed(4))
+    listener.invoke(OrderEvent.Placed(4)).unsafeRunSync()
     assertEquals(
       (listener.info.name, listener.info.eventType, journal.placed.recorded),
       ("orderJournal.onPlaced", GenericType.of(classOf[OrderEvent.Placed]), List(OrderEvent.Placed(4)))
@@ -45,7 +46,7 @@ final class ReflectiveEventListenerScannerTest extends FunSuite {
       messages.map(_.takeWhile(_ != ',')),
       List(
         "@EventListener method onPlaced of bean 'twoParameters' must take exactly one parameter",
-        "@EventListener method onPlaced of bean 'returnsValue' must return Unit",
+        "@EventListener method onPlaced of bean 'returnsValue' must return IO[Unit]",
         "@EventListener methods of bean 'overloaded' are overloaded as on. Give each listener method its own name"
       )
     )

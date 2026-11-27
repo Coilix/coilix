@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.annotation.Slf4s
@@ -19,9 +20,9 @@ final class BookingDesk {
   def accepting: Boolean = open.get
 
   @EventListener
-  private def onHealthChanged(event: HealthChanged): Unit =
-    if (event.kind == HealthKind.Readiness) {
-      open.set(event.current == HealthStatus.Up)
-      log.info(s"Bookings are ${if (event.current == HealthStatus.Up) "open" else s"paused: ${event.reasons.mkString(", ")}"}")
-    }
+  private def onHealthChanged(event: HealthChanged): IO[Unit] =
+    IO.whenA(event.kind == HealthKind.Readiness)(
+      IO(open.set(event.current == HealthStatus.Up)) *>
+        logF.info(s"Bookings are ${if (event.current == HealthStatus.Up) "open" else s"paused: ${event.reasons.mkString(", ")}"}")
+    )
 }

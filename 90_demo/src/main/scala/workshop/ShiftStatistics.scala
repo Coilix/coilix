@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.annotation.Slf4s
@@ -24,16 +25,16 @@ final class ShiftStatistics extends ApplicationEventListener[InspectionFinished]
   /** The number of inspections finished so far. */
   def inspectionsDone: Int = inspections.get
 
-  override def onEvent(event: InspectionFinished): Unit = {
-    val done = inspections.incrementAndGet()
-    log.info(s"Shift statistics: $done inspection(s) done, the last one had ${event.steps} steps")
-  }
+  override def onEvent(event: InspectionFinished): IO[Unit] =
+    IO(inspections.incrementAndGet()).flatMap(done =>
+      logF.info(s"Shift statistics: $done inspection(s) done, the last one had ${event.steps} steps")
+    )
 
   @EventListener
-  private def onApplicationStarted(event: ApplicationStarted): Unit =
-    log.info(s"The shift is under way with $inspectionsDone inspection(s) done at the start")
+  private def onApplicationStarted(event: ApplicationStarted): IO[Unit] =
+    logF.info(s"The shift is under way with $inspectionsDone inspection(s) done at the start")
 
   @EventListener
-  private def onContextClosing(event: ContextClosing): Unit =
-    log.info(s"The shift ends with $inspectionsDone inspection(s) done")
+  private def onContextClosing(event: ContextClosing): IO[Unit] =
+    logF.info(s"The shift ends with $inspectionsDone inspection(s) done")
 }

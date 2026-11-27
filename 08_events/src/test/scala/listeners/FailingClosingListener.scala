@@ -1,6 +1,7 @@
 package dev.coilix.events
 package listeners
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 
@@ -8,5 +9,5 @@ import dev.coilix.annotation.EventListener
 final class FailingClosingListener {
 
   @EventListener
-  private def onClosing(event: ContextClosing): Unit = throw IllegalStateException("cannot say goodbye")
+  private def onClosing(event: ContextClosing): IO[Unit] = IO.raiseError(IllegalStateException("cannot say goodbye"))
 }

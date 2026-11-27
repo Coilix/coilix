@@ -17,7 +17,9 @@ final class EventsModuleTest extends FunSuite {
 
   test("registers one bus as the publisher, with the default settings in a context without an environment") {
     val context = ApplicationContextBuilder.default.build(
-      (ConcurrencyModule().components ++ EventsModule().components).flatMap(BeanDefinitionFactory.default.create)
+      (ConcurrencyModule().components ++ EventsModule().components).flatMap(BeanDefinitionFactory.default.create),
+      Nil,
+      ConcurrencyModule().effectInterpreter
     )
     try {
       assertEquals(

@@ -1,5 +1,6 @@
 package dev.coilix.diagnostics
 
+import cats.effect.unsafe.IORuntime
 import dev.coilix.annotation.Bean
 import dev.coilix.annotation.ConditionalOnMissingBean
 import dev.coilix.annotation.Configuration
@@ -71,7 +72,8 @@ final class DiagnosticsConfiguration {
     indicator:   SettableHealthIndicator,
     health:      Health,
     fatalErrors: FatalErrorHandler,
-    clock:       Option[Clock]
+    clock:       Option[Clock],
+    runtime:     IORuntime
   ): DiagnosticsMonitor =
     DiagnosticsMonitor(
       settings,
@@ -81,6 +83,7 @@ final class DiagnosticsConfiguration {
       indicator,
       health,
       fatalErrors,
-      clock.getOrElse(Clock.systemUTC)
+      clock.getOrElse(Clock.systemUTC),
+      runtime
     )
 }

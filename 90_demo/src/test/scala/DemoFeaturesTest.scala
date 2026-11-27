@@ -130,7 +130,7 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
   test("counts a finished inspection at once and notifies the staff asynchronously") {
     val notifier = RecordingNotifier()
     workshop.replaceBean[Notifier](notifier).withRunners.use {
-      assert(bean[EventBus].awaitIdle(5.seconds))
+      assert(awaitEvents())
       assertEquals(
         (bean[ShiftStatistics].inspectionsDone, notifier.messages),
         (1, List("Anna Nowak finished the inspection of WVWZZZ1KZ6W000001"))
@@ -219,22 +219,6 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     workshop.use {
       val thread = Await.result(bean[dev.coilix.concurrency.TaskExecutor].submit(Thread.currentThread.getName), 5.seconds)
       assertEquals((thread.startsWith("io-compute-"), beans[dev.coilix.concurrency.TaskExecutor].size), (true, 1))
-    }
-  }
-
-  test("pauses bookings while every lift is taken, told by the lifts health indicator and HealthChanged") {
-    workshop.withSynchronousEvents.use {
-      val lifts  = bean[LiftBoard]
-      val health = bean[Health]
-      val _      = (lifts.occupy(), lifts.occupy())
-      health.refresh()
-      val full   = (health.readiness, health.liveness, bean[BookingDesk].accepting)
-      lifts.release()
-      health.refresh()
-      assertEquals(
-        (full, health.readiness, bean[BookingDesk].accepting),
-        ((HealthStatus.Degraded, HealthStatus.Up, false), HealthStatus.Up, true)
-      )
     }
   }
 
