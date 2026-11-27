@@ -1,5 +1,7 @@
 package dev.coilix.events
 
+import cats.effect.IO
+
 /**
  * A bean that receives the application events of type `E` and of its subtypes, an alternative to a method annotated with
  * [[dev.coilix.annotation.EventListener]].
@@ -12,7 +14,7 @@ package dev.coilix.events
  * final class OrderStatistics extends ApplicationEventListener[OrderPlaced] {
  *   private val placed = AtomicInteger()
  *
- *   override def onEvent(event: OrderPlaced): Unit = { val _ = placed.incrementAndGet() }
+ *   override def onEvent(event: OrderPlaced): IO[Unit] = IO(placed.incrementAndGet()).void
  * }
  * ```
  *
@@ -21,12 +23,9 @@ package dev.coilix.events
  */
 trait ApplicationEventListener[E] {
 
-  /** Handles one event. An exception is handled like the exception of an annotated listener method. */
-  def onEvent(event: E): Unit
+  /** Handles one event. An error is handled like the error of an annotated listener method. */
+  def onEvent(event: E): IO[Unit]
 
-  /** Whether the listener runs on the task executor instead of the thread of the publisher, `false` by default. */
+  /** Whether the listener runs on a fiber of its own instead of the fiber of the publisher, `false` by default. */
   def async: Boolean = false
-
-  /** Whether an asynchronous listener blocks and runs on the blocking executor, `false` by default. */
-  def blocking: Boolean = false
 }

@@ -57,6 +57,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0050](0050-typed-startup-errors.md) | Błędy typowane w `EitherT`, decyzja o rzuceniu w warstwie wyższej | proponowana |
 | [0051](0051-typed-configuration-errors.md) | Błędy typowane konfiguracji | proponowana |
 | [0054](0054-fiber-mdc.md) | MDC fibera na `IOLocal` | proponowana |
+| [0055](0055-events-in-io.md) | Szyna zdarzeń na `IO` | proponowana |
 | [0052](0052-typed-processing-errors.md) | Błędy typowane procesorów tła i ustawień logowania | proponowana |
 | [0053](0053-typed-event-errors.md) | Błędy typowane zdarzeń | proponowana |
 

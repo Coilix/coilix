@@ -1,5 +1,6 @@
 package dev.coilix.diagnostics
 
+import cats.effect.unsafe.implicits.global
 import munit.FunSuite
 
 final class DefaultHealthTest extends FunSuite {
@@ -16,10 +17,10 @@ final class DefaultHealthTest extends FunSuite {
     val memory  = SettableHealthIndicator("memory", HealthKind.Readiness)
     val health  = DefaultHealth(List(threads, memory), RecordingPublisher())
     memory.set(HealthState.degraded("memory is short"))
-    health.refresh()
+    health.refresh().unsafeRunSync()
     assertEquals((health.liveness, health.readiness), (HealthStatus.Up, HealthStatus.Degraded))
     threads.set(HealthState.down("deadlock"))
-    health.refresh()
+    health.refresh().unsafeRunSync()
     assertEquals((health.liveness, health.readiness), (HealthStatus.Down, HealthStatus.Down))
     assertEquals(health.indicators.map(_.name), List("memory", "threads"))
   }
@@ -28,12 +29,12 @@ final class DefaultHealthTest extends FunSuite {
     val memory    = SettableHealthIndicator("memory", HealthKind.Readiness)
     val publisher = RecordingPublisher()
     val health    = DefaultHealth(List(memory), publisher)
-    health.refresh()
+    health.refresh().unsafeRunSync()
     memory.set(HealthState.degraded("memory is short"))
-    health.refresh()
-    health.refresh()
+    health.refresh().unsafeRunSync()
+    health.refresh().unsafeRunSync()
     memory.set(HealthState.up)
-    health.refresh()
+    health.refresh().unsafeRunSync()
     assertEquals(
       publisher.events,
       List(
@@ -52,7 +53,7 @@ final class DefaultHealthTest extends FunSuite {
       override def state: HealthState = throw IllegalStateException("no connection")
     }
     val health = DefaultHealth(List(broken), RecordingPublisher())
-    health.refresh()
+    health.refresh().unsafeRunSync()
     assertEquals(health.liveness, HealthStatus.Down)
     assert(health.indicators.head.state.reason.contains("no connection"))
   }

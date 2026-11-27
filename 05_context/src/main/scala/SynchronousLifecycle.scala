@@ -29,9 +29,22 @@ object SynchronousLifecycle {
   def opened(context: Resource[IO, ConfigurableApplicationContext]): ConfigurableApplicationContext =
     context.allocated.map(_._1).unsafeRunSync()(using IORuntime.global)
 
+  /**
+   * Runs the closing of a context on the global runtime of cats-effect and blocks until it completes, rethrowing its failure.
+   *
+   * The closing must not run on the runtime of the context: when beans made by effects own that runtime, releasing them shuts
+   * it down, and an effect that runs on a runtime that is shut down never completes.
+   */
+  def closed(closing: IO[Unit]): Unit =
+    closing.unsafeRunSync()(using IORuntime.global)
+
   /** Runs `effect` on the runtime of `context` and blocks until it completes, rethrowing its failure. */
   def run[A](context: ApplicationContext, effect: IO[A]): A =
-    effect.unsafeRunSync()(using runtimeOf(context))
+    runOn(runtimeOf(context), effect)
+
+  /** Runs `effect` on `runtime` and blocks until it completes, rethrowing its failure, for a thread outside the runtime. */
+  def runOn[A](runtime: IORuntime, effect: IO[A]): A =
+    effect.unsafeRunSync()(using runtime)
 
   /** The `IORuntime` bean of `context`, or the global runtime of cats-effect when the context has none. */
   def runtimeOf(context: ApplicationContext): IORuntime =

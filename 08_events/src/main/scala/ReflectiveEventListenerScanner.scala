@@ -1,5 +1,6 @@
 package dev.coilix.events
 
+import cats.effect.IO
 import cats.syntax.all.*
 import dev.coilix.annotation.EventListener
 import dev.coilix.common.GenericType
@@ -53,17 +54,17 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
     } yield {
       val annotation = method.getAnnotation(classOf[EventListener])
       RegisteredListener(
-        info(beanName, method.getName, eventType, annotation.async, annotation.blocking),
+        info(beanName, method.getName, eventType, annotation.async),
         event => invoke(bean, method, event)
       )
     }
 
   private def problemOf(method: Method): Option[String] =
     List(
-      Modifier.isStatic(method.getModifiers) -> "must not be static",
-      (method.getParameterCount != 1)        -> s"must take exactly one parameter, the event, not ${method.getParameterCount}",
-      (method.getReturnType != Void.TYPE)    -> s"must return Unit, not ${method.getReturnType.getName}",
-      !method.trySetAccessible()             ->
+      Modifier.isStatic(method.getModifiers)                 -> "must not be static",
+      (method.getParameterCount != 1)                        -> s"must take exactly one parameter, the event, not ${method.getParameterCount}",
+      !classOf[IO[?]].isAssignableFrom(method.getReturnType) -> s"must return IO[Unit], not ${method.getReturnType.getName}",
+      !method.trySetAccessible()                             ->
         s"cannot be made accessible, open the package ${method.getDeclaringClass.getPackageName} to Coilix"
     ).collectFirst { case (true, problem) => problem }
 
@@ -76,7 +77,7 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
   private def fromTrait(beanName: String, listener: ApplicationEventListener[?]): Found[RegisteredListener] =
     traitArgument(beanName, listener).map { eventType =>
       val typed = acceptingAll(listener)
-      RegisteredListener(info(beanName, "onEvent", eventType, listener.async, listener.blocking), event => typed.onEvent(event))
+      RegisteredListener(info(beanName, "onEvent", eventType, listener.async), event => IO.defer(typed.onEvent(event)))
     }
 
   /**
@@ -100,13 +101,16 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
       EventListenerError.UnknownEventType(label, eventType)
     )
 
-  private def info(beanName: String, method: String, eventType: GenericType, async: Boolean, blocking: Boolean): EventListenerInfo =
-    EventListenerInfo(s"$beanName.$method", eventType, async, settings.listener(beanName, method).retry, blocking)
+  private def info(beanName: String, method: String, eventType: GenericType, async: Boolean): EventListenerInfo =
+    EventListenerInfo(s"$beanName.$method", eventType, async, settings.listener(beanName, method).retry)
 
-  private def invoke(bean: AnyRef, method: Method, event: AnyRef): Unit =
-    try {
-      val _ = method.invoke(bean, event)
-    } catch {
-      case invocation: InvocationTargetException => throw Option(invocation.getCause).getOrElse(invocation)
+  /**
+   * The effect returned by the listener method. The cast cannot fail, because the scanner accepts only methods that return
+   * `IO`, and the result type is erased.
+   */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def invoke(bean: AnyRef, method: Method, event: AnyRef): IO[Unit] =
+    IO.defer(method.invoke(bean, event).asInstanceOf[IO[Unit]]).adaptError {
+      case invocation: InvocationTargetException => Option(invocation.getCause).getOrElse(invocation)
     }
 }

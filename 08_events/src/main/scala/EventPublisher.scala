@@ -1,5 +1,7 @@
 package dev.coilix.events
 
+import cats.data.EitherT
+import cats.effect.IO
 import dev.coilix.common.TypeInfo
 
 /**
@@ -11,10 +13,8 @@ import dev.coilix.common.TypeInfo
  * ```scala
  * @Service
  * final class Checkout(events: EventPublisher) {
- *   def place(order: Order): Unit = {
- *     orders.save(order)
- *     events.publish(OrderPlaced(order.id, order.customer))
- *   }
+ *   def place(order: Order): IO[Unit] =
+ *     orders.save(order) *> events.publish(OrderPlaced(order.id, order.customer))
  * }
  * ```
  */
@@ -23,27 +23,22 @@ trait EventPublisher {
   /**
    * Delivers `event` to every listener of its type or of a supertype.
    *
-   * Synchronous listeners run in the calling thread before this method returns. Asynchronous listeners start on the task
-   * executor only after every synchronous listener succeeded. An event published before the context has started waits and is
+   * Synchronous listeners run in the fiber of the caller before the effect ends. Asynchronous listeners start on fibers of
+   * their own only after every synchronous listener succeeded. An event published before the context has started waits and is
    * delivered right after the start.
    *
-   * @return
-   *   `Right` when the event was delivered or kept for the start, or a [[dev.coilix.events.PublishError]] if the context is
-   *   closing and the caller is not a listener, or the context is closed
-   * @throws java.lang.Exception
-   *   the exception of the first synchronous listener that fails, with the exceptions of the further failing synchronous
-   *   listeners added as suppressed; every synchronous listener runs even when an earlier one fails
+   * The effect ends with `Right` when the event was delivered or kept for the start, or with a
+   * [[dev.coilix.events.PublishError]] if the context is closing and the caller is not a listener, or the context is closed.
+   * It fails with the error of the first synchronous listener that fails, with the errors of the further failing synchronous
+   * listeners added as suppressed; every synchronous listener runs even when an earlier one fails.
    */
-  def tryPublish[E: TypeInfo](event: E): Either[PublishError, Unit]
+  def tryPublish[E: TypeInfo](event: E): EitherT[IO, PublishError, Unit]
 
   /**
-   * Delivers `event` like [[dev.coilix.events.EventPublisher.tryPublish]], for callers that do not handle a closed context.
-   *
-   * @throws java.lang.Exception
-   *   the exception of the first synchronous listener that fails
-   * @throws dev.coilix.events.EventBusClosedException
-   *   if the context is closing and the caller is not a listener, or the context is closed
+   * Delivers `event` like [[dev.coilix.events.EventPublisher.tryPublish]], for callers that do not handle a closed context:
+   * the effect fails with [[dev.coilix.events.EventBusClosedException]] instead, or with the error of the first synchronous
+   * listener that fails.
    */
-  final def publish[E: TypeInfo](event: E): Unit =
-    tryPublish(event).fold(error => throw error.exception, identity)
+  final def publish[E: TypeInfo](event: E): IO[Unit] =
+    tryPublish(event).foldF(error => IO.raiseError(error.exception), IO.pure)
 }

@@ -1,9 +1,11 @@
 package dev.coilix.testkit
 package fixture
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import java.util.concurrent.atomic.AtomicReference
+import scala.concurrent.duration.DurationInt
 
 @Component
 final class GuestBook {
@@ -14,8 +16,6 @@ final class GuestBook {
   def threads: List[String] = entries.get.map(_._2)
 
   @EventListener(async = true)
-  private def onVisit(event: Visit): Unit = {
-    Thread.sleep(50)
-    val _ = entries.updateAndGet(_ :+ (event.guest, Thread.currentThread.getName))
-  }
+  private def onVisit(event: Visit): IO[Unit] =
+    IO.sleep(50.millis) *> IO(entries.updateAndGet(_ :+ (event.guest, Thread.currentThread.getName))).void
 }

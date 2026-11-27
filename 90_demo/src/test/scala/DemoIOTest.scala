@@ -4,9 +4,11 @@ import cats.effect.IO
 import cats.effect.unsafe.IORuntime
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.demo.vehicle.Vin
+import dev.coilix.demo.workshop.BookingDesk
 import dev.coilix.demo.workshop.CheckInLog
 import dev.coilix.demo.workshop.FaultCodeExport
 import dev.coilix.demo.workshop.FaultLedger
+import dev.coilix.demo.workshop.LiftBoard
 import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.PortalSession
 import dev.coilix.demo.workshop.RecallBoard
@@ -15,6 +17,8 @@ import dev.coilix.demo.workshop.RecallCheck
 import dev.coilix.demo.workshop.ServiceDesk
 import dev.coilix.demo.workshop.TroubleshootingDesk
 import dev.coilix.demo.workshop.WorkshopProcessor
+import dev.coilix.diagnostics.Health
+import dev.coilix.diagnostics.HealthStatus
 import dev.coilix.logging.LogLevel
 import dev.coilix.logging.LogLevels
 import dev.coilix.processing.ProcessorError
@@ -50,6 +54,22 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
         (result._1.isOpen, result._2.forall(_.contains("in bulletin 2026-11")), result._1.url),
         (false, true, "https://oem-portal.example.com/workshop-keys")
       )
+    )
+  }
+
+  coilixTest(
+    "pauses bookings while every lift is taken, told by the lifts health indicator and HealthChanged",
+    summon[CoilixTestSetup].withSynchronousEvents
+  ) {
+    val lifts  = bean[LiftBoard]
+    val health = bean[Health]
+    for {
+      _   <- IO((lifts.occupy(), lifts.occupy())) *> health.refresh()
+      full = (health.readiness, health.liveness, bean[BookingDesk].accepting)
+      _   <- IO(lifts.release()) *> health.refresh()
+    } yield assertEquals(
+      (full, health.readiness, bean[BookingDesk].accepting),
+      ((HealthStatus.Degraded, HealthStatus.Up, false), HealthStatus.Up, true)
     )
   }
 

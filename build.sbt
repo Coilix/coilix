@@ -209,7 +209,11 @@ lazy val cluster = slf4sModule("cluster", "07_cluster", "dev.coilix.cluster")
 lazy val applicationEvents = slf4sModule("events", "08_events", "dev.coilix.events")
   .dependsOn(concurrency)
   .settings(coreGroup)
-  .settings(description := "In-memory application events for Coilix, with synchronous and asynchronous listeners")
+  .settings(
+    description                                        := "In-memory application events for Coilix, with synchronous and asynchronous listeners in IO",
+    libraryDependencies += Dependencies.munitCatsEffect % Test,
+    Test / fork                                        := true
+  )
 
 lazy val diagnostics = slf4sModule("diagnostics", "09_diagnostics", "dev.coilix.diagnostics")
   .dependsOn(applicationEvents)

@@ -61,7 +61,7 @@ final class DefaultApplicationContext(
 
   override def close(): Unit =
     if (active.compareAndSet(true, false)) {
-      try SynchronousLifecycle.run(this, closing)
+      try SynchronousLifecycle.closed(closing)
       finally destroyed()
     }
 

@@ -1,5 +1,7 @@
 package dev.coilix.diagnostics
 
+import cats.effect.IO
+
 /**
  * The health of the application, combined from every [[dev.coilix.diagnostics.HealthIndicator]] of the context.
  *
@@ -25,5 +27,5 @@ trait Health {
   def indicators: List[IndicatorReport]
 
   /** Reads every indicator again and publishes [[dev.coilix.diagnostics.HealthChanged]] for each status that changed. */
-  def refresh(): Unit
+  def refresh(): IO[Unit]
 }

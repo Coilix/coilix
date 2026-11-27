@@ -112,7 +112,7 @@ final case class CoilixTestSetup(
 
   private def defaultName[T: TypeInfo]: String = {
     val simpleName = TypeInfo[T].runtimeClass.getSimpleName.stripSuffix("$")
-    simpleName.take(1).toLowerCase + simpleName.drop(1)
+    s"${simpleName.take(1).toLowerCase}${simpleName.drop(1)}"
   }
 }
 

@@ -1,5 +1,6 @@
 package dev.coilix.diagnostics
 
+import cats.effect.unsafe.IORuntime
 import java.time.Clock
 import munit.FunSuite
 import scala.concurrent.duration.DurationInt
@@ -49,7 +50,8 @@ final class DiagnosticsMonitorTest extends FunSuite {
       SettableHealthIndicator("threads", HealthKind.Liveness),
       health,
       RecordingFatalErrorHandler(),
-      Clock.systemUTC
+      Clock.systemUTC,
+      IORuntime.global
     )
     memory.set(HealthState.degraded("memory is short"))
     assertEquals((monitor.runChecks(), health.readiness), (Nil, HealthStatus.Degraded))
@@ -67,7 +69,8 @@ final class DiagnosticsMonitorTest extends FunSuite {
       SettableHealthIndicator("threads", HealthKind.Liveness),
       DefaultHealth(Nil, RecordingPublisher()),
       RecordingFatalErrorHandler(),
-      Clock.systemUTC
+      Clock.systemUTC,
+      IORuntime.global
     )
     assertEquals(monitor.runChecks().map(_.kind), List(Finding.tooManyThreads))
   }
@@ -83,7 +86,8 @@ final class DiagnosticsMonitorTest extends FunSuite {
         SettableHealthIndicator("threads", HealthKind.Liveness),
         DefaultHealth(Nil, RecordingPublisher()),
         fatalErrors,
-        Clock.systemUTC
+        Clock.systemUTC,
+        IORuntime.global
       )
     throwing(NoClassDefFoundError("dev/coilix/diagnostics/Missing")).round()
     throwing(OutOfMemoryError("test")).round()
@@ -104,6 +108,7 @@ final class DiagnosticsMonitorTest extends FunSuite {
       indicator,
       health,
       fatalErrors,
-      Clock.systemUTC
+      Clock.systemUTC,
+      IORuntime.global
     )
 }

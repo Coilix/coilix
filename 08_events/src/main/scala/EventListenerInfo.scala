@@ -21,6 +21,5 @@ final case class EventListenerInfo(
   name:      String,
   eventType: GenericType,
   async:     Boolean,
-  retry:     RetryPolicy,
-  blocking:  Boolean = false
+  retry:     RetryPolicy
 )

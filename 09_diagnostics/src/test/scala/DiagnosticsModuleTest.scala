@@ -9,6 +9,7 @@ import dev.coilix.context.ApplicationContextBuilder
 import dev.coilix.context.BeanDefinitionFactory
 import dev.coilix.context.ConfigurableApplicationContext
 import dev.coilix.context.RegisteredBean
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.events.ApplicationFailed
 import dev.coilix.events.ApplicationStarted
 import dev.coilix.events.EventPublisher
@@ -36,11 +37,11 @@ final class DiagnosticsModuleTest extends FunSuite {
     withContext("") { context =>
       val health    = context.getBean[Health]
       val publisher = context.getBean[EventPublisher]
-      health.refresh()
+      SynchronousLifecycle.run(context, health.refresh())
       val starting  = health.readiness
-      publisher.publish(ApplicationStarted(context))
+      SynchronousLifecycle.run(context, publisher.publish(ApplicationStarted(context)))
       val started   = (health.readiness, health.liveness)
-      publisher.publish(ApplicationFailed(context, IllegalStateException("no database")))
+      SynchronousLifecycle.run(context, publisher.publish(ApplicationFailed(context, IllegalStateException("no database"))))
       assertEquals(
         (starting, started, health.readiness),
         (HealthStatus.Down, (HealthStatus.Up, HealthStatus.Up), HealthStatus.Down)
@@ -91,7 +92,8 @@ final class DiagnosticsModuleTest extends FunSuite {
     ApplicationContextBuilder.default.build(
       (ConcurrencyModule().components ++ EventsModule().components ++ DiagnosticsModule().components)
         .flatMap(BeanDefinitionFactory.default.create),
-      List(RegisteredBean.of[Environment]("environment", environment))
+      List(RegisteredBean.of[Environment]("environment", environment)),
+      ConcurrencyModule().effectInterpreter
     )
   }
 }

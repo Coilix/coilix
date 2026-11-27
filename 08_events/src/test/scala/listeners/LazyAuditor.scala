@@ -1,6 +1,7 @@
 package dev.coilix.events
 package listeners
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.annotation.Lazy
@@ -12,5 +13,5 @@ final class LazyAuditor {
   val events: Recorder[OrderEvent] = Recorder()
 
   @EventListener
-  private def onOrder(event: OrderEvent): Unit = events.record(event)
+  private def onOrder(event: OrderEvent): IO[Unit] = IO(events.record(event))
 }

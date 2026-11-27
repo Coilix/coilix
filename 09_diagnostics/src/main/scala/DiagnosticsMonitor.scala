@@ -1,10 +1,12 @@
 package dev.coilix.diagnostics
 
 import cats.effect.IO
+import cats.effect.unsafe.IORuntime
 import dev.coilix.annotation.Slf4s
 import dev.coilix.concurrency.FatalErrorHandler
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.ContextLifecycleListener
+import dev.coilix.context.SynchronousLifecycle
 import java.time.Clock
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
@@ -42,7 +44,8 @@ final class DiagnosticsMonitor(
   indicator:   SettableHealthIndicator,
   health:      Health,
   fatalErrors: FatalErrorHandler,
-  clock:       Clock
+  clock:       Clock,
+  runtime:     IORuntime
 ) extends ContextLifecycleListener {
 
   private val history   = AtomicReference(ThreadHistory.empty)
@@ -65,7 +68,7 @@ final class DiagnosticsMonitor(
     val findings = if (settings.threads.enabled) threadFindings() else Nil
     reporter.report(findings)
     findings.find(_.kind == Finding.deadlock).foreach(react)
-    health.refresh()
+    SynchronousLifecycle.runOn(runtime, health.refresh())
     findings
   }
 

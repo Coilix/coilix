@@ -1,6 +1,7 @@
 package dev.coilix.events
 package listeners
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.events.model.OrderEvent
@@ -14,7 +15,8 @@ final class FlakyNotifier {
   val delivered: CountDownLatch = CountDownLatch(1)
 
   @EventListener(async = true)
-  def onPlaced(event: OrderEvent.Placed): Unit =
-    if (attempts.incrementAndGet() < 3) throw IllegalStateException("not yet")
-    else delivered.countDown()
+  def onPlaced(event: OrderEvent.Placed): IO[Unit] =
+    IO(attempts.incrementAndGet()).flatMap(attempt =>
+      if (attempt < 3) IO.raiseError(IllegalStateException("not yet")) else IO(delivered.countDown())
+    )
 }

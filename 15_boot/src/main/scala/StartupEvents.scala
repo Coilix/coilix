@@ -1,6 +1,7 @@
 package dev.coilix.boot
 
 import cats.effect.IO
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.TypeInfo
 import dev.coilix.context.ConfigurableApplicationContext
@@ -36,5 +37,5 @@ object StartupEvents {
     )
 
   private def publish[E: TypeInfo](context: ConfigurableApplicationContext, event: E): IO[Unit] =
-    IO.blocking(context.getBeanOption[EventPublisher].foreach(_.publish(event)))
+    context.getBeanOption[EventPublisher].traverse_(_.publish(event))
 }

@@ -1,6 +1,7 @@
 package com.example
 package diagnostics
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.EventListener
 import dev.coilix.diagnostics.HealthChanged
@@ -15,6 +16,6 @@ final class OrderIntake {
   def accepting: Boolean = open.get
 
   @EventListener
-  private def onHealthChanged(event: HealthChanged): Unit =
-    if (event.kind == HealthKind.Readiness) open.set(event.current == HealthStatus.Up)
+  private def onHealthChanged(event: HealthChanged): IO[Unit] =
+    IO.whenA(event.kind == HealthKind.Readiness)(IO(open.set(event.current == HealthStatus.Up)))
 }
