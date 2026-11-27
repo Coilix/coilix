@@ -53,7 +53,7 @@ final class FiberMdcAdapterTest extends CatsEffectSuite {
 
   test("a thread without a fiber keeps its own MDC") {
     IO.blocking {
-      val seen = java.util.concurrent.atomic.AtomicReference(Option.empty[String])
+      val seen  = java.util.concurrent.atomic.AtomicReference(Option.empty[String])
       val other = Thread(() => {
         MDC.put("job", "thread")
         seen.set(Option(MDC.get("job")))
