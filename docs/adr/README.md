@@ -59,6 +59,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0054](0054-fiber-mdc.md) | MDC fibera na `IOLocal` | proponowana |
 | [0055](0055-events-in-io.md) | Szyna zdarzeń na `IO` | proponowana |
 | [0056](0056-scheduled-on-fibers.md) | `@Scheduled` na fiberach, bez `TaskScheduler` | proponowana |
+| [0057](0057-async-in-io.md) | `@Async` w `IO` | proponowana |
 | [0052](0052-typed-processing-errors.md) | Błędy typowane procesorów tła i ustawień logowania | proponowana |
 | [0053](0053-typed-event-errors.md) | Błędy typowane zdarzeń | proponowana |
 

@@ -1,21 +1,23 @@
 package dev.coilix.concurrency
 
+import cats.effect.IO
 import dev.coilix.annotation.Async
 import dev.coilix.common.GenericType
 import dev.coilix.context.BeanDefinition
 import dev.coilix.context.DefinitionProcessor
 import dev.coilix.context.Dependency
 import java.lang.reflect.Method
-import scala.concurrent.Future
+import java.lang.reflect.ParameterizedType
+import scala.runtime.BoxedUnit
 
 /**
- * Turns the definition of a bean with [[dev.coilix.annotation.Async]] methods into a definition of a proxy that runs those
- * methods on the [[dev.coilix.concurrency.TaskExecutor]], or on the [[dev.coilix.concurrency.BlockingExecutor]] for methods with
- * `blocking = true`.
+ * Turns the definition of a bean with [[dev.coilix.annotation.Async]] methods into a definition of a proxy that runs the `IO` of
+ * those methods on the compute pool, or on the [[dev.coilix.concurrency.BlockingExecutor]] for methods with `blocking = true`.
  *
  * The proxy implements every trait of the bean class and is registered under the trait that declares the asynchronous
- * methods, so other beans inject that trait. The definition gets both executors as extra dependencies. Definitions
- * without `@Async` methods stay as they are. The concurrency module provides this processor.
+ * methods, so other beans inject that trait. The definition gets the blocking executor and the
+ * [[dev.coilix.concurrency.AsyncTasks]] as extra dependencies. Definitions without `@Async` methods stay as they are. The
+ * concurrency module provides this processor.
  */
 final class AsyncDefinitionProcessor extends DefinitionProcessor {
 
@@ -23,7 +25,7 @@ final class AsyncDefinitionProcessor extends DefinitionProcessor {
    * The proxy definition for a bean with `@Async` methods.
    *
    * @throws dev.coilix.concurrency.InvalidAsyncMethodException
-   *   if an `@Async` method returns neither `Unit` nor `Future`, no trait of the bean declares it, or the methods are declared
+   *   if an `@Async` method does not return `IO`, no trait of the bean declares it, or the methods are declared
    *   in different traits
    */
   override def process(definition: BeanDefinition): BeanDefinition =
@@ -42,21 +44,30 @@ final class AsyncDefinitionProcessor extends DefinitionProcessor {
     val service        = serviceTrait(definition, methods, interfaces)
     definition.copy(
       beanType     = definition.beanType.asSuper(service).getOrElse(GenericType.of(service)),
-      factory      = AsyncProxyFactory(definition.factory, interfaces, methods.map(method => signature(method) -> blocks(method)).toMap),
+      factory      = AsyncProxyFactory(
+        definition.factory,
+        interfaces,
+        methods.map(method => signature(method) -> async(definition, method)).toMap
+      ),
       dependencies = definition.dependencies ++ List(
-        Dependency.Required(GenericType.of(classOf[TaskExecutor])),
-        Dependency.Required(GenericType.of(classOf[BlockingExecutor]))
+        Dependency.Required(GenericType.of(classOf[BlockingExecutor])),
+        Dependency.Required(GenericType.of(classOf[AsyncTasks]))
       )
     )
   }
 
-  private def blocks(method: Method): Boolean = method.getAnnotation(classOf[Async]).blocking
+  private def async(definition: BeanDefinition, method: Method): AsyncMethod =
+    AsyncMethod(label(definition, method), method.getAnnotation(classOf[Async]).blocking, returnsUnit(method))
+
+  private def returnsUnit(method: Method): Boolean =
+    method.getGenericReturnType match {
+      case effect: ParameterizedType => effect.getActualTypeArguments.toList == List(classOf[BoxedUnit])
+      case _ => false
+    }
 
   private def checkResult(definition: BeanDefinition)(method: Method): Unit =
-    if (method.getReturnType != Void.TYPE && !classOf[Future[?]].isAssignableFrom(method.getReturnType)) {
-      throw InvalidAsyncMethodException(
-        s"${label(definition, method)} must return Unit or Future, not ${method.getReturnType.getName}"
-      )
+    if (!classOf[IO[?]].isAssignableFrom(method.getReturnType)) {
+      throw InvalidAsyncMethodException(s"${label(definition, method)} must return IO, not ${method.getReturnType.getName}")
     }
 
   private def serviceTrait(definition: BeanDefinition, methods: List[Method], interfaces: List[Class[?]]): Class[?] =

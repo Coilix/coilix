@@ -3,6 +3,7 @@
 - Status: proponowana
 - Data: 2026-11-19
 - Task: COILIX-00005 (krok 2)
+- Częściowo zastąpione przez: 0057 (metody `@Async` zwracają `IO`, proxy zależy od `BlockingExecutor` i `AsyncTasks`)
 
 ## Kontekst
 

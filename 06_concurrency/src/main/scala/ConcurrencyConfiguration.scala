@@ -10,7 +10,8 @@ import dev.coilix.context.ConfigurableApplicationContext
 
 /**
  * The beans of the concurrency module: `concurrencySettings`, `blockingExecutor` for calls that wait,
- * `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods on fibers, `mdcContextPropagator`,
+ * `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods on fibers, `asyncTasks`, which keeps the
+ * fibers of the [[dev.coilix.annotation.Async]] methods, `mdcContextPropagator`,
  * which carries the MDC to tasks, and `fatalErrorSettings`, `processTerminator` and `fatalErrorHandler`, which react to fatal
  * errors in the threads of the executors.
  *
@@ -80,4 +81,8 @@ final class ConcurrencyConfiguration {
   @Bean
   def scheduledMethodRegistrar(environment: Option[Environment]): ScheduledMethodRegistrar =
     ScheduledMethodRegistrar(environment)
+
+  /** Keeps the fibers of the [[dev.coilix.annotation.Async]] methods that run without the caller waiting. */
+  @Bean
+  def asyncTasks(): AsyncTasks = AsyncTasks()
 }

@@ -25,7 +25,7 @@ Ta strona pokazuje, jak bean wykonuje pracę w tle albo według harmonogramu bez
 
 Każda aplikacja ma dwóch wykonawców, bo praca, która liczy, i praca, która czeka, potrzebują innych wątków:
 
-- `TaskExecutor` to pula obliczeniowa: pula work-stealing [cats-effect](cats-effect.mdx) z jednym wątkiem na procesor, o nazwach `io-compute-<numer>`, wspólna z fiberami `IO`. Działają na niej obliczenia, metody `@Async` i asynchroniczni odbiorcy zdarzeń. Zadanie przekazane z jednego z jej wątków zwykle zostaje na tym samym wątku, co utrzymuje cache procesora.
+- `TaskExecutor` to pula obliczeniowa: pula work-stealing [cats-effect](cats-effect.mdx) z jednym wątkiem na procesor, o nazwach `io-compute-<numer>`, wspólna z fiberami `IO`. Działają na niej obliczenia, metody `@Async` bez `blocking` i asynchroniczni odbiorcy zdarzeń. Zadanie przekazane z jednego z jej wątków zwykle zostaje na tym samym wątku, co utrzymuje cache procesora.
 - `BlockingExecutor` służy do wywołań, które czekają, np. zapytań JDBC, żądań HTTP i dostępu do plików. Każde zadanie dostaje nowy wątek wirtualny o nazwie `coilix-blocking-<numer>`, który podczas czekania prawie nic nie kosztuje. Na JDK 17, które nie ma wątków wirtualnych, używa puli najwyżej 64 wątków platformowych.
 
 Nie mieszaj ich. Wywołanie blokujące na puli obliczeniowej zajmuje jeden z jej nielicznych wątków, a z nim rdzeń procesora, przez cały czas czekania. Obliczenia na wykonawcy blokującym też nie pomagają: wątki wirtualne dzielą wątki nośne, po jednym na rdzeń, a zadanie, które liczy, zajmuje swój nośnik.
@@ -44,15 +44,15 @@ Obu wykonawców można też przekazać tam, gdzie biblioteka oczekuje `Execution
 
 ## Metoda asynchroniczna z @Async
 
-Oznacz metodę adnotacją `@Async`, żeby wykonywała się na puli obliczeniowej przy każdym wywołaniu przez inny bean, albo `@Async(blocking = true)`, żeby wykonywała się na wykonawcy blokującym. Wysłanie maila czeka na serwer pocztowy, więc poniższy mailer blokuje. Metoda musi być zadeklarowana w traicie beana:
+Oznacz metodę zwracającą `IO` adnotacją `@Async`, żeby wykonywała się na puli obliczeniowej przy każdym wywołaniu przez inny bean, albo `@Async(blocking = true)`, żeby wykonywała się na wykonawcy blokującym. Wysłanie maila czeka na serwer pocztowy, więc poniższe `send` blokuje. Metoda musi być zadeklarowana w traicie beana:
 
 <CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
 
 <CodeBlock language="scala" title="SmtpInvoiceMailer.scala">{SmtpInvoiceMailer}</CodeBlock>
 
-Metoda zwracająca `Future[T]` zwraca wynik wykonania na wykonawcy, a metoda zwracająca `Unit` jest uruchamiana bez czekania; jej błąd trafia do logu. Metody bez `@Async` działają na wątku wywołującym.
+Wywołanie zwraca `IO`, a bean jest wołany dopiero przy wykonaniu tego `IO`, na wybranej puli, więc tam działa też kod, który buduje efekt metody. Metoda zwracająca `IO[A]` oddaje wynik wywołującemu, który czeka na niego jak na każde `IO`. Metoda zwracająca `IO[Unit]`, jak `remind`, startuje na własnym fiberze, a wywołujący idzie dalej od razu; jej błąd trafia do logu, a fibery, które jeszcze działają, są anulowane na początku zamykania aplikacji, zanim jakikolwiek bean zostanie zniszczony. Metody bez `@Async` działają na wątku wywołującym.
 
-Coilix rejestruje taki bean jako proxy traitu, więc inne beany wstrzykują `InvoiceMailer`, a nie `SmtpInvoiceMailer`. Wywołanie z wnętrza samego beana omija proxy i działa na wątku wywołującym. Metoda `@Async`, której nie deklaruje żaden trait albo która zwraca coś innego niż `Unit` lub `Future`, zatrzymuje start wyjątkiem `InvalidAsyncMethodException`.
+Coilix rejestruje taki bean jako proxy traitu, więc inne beany wstrzykują `InvoiceMailer`, a nie `SmtpInvoiceMailer`. Wywołanie z wnętrza samego beana omija proxy i działa na wątku wywołującym. Metoda `@Async`, której nie deklaruje żaden trait albo która nie zwraca `IO`, zatrzymuje start wyjątkiem `InvalidAsyncMethodException`.
 
 ## Kontekst logowania w zadaniach
 

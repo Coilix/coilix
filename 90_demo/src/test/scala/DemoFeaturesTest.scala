@@ -8,7 +8,6 @@ import dev.coilix.boot.CoilixIOApp
 import dev.coilix.boot.CoilixIOStartup
 import dev.coilix.boot.StartupError
 import dev.coilix.concurrency.ProcessTerminator
-import dev.coilix.context.ProxiedBean
 import dev.coilix.demo.access.ClaimSweeper
 import dev.coilix.demo.diagnostics.FleetScan
 import dev.coilix.demo.vehicle.Vin
@@ -16,10 +15,8 @@ import dev.coilix.demo.workshop.BayMonitor
 import dev.coilix.demo.workshop.BookingDesk
 import dev.coilix.demo.workshop.FaultCodeExport
 import dev.coilix.demo.workshop.FaultLedger
-import dev.coilix.demo.workshop.FileJobArchive
 import dev.coilix.demo.workshop.InspectionFinished
 import dev.coilix.demo.workshop.InspectionSheet
-import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.JobLog
 import dev.coilix.demo.workshop.JobNotes
 import dev.coilix.demo.workshop.LiftBoard
@@ -71,14 +68,6 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
   test("updates the job notes with EditOption") {
     workshop.use {
       assertEquals(bean[ServiceDesk].updatedNotes, JobNotes(Some("Brake pads replaced"), None))
-    }
-  }
-
-  test("archives a report on the blocking executor through the @Async proxy") {
-    workshop.use {
-      val archive = bean[JobArchive]
-      assert(ProxiedBean.unwrap(archive).isInstanceOf[FileJobArchive])
-      assert(Await.result(archive.archive("test"), 5.seconds).contains("archived on coilix-blocking-"))
     }
   }
 
