@@ -53,10 +53,10 @@ enum EventListenerError {
   /** The description of this error. */
   def message: String =
     this match {
-      case OverloadedMethod(beanName, method)        => overloaded(beanName, method)
-      case InvalidMethod(beanName, method, problem)  => s"${EventListenerError.methodLabel(beanName, method)} $problem"
-      case UndeclaredEventType(beanName)             => s"${EventListenerError.traitLabel(beanName)} does not declare the type of its events"
-      case UnknownEventType(listener, eventType)     => unknownType(listener, eventType)
+      case OverloadedMethod(beanName, method)       => overloaded(beanName, method)
+      case InvalidMethod(beanName, method, problem) => s"${EventListenerError.methodLabel(beanName, method)} $problem"
+      case UndeclaredEventType(beanName)            => s"${EventListenerError.traitLabel(beanName)} does not declare the type of its events"
+      case UnknownEventType(listener, eventType)    => unknownType(listener, eventType)
     }
 
   /** The exception that reports this error to code that throws. */
