@@ -3,20 +3,21 @@ package dev.coilix.annotation;
 import java.lang.annotation.*;
 
 /**
- * Marks a method of a bean that runs repeatedly on the task scheduler of the concurrency module.
+ * Marks a method of a bean that runs repeatedly on a fiber of its own, started by the concurrency
+ * module.
  *
  * <p>Set exactly one of {@link #fixedRate()} and {@link #fixedDelay()}. Durations are written like
  * configuration values, such as {@code "10s"} or {@code "5 minutes"}, or as a placeholder such as
- * {@code "${shop.refresh-interval:1m}"}. The method takes no parameters, returns {@code Unit} and
- * may be private. The runs start when every bean of the context exists and stop when the context
- * starts closing, before any bean is destroyed. A failed run is logged and the next runs still
- * happen.
+ * {@code "${shop.refresh-interval:1m}"}. The method takes no parameters, returns {@code
+ * cats.effect.IO[Unit]} and may be private; between runs its fiber waits with {@code IO.sleep}. The
+ * runs start when every bean of the context exists and stop when the context starts closing, before
+ * any bean is destroyed. A failed run is logged and the next runs still happen.
  *
  * <pre>
  * {@literal @}Component
  * final class PriceRefresher(prices: PriceCache) {
  *   {@literal @}Scheduled(fixedDelay = "${shop.refresh-interval:1m}", initialDelay = "10s")
- *   def refresh(): Unit = prices.reload()
+ *   def refresh(): IO[Unit] = IO.blocking(prices.reload())
  * }</pre>
  */
 @Retention(RetentionPolicy.RUNTIME)

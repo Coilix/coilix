@@ -19,12 +19,12 @@ final class ConcurrencyModuleTest extends FunSuite {
     assert(ServiceLoaderModuleLoader(getClass.getClassLoader, Environment.empty).load().exists(_.name == "concurrency"))
   }
 
-  test("injects the executor and the scheduler") {
+  test("injects the executors") {
     val context = contextOf(classOf[ExecutorUser])
     try {
       val user = context.getBean[ExecutorUser]
       assertEquals(
-        (user.executor eq context.getBean[TaskExecutor], user.scheduler eq context.getBean[TaskScheduler]),
+        (user.executor eq context.getBean[TaskExecutor], user.blocking eq context.getBean[BlockingExecutor]),
         (true, true)
       )
     } finally {
@@ -32,13 +32,12 @@ final class ConcurrencyModuleTest extends FunSuite {
     }
   }
 
-  test("computes on the cats-effect runtime and closes the blocking executor and the scheduler with the context") {
-    val context   = contextOf()
-    val executor  = context.getBean[TaskExecutor]
-    val blocking  = context.getBean[ExecutorServiceBlockingExecutor]
-    val scheduler = context.getBean[ScheduledExecutorTaskScheduler]
+  test("computes on the cats-effect runtime and closes the blocking executor with the context") {
+    val context  = contextOf()
+    val executor = context.getBean[TaskExecutor]
+    val blocking = context.getBean[ExecutorServiceBlockingExecutor]
     context.close()
-    assertEquals((executor.isInstanceOf[IORuntimeTaskExecutor], blocking.isClosed, scheduler.isClosed), (true, true, true))
+    assertEquals((executor.isInstanceOf[IORuntimeTaskExecutor], blocking.isClosed), (true, true))
   }
 
   test("uses the default settings in a context without an environment") {

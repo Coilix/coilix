@@ -1,7 +1,7 @@
 ---
 id: tasks-and-scheduling
 title: Background tasks and scheduling
-description: Run computation on TaskExecutor and blocking calls on BlockingExecutor, and repeat work with @Scheduled or TaskScheduler.
+description: Run computation on TaskExecutor and blocking calls on BlockingExecutor, and repeat work with @Scheduled or an fs2 stream.
 sidebar_position: 6
 ---
 
@@ -74,21 +74,19 @@ Annotate a method of a bean with `@Scheduled` to run it repeatedly. Set `fixedRa
 
 <CodeBlock language="scala" title="PriceRefresher.scala">{PriceRefresher}</CodeBlock>
 
-Durations are written like configuration values, such as `10s` or `5 minutes`, or as a placeholder with a default, as in the example. The method takes no parameters and may be private.
+Durations are written like configuration values, such as `10s` or `5 minutes`, or as a placeholder with a default, as in the example. The method takes no parameters, returns `IO[Unit]` and may be private. It runs on a fiber of its own, which waits with `IO.sleep` between runs and holds no thread meanwhile. If one run fails, Coilix logs the error and the method runs again on schedule. Runs of the same method never overlap.
 
-The runs start when every bean of the application exists, and stop when the application starts stopping, before any bean is destroyed. A method that takes parameters, sets both `fixedRate` and `fixedDelay`, sets neither, or has a duration that cannot be read stops the startup with `InvalidScheduledMethodException`, which names the bean and the method.
+The runs start when every bean of the application exists, and stop when the application starts stopping, before any bean is destroyed. A method that takes parameters, does not return `IO`, sets both `fixedRate` and `fixedDelay`, sets neither, or has a duration that cannot be read stops the startup with `InvalidScheduledMethodException`, which names the bean and the method.
 
 ## Repeat a task from code
 
-When the schedule is known only at runtime, use the `TaskScheduler` bean. It runs a task once after a delay (`schedule`), at a fixed rate (`scheduleAtFixedRate`), or with a fixed pause between runs (`scheduleWithFixedDelay`). Each method returns a `ScheduledTask` with `cancel()`.
+When the schedule is known only at runtime, run an fs2 stream such as `Stream.fixedDelay` or `Stream.awakeEvery` on a fiber. A `ContextLifecycleListener` starts it with the context and cancels it in the `Producers` phase of closing, like the `@Scheduled` methods; a single delayed run is `IO.sleep(delay) *> work`.
 
 <CodeBlock language="scala" title="StockRefresher.scala">{StockRefresher}</CodeBlock>
 
-Scheduled tasks run on a separate pool, `coilix-scheduler-<number>`, with one thread by default. If one run throws an exception, Coilix logs it and the task still runs next time. Runs of the same task never overlap.
-
 ## Retry failed work
 
-`RetryPolicy` says how many times to try failed work and how long to wait between the tries. The wait starts at `initialDelay`, grows by `multiplier` after each failed try and never exceeds `maxDelay`. `jitter` spreads each wait randomly, here by up to 20% in both directions, so replicas that failed together do not retry at the same moment. `delayAfter(attempts)` returns the wait after that many failed tries, or `None` when no tries are left:
+`RetryPolicy` says how many times to try failed work and how long to wait between the tries. The wait starts at `initialDelay`, grows by `multiplier` after each failed try and never exceeds `maxDelay`. `jitter` spreads each wait randomly, here by up to 20% in both directions, so replicas that failed together do not retry at the same moment. `delayAfter(attempts)` returns the wait after that many failed tries, or `None` when no tries are left, and `IO.sleep` waits it:
 
 <CodeBlock language="scala" title="tasks/RetryingMailer.scala">{RetryingMailer}</CodeBlock>
 
@@ -96,17 +94,17 @@ The policy keeps no state, so one instance can serve every call. `RetryPolicy.de
 
 ## Configure the threads
 
-All keys under `coilix.concurrency` are optional. This configuration gives the compute pool four threads, lets at most 20 blocking calls run at once, for example to match a connection pool of 20, and gives the scheduler two threads:
+All keys under `coilix.concurrency` are optional. This configuration gives the compute pool four threads and lets at most 20 blocking calls run at once, for example to match a connection pool of 20:
 
 <CodeBlock language="yaml" title="application.yaml">{TasksYaml}</CodeBlock>
 
-Without configuration, the compute pool has `compute.threads` equal to the number of processors available to the JVM, which in a container is its CPU limit. The blocking executor has no limit, uses virtual threads, and with `blocking.virtual-threads: false` uses up to `blocking.platform-threads` platform threads (64 by default). Both wait 30 seconds for running tasks when the application stops. The scheduler has one thread named `coilix-scheduler-<number>` and waits 10 seconds by default. A scheduled method runs on that thread, so a method that computes or waits for long hands the work over to one of the executors.
+Without configuration, the compute pool has `compute.threads` equal to the number of processors available to the JVM, which in a container is its CPU limit. The blocking executor has no limit, uses virtual threads, and with `blocking.virtual-threads: false` uses up to `blocking.platform-threads` platform threads (64 by default). Both wait 30 seconds for running tasks when the application stops.
 
 Keep about one compute thread per processor. More threads that compute at the same time than processors only make the system switch between them.
 
 ## What happens when the application stops
 
-`@Scheduled` methods stop first, in the `Producers` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context). The executor and the scheduler are closed like other beans when the application context closes, after the beans that use them. The scheduler drops the tasks that are still waiting for their time. Each of them then waits up to its `shutdown-timeout` for running tasks, interrupts those still running, and logs a warning with the number of tasks that did not finish.
+`@Scheduled` methods stop first: their fibers are cancelled in the `Producers` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context). The executors are closed like other beans when the application context closes, after the beans that use them. Each of them waits up to its `shutdown-timeout` for running tasks, interrupts those still running, and logs a warning with the number of tasks that did not finish.
 
 ## Use your own executor
 

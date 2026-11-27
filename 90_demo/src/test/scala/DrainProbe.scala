@@ -1,6 +1,7 @@
 package dev.coilix.demo
 
 import cats.effect.IO
+import cats.syntax.all.*
 import dev.coilix.context.ApplicationContext
 import dev.coilix.context.ClosingPhase
 import dev.coilix.context.ContextLifecycleListener
@@ -19,5 +20,8 @@ final class DrainProbe extends ContextLifecycleListener {
   override def onContextStarted(started: ApplicationContext): IO[Unit] = IO(context.set(Some(started)))
 
   override def onContextClosing: IO[Unit] =
-    IO(observed.set(context.get.map(beans => (beans.getBean[ClaimSweeper].isSweeping, beans.getBean[WorkshopOpening].isOpen))))
+    context.get.traverse(beans =>
+      beans.getBean[ClaimSweeper].isSweeping.map(sweeping => (sweeping, beans.getBean[WorkshopOpening].isOpen))
+    )
+      .flatMap(seen => IO(observed.set(seen)))
 }

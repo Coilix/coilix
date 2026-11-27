@@ -40,21 +40,6 @@ final class FatalErrorRoutingTest extends FunSuite {
     }
   }
 
-  test("a scheduled task passes its fatal error to the handler") {
-    val handler   = RecordingFatalErrorHandler()
-    val scheduler = ScheduledExecutorTaskScheduler(SchedulerSettings(threadNamePrefix = "fatal-scheduler-"), handler)
-    try {
-      val _ = scheduler.scheduleAtFixedRate(1.millis, 1.hour)(throw OutOfMemoryError("scheduled"))
-      assert(handler.called.await(5, TimeUnit.SECONDS))
-      assertEquals(
-        handler.failures.map((thread, failure) => (thread, failure.getMessage)),
-        List(("fatal-scheduler-1", "scheduled"))
-      )
-    } finally {
-      scheduler.close()
-    }
-  }
-
   test("a thread of the factory passes an uncaught fatal error to its handler") {
     val handler = RecordingFatalErrorHandler()
     val thread  = ThreadFactories

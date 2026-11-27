@@ -111,7 +111,6 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "staffNotifications",
         "startupHealthIndicator",
         "startupHealthListener",
-        "taskScheduler",
         "testerCrashDrill",
         "threadCountCheck",
         "threadGrowthCheck",
@@ -143,7 +142,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
     assertEquals(workshop.oemPortal.apiKey.toString, "*****")
   }
 
-  shared.test("checks the bays on the scheduler") {
+  shared.test("checks the bays on a fiber of its own") {
     assert(LazyList.range(0, 100).exists(_ => bean[BayMonitor].checksDone > 0 || { Thread.sleep(20); false }))
   }
 

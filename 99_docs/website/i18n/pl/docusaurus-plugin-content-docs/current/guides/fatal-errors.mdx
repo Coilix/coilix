@@ -23,7 +23,7 @@ Każdy inny wyjątek to porażka, którą aplikacja przeżywa. Zadanie, metoda `
 
 ## Co się dzieje po błędzie fatalnym
 
-Błąd fatalny rzucony w zadaniu `TaskExecutor`, w zadaniu `TaskScheduler` (także w metodzie `@Scheduled`) albo w asynchronicznym odbiorcy zdarzeń trafia do beana `FatalErrorHandler`. W aplikacji uruchomionej jako `CoilixIOApp` handler dostaje też błędy fatalne wszystkich innych wątków. Domyślnie:
+Błąd fatalny rzucony w zadaniu `TaskExecutor` albo `BlockingExecutor` trafia do beana `FatalErrorHandler`. Błąd fatalny w fiberze, np. w metodzie `@Scheduled` albo w asynchronicznym odbiorcy zdarzeń, trafia do runtime'u cats-effect, który w `CoilixIOApp` przekazuje go temu samemu handlerowi. W aplikacji uruchomionej jako `CoilixIOApp` handler dostaje też błędy fatalne wszystkich innych wątków. Domyślnie:
 
 1. zapisuje błąd w logu,
 2. zamyka kontekst w nowym wątku, więc działają metody `@PreDestroy`, a odbiorcy asynchroniczni dostają zwykły czas na dokończenie pracy,

@@ -21,9 +21,10 @@ import java.lang.reflect.Parameter
 final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper) extends ParameterDependencyMapper {
 
   override def map(parameter: Parameter): Dependency =
-    Option(parameter.getAnnotation(classOf[Value]))
-      .map(value => Dependency.Value(ValueExpression.parse(value.value), parameter.getParameterizedType))
-      .getOrElse(qualified(parameter, checked(parameter, typeMapper.map(parameter.getParameterizedType))))
+    Option(parameter.getAnnotation(classOf[Value])).fold(qualified(
+      parameter,
+      checked(parameter, typeMapper.map(parameter.getParameterizedType))
+    ))(value => Dependency.Value(ValueExpression.parse(value.value), parameter.getParameterizedType))
 
   private def qualified(parameter: Parameter, dependency: Dependency): Dependency =
     (Option(parameter.getAnnotation(classOf[Qualifier])), dependency) match {
