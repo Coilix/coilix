@@ -25,7 +25,7 @@ This page shows how a bean runs work in the background or on a schedule without 
 
 Every application has two executors, because work that computes and work that waits need different threads:
 
-- `TaskExecutor` is the compute pool: the work-stealing pool of [cats-effect](cats-effect.mdx), with one thread per processor, named `io-compute-<number>`, shared with `IO` fibers. Computation, `@Async` methods and asynchronous event listeners run here. A task handed over from one of its threads usually stays on the same thread, which keeps the processor cache warm.
+- `TaskExecutor` is the compute pool: the work-stealing pool of [cats-effect](cats-effect.mdx), with one thread per processor, named `io-compute-<number>`, shared with `IO` fibers. Computation, `@Async` methods without `blocking` and asynchronous event listeners run here. A task handed over from one of its threads usually stays on the same thread, which keeps the processor cache warm.
 - `BlockingExecutor` is for calls that wait, such as JDBC queries, HTTP requests and file access. Each task gets a new virtual thread named `coilix-blocking-<number>`, which costs almost nothing while it waits. On JDK 17, which has no virtual threads, it uses a pool of up to 64 platform threads.
 
 Keep them apart. A blocking call on the compute pool holds one of its few threads, and with it a processor core, while it waits. Computation on the blocking executor does not help either: virtual threads share carrier threads, one per core, and a task that computes holds its carrier.
@@ -44,15 +44,15 @@ Both executors can also be passed where a library expects an `ExecutionContext`,
 
 ## Run a method asynchronously with @Async
 
-Annotate a method with `@Async` to run it on the compute pool whenever another bean calls it, or with `@Async(blocking = true)` to run it on the blocking executor. Sending a mail waits for the mail server, so the mailer below blocks. The method must be declared in a trait of the bean:
+Annotate a method that returns `IO` with `@Async` to run it on the compute pool whenever another bean calls it, or with `@Async(blocking = true)` to run it on the blocking executor. Sending a mail waits for the mail server, so `send` below blocks. The method must be declared in a trait of the bean:
 
 <CodeBlock language="scala" title="InvoiceMailer.scala">{InvoiceMailer}</CodeBlock>
 
 <CodeBlock language="scala" title="SmtpInvoiceMailer.scala">{SmtpInvoiceMailer}</CodeBlock>
 
-A method returning `Future[T]` returns the result of the run on the executor, and a method returning `Unit` is started without waiting; its failure is logged. Methods without `@Async` run on the calling thread.
+A call returns an `IO` and the bean is called only when that `IO` runs, on the chosen pool, so also the code that builds the effect of the method runs there. A method returning `IO[A]` gives its result to the caller, which waits for it like for any `IO`. A method returning `IO[Unit]`, like `remind`, is started on a fiber of its own and the caller goes on at once; its failure is logged, and the fibers that still run are cancelled when the application starts closing, before any bean is destroyed. Methods without `@Async` run on the calling thread.
 
-Coilix registers such a bean as a proxy of the trait, so other beans inject `InvoiceMailer`, not `SmtpInvoiceMailer`. A call from inside the bean itself does not pass the proxy and runs on the calling thread. An `@Async` method that no trait declares, or that returns something other than `Unit` or `Future`, stops the startup with `InvalidAsyncMethodException`.
+Coilix registers such a bean as a proxy of the trait, so other beans inject `InvoiceMailer`, not `SmtpInvoiceMailer`. A call from inside the bean itself does not pass the proxy and runs on the calling thread. An `@Async` method that no trait declares, or that does not return `IO`, stops the startup with `InvalidAsyncMethodException`.
 
 ## Keep the logging context in tasks
 

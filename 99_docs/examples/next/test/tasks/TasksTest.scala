@@ -1,6 +1,7 @@
 package com.example
 package tasks
 
+import dev.coilix.context.ProxiedBean
 import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
@@ -27,7 +28,19 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
 
   test("a blocking @Async method runs on the blocking executor and the bean is injected through its trait") {
     setup.use {
-      assert(Await.result(bean[InvoiceMailer].send("INV-7"), 5.seconds).startsWith("INV-7 sent from coilix-blocking-"))
+      val sent = SynchronousLifecycle.run(context, bean[InvoiceMailer].send("INV-7"))
+      assert(sent.startsWith("INV-7 sent from coilix-blocking-"), sent)
+    }
+  }
+
+  test("an @Async method returning IO[Unit] runs on a fiber of its own") {
+    setup.use {
+      SynchronousLifecycle.run(context, bean[InvoiceMailer].remind("INV-7"))
+      val mailer = ProxiedBean.unwrap(bean[InvoiceMailer])
+      mailer match {
+        case smtp: SmtpInvoiceMailer => assertEquals(smtp.reminders.poll(5, TimeUnit.SECONDS), "reminder for INV-7")
+        case other => fail(s"Unexpected mailer $other")
+      }
     }
   }
 

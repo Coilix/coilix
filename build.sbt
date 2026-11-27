@@ -194,9 +194,9 @@ lazy val concurrency = slf4sModule("concurrency", "06_concurrency", "dev.coilix.
   .settings(coreGroup)
   .settings(
     description              :=
-      "The IORuntime of Coilix as the only compute pool, fs2, blocking executors, a task scheduler and beans created in IO",
+      "The IORuntime of Coilix as the only compute pool, fs2, blocking executors, @Scheduled and @Async methods in IO and beans created in IO",
     libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
-    libraryDependencies ++= Seq(Dependencies.catsEffect, Dependencies.fs2Core),
+    libraryDependencies ++= Seq(Dependencies.catsEffect, Dependencies.fs2Core, Dependencies.munitCatsEffect % Test),
     libraryDependencies ++= Dependencies.log4jSlf4j.map(_ % Test),
     Test / parallelExecution := false
   )

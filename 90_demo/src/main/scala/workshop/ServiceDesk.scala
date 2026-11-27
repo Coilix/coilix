@@ -24,7 +24,8 @@ import dev.coilix.processing.ProcessorManager
  * that is injected as `Option`, because the module can be disabled. The `@Lazy` [[dev.coilix.demo.workshop.WarrantyRegistry]]
  * comes through a `Provider`, so it is loaded only here. The [[dev.coilix.demo.workshop.ModuleCensus]] counts the modules of
  * the fleet with an fs2 stream. The background processors are reached only through the `ProcessorManager`. It is an
- * `IOApplicationRunner`, so the `Future` of the archive and the `IO` of the other services run on the fiber of the start.
+ * `IOApplicationRunner`, so the `IO` of the archive and of the other services run on the fiber of the start; indexing the
+ * report runs on a fiber of its own.
  */
 @Component
 @Order(4)
@@ -44,7 +45,8 @@ final class ServiceDesk(
 
   override def run(arguments: ApplicationArguments): IO[Unit] =
     IO.blocking(deskReport()) *>
-      IO.fromFuture(IO(archive.archive("shift report"))).flatMap(line => logF.info(line)) *>
+      archive.archive("shift report").flatMap(line => logF.info(line)) *>
+      archive.index("shift report") *>
       recalls.openRecalls.flatMap(_.traverse_(line => logF.info(s"Recalls: $line"))) *>
       census.count.flatMap(counts => logF.info(s"Modules in the fleet: ${described(counts)}")) *>
       IO.blocking(fleet.fold(log.info("Diagnostics module is disabled"))(_.scan().foreach(line =>

@@ -33,6 +33,7 @@ final class DemoApplicationTest extends FunSuite with CoilixSuite {
         "aftermarketPartsSupplier",
         "applicationArguments",
         "applicationContext",
+        "asyncTasks",
         "bayMonitor",
         "blockingExecutor",
         "bookingDesk",

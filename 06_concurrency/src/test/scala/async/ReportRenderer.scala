@@ -1,16 +1,20 @@
 package dev.coilix.concurrency
 package async
 
-import scala.concurrent.Future
+import cats.effect.IO
 
 trait ReportRenderer {
-  def render(name: String): Future[String]
+  def render(name: String): IO[String]
 
-  def announce(name: String): Unit
+  def announce(name: String): IO[Unit]
 
-  def fail(): Future[String]
+  def fail(): IO[String]
 
-  def archive(name: String): Future[String]
+  def failLater(): IO[Unit]
+
+  def archive(name: String): IO[String]
+
+  def hang(): IO[Unit]
 
   def callerThread(): String
 }
