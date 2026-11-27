@@ -241,6 +241,7 @@ final class DefaultEventBusTest extends FunSuite {
     mailer.release.countDown()
     closer.join()
     val closed  = intercept[EventBusClosedException](bus.publish(OrderEvent.Placed(3))).getMessage
+    assertEquals(bus.tryPublish(OrderEvent.Placed(4)), Left(PublishError.Closed(GenericType.of(classOf[OrderEvent.Placed]))))
     assertEquals(
       (closing.map(_.getMessage), closed),
       (

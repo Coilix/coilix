@@ -28,7 +28,8 @@ import scala.util.Using
  * optional [[dev.coilix.demo.workshop.TelematicsUplink]] has no bean, so it is injected as `None`. The
  * [[dev.coilix.demo.workshop.Notifier]] depends on the active profile: `--coilix.profiles.active=dev` logs notifications.
  * At the end it publishes [[dev.coilix.demo.workshop.InspectionFinished]], which
- * [[dev.coilix.demo.workshop.ShiftStatistics]] counts and [[dev.coilix.demo.workshop.StaffNotifications]] sends to the staff.
+ * [[dev.coilix.demo.workshop.ShiftStatistics]] counts and [[dev.coilix.demo.workshop.StaffNotifications]] sends to the staff;
+ * `tryPublish` returns a closed context as an error, which the shift logs instead of failing.
  * The inspection runs with the vehicle under the `job` key of the MDC, which Coilix carries to the asynchronous notification,
  * so its log lines show the job too.
  * Each inspection gets a new [[dev.coilix.demo.workshop.InspectionSheet]] from `sheets`.
@@ -63,7 +64,7 @@ final class WorkshopShift(
     Using.resource(MDC.putCloseable("job", s"inspection-${vehicle.vin.value}"))(_ => runInspection(mechanic, vehicle))
 
   private def runInspection(mechanic: Mechanic, vehicle: Vehicle): Unit = {
-    val steps = ServiceJob.inspection.filter(step => vehicle.modules.contains(step.module))
+    val steps     = ServiceJob.inspection.filter(step => vehicle.modules.contains(step.module))
     log.info(
       s"${properties.name}: ${mechanic.name} (${mechanic.certification}) starts an inspection of ${vehicle.model} ${vehicle.vin.value}"
     )
@@ -72,12 +73,15 @@ final class WorkshopShift(
       vehicle,
       steps.map(_.grant).toSet,
       clock.instant()
-    ).fold(error => log.warn(s"Access refused: $error"), token => work(vehicle, token, steps, sheets.get()))
+    ).fold(error     => log.warn(s"Access refused: $error"), token => work(vehicle, token, steps, sheets.get()))
     uplink.fold(
       log.info("No telematics uplink, the job report stays in the workshop")
     )(_.send(s"Inspection of ${vehicle.vin.value} done"))
     log.info(s"Notifications: ${notifier.description}")
-    events.publish(InspectionFinished(mechanic.name, vehicle.vin, steps.size))
+    events
+      .tryPublish(InspectionFinished(mechanic.name, vehicle.vin, steps.size))
+      .left
+      .foreach(error => log.warn(s"The inspection is not reported: ${error.message}"))
   }
 
   private def work(vehicle: Vehicle, token: AuthToken, steps: List[ServiceStep], sheet: InspectionSheet): Unit = {

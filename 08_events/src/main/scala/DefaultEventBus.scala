@@ -1,6 +1,7 @@
 package dev.coilix.events
 
 import cats.effect.IO
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.common.GenericType
 import dev.coilix.common.TypeInfo
@@ -63,13 +64,11 @@ final class DefaultEventBus(
   private val retryIds       = AtomicLong()
   private val insideListener = ThreadLocal.withInitial[Boolean](() => false)
 
-  override def publish[E: TypeInfo](event: E): Unit = {
+  override def tryPublish[E: TypeInfo](event: E): Either[PublishError, Unit] = {
     val value     = Objects.requireNonNull(boxed(event), "event")
     val eventType = typeOf(value, TypeInfo[E].genericType)
-    if (!keptForStart(value, eventType)) {
-      checkOpen(eventType)
-      deliver(value, eventType, failure => throw failure)
-    }
+    if (keptForStart(value, eventType)) Right(())
+    else refusal(eventType).toLeft(deliver(value, eventType, failure => throw failure))
   }
 
   override def listeners: List[EventListenerInfo] = registered.get.map(_.info)
@@ -82,11 +81,15 @@ final class DefaultEventBus(
   /**
    * Finds the listeners in every bean of `context` and delivers the events published before the start.
    *
-   * @throws dev.coilix.events.InvalidEventListenerException
-   *   if a listener cannot be called with events
+   * The bus is the top layer of the check of listeners, so an [[dev.coilix.events.EventListenerError]] fails the start with
+   * its [[dev.coilix.events.InvalidEventListenerException]].
    */
-  override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.blocking {
-    val found = context.createdBeans.flatMap(bean => listenersOf(bean.beanName, bean.instance))
+  override def onContextStarted(context: ApplicationContext): IO[Unit] =
+    IO.blocking(context.createdBeans.flatTraverse(bean => listenersOf(bean.beanName, bean.instance)))
+      .flatMap(found => IO.fromEither(found.left.map(_.exception)))
+      .flatMap(found => IO.blocking(started(found)))
+
+  private def started(found: List[RegisteredListener]): Unit = {
     registered.set(found.sortBy(_.info.name))
     logListeners(registered.get.map(_.info))
     stateLock.synchronized {
@@ -123,13 +126,11 @@ final class DefaultEventBus(
       starting
     }
 
-  private def checkOpen(eventType: GenericType): Unit =
+  private def refusal(eventType: GenericType): Option[PublishError] =
     state.get match {
-      case EventBusState.Closing if !insideListener.get =>
-        throw EventBusClosedException(s"Cannot publish an event of type $eventType, the context is closing")
-      case EventBusState.Closed                         =>
-        throw EventBusClosedException(s"Cannot publish an event of type $eventType, the context is closed")
-      case _                                            => ()
+      case EventBusState.Closing if !insideListener.get => Some(PublishError.Closing(eventType))
+      case EventBusState.Closed                         => Some(PublishError.Closed(eventType))
+      case _                                            => None
     }
 
   private def deliver(event: AnyRef, eventType: GenericType, onFailure: Throwable => Unit): Unit = {
@@ -306,9 +307,9 @@ final class DefaultEventBus(
     }
   }
 
-  private def listenersOf(beanName: String, bean: AnyRef): List[RegisteredListener] =
+  private def listenersOf(beanName: String, bean: AnyRef): Either[EventListenerError, List[RegisteredListener]] =
     ProxiedBean.unwrap(bean) match {
-      case self if self eq this => Nil
+      case self if self eq this => Right(Nil)
       case target               => scanner.listenersOf(beanName, target)
     }
 

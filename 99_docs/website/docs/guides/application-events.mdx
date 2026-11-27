@@ -68,7 +68,7 @@ A listener that implements `ApplicationEventListener` uses `onEvent` as its meth
 
 Coilix first publishes `ContextClosing`, described below. Then `@Scheduled` methods and other sources of new work stop. After that, in the `Events` phase of closing described in [Bean lifecycle](bean-lifecycle.mdx#react-to-the-whole-context), the event bus:
 
-1. refuses events published from outside listeners with `EventBusClosedException`, so no code counts on a delivery that would not happen,
+1. refuses events published from outside listeners, so no code counts on a delivery that would not happen: `publish` throws `EventBusClosedException`, and `tryPublish` returns `PublishError.Closing` or `PublishError.Closed`, so code that may run during closing decides itself what to do, for example log the event it could not publish,
 2. cancels retries that are still waiting,
 3. waits for the running asynchronous listeners, including the ones that receive events published by other listeners in the meantime,
 4. after `coilix.events.shutdown-timeout` (10 seconds by default) interrupts the listeners that still run and logs how many deliveries of each listener were abandoned.
