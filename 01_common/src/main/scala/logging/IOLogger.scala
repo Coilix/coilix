@@ -2,6 +2,7 @@ package dev.coilix.common
 package logging
 
 import cats.effect.IO
+import cats.effect.Sync
 import org.slf4j.Logger
 
 /**
@@ -17,40 +18,53 @@ import org.slf4j.Logger
  * }
  * ```
  *
- * The message is built only when the `IO` runs and the level is enabled, so a debug message costs nothing while debug is off.
+ * The message is built only when the effect runs and the level is enabled, so a debug message costs nothing while debug is off.
+ *
+ * The same calls in another effect with `Sync`, such as `Resource[IO, *]`, `EitherT[IO, E, *]` or the `F` of polymorphic code,
+ * come from `logF[F]`, a [[dev.coilix.common.logging.LoggerF]]:
+ *
+ * ```scala
+ * def loaded[F[_]: Sync](id: InvoiceId): F[Invoice] =
+ *   logF[F].debug(s"Loading $id") *> repository.load[F](id)
+ * ```
  *
  * @param logger
  *   the logger that receives the messages
  */
 case class IOLogger(logger: Logger) {
 
-  /** Logs `message` at `TRACE` level. */
-  def trace(message: => String): IO[Unit] = IO(if (logger.isTraceEnabled) logger.trace(message))
+  private val io = LoggerF[IO](logger)
 
-  /** Logs `message` with `error` at `TRACE` level. */
-  def trace(message: => String, error: Throwable): IO[Unit] = IO(if (logger.isTraceEnabled) logger.trace(message, error))
+  /** The same logger with calls in the effect `F`. */
+  def apply[F[_]: Sync]: LoggerF[F] = LoggerF[F](logger)
+
+  /** Logs `message` at `TRACE` level. */
+  def trace(message: => String): IO[Unit] = io.trace(message)
+
+  /** Logs `message` with `failure` at `TRACE` level. */
+  def trace(message: => String, failure: Throwable): IO[Unit] = io.trace(message, failure)
 
   /** Logs `message` at `DEBUG` level. */
-  def debug(message: => String): IO[Unit] = IO(if (logger.isDebugEnabled) logger.debug(message))
+  def debug(message: => String): IO[Unit] = io.debug(message)
 
-  /** Logs `message` with `error` at `DEBUG` level. */
-  def debug(message: => String, error: Throwable): IO[Unit] = IO(if (logger.isDebugEnabled) logger.debug(message, error))
+  /** Logs `message` with `failure` at `DEBUG` level. */
+  def debug(message: => String, failure: Throwable): IO[Unit] = io.debug(message, failure)
 
   /** Logs `message` at `INFO` level. */
-  def info(message: => String): IO[Unit] = IO(if (logger.isInfoEnabled) logger.info(message))
+  def info(message: => String): IO[Unit] = io.info(message)
 
-  /** Logs `message` with `error` at `INFO` level. */
-  def info(message: => String, error: Throwable): IO[Unit] = IO(if (logger.isInfoEnabled) logger.info(message, error))
+  /** Logs `message` with `failure` at `INFO` level. */
+  def info(message: => String, failure: Throwable): IO[Unit] = io.info(message, failure)
 
   /** Logs `message` at `WARN` level. */
-  def warn(message: => String): IO[Unit] = IO(if (logger.isWarnEnabled) logger.warn(message))
+  def warn(message: => String): IO[Unit] = io.warn(message)
 
-  /** Logs `message` with `error` at `WARN` level. */
-  def warn(message: => String, error: Throwable): IO[Unit] = IO(if (logger.isWarnEnabled) logger.warn(message, error))
+  /** Logs `message` with `failure` at `WARN` level. */
+  def warn(message: => String, failure: Throwable): IO[Unit] = io.warn(message, failure)
 
   /** Logs `message` at `ERROR` level. */
-  def error(message: => String): IO[Unit] = IO(if (logger.isErrorEnabled) logger.error(message))
+  def error(message: => String): IO[Unit] = io.error(message)
 
-  /** Logs `message` with `error` at `ERROR` level. */
-  def error(message: => String, error: Throwable): IO[Unit] = IO(if (logger.isErrorEnabled) logger.error(message, error))
+  /** Logs `message` with `failure` at `ERROR` level. */
+  def error(message: => String, failure: Throwable): IO[Unit] = io.error(message, failure)
 }

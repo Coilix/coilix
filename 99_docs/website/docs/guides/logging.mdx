@@ -19,6 +19,8 @@ This page shows how a class of a Coilix application logs. `@Slf4s` adds two priv
 
 `logF` has `trace`, `debug`, `info`, `warn` and `error`, each with an optional exception. Nothing is logged until the `IO` runs, and the message is built only when its level is enabled, so a `debug` message costs nothing while debug is off. Use `log` in code that does not run in `IO`, such as a `@PostConstruct` method that returns `Unit`.
 
+Code in another effect with `Sync` uses `logF[F]`, the same logger with calls in `F`: `logF[F].debug(...)` in polymorphic code with `F[_]: Sync`, `logF[[A] =>> Resource[IO, A]].info(...)` while a resource is acquired, or `logF[[A] =>> EitherT[IO, PaymentError, A]].info(...)` as a step of a for-comprehension over `EitherT`. The effect is given explicitly, because Scala cannot infer it at the start of a chain.
+
 A class that declares its own `log` gets neither field, and a class that declares its own `logF` keeps it.
 
 ## Logging backend

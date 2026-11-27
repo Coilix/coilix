@@ -1,7 +1,10 @@
 package dev.coilix.common
 package logging
 
+import cats.data.EitherT
 import cats.effect.IO
+import cats.effect.Resource
+import cats.effect.Sync
 import java.util.concurrent.atomic.AtomicInteger
 import munit.CatsEffectSuite
 import org.slf4j.event.Level
@@ -59,4 +62,25 @@ final class IOLoggerTest extends CatsEffectSuite {
       _ <- logger.info(message)
     } yield assertEquals((built.get, recording.recorded), (1, Vector("INFO expensive 1")))
   }
+
+  test("logs in any effect with Sync when the effect is given, also inside EitherT and Resource") {
+    val recording  = RecordingLogger(allLevels)
+    val logger     = IOLogger(recording)
+    val inEither   = for {
+      _ <- logger[[A] =>> EitherT[IO, String, A]].info("in EitherT")
+      _ <- EitherT.leftT[IO, Unit]("stopped")
+      _ <- logger[[A] =>> EitherT[IO, String, A]].info("never logged")
+    } yield ()
+    val inResource = logger[[A] =>> Resource[IO, A]].debug("in Resource", IllegalStateException("noted"))
+    for {
+      stopped <- inEither.value
+      _       <- inResource.use_
+      _       <- polymorphic[IO](logger)
+    } yield {
+      assertEquals(stopped, Left("stopped"))
+      assertEquals(recording.recorded, Vector("INFO in EitherT", "DEBUG in Resource (noted)", "WARN polymorphic"))
+    }
+  }
+
+  private def polymorphic[F[_]: Sync](logger: IOLogger): F[Unit] = logger[F].warn("polymorphic")
 }
