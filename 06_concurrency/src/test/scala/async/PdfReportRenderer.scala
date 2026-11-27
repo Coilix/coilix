@@ -36,7 +36,7 @@ final class PdfReportRenderer extends ReportRenderer {
     IO.pure(s"$name archived on ${Thread.currentThread.getName}")
 
   @Async
-  override def hang(): IO[Unit] = IO.never.onCancel(IO(events.add("cancelled")).void)
+  override def hang(): IO[Unit] = (IO(events.add("hanging")) *> IO.never).onCancel(IO(events.add("cancelled")).void)
 
   override def callerThread(): String = Thread.currentThread.getName
 

@@ -96,6 +96,7 @@ final class AsyncDefinitionProcessorTest extends CatsEffectSuite {
       for {
         _       <- context.getBean[ReportRenderer].hang()
         running <- context.getBean[AsyncTasks].running
+        _       <- (IO.sleep(10.millis) *> IO(renderer.events.contains("hanging"))).iterateUntil(identity).timeout(5.seconds)
         _       <- IO.blocking(context.close())
       } yield assertEquals((running, renderer.events.toArray.toList.contains("cancelled")), (1, true))
     }
