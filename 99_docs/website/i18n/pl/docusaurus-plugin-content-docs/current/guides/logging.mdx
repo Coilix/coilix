@@ -19,6 +19,8 @@ Ta strona pokazuje, jak klasa aplikacji Coilix loguje. `@Slf4s` dodaje do oznacz
 
 `logF` ma `trace`, `debug`, `info`, `warn` i `error`, każde z opcjonalnym wyjątkiem. Nic nie trafia do logu, dopóki `IO` się nie wykona, a wiadomość powstaje tylko wtedy, gdy jej poziom jest włączony, więc wiadomość `debug` nic nie kosztuje przy wyłączonym debugu. W kodzie, który nie działa w `IO`, np. w metodzie `@PostConstruct` zwracającej `Unit`, używaj `log`.
 
+Kod w innym efekcie z `Sync` używa `logF[F]`, czyli tego samego loggera z wywołaniami w `F`: `logF[F].debug(...)` w kodzie polimorficznym z `F[_]: Sync`, `logF[[A] =>> Resource[IO, A]].info(...)` przy otwieraniu zasobu albo `logF[[A] =>> EitherT[IO, PaymentError, A]].info(...)` jako krok for-comprehension na `EitherT`. Efekt podaje się jawnie, bo Scala nie wywnioskuje go na początku łańcucha.
+
 Klasa, która deklaruje własne `log`, nie dostaje żadnego z pól, a klasa z własnym `logF` je zachowuje.
 
 ## Backend logowania

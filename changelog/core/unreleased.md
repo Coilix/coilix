@@ -1,5 +1,6 @@
 ### Added
 
+- `logF[F]` gives the logger of `@Slf4s` with calls in any effect `F` with `Sync`, as a `LoggerF[F]`, for code in `Resource[IO, *]`, `EitherT[IO, E, *]` or polymorphic code; `logF.info(...)` still returns `IO[Unit]` (COILIX-00033).
 - IoC container with constructor injection, `@Component`, `@Service`, `@Repository`, `@Qualifier`, `@Primary`, `@Order`, and `Option[T]` and `List[T]` dependencies (COILIX-00000).
 - `@Slf4s` compiler plugin that adds an SLF4J `log` field (COILIX-00000).
 - Application startup with `@CoilixApplication`, `ApplicationRunner`, command-line arguments and a banner (COILIX-00002). An application is an object that extends `CoilixIOApp`, an `IOApp` of cats-effect, which closes the context when it is cancelled, for example by `SIGTERM` (COILIX-00031).

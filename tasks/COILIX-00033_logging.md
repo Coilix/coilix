@@ -13,6 +13,7 @@
 1. `IOLogger` w `common`, pole `logF` z `@Slf4s`, przewodnik po logowaniu, ADR 0046 i ten task. Framework i demo używają `logF` w kodzie w `IO`.
 2. Moduł funkcji `logging`: provider SLF4J 2, poziomy z `coilix.logging` (poziom główny, mapa nazw pakietów i klas, `off`), format z implicits (czas, wątek, poziom w kolorze, skrócona nazwa loggera), appender asynchroniczny, MDC, mosty `jul-to-slf4j`, `log4j-to-slf4j` i `jcl-over-slf4j`, bean do zmiany poziomów w runtime z API w `IO`. Demo przechodzi z Log4j 2 na moduł.
 3. Plugin IntelliJ w `coilix-intellij` zna pole `logF`.
+4. `logF[F]` dla dowolnego efektu z `Sync` (`LoggerF[F]`), na wzór `logF.info[F]` z implicits, obok `logF` w `IO`: zrobione.
 
 ## Kryteria akceptacji
 
