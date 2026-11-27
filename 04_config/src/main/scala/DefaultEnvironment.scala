@@ -12,7 +12,7 @@ import scala.reflect.ClassTag
  *
  * This is the implementation returned by [[dev.coilix.config.Environment.of]].
  */
-final class DefaultEnvironment(tree: ConfigTree, binder: ConfigBinder) extends Environment {
+case class DefaultEnvironment(tree: ConfigTree, binder: ConfigBinder) extends Environment {
 
   private val literalKey = "literal"
 

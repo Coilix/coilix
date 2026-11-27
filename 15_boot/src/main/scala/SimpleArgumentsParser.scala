@@ -7,7 +7,7 @@ package dev.coilix.boot
  *
  * This is the parser used by [[dev.coilix.boot.CoilixApplicationRunner.default]].
  */
-final class SimpleArgumentsParser extends ArgumentsParser {
+case class SimpleArgumentsParser() extends ArgumentsParser {
 
   private val optionPrefix = "--"
 

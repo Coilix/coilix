@@ -11,7 +11,7 @@ import java.lang.reflect.Constructor
  * @param constructor
  *   the constructor chosen by the [[dev.coilix.context.ConstructorSelector]]
  */
-final case class ConstructorInstanceFactory(constructor: Constructor[?]) extends InstanceFactory {
+case class ConstructorInstanceFactory(constructor: Constructor[?]) extends InstanceFactory {
 
   override def create(arguments: List[AnyRef]): AnyRef =
     FactoryCalls.guarded(s"Constructor of ${constructor.getDeclaringClass.getName}")(constructor.newInstance(arguments*))

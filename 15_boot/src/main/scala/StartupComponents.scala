@@ -14,7 +14,7 @@ import dev.coilix.config.ComponentProvider
  * @param startupLogger
  *   logs the start and the startup time
  */
-final case class StartupComponents(
+case class StartupComponents(
   resolver:      BasePackageResolver,
   bootstrap:     CoilixBootstrap,
   invoker:       RunnerInvoker,

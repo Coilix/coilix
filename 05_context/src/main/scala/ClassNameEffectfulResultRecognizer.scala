@@ -13,7 +13,7 @@ import dev.coilix.common.GenericType
  * @param managed
  *   class names of resources that open the instance and release it later
  */
-final class ClassNameEffectfulResultRecognizer(deferred: Map[String, Int], managed: Map[String, Int])
+case class ClassNameEffectfulResultRecognizer(deferred: Map[String, Int], managed: Map[String, Int])
     extends EffectfulResultRecognizer {
 
   override def recognize(resultType: GenericType): Option[BeanResult] = {

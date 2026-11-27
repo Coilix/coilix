@@ -14,7 +14,7 @@ import scala.util.Using
  *
  * A file whose root is not a mapping gives an empty configuration.
  */
-final class YamlConfigFormat extends ConfigFormat {
+case class YamlConfigFormat() extends ConfigFormat {
 
   override def extensions: List[String] = List("yaml", "yml")
 

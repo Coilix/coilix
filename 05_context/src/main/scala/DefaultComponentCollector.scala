@@ -22,7 +22,7 @@ import dev.coilix.common.GenericType
  *   runs the `@PreDestroy` methods when an instance is closed
  */
 @Slf4s
-final class DefaultComponentCollector(
+case class DefaultComponentCollector(
   factory:       BeanDefinitionFactory,
   filter:        DefinitionFilter,
   postProcessor: BeanPostProcessor,

@@ -11,7 +11,7 @@ import scala.util.Try
  * @param classLoader
  *   the class loader that must see the classes
  */
-final case class ClassCondition(classNames: List[String], classLoader: ClassLoader) extends BeanCondition {
+case class ClassCondition(classNames: List[String], classLoader: ClassLoader) extends BeanCondition {
 
   override def matches(environment: Environment): Boolean =
     classNames.forall(isPresent)

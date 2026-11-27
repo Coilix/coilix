@@ -19,7 +19,7 @@ package dev.coilix.common
  * @param genericType
  *   the type of `T`
  */
-final class TypeInfo[T](val genericType: GenericType) {
+case class TypeInfo[T](genericType: GenericType) {
 
   /**
    * The class of `T`, typed as `Class[T]`.

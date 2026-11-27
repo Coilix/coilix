@@ -13,7 +13,7 @@ import dev.coilix.context.ApplicationContext
  * @param run
  *   runs the runner; an [[dev.coilix.boot.ApplicationRunner]] runs in `IO.blocking`
  */
-final case class OrderedRunner(runner: AnyRef, run: ApplicationArguments => IO[Unit])
+case class OrderedRunner(runner: AnyRef, run: ApplicationArguments => IO[Unit])
 
 /** The runners of a context in the order in which they run. */
 object OrderedRunner {

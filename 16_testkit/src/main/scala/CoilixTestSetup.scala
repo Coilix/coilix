@@ -40,7 +40,7 @@ import scala.util.Using
  * @param runners
  *   whether the runners are called after the context is built
  */
-final case class CoilixTestSetup(
+case class CoilixTestSetup(
   packages: BasePackageResolver => List[String],
   properties: Map[String, String],
   profiles:   List[String],

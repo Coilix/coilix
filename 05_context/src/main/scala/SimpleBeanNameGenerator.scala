@@ -6,7 +6,7 @@ package dev.coilix.context
  *
  * This is the default [[dev.coilix.context.BeanNameGenerator]].
  */
-final class SimpleBeanNameGenerator extends BeanNameGenerator {
+case class SimpleBeanNameGenerator() extends BeanNameGenerator {
 
   override def generate(beanClass: Class[?]): String =
     beanClass.getSimpleName match {

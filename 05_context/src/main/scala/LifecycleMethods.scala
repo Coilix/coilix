@@ -15,7 +15,7 @@ import java.lang.reflect.Method
  * @param destroy
  *   methods invoked when the context closes, in this order
  */
-final case class LifecycleMethods(init: List[Method], destroy: List[Method]) {
+case class LifecycleMethods(init: List[Method], destroy: List[Method]) {
 
   /** The `@PostConstruct` methods that return `Unit`, which the [[dev.coilix.context.BeanPostProcessor]] invokes. */
   def plainInit: List[Method] = init.filterNot(LifecycleMethods.returnsEffect)

@@ -15,7 +15,7 @@ import dev.coilix.config.Environment
  *   the configuration the conditions are checked against
  */
 @Slf4s
-final class ConditionalDefinitionFilter(environment: Environment) extends DefinitionFilter {
+case class ConditionalDefinitionFilter(environment: Environment) extends DefinitionFilter {
 
   override def filter(definitions: List[BeanDefinition], existing: List[Class[?]]): List[BeanDefinition] = {
     val matching  = definitions.filter(conditionsHold)

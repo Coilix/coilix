@@ -19,7 +19,7 @@ import java.lang.reflect.Method
  * @param recognizer
  *   finds return types that are effects
  */
-final class ReflectiveBeanMethodScanner(parameterMapper: ParameterDependencyMapper, recognizer: EffectfulResultRecognizer)
+case class ReflectiveBeanMethodScanner(parameterMapper: ParameterDependencyMapper, recognizer: EffectfulResultRecognizer)
     extends BeanMethodScanner {
 
   override def scan(owner: Class[?]): List[BeanDefinition] =

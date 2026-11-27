@@ -18,7 +18,7 @@ import scala.runtime.BoxedUnit
  * @param recognizer
  *   finds return types that are effects
  */
-final class AnnotatedLifecycleMethodScanner(
+case class AnnotatedLifecycleMethodScanner(
   recognizer: EffectfulResultRecognizer = ClassNameEffectfulResultRecognizer.knownEffects
 ) extends LifecycleMethodScanner {
 

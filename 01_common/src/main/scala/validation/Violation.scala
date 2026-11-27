@@ -22,7 +22,7 @@ package validation
  * @param path
  *   the field the violation refers to, such as `address.city`, or `None` for the whole value
  */
-final case class Violation(code: String, message: String, arguments: List[String] = Nil, path: Option[String] = None) {
+case class Violation(code: String, message: String, arguments: List[String] = Nil, path: Option[String] = None) {
 
   /** The same violation, referring to the field `path`. */
   def withPath(path: String): Violation =

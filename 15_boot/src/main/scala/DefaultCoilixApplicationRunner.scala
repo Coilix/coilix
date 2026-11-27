@@ -33,7 +33,7 @@ import scala.reflect.ClassTag
  *   creates the other startup components from the loaded configuration, so they can be replaced there
  */
 @Slf4s
-final class DefaultCoilixApplicationRunner(
+case class DefaultCoilixApplicationRunner(
   parser:            ArgumentsParser,
   environmentLoader: EnvironmentLoader,
   assemble: ComponentProvider => StartupComponents

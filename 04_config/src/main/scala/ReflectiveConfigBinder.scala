@@ -59,7 +59,7 @@ import scala.util.Try
  * @param enums
  *   recognizes enums and finds their cases by name
  */
-final class ReflectiveConfigBinder(
+case class ReflectiveConfigBinder(
   scalars:     ScalarReader,
   defaults:    DefaultArguments,
   classLoader: ClassLoader,

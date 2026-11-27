@@ -14,7 +14,7 @@ import scala.util.Try
  * @param factory
  *   builds the context
  */
-final class SuiteContextFixture(setup: CoilixTestSetup, factory: TestContextFactory)
+case class SuiteContextFixture(setup: CoilixTestSetup, factory: TestContextFactory)
     extends Fixture[ConfigurableApplicationContext]("coilix-context") {
 
   private lazy val context: ConfigurableApplicationContext = factory.create(setup)

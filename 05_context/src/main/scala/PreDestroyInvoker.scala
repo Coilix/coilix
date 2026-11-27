@@ -15,7 +15,7 @@ import scala.util.Try
  * default [[dev.coilix.context.BeanDestroyer]].
  */
 @Slf4s
-final class PreDestroyInvoker extends BeanDestroyer {
+case class PreDestroyInvoker() extends BeanDestroyer {
 
   override def destroy(beans: List[RegisteredBean]): Unit =
     beans.reverse.foreach(destroyBean)

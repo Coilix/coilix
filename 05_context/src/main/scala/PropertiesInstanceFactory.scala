@@ -12,7 +12,7 @@ import dev.coilix.config.Environment
  * @param beanClass
  *   the annotated class
  */
-final case class PropertiesInstanceFactory(environment: Environment, prefix: String, beanClass: Class[?]) extends InstanceFactory {
+case class PropertiesInstanceFactory(environment: Environment, prefix: String, beanClass: Class[?]) extends InstanceFactory {
 
   override def create(arguments: List[AnyRef]): AnyRef =
     environment.bind(prefix, beanClass)

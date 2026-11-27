@@ -14,7 +14,7 @@ import dev.coilix.context.BeanDefinition
  * @param types
  *   the replaced types
  */
-final case class BeanReplacements(types: List[GenericType]) {
+case class BeanReplacements(types: List[GenericType]) {
 
   /** Whether `definition` is replaced by one of the types. */
   def replaces(definition: BeanDefinition): Boolean =

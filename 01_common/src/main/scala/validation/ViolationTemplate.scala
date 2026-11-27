@@ -28,7 +28,7 @@ package validation
  *   if the number of `%s` placeholders differs from the number of argument functions, or the template contains another
  *   format specifier
  */
-final class ViolationTemplate[T](val code: String, val template: String, arguments: List[T => String]) {
+case class ViolationTemplate[T](code: String, template: String, arguments: List[T => String]) {
 
   require(!template.matches("(?s).*%(?!s).*"), s"Violation template '$template' may contain only %s placeholders")
 

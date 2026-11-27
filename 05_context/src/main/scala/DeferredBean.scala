@@ -18,16 +18,17 @@ import java.util.concurrent.atomic.AtomicReference
  *   whether the instance is kept or created for every lookup
  * @param create
  *   creates the bean with dependencies looked up in the given registry
+ * @param kept
+ *   the instance of a lazy singleton once it is created
  */
-final class DeferredBean(
+case class DeferredBean(
   override val beanName:  String,
   override val beanType:  GenericType,
   override val isPrimary: Boolean,
-  val creation:           BeanCreation,
-  create: BeanRegistry => RegisteredBean
+  creation:               BeanCreation,
+  create: BeanRegistry => RegisteredBean,
+  kept:                   AtomicReference[Option[RegisteredBean]]
 ) extends BeanEntry {
-
-  private val kept = AtomicReference(Option.empty[RegisteredBean])
 
   override def resolve(registry: BeanRegistry): RegisteredBean =
     creation match {
@@ -53,5 +54,12 @@ object DeferredBean {
 
   /** A deferred bean for `definition`, created by `create`. */
   def of(definition: BeanDefinition)(create: BeanRegistry => RegisteredBean): DeferredBean =
-    DeferredBean(definition.beanName, definition.beanType, definition.isPrimary, definition.creation, create)
+    DeferredBean(
+      definition.beanName,
+      definition.beanType,
+      definition.isPrimary,
+      definition.creation,
+      create,
+      AtomicReference(Option.empty[RegisteredBean])
+    )
 }

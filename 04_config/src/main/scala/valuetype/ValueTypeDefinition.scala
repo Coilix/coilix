@@ -19,7 +19,7 @@ import scala.util.Try
  * @param accessor
  *   the public method that returns the inner value
  */
-final case class ValueTypeDefinition(valueType: Class[?], constructor: Constructor[?], accessor: Method) {
+case class ValueTypeDefinition(valueType: Class[?], constructor: Constructor[?], accessor: Method) {
 
   /** The class of the inner value, for example `int` for `Port(value: Int)`. */
   def innerClass: Class[?] =

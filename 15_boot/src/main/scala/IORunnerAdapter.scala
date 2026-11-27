@@ -7,7 +7,7 @@ import dev.coilix.context.ApplicationContext
  * Runs the [[dev.coilix.boot.IOApplicationRunner]] beans among the [[dev.coilix.boot.ApplicationRunner]] beans. The boot module
  * registers it as the bean `ioRunnerAdapter`.
  */
-final class IORunnerAdapter extends RunnerAdapter {
+case class IORunnerAdapter() extends RunnerAdapter {
 
   override def runners(context: ApplicationContext): List[AnyRef] =
     context.getBeansOfType[IOApplicationRunner]

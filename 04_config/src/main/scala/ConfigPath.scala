@@ -21,7 +21,7 @@ import scala.reflect.ClassTag
  *   the component type, which every configured implementation must extend. The constructor is private, so the type always comes
  *   from the `ClassTag` of `T` through `ConfigPath[T](path)`
  */
-final case class ConfigPath[T] private (path: String, componentType: Class[T])
+case class ConfigPath[T] private (path: String, componentType: Class[T])
 
 /** Factories for [[dev.coilix.config.ConfigPath]]. */
 object ConfigPath {

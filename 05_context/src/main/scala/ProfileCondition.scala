@@ -9,7 +9,7 @@ import dev.coilix.config.Environment
  * @param profiles
  *   profile names, each optionally preceded by `!`
  */
-final case class ProfileCondition(profiles: List[String]) extends BeanCondition {
+case class ProfileCondition(profiles: List[String]) extends BeanCondition {
 
   override def matches(environment: Environment): Boolean =
     profiles.exists(matchesOne(environment.activeProfiles))

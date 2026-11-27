@@ -14,4 +14,4 @@ import dev.coilix.common.GenericType
  * @param replaces
  *   whether the instance replaces the beans of `beanType` found by scanning, or is added next to them
  */
-final case class TestBean(beanName: String, beanType: GenericType, instance: AnyRef, replaces: Boolean)
+case class TestBean(beanName: String, beanType: GenericType, instance: AnyRef, replaces: Boolean)

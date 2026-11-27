@@ -13,7 +13,7 @@ import dev.coilix.context.ApplicationContext
  * This is the default [[dev.coilix.boot.RunnerInvoker]].
  */
 @Slf4s
-final class OrderedRunnerInvoker extends RunnerInvoker {
+case class OrderedRunnerInvoker() extends RunnerInvoker {
 
   override def invoke(context: ApplicationContext, arguments: ApplicationArguments): IO[Unit] =
     IO(OrderedRunner.all(context)).flatMap(_.traverse_(entry => invokeRunner(entry, arguments)))

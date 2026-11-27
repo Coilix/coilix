@@ -23,7 +23,7 @@ import scala.jdk.CollectionConverters.*
  * @param factory
  *   creates the definitions for each class found
  */
-final class ReflectionsClassPathScanner(factory: BeanDefinitionFactory) extends ClassPathScanner {
+case class ReflectionsClassPathScanner(factory: BeanDefinitionFactory) extends ClassPathScanner {
 
   private val componentAnnotations: List[Class[? <: Annotation]] =
     List(classOf[Component], classOf[Service], classOf[Repository], classOf[Configuration], classOf[ConfigurationProperties])

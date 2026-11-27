@@ -20,7 +20,7 @@ import dev.coilix.annotation.ValueType
  *   the secret text
  */
 @ValueType
-final case class Secret(value: String) {
+case class Secret(value: String) {
 
   /** Always `*****`, so that the text is not shown. */
   override def toString: String =
