@@ -16,8 +16,14 @@ class ProcessingExampleTest extends munit.FunSuite {
   test("the guide configuration sets the shards, the assignment and the restart policy") {
     val url      = resources.resolve("guides/processing/application.yaml").toUri.toURL
     val settings = ProcessingSettings.from(Environment.of(TypesafeConfigTree(YamlConfigFormat().parse(url).orThrow)))
-    val invoices = settings.of(ShopProcessor.InvoiceExport).resolve("invoice-export", defaultShards = 2, replicaCount = 3)
-    val watch    = settings.of(ShopProcessor.OrderWatch).resolve("order-watch", defaultShards = 1, replicaCount = 3)
+    val invoices = settings.of(ShopProcessor.InvoiceExport).resolve("invoice-export", defaultShards = 2, replicaCount = 3).fold(
+      error => fail(error.message),
+      identity
+    )
+    val watch    = settings.of(ShopProcessor.OrderWatch).resolve("order-watch", defaultShards = 1, replicaCount = 3).fold(
+      error => fail(error.message),
+      identity
+    )
     assertEquals(settings.shutdownTimeout, 20.seconds)
     assertEquals(
       (invoices.shardCount, invoices.policy.restart.maxAttempts, invoices.policy.restart.backoff.initial),

@@ -56,6 +56,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0049](0049-context-in-resource-without-unsafe-run.md) | Kontekst w `Resource`, runnery w `IO`, jedna granica synchroniczna | proponowana |
 | [0050](0050-typed-startup-errors.md) | Błędy typowane w `EitherT`, decyzja o rzuceniu w warstwie wyższej | proponowana |
 | [0051](0051-typed-configuration-errors.md) | Błędy typowane konfiguracji | proponowana |
+| [0052](0052-typed-processing-errors.md) | Błędy typowane procesorów tła i ustawień logowania | proponowana |
 
 ## Nowa decyzja
 

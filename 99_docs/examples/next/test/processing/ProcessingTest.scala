@@ -2,6 +2,7 @@ package com.example
 package processing
 
 import cats.effect.IO
+import dev.coilix.processing.ProcessorError
 import dev.coilix.processing.ProcessorManager
 import dev.coilix.processing.WorkerState
 import dev.coilix.testkit.CoilixIOSuite
@@ -13,7 +14,7 @@ class ProcessingTest extends CatsEffectSuite with CoilixIOSuite {
   private given CoilixTestSetup = CoilixTestSetup.forApplication[ProcessingApplication.type]
 
   coilixTest("the shards of the export together export every customer") {
-    within(bean[ProcessorManager].status(ShopProcessor.InvoiceExport).map(_.all(WorkerState.Completed))).map { completed =>
+    within(bean[ProcessorManager].status(ShopProcessor.InvoiceExport).exists(_.all(WorkerState.Completed))).map { completed =>
       assert(completed)
       assertEquals(bean[Invoices].exportedCustomers, bean[Invoices].customers.toSet)
     }
@@ -24,7 +25,7 @@ class ProcessingTest extends CatsEffectSuite with CoilixIOSuite {
     for {
       running <- within(maintenance.ordersRunning)
       paused  <- maintenance.pauseOrders
-      _       <- maintenance.resumeOrders
+      _       <- ProcessorError.raised(maintenance.resumeOrders)
       resumed <- within(maintenance.ordersRunning)
     } yield {
       assert(running && resumed)
@@ -36,7 +37,7 @@ class ProcessingTest extends CatsEffectSuite with CoilixIOSuite {
   coilixTest("stopping the order loading saves the batch it has already read") {
     for {
       read   <- within(IO(bean[OrderFeed].readCount == 3))
-      result <- bean[ProcessorManager].stop(ShopProcessor.OrderLoading)
+      result <- ProcessorError.raised(bean[ProcessorManager].stop(ShopProcessor.OrderLoading))
     } yield {
       assert(read && result.isComplete)
       assertEquals(bean[OrderStore].saved, List(bean[OrderFeed].incoming))

@@ -1,5 +1,6 @@
 package dev.coilix.processing
 
+import cats.data.EitherT
 import cats.effect.IO
 import cats.syntax.all.*
 import dev.coilix.config.ConfigurationException
@@ -18,7 +19,11 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
     CoilixTestSetup.forPackages("dev.coilix.processing.fleet").addBean(journal)
 
   private def running(id: ProcessorId, manager: ProcessorManager): IO[Boolean] =
-    awaited(manager.status(id).map(_.all(WorkerState.Running)))
+    awaited(manager.status(id).io.map(_.all(WorkerState.Running)))
+
+  extension [A](operation: EitherT[IO, ProcessorError, A]) {
+    private def io: IO[A] = ProcessorError.raised(operation)
+  }
 
   private def awaited(condition: IO[Boolean]): IO[Boolean] =
     condition.ifM(IO.pure(true), IO.sleep(5.millis) *> awaited(condition)).timeoutTo(5.seconds, IO.pure(false))
@@ -54,11 +59,11 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
       val manager = bean[ProcessorManager]
       for {
         _       <- running(TestProcessor.Ticker, manager)
-        result  <- manager.stop(TestProcessor.Ticker)
-        _       <- manager.stop(TestProcessor.Ticker)
-        status  <- manager.status(TestProcessor.Ticker)
+        result  <- manager.stop(TestProcessor.Ticker).io
+        _       <- manager.stop(TestProcessor.Ticker).io
+        status  <- manager.status(TestProcessor.Ticker).io
         _       <- IO(assertEquals(journal.count("released ticker#0 Stopped"), 1))
-        _       <- manager.start(TestProcessor.Ticker)
+        _       <- manager.start(TestProcessor.Ticker).io
         started <- awaitUntil(journal.count("acquired ticker#0") == 2)
       } yield {
         assertEquals(result, StopResult(TestProcessor.Ticker, List(0, 1), Nil))
@@ -82,7 +87,7 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
     val journal = Journal()
     fleet(journal).withIORuntime(munitIORuntime).useIO {
       for {
-        completed <- awaited(bean[ProcessorManager].status(TestProcessor.Exporter).map(_.all(WorkerState.Completed)))
+        completed <- awaited(bean[ProcessorManager].status(TestProcessor.Exporter).io.map(_.all(WorkerState.Completed)))
         released  <- awaitUntil(journal.contains("released exporter#0 Completed"))
       } yield {
         assert(completed)
@@ -107,11 +112,11 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
         val ticker  = manager.topology.processors.find(_.id == TestProcessor.Ticker).map(_.shards.map(_.shard))
         for {
           ticked <- awaitUntil(journal.contains("tick ticker#10"))
-          error  <- manager.restart(TestProcessor.Ticker, 0).intercept[ShardNotOwnedException]
+          result <- manager.restart(TestProcessor.Ticker, 0).value
         } yield {
           assertEquals(ticker, Some(List(1, 4, 7, 10)))
           assert(ticked, journal.all)
-          assertEquals(error.owners, List(0))
+          assertEquals(result, Left(ProcessorError.ShardNotOwned(TestProcessor.Ticker, 0, List(0))))
         }
       }
   }
@@ -122,7 +127,7 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
       val manager = bean[ProcessorManager]
       for {
         _         <- running(TestProcessor.Ticker, manager)
-        _         <- manager.restart(TestProcessor.Ticker, 1)
+        _         <- manager.restart(TestProcessor.Ticker, 1).io
         restarted <- awaitUntil(journal.count("prepare ticker#1") == 2)
       } yield {
         assert(restarted, journal.all)
@@ -145,11 +150,11 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
       .useIO {
         val manager = bean[ProcessorManager]
         for {
-          failed   <- awaited(manager.status(TestProcessor.Flaky).map(_.all(WorkerState.Failed)))
-          shard    <- manager.status(TestProcessor.Flaky).map(_.shards.head)
+          failed   <- awaited(manager.status(TestProcessor.Flaky).io.map(_.all(WorkerState.Failed)))
+          shard    <- manager.status(TestProcessor.Flaky).io.map(_.shards.head)
           released <- awaitUntil(journal.contains("released flaky#0 Failed"))
           attempts  = journal.count("attempt flaky#0")
-          _        <- manager.start(TestProcessor.Flaky)
+          _        <- manager.start(TestProcessor.Flaky).io
           again    <- awaitUntil(journal.count("attempt flaky#0") == 6)
         } yield {
           assert(failed, journal.all)
@@ -170,7 +175,7 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
       .withIORuntime(munitIORuntime)
       .useIO {
         val manager = bean[ProcessorManager]
-        (manager.status(TestProcessor.Ticker), manager.status(TestProcessor.Exporter)).mapN { (ticker, exporter) =>
+        (manager.status(TestProcessor.Ticker).io, manager.status(TestProcessor.Exporter).io).mapN { (ticker, exporter) =>
           assert(ticker.all(WorkerState.Idle))
           assert(exporter.all(WorkerState.Stopped))
           assertEquals(manager.processors.find(_.id == TestProcessor.Exporter).map(_.settings.enabled), Some(false))
@@ -184,10 +189,10 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
       val manager = bean[ProcessorManager]
       for {
         _      <- List.range(0, 100).parTraverse_ { index =>
-                    if (index % 2 == 0) manager.start(TestProcessor.Ticker) else manager.restart(TestProcessor.Ticker)
+                    if (index % 2 == 0) manager.start(TestProcessor.Ticker).io else manager.restart(TestProcessor.Ticker).io
                   }
-        _      <- manager.stop(TestProcessor.Ticker)
-        status <- manager.status(TestProcessor.Ticker)
+        _      <- manager.stop(TestProcessor.Ticker).io
+        status <- manager.status(TestProcessor.Ticker).io
       } yield {
         assert(status.all(WorkerState.Stopped))
         assertEquals(journal.count("acquired ticker#0"), journal.count("released ticker#0 Stopped"))
@@ -197,7 +202,9 @@ final class DefaultProcessorManagerTest extends CatsEffectSuite with CoilixConte
 
   test("rejects an identifier without a processor") {
     fleet(Journal()).withIORuntime(munitIORuntime).useIO {
-      bean[ProcessorManager].start(TestProcessor.Twin).intercept[NoSuchProcessorException].void
+      bean[ProcessorManager].start(TestProcessor.Twin).value.map(result =>
+        assertEquals(result, Left(ProcessorError.NoSuchProcessor(TestProcessor.Twin)))
+      )
     }
   }
 

@@ -17,6 +17,7 @@ import dev.coilix.demo.workshop.TroubleshootingDesk
 import dev.coilix.demo.workshop.WorkshopProcessor
 import dev.coilix.logging.LogLevel
 import dev.coilix.logging.LogLevels
+import dev.coilix.processing.ProcessorError
 import dev.coilix.processing.ProcessorManager
 import dev.coilix.processing.WorkerState
 import dev.coilix.testkit.CoilixIOSuite
@@ -77,7 +78,7 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
     for {
       arrived <- awaitArrivals(checkIns)
       before  <- IO(checkIns.batches)
-      result  <- bean[ProcessorManager].stop(WorkshopProcessor.VehicleCheckIn)
+      result  <- ProcessorError.raised(bean[ProcessorManager].stop(WorkshopProcessor.VehicleCheckIn))
     } yield {
       assert(arrived && result.isComplete, s"$result after ${checkIns.arrivals}")
       assertEquals((before, checkIns.batches), (Nil, List(List(vin, Vin("TMBJJ7NE8J0000002")))))
@@ -107,7 +108,7 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
   private def completed(processors: ProcessorManager): IO[Boolean] =
     processors
       .status(WorkshopProcessor.FaultCodeExport)
-      .map(_.all(WorkerState.Completed))
+      .exists(_.all(WorkerState.Completed))
       .flatMap(done => if (done) IO.pure(true) else IO.sleep(10.millis) *> completed(processors))
       .timeoutTo(5.seconds, IO.pure(false))
 

@@ -51,9 +51,9 @@ final class ShardingTest extends FunSuite {
 
   test("reads assignments by name and rejects unknown ones") {
     assertEquals(
-      List("round-robin", "range", "all", "pinned").map(ShardAssignment.named(_, 0).name),
-      List("round-robin", "range", "all", "pinned")
+      List("round-robin", "range", "all", "pinned").map(ShardAssignment.named(_, 0).map(_.name)),
+      List("round-robin", "range", "all", "pinned").map(Right(_))
     )
-    intercept[ConfigurationException](ShardAssignment.named("random", 0))
+    assertEquals(ShardAssignment.named("random", 0).left.map(_.exception.getClass), Left(classOf[ConfigurationException]))
   }
 }

@@ -1,5 +1,6 @@
 package dev.coilix.processing
 
+import cats.data.EitherT
 import cats.effect.IO
 import cats.effect.Ref
 import cats.effect.Resource
@@ -43,24 +44,26 @@ case class DefaultProcessorManager(
   override def topology: ProcessingTopology =
     ProcessingTopology(identity.self, identity.replicaCount, managed.map(topologyOf))
 
-  override def status(id: ProcessorId): IO[ProcessorStatus] =
-    processorOf(id).flatMap(processor => runs.get.map(current => statusOf(processor, current)))
+  override def status(id: ProcessorId): EitherT[IO, ProcessorError, ProcessorStatus] =
+    processorOf(id).semiflatMap(processor => runs.get.map(current => statusOf(processor, current)))
 
-  override def start(id: ProcessorId): IO[Unit] =
-    processorOf(id).flatMap(processor => control.call(keysOf(processor).traverse_(handle(_, WorkerEvent.StartRequested))))
+  override def start(id: ProcessorId): EitherT[IO, ProcessorError, Unit] =
+    processorOf(id).semiflatMap(startShards)
 
-  override def stop(id: ProcessorId): IO[StopResult] = stop(id, settings.shutdownTimeout)
+  override def stop(id: ProcessorId): EitherT[IO, ProcessorError, StopResult] = stop(id, settings.shutdownTimeout)
 
-  override def stop(id: ProcessorId, timeout: FiniteDuration): IO[StopResult] =
-    processorOf(id).flatMap { processor =>
+  override def stop(id: ProcessorId, timeout: FiniteDuration): EitherT[IO, ProcessorError, StopResult] =
+    processorOf(id).semiflatMap(processor =>
       control.call(stopShards(keysOf(processor), ReleaseReason.Stopped, timeout).map(resultOf(id, _)))
-    }
+    )
 
-  override def restart(id: ProcessorId): IO[Unit] =
-    processorOf(id).flatMap(processor => control.call(keysOf(processor).traverse_(handle(_, WorkerEvent.RestartRequested))))
+  override def restart(id: ProcessorId): EitherT[IO, ProcessorError, Unit] =
+    processorOf(id).semiflatMap(processor =>
+      control.call(keysOf(processor).traverse_(handle(_, WorkerEvent.RestartRequested)))
+    )
 
-  override def restart(id: ProcessorId, shard: Int): IO[Unit] =
-    processorOf(id).flatMap(ownedKey(_, shard)).flatMap(key => control.call(handle(key, WorkerEvent.RestartRequested)))
+  override def restart(id: ProcessorId, shard: Int): EitherT[IO, ProcessorError, Unit] =
+    processorOf(id).subflatMap(ownedKey(_, shard)).semiflatMap(key => control.call(handle(key, WorkerEvent.RestartRequested)))
 
   override def stopAll(timeout: FiniteDuration): IO[List[StopResult]] =
     control.call(stopShards(managed.flatMap(keysOf), ReleaseReason.Stopped, timeout).map(resultsOf))
@@ -68,7 +71,7 @@ case class DefaultProcessorManager(
   /** Logs the topology and starts the enabled processors when `coilix.processors.autostart` is true. */
   def startEnabled: IO[Unit] =
     managed.traverse_(logTopology) *>
-      IO.whenA(settings.autostart)(managed.filter(_.settings.enabled).traverse_(processor => start(processor.id)))
+      IO.whenA(settings.autostart)(managed.filter(_.settings.enabled).traverse_(startShards))
 
   /** Stops every shard for the shutdown, logging the shards that did not stop within the limit. */
   def stopForShutdown: IO[Unit] =
@@ -85,20 +88,23 @@ case class DefaultProcessorManager(
       s"Shards ${result.abandoned.mkString(", ")} of processor ${result.id.name} did not stop within ${settings.shutdownTimeout}"
     )
 
-  private def processorOf(id: ProcessorId): IO[ManagedProcessor] =
-    IO.fromOption(byId.get(id))(NoSuchProcessorException(id))
+  private def processorOf(id: ProcessorId): EitherT[IO, ProcessorError, ManagedProcessor] =
+    EitherT.fromOption[IO](byId.get(id), ProcessorError.NoSuchProcessor(id))
+
+  private def startShards(processor: ManagedProcessor): IO[Unit] =
+    control.call(keysOf(processor).traverse_(handle(_, WorkerEvent.StartRequested)))
 
   private def keysOf(processor: ManagedProcessor): List[ShardKey] =
     processor.shards.map(slots => ShardKey(processor.id, slots.shard))
 
-  private def ownedKey(processor: ManagedProcessor, shard: Int): IO[ShardKey] =
-    IO.fromOption(keysOf(processor).find(_.shard == shard))(notOwned(processor, shard))
+  private def ownedKey(processor: ManagedProcessor, shard: Int): Either[ProcessorError, ShardKey] =
+    keysOf(processor).find(_.shard == shard).toRight(notOwned(processor, shard))
 
-  private def notOwned(processor: ManagedProcessor, shard: Int): ShardNotOwnedException = {
+  private def notOwned(processor: ManagedProcessor, shard: Int): ProcessorError = {
     val count  = processor.settings.shardCount
     val owners =
       if (shard >= 0 && shard < count) processor.settings.assignment.replicasOf(shard, count, identity.replicaCount) else Nil
-    ShardNotOwnedException(processor.id, shard, owners)
+    ProcessorError.ShardNotOwned(processor.id, shard, owners)
   }
 
   private def topologyOf(processor: ManagedProcessor): ProcessorTopology = {
@@ -253,7 +259,8 @@ object DefaultProcessorManager {
 
   /**
    * A manager whose processors are created when the resource is acquired and closed, with their `@PreDestroy` methods,
-   * when it is released.
+   * when it is released. The manager is the top layer of the setup of the processors, so a
+   * [[dev.coilix.processing.ProcessingSetupError]] fails the resource with its exception and stops the startup.
    */
   def resource(
     collected: CollectedComponents,
@@ -262,11 +269,20 @@ object DefaultProcessorManager {
     settings:  ProcessingSettings
   ): Resource[IO, DefaultProcessorManager] =
     for {
-      managed    <- Resource.make(IO.blocking(ProcessorAssembler(collected, engines, identity, settings).assemble()))(closed)
+      managed    <- Resource.make(assembled(collected, engines, identity, settings))(closed)
       supervisor <- Supervisor[IO](await = false)
       control    <- ControlLoop.resource
       runs       <- Resource.eval(initialRuns(managed, identity).flatMap(Ref.of[IO, Map[ShardKey, ShardRun]]))
     } yield DefaultProcessorManager(managed, identity, settings, runs, control, supervisor)
+
+  private def assembled(
+    collected: CollectedComponents,
+    engines:   List[ProcessorEngine],
+    identity:  ReplicaIdentity,
+    settings:  ProcessingSettings
+  ): IO[List[ManagedProcessor]] =
+    IO.blocking(ProcessorAssembler(collected, engines, identity, settings).assemble())
+      .flatMap(assembled => IO.fromEither(assembled.left.map(_.exception)))
 
   private def closed(managed: List[ManagedProcessor]): IO[Unit] =
     managed.traverse_(processor =>

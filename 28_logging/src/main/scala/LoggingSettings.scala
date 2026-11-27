@@ -1,6 +1,8 @@
 package dev.coilix.logging
 
-import dev.coilix.config.ConfigurationException
+import cats.syntax.all.*
+import dev.coilix.config.ConfigError
+import dev.coilix.config.ConfigError.orThrow
 import dev.coilix.config.Environment
 import java.util.Map as JavaMap
 import scala.jdk.CollectionConverters.*
@@ -53,42 +55,61 @@ object LoggingSettings {
   /** The configuration path of the settings. */
   val path: String = "coilix.logging"
 
+  private type Read[A] = Either[ConfigError, A]
+
   /**
    * The settings under [[path]] in `environment`.
    *
-   * @throws dev.coilix.config.ConfigurationException
-   *   when a level is not one of `trace`, `debug`, `info`, `warn`, `error` and `off`
+   * @return
+   *   the settings, or a [[dev.coilix.config.ConfigError]] when a value cannot be read or a level is not one of `trace`,
+   *   `debug`, `info`, `warn`, `error` and `off`
    */
-  def from(environment: Environment): LoggingSettings = {
-    val defaults     = LoggingSettings()
-    LoggingSettings(
-      level     = environment.get[String](s"$path.level").map(levelNamed(s"$path.level", _)).getOrElse(defaults.level),
-      levels    = levelsIn(environment),
-      colors    = environment.get[Boolean](s"$path.colors").getOrElse(defaults.colors),
-      async     = environment.get[Boolean](s"$path.async").getOrElse(defaults.async),
-      queueSize = environment.get[Int](s"$path.queue-size").getOrElse(defaults.queueSize)
-    )
+  def read(environment: Environment): Read[LoggingSettings] = {
+    val defaults = LoggingSettings()
+    (
+      environment.lookup[String](s"$path.level").flatMap(_.traverse(levelNamed(s"$path.level", _))),
+      levelsIn(environment),
+      environment.lookup[Boolean](s"$path.colors"),
+      environment.lookup[Boolean](s"$path.async"),
+      environment.lookup[Int](s"$path.queue-size")
+    ).mapN { (level, levels, colors, async, queueSize) =>
+      LoggingSettings(
+        level.getOrElse(defaults.level),
+        levels,
+        colors.getOrElse(defaults.colors),
+        async.getOrElse(defaults.async),
+        queueSize.getOrElse(defaults.queueSize)
+      )
+    }
   }
 
-  private def levelsIn(environment: Environment): Map[String, LogLevel] =
-    environment.get[AnyRef](s"$path.levels") match {
-      case Some(section: JavaMap[?, ?]) => flattened(Nil, section).toMap
-      case _                            => Map.empty
+  /**
+   * The settings under [[path]] in `environment`, as [[dev.coilix.logging.LoggingSettings.read]] gives them.
+   *
+   * @throws dev.coilix.config.ConfigurationException
+   *   when a value cannot be read or a level is unknown
+   */
+  def from(environment: Environment): LoggingSettings =
+    read(environment).orThrow
+
+  private def levelsIn(environment: Environment): Read[Map[String, LogLevel]] =
+    environment.lookup[AnyRef](s"$path.levels").flatMap {
+      case Some(section: JavaMap[?, ?]) => flattened(Nil, section).map(_.toMap)
+      case _                            => Right(Map.empty)
     }
 
-  private def flattened(prefix: List[String], section: JavaMap[?, ?]): List[(String, LogLevel)] =
-    section.asScala.toList.flatMap((key, value) => entriesOf(prefix :+ key.toString, value))
+  private def flattened(prefix: List[String], section: JavaMap[?, ?]): Read[List[(String, LogLevel)]] =
+    section.asScala.toList.flatTraverse((key, value) => entriesOf(prefix :+ key.toString, value))
 
-  private def entriesOf(name: List[String], value: Any): List[(String, LogLevel)] =
+  private def entriesOf(name: List[String], value: Any): Read[List[(String, LogLevel)]] =
     value match {
       case nested: JavaMap[?, ?] => flattened(name, nested)
-      case level => List(name.mkString(".") -> levelNamed(s"$path.levels.${name.mkString(".")}", level.toString))
+      case level =>
+        levelNamed(s"$path.levels.${name.mkString(".")}", level.toString).map(found => List(name.mkString(".") -> found))
     }
 
-  private def levelNamed(key: String, name: String): LogLevel =
+  private def levelNamed(key: String, name: String): Read[LogLevel] =
     LogLevel
       .parse(name)
-      .getOrElse(
-        throw ConfigurationException(s"$key is '$name', but a level is one of trace, debug, info, warn, error and off")
-      )
+      .toRight(ConfigError.InvalidValue(key, classOf[LogLevel], s"'$name' is not one of trace, debug, info, warn, error and off"))
 }

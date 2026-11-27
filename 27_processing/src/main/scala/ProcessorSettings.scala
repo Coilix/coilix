@@ -1,6 +1,5 @@
 package dev.coilix.processing
 
-import dev.coilix.config.ConfigurationException
 import dev.coilix.config.Environment
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration.DurationInt
@@ -61,43 +60,44 @@ final case class ProcessorSettings(
   /**
    * The settings of the processor with the defaults of Coilix for the missing keys.
    *
-   * @throws dev.coilix.config.ConfigurationException
-   *   when a value is out of range or unknown
+   * @return
+   *   the settings, or [[dev.coilix.processing.ProcessingSetupError]] when a value is out of range or unknown
    */
-  def resolve(name: String, defaultShards: Int, replicaCount: Int): ResolvedProcessorSettings = {
+  def resolve(name: String, defaultShards: Int, replicaCount: Int): Either[ProcessingSetupError, ResolvedProcessorSettings] = {
     val shardCount = shards.getOrElse(defaultShards)
     val slotCount  = slots.getOrElse(ProcessorSettings.defaultSlots)
-    validate(name, shardCount, slotCount, replicaCount)
-    ResolvedProcessorSettings(
+    for {
+      _              <- validated(name, shardCount, slotCount, replicaCount)
+      shardAssigning <- ShardAssignment.named(assignment.getOrElse(ShardAssignment.roundRobin.name), pinnedReplica.getOrElse(0))
+      onComplete     <- completion(name)
+    } yield ResolvedProcessorSettings(
       shardCount,
       slotCount,
-      ShardAssignment.named(assignment.getOrElse(ShardAssignment.roundRobin.name), pinnedReplica.getOrElse(0)),
+      shardAssigning,
       enabled.getOrElse(true),
-      SupervisionPolicy(restart.policy, completion(name)),
+      SupervisionPolicy(restart.policy, onComplete),
       drainTimeout
     )
   }
 
-  private def validate(name: String, shardCount: Int, slotCount: Int, replicaCount: Int): Unit = {
-    if (shardCount < 1) throw invalid(name, s"has $shardCount shards, at least 1 is needed")
-    if (slotCount < shardCount) throw invalid(name, s"has $shardCount shards but only $slotCount slots")
-    drainTimeout.filter(_ <= Duration.Zero).foreach(timeout =>
-      throw invalid(name, s"has drain-timeout $timeout, it must be positive")
-    )
-    pinnedReplica.filter(replica => replica < 0 || replica >= replicaCount).foreach { replica =>
-      throw invalid(name, s"is pinned to replica $replica, but the application has replicas 0 to ${replicaCount - 1}")
-    }
-  }
+  private def validated(name: String, shardCount: Int, slotCount: Int, replicaCount: Int): Either[ProcessingSetupError, Unit] =
+    List(
+      Option.when(shardCount < 1)(s"has $shardCount shards, at least 1 is needed"),
+      Option.when(slotCount < shardCount)(s"has $shardCount shards but only $slotCount slots"),
+      drainTimeout.filter(_ <= Duration.Zero).map(timeout => s"has drain-timeout $timeout, it must be positive"),
+      pinnedReplica.filter(replica => replica < 0 || replica >= replicaCount).map(outOfReplicas(_, replicaCount))
+    ).flatten.headOption.map(ProcessingSetupError.InvalidSettings(name, _)).toLeft(())
 
-  private def completion(name: String): CompletionPolicy =
+  private def outOfReplicas(replica: Int, replicaCount: Int): String =
+    s"is pinned to replica $replica, but the application has replicas 0 to ${replicaCount - 1}"
+
+  private def completion(name: String): Either[ProcessingSetupError, CompletionPolicy] =
     onCompletion.getOrElse("stop") match {
-      case "stop"    => CompletionPolicy.Stop
-      case "restart" => CompletionPolicy.Restart(completionDelay.getOrElse(1.second))
-      case other     => throw invalid(name, s"has unknown on-completion '$other', expected stop or restart")
+      case "stop"    => Right(CompletionPolicy.Stop)
+      case "restart" => Right(CompletionPolicy.Restart(completionDelay.getOrElse(1.second)))
+      case other     =>
+        Left(ProcessingSetupError.InvalidSettings(name, s"has unknown on-completion '$other', expected stop or restart"))
     }
-
-  private def invalid(name: String, problem: String): ConfigurationException =
-    ConfigurationException(s"Processor $name $problem")
 }
 
 /** Reads processor settings. */
