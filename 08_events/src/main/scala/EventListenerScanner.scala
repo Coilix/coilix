@@ -10,5 +10,5 @@ private[events] trait EventListenerScanner {
    * @throws dev.coilix.events.InvalidEventListenerException
    *   if a listener cannot be called with events
    */
-  def listenersOf(beanName: String, bean: AnyRef): List[RegisteredListener]
+  def listenersOf(beanName: String, bean: AnyRef): Either[EventListenerError, List[RegisteredListener]]
 }
