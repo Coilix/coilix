@@ -45,8 +45,8 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0037](0037-background-processors.md) | Procesory tła z shardami, nadzorem i jednym menedżerem | proponowana, styl, silnik i wątek menedżera zastąpione przez 0044 |
 | [0038](0038-custom-warts.md) | Własne warty w module narzędziowym `tools/warts` | proponowana |
 | [0039](0039-deadlocks-of-virtual-threads.md) | Wykrywanie zakleszczeń przy wątkach wirtualnych | proponowana |
-| [0042](0042-effectful-runtime.md) | Runtime Coilix na IO, komponenty aplikacji w tagless final | proponowana, część o tagless final zastąpiona przez 0043 |
 | [0040](0040-diagnostics-module.md) | Moduł rdzenia diagnostics: zdrowie aplikacji i kontrole wątków | proponowana |
+| [0042](0042-effectful-runtime.md) | Runtime Coilix na IO, komponenty aplikacji w tagless final | proponowana, część o tagless final zastąpiona przez 0043 |
 | [0043](0043-io-resource-fs2.md) | Coilix na IO, Resource i fs2, bez Pekko i bez tagless final | proponowana |
 | [0044](0044-processors-on-io.md) | Procesory tła na IO i fiberach | proponowana |
 | [0045](0045-single-io-entry-point.md) | Jeden punkt wejścia aplikacji: CoilixIOApp | proponowana |
@@ -56,12 +56,13 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0049](0049-context-in-resource-without-unsafe-run.md) | Kontekst w `Resource`, runnery w `IO`, jedna granica synchroniczna | proponowana |
 | [0050](0050-typed-startup-errors.md) | Błędy typowane w `EitherT`, decyzja o rzuceniu w warstwie wyższej | proponowana |
 | [0051](0051-typed-configuration-errors.md) | Błędy typowane konfiguracji | proponowana |
+| [0052](0052-typed-processing-errors.md) | Błędy typowane procesorów tła i ustawień logowania | proponowana |
+| [0053](0053-typed-event-errors.md) | Błędy typowane zdarzeń | proponowana |
 | [0054](0054-fiber-mdc.md) | MDC fibera na `IOLocal` | proponowana |
 | [0055](0055-events-in-io.md) | Szyna zdarzeń na `IO` | proponowana |
 | [0056](0056-scheduled-on-fibers.md) | `@Scheduled` na fiberach, bez `TaskScheduler` | proponowana |
 | [0057](0057-async-in-io.md) | `@Async` w `IO` | proponowana |
-| [0052](0052-typed-processing-errors.md) | Błędy typowane procesorów tła i ustawień logowania | proponowana |
-| [0053](0053-typed-event-errors.md) | Błędy typowane zdarzeń | proponowana |
+| [0058](0058-diagnostics-in-io.md) | Diagnostyka w `IO` | proponowana |
 
 ## Nowa decyzja
 

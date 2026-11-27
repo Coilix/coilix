@@ -20,7 +20,7 @@ Bean `Health` odpowiada na dwa pytania:
 - **liveness**: czy aplikacja żyje? Aplikacja, która nie żyje, sama się nie naprawi i trzeba ją uruchomić od nowa, na przykład po zakleszczeniu wątków.
 - **readiness**: czy aplikacja powinna dostawać nową pracę? Aplikacja, która nie jest gotowa, działa, ale potrzebuje przerwy, na przykład na odrobienie zaległości.
 
-Każda odpowiedź to `Up`, `Degraded` albo `Down`. Odpowiedzi biorą się z beanów `HealthIndicator`. Wskaźnik ma nazwę, rodzaj (`Liveness` albo `Readiness`) i bieżący stan z powodem. Liveness to najgorszy stan wskaźników liveness, a readiness to najgorszy stan wszystkich wskaźników, bo aplikacja, która nie żyje, nie jest też gotowa.
+Każda odpowiedź to `Up`, `Degraded` albo `Down`. Odpowiedzi biorą się z beanów `HealthIndicator`. Wskaźnik ma nazwę, rodzaj (`Liveness` albo `Readiness`) i bieżący stan z powodem, zwracany jako `IO[HealthState]`. Liveness to najgorszy stan wskaźników liveness, a readiness to najgorszy stan wszystkich wskaźników, bo aplikacja, która nie żyje, nie jest też gotowa.
 
 Wbudowany wskaźnik gotowości `startup` jest `Down`, dopóki aplikacja startuje, i przechodzi na `Up`, gdy skończą się jej runnery, więc load balancer nie kieruje ruchu do aplikacji, która jeszcze się rozgrzewa. Po nieudanym starcie jest `Down` z błędem jako powodem.
 
@@ -28,11 +28,11 @@ Wskaźnik dodaje się jako bean. Ten mówi, że sklep nie jest gotowy, gdy na ma
 
 <CodeBlock language="scala" title="StockHealth.scala">{StockHealth}</CodeBlock>
 
-Wątek diagnostyki czyta każdy wskaźnik co `coilix.diagnostics.interval` (domyślnie co 5 sekund), więc `state` musi być szybkie i nie może blokować. Gdy liveness albo readiness się zmieni, `Health` zapisuje to w logu i publikuje zdarzenie `HealthChanged`. Części aplikacji, które przyjmują pracę, słuchają go i wstrzymują się, dopóki aplikacja nie jest gotowa:
+Wątek diagnostyki wykonuje `state` każdego wskaźnika co `coilix.diagnostics.interval` (domyślnie co 5 sekund), więc musi być szybkie; wywołanie, które czeka, idzie do `IO.blocking`. Wskaźnik, którego `IO` kończy się błędem, liczy się jako `Down` z błędem jako powodem. Gdy liveness albo readiness się zmieni, `Health` zapisuje to w logu i publikuje zdarzenie `HealthChanged`. Części aplikacji, które przyjmują pracę, słuchają go i wstrzymują się, dopóki aplikacja nie jest gotowa:
 
 <CodeBlock language="scala" title="OrderIntake.scala">{OrderIntake}</CodeBlock>
 
-Endpointy zdrowia po HTTP przyjdą z modułem web. Do tego czasu `Health` czyta się we własnym kodzie, na przykład `health.readiness == HealthStatus.Up`, a `health.refresh()` daje najnowszy stan od razu.
+Endpointy zdrowia po HTTP przyjdą z modułem web. Do tego czasu `Health` czyta się we własnym kodzie, na przykład `health.readiness.map(_ == HealthStatus.Up)`: `liveness`, `readiness` i `indicators` zwracają `IO` ze stanem z ostatniego odświeżenia. `health.refresh()` daje najnowszy stan od razu.
 
 ## Kontrole wątków
 
@@ -45,7 +45,7 @@ Wątek diagnostyki, `coilix-diagnostics`, to osobny wątek platformowy poza pula
 | `LongBlockedCheck` | `Warning` | Wątek czeka na monitor co najmniej `blocked-after`. |
 | `ThreadGrowthCheck` | `Warning` | Liczba wątków urosła o `growth-limit` w ciągu `growth-window`, co wskazuje na wyciek wątków. |
 
-Bean `findingReporter` zapisuje wyniki w logu ze stosami wątków, których dotyczą. Wynik `Critical` trafia do logu w każdej rundzie, a ostrzeżenie jednego rodzaju dopiero po `repeat-after`, żeby trwający problem nie zalał logu. Żeby wysyłać wyniki gdzie indziej, zarejestruj własny bean `FindingReporter`. Własną kontrolę dodaje się jako bean, który implementuje `ThreadCheck`.
+Bean `findingReporter` zapisuje wyniki w logu ze stosami wątków, których dotyczą. Wynik `Critical` trafia do logu w każdej rundzie, a ostrzeżenie jednego rodzaju dopiero po `repeat-after`, żeby trwający problem nie zalał logu. Żeby wysyłać wyniki gdzie indziej, zarejestruj własny bean `FindingReporter`, którego `report` zwraca `IO[Unit]`; nieudany raport trafia do logu, a następna runda działa normalnie. Własną kontrolę dodaje się jako bean, który implementuje `ThreadCheck`.
 
 <CodeBlock language="yaml" title="application.yaml">{DiagnosticsYaml}</CodeBlock>
 
