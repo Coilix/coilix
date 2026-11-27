@@ -20,7 +20,7 @@ The `Health` bean answers two questions:
 - **liveness**: is the application alive? An application that is not alive does not recover by itself and should be restarted, for example after a deadlock.
 - **readiness**: should the application get new work? An application that is not ready works, but needs a break, for example while a backlog is cleared.
 
-Each answer is `Up`, `Degraded` or `Down`. The answers come from `HealthIndicator` beans. An indicator has a name, a kind (`Liveness` or `Readiness`) and a current state with a reason. Liveness is the worst state of the liveness indicators, and readiness is the worst state of all indicators, because an application that is not alive is not ready either.
+Each answer is `Up`, `Degraded` or `Down`. The answers come from `HealthIndicator` beans. An indicator has a name, a kind (`Liveness` or `Readiness`) and a current state with a reason, returned as `IO[HealthState]`. Liveness is the worst state of the liveness indicators, and readiness is the worst state of all indicators, because an application that is not alive is not ready either.
 
 The built-in `startup` readiness indicator is `Down` while the application starts and turns `Up` when its runners have finished, so a load balancer sends no traffic to an application that is still warming up. After a failed start it is `Down` with the failure as the reason.
 
@@ -28,11 +28,11 @@ Add an indicator as a bean. This one makes the shop not ready while too many sto
 
 <CodeBlock language="scala" title="StockHealth.scala">{StockHealth}</CodeBlock>
 
-The diagnostics thread reads every indicator every `coilix.diagnostics.interval` (5 seconds by default), so `state` must be quick and must not block. When liveness or readiness changes, `Health` logs it and publishes a `HealthChanged` event. Parts of the application that take work listen to it and pause while the application is not ready:
+The diagnostics thread runs `state` of every indicator every `coilix.diagnostics.interval` (5 seconds by default), so it must be quick; a call that waits goes in `IO.blocking`. An indicator whose `IO` fails counts as `Down` with the failure as the reason. When liveness or readiness changes, `Health` logs it and publishes a `HealthChanged` event. Parts of the application that take work listen to it and pause while the application is not ready:
 
 <CodeBlock language="scala" title="OrderIntake.scala">{OrderIntake}</CodeBlock>
 
-Health endpoints over HTTP will come with the web module. Until then, read `Health` from your own code, for example `health.readiness == HealthStatus.Up`, and call `health.refresh()` when you need the newest state at once.
+Health endpoints over HTTP will come with the web module. Until then, read `Health` from your own code, for example `health.readiness.map(_ == HealthStatus.Up)`: `liveness`, `readiness` and `indicators` return `IO` with the state of the last refresh. Call `health.refresh()` when you need the newest state at once.
 
 ## Thread checks
 
@@ -45,7 +45,7 @@ The diagnostics thread, `coilix-diagnostics`, is a platform thread of its own, o
 | `LongBlockedCheck` | `Warning` | A thread has been blocked on a monitor for at least `blocked-after`. |
 | `ThreadGrowthCheck` | `Warning` | The thread count grew by `growth-limit` within `growth-window`, which suggests that threads leak. |
 
-The `findingReporter` bean logs the findings with the stacks of the threads involved. A `Critical` finding is logged every round, while a warning of one kind is logged again only after `repeat-after`, so a lasting problem does not flood the log. To send findings somewhere else, register your own `FindingReporter` bean. To add a check, register a bean that implements `ThreadCheck`.
+The `findingReporter` bean logs the findings with the stacks of the threads involved. A `Critical` finding is logged every round, while a warning of one kind is logged again only after `repeat-after`, so a lasting problem does not flood the log. To send findings somewhere else, register your own `FindingReporter` bean, whose `report` returns `IO[Unit]`; a failed report is logged and the next round runs as usual. To add a check, register a bean that implements `ThreadCheck`.
 
 <CodeBlock language="yaml" title="application.yaml">{DiagnosticsYaml}</CodeBlock>
 

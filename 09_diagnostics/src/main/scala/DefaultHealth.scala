@@ -1,11 +1,10 @@
 package dev.coilix.diagnostics
 
 import cats.effect.IO
+import cats.effect.Ref
 import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import dev.coilix.events.EventPublisher
-import java.util.concurrent.atomic.AtomicReference
-import scala.util.control.NonFatal
 
 /**
  * The [[dev.coilix.diagnostics.Health]] registered by the diagnostics module as the `health` bean. An indicator that throws
@@ -15,39 +14,37 @@ import scala.util.control.NonFatal
  *   every indicator of the context
  * @param publisher
  *   publishes [[dev.coilix.diagnostics.HealthChanged]]
+ * @param current
+ *   the reports of the last refresh
  */
 @Slf4s
-final class DefaultHealth(sources: List[HealthIndicator], publisher: EventPublisher) extends Health {
+case class DefaultHealth(sources: List[HealthIndicator], publisher: EventPublisher, current: Ref[IO, List[IndicatorReport]])
+    extends Health {
 
-  private val current = AtomicReference(List.empty[IndicatorReport])
+  override def liveness: IO[HealthStatus] = current.get.map(livenessOf)
 
-  override def liveness: HealthStatus = livenessOf(current.get)
+  override def readiness: IO[HealthStatus] = current.get.map(readinessOf)
 
-  override def readiness: HealthStatus = readinessOf(current.get)
-
-  override def indicators: List[IndicatorReport] = current.get
+  override def indicators: IO[List[IndicatorReport]] = current.get
 
   override def refresh(): IO[Unit] =
-    IO(changes()).flatMap(_.traverse_(announced))
+    sources
+      .traverse(reportOf)
+      .map(_.sortBy(_.name))
+      .flatMap(next => current.getAndSet(next).map(previous => changes(previous, next)))
+      .flatMap(_.traverse_(announced))
 
-  private def changes(): List[HealthChanged] = {
-    val next     = sources.map(reportOf).sortBy(_.name)
-    val previous = current.getAndSet(next)
+  private def changes(previous: List[IndicatorReport], next: List[IndicatorReport]): List[HealthChanged] =
     List(
       changed(HealthKind.Liveness, livenessOf(previous), livenessOf(next), next.filter(_.kind == HealthKind.Liveness)),
       changed(HealthKind.Readiness, readinessOf(previous), readinessOf(next), next)
     ).flatten
-  }
 
-  private def reportOf(indicator: HealthIndicator): IndicatorReport =
-    IndicatorReport(indicator.name, indicator.kind, stateOf(indicator))
+  private def reportOf(indicator: HealthIndicator): IO[IndicatorReport] =
+    stateOf(indicator).map(state => IndicatorReport(indicator.name, indicator.kind, state))
 
-  private def stateOf(indicator: HealthIndicator): HealthState =
-    try {
-      indicator.state
-    } catch {
-      case NonFatal(failure) => HealthState.down(s"the indicator failed: $failure")
-    }
+  private def stateOf(indicator: HealthIndicator): IO[HealthState] =
+    IO.defer(indicator.state).handleError(failure => HealthState.down(s"the indicator failed: $failure"))
 
   private def livenessOf(reports: List[IndicatorReport]): HealthStatus =
     HealthStatus.worst(reports.filter(_.kind == HealthKind.Liveness).map(_.state.status))
@@ -75,4 +72,12 @@ final class DefaultHealth(sources: List[HealthIndicator], publisher: EventPublis
 
   private def describe(reasons: List[String]): String =
     if (reasons.isEmpty) "" else reasons.mkString(" (", ", ", ")")
+}
+
+/** Creation of the [[dev.coilix.diagnostics.DefaultHealth]]. */
+object DefaultHealth {
+
+  /** A health without reports, so both statuses are `Up` until the first refresh. Creating the `Ref` runs no effect. */
+  def apply(sources: List[HealthIndicator], publisher: EventPublisher): DefaultHealth =
+    DefaultHealth(sources, publisher, Ref.unsafe[IO, List[IndicatorReport]](Nil))
 }

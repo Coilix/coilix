@@ -1,10 +1,12 @@
 package dev.coilix.diagnostics
 
+import cats.effect.IO
+import cats.effect.Ref
+import cats.syntax.all.*
 import dev.coilix.annotation.Slf4s
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.atomic.AtomicReference
 import scala.concurrent.duration.FiniteDuration
 
 /**
@@ -18,39 +20,51 @@ import scala.concurrent.duration.FiniteDuration
  *   how long a kind of finding stays quiet after it was logged
  * @param maxThreads
  *   how many threads of one finding are logged
+ * @param lastLogged
+ *   when each kind of `Warning` or `Info` finding was logged last
  */
 @Slf4s
-final class LoggingFindingReporter(repeatAfter: FiniteDuration, maxThreads: Int, clock: Clock) extends FindingReporter {
+case class LoggingFindingReporter(
+  repeatAfter: FiniteDuration,
+  maxThreads:  Int,
+  clock:       Clock,
+  lastLogged:  Ref[IO, Map[String, Instant]]
+) extends FindingReporter {
 
-  private val lastLogged = AtomicReference(Map.empty[String, Instant])
-
-  override def report(findings: List[Finding]): Unit =
-    due(findings).foreach(logged)
+  override def report(findings: List[Finding]): IO[Unit] =
+    due(findings).flatMap(_.traverse_(logged))
 
   /** The findings of one round that are logged now; a `Warning` or `Info` kind logged within `repeatAfter` is left out. */
-  private[diagnostics] def due(findings: List[Finding]): List[Finding] = {
-    val now = clock.instant
-    findings.filter(dueAt(now))
-  }
+  private[diagnostics] def due(findings: List[Finding]): IO[List[Finding]] =
+    IO(clock.instant).flatMap(now => lastLogged.modify(logged => selected(findings, now, logged)))
 
   /** The logged text of `finding`, with its threads and their stacks. */
   private[diagnostics] def textOf(finding: Finding): String = s"${finding.kind}: ${finding.message}${threadsOf(finding)}"
 
-  private def dueAt(now: Instant)(finding: Finding): Boolean =
-    finding.severity == FindingSeverity.Critical || quietLongEnough(finding.kind, now)
+  private def selected(
+    findings: List[Finding],
+    now:      Instant,
+    logged:   Map[String, Instant]
+  ): (Map[String, Instant], List[Finding]) =
+    findings.foldLeft((logged, List.empty[Finding]))(withFinding(now))
 
-  private def quietLongEnough(kind: String, now: Instant): Boolean = {
-    val previous = lastLogged.get
-    val due      = previous.get(kind).forall(last => Duration.between(last, now).toMillis >= repeatAfter.toMillis)
-    due && lastLogged.compareAndSet(previous, previous.updated(kind, now))
+  private def withFinding(now: Instant)(state: (Map[String, Instant], List[Finding]), finding: Finding)
+    : (Map[String, Instant], List[Finding]) = {
+    val (seen, due) = state
+    if (finding.severity == FindingSeverity.Critical) (seen, due :+ finding)
+    else if (quietLongEnough(seen.get(finding.kind), now)) (seen.updated(finding.kind, now), due :+ finding)
+    else (seen, due)
   }
 
-  private def logged(finding: Finding): Unit = {
+  private def quietLongEnough(last: Option[Instant], now: Instant): Boolean =
+    last.forall(previous => Duration.between(previous, now).toMillis >= repeatAfter.toMillis)
+
+  private def logged(finding: Finding): IO[Unit] = {
     val text = textOf(finding)
     finding.severity match {
-      case FindingSeverity.Critical => log.error(text)
-      case FindingSeverity.Warning  => log.warn(text)
-      case FindingSeverity.Info     => log.info(text)
+      case FindingSeverity.Critical => logF.error(text)
+      case FindingSeverity.Warning  => logF.warn(text)
+      case FindingSeverity.Info     => logF.info(text)
     }
   }
 
@@ -63,4 +77,12 @@ final class LoggingFindingReporter(repeatAfter: FiniteDuration, maxThreads: Int,
     val stack = thread.stack.map(frame => s"\n        at $frame").mkString
     s"\n    \"${thread.name}\" ${thread.state}$lock$owner$stack"
   }
+}
+
+/** Creation of the [[dev.coilix.diagnostics.LoggingFindingReporter]]. */
+object LoggingFindingReporter {
+
+  /** A reporter that has logged nothing yet. Creating the `Ref` runs no effect, so the reporter is a plain bean. */
+  def apply(repeatAfter: FiniteDuration, maxThreads: Int, clock: Clock): LoggingFindingReporter =
+    LoggingFindingReporter(repeatAfter, maxThreads, clock, Ref.unsafe[IO, Map[String, Instant]](Map.empty))
 }

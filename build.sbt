@@ -219,8 +219,9 @@ lazy val diagnostics = slf4sModule("diagnostics", "09_diagnostics", "dev.coilix.
   .dependsOn(applicationEvents)
   .settings(coreGroup)
   .settings(
-    description := "Health of Coilix applications and checks of their threads, such as deadlock detection",
-    Test / fork := true
+    description                                        := "Health of Coilix applications and checks of their threads, such as deadlock detection",
+    libraryDependencies += Dependencies.munitCatsEffect % Test,
+    Test / fork                                        := true
   )
 
 lazy val data = slf4sModule("data", "20_data", "dev.coilix.data")

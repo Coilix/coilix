@@ -68,11 +68,14 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
     val lifts  = bean[LiftBoard]
     val health = bean[Health]
     for {
-      _   <- IO((lifts.occupy(), lifts.occupy())) *> health.refresh()
-      full = (health.readiness, health.liveness, bean[BookingDesk].accepting)
-      _   <- IO(lifts.release()) *> health.refresh()
+      _         <- IO((lifts.occupy(), lifts.occupy())) *> health.refresh()
+      readiness <- health.readiness
+      liveness  <- health.liveness
+      full       = (readiness, liveness, bean[BookingDesk].accepting)
+      _         <- IO(lifts.release()) *> health.refresh()
+      freed     <- health.readiness
     } yield assertEquals(
-      (full, health.readiness, bean[BookingDesk].accepting),
+      (full, freed, bean[BookingDesk].accepting),
       ((HealthStatus.Degraded, HealthStatus.Up, false), HealthStatus.Up, true)
     )
   }

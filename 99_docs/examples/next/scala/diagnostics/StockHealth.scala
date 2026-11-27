@@ -1,6 +1,7 @@
 package com.example
 package diagnostics
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.diagnostics.HealthIndicator
 import dev.coilix.diagnostics.HealthKind
@@ -13,7 +14,8 @@ final class StockHealth(sync: StockSync) extends HealthIndicator {
 
   override def kind: HealthKind = HealthKind.Readiness
 
-  override def state: HealthState =
-    if (sync.backlog < 1000) HealthState.up
-    else HealthState.degraded(s"${sync.backlog} stock changes wait for the warehouse")
+  override def state: IO[HealthState] =
+    IO(sync.backlog).map(backlog =>
+      if (backlog < 1000) HealthState.up else HealthState.degraded(s"$backlog stock changes wait for the warehouse")
+    )
 }

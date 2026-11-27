@@ -14,12 +14,15 @@ final class DiagnosticsTest extends CatsEffectSuite with CoilixIOSuite {
   coilixTest("a long stock backlog makes the shop not ready and pauses the order intake") {
     val health = bean[Health]
     for {
-      _      <- IO(bean[StockSync].queue(1500)) *> health.refresh()
-      backlog = (health.readiness, health.liveness, bean[OrderIntake].accepting)
-      _      <- IO(bean[StockSync].synced(1500)) *> health.refresh()
+      _         <- IO(bean[StockSync].queue(1500)) *> health.refresh()
+      readiness <- health.readiness
+      liveness  <- health.liveness
+      backlog    = (readiness, liveness, bean[OrderIntake].accepting)
+      _         <- IO(bean[StockSync].synced(1500)) *> health.refresh()
+      synced    <- health.readiness
     } yield {
       assertEquals(backlog, (HealthStatus.Degraded, HealthStatus.Up, false))
-      assertEquals((health.readiness, bean[OrderIntake].accepting), (HealthStatus.Up, true))
+      assertEquals((synced, bean[OrderIntake].accepting), (HealthStatus.Up, true))
     }
   }
 }
