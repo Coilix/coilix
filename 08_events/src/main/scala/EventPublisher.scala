@@ -27,11 +27,23 @@ trait EventPublisher {
    * executor only after every synchronous listener succeeded. An event published before the context has started waits and is
    * delivered right after the start.
    *
+   * @return
+   *   `Right` when the event was delivered or kept for the start, or a [[dev.coilix.events.PublishError]] if the context is
+   *   closing and the caller is not a listener, or the context is closed
    * @throws java.lang.Exception
    *   the exception of the first synchronous listener that fails, with the exceptions of the further failing synchronous
    *   listeners added as suppressed; every synchronous listener runs even when an earlier one fails
+   */
+  def tryPublish[E: TypeInfo](event: E): Either[PublishError, Unit]
+
+  /**
+   * Delivers `event` like [[dev.coilix.events.EventPublisher.tryPublish]], for callers that do not handle a closed context.
+   *
+   * @throws java.lang.Exception
+   *   the exception of the first synchronous listener that fails
    * @throws dev.coilix.events.EventBusClosedException
    *   if the context is closing and the caller is not a listener, or the context is closed
    */
-  def publish[E: TypeInfo](event: E): Unit
+  final def publish[E: TypeInfo](event: E): Unit =
+    tryPublish(event).fold(error => throw error.exception, identity)
 }

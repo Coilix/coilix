@@ -68,7 +68,7 @@ Odbiorca, który implementuje `ApplicationEventListener`, ma nazwę metody `onEv
 
 Najpierw Coilix publikuje `ContextClosing`, opisane niżej. Potem zatrzymują się metody `@Scheduled` i inne źródła nowej pracy. Następnie, w fazie zamykania `Events` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst), szyna zdarzeń:
 
-1. odrzuca zdarzenia publikowane spoza odbiorców wyjątkiem `EventBusClosedException`, żeby żaden kod nie liczył na dostarczenie, które się nie odbędzie,
+1. odrzuca zdarzenia publikowane spoza odbiorców, żeby żaden kod nie liczył na dostarczenie, które się nie odbędzie: `publish` rzuca `EventBusClosedException`, a `tryPublish` zwraca `PublishError.Closing` albo `PublishError.Closed`, więc kod, który może działać w czasie zamykania, sam decyduje, co zrobić, na przykład zapisać w logu zdarzenie, którego nie opublikował,
 2. anuluje ponowienia, które jeszcze czekają,
 3. czeka na działających odbiorców asynchronicznych, także tych, którzy dostają zdarzenia opublikowane w tym czasie przez innych odbiorców,
 4. po `coilix.events.shutdown-timeout` (domyślnie 10 sekund) przerywa odbiorców, którzy nadal działają, i zapisuje w logu, ile dostarczeń każdego odbiorcy porzucono.

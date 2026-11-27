@@ -1,5 +1,6 @@
 package dev.coilix.events
 
+import cats.syntax.all.*
 import dev.coilix.annotation.EventListener
 import dev.coilix.common.GenericType
 import java.lang.reflect.InvocationTargetException
@@ -10,46 +11,52 @@ import java.lang.reflect.Modifier
  * Finds listeners by reflection: annotated methods of the bean class and its superclasses, including private ones, and the
  * event type of an [[dev.coilix.events.ApplicationEventListener]] read from the generic supertypes of the bean class.
  *
+ * A listener that cannot be called with events is returned as an [[dev.coilix.events.EventListenerError]].
+ *
  * @param settings
  *   gives the retry policy of each listener
  */
 private[events] final class ReflectiveEventListenerScanner(settings: EventsSettings) extends EventListenerScanner {
 
-  override def listenersOf(beanName: String, bean: AnyRef): List[RegisteredListener] =
-    (annotatedMethods(beanName, bean) ++ implemented(beanName, bean)).distinctBy(_.info.name)
+  private type Found[A] = Either[EventListenerError, A]
 
-  private def annotatedMethods(beanName: String, bean: AnyRef): List[RegisteredListener] = {
+  override def listenersOf(beanName: String, bean: AnyRef): Found[List[RegisteredListener]] =
+    (annotatedMethods(beanName, bean), implemented(beanName, bean)).mapN((methods, traits) =>
+      (methods ++ traits).distinctBy(_.info.name)
+    )
+
+  private def annotatedMethods(beanName: String, bean: AnyRef): Found[List[RegisteredListener]] = {
     val methods = hierarchy(bean.getClass)
       .flatMap(_.getDeclaredMethods.toList)
       .filter(method => !method.isBridge && !method.isSynthetic && method.isAnnotationPresent(classOf[EventListener]))
       .distinctBy(method => (method.getName, method.getParameterTypes.toList))
       .sortBy(_.getName)
-    checkUniqueNames(beanName, methods)
-    methods.map(method => fromMethod(beanName, bean, method))
+    uniqueNames(beanName, methods).flatMap(_.traverse(fromMethod(beanName, bean, _)))
   }
 
   private def hierarchy(beanClass: Class[?]): List[Class[?]] =
     List.unfold(Option[Class[?]](beanClass))(_.map(current => (current, Option(current.getSuperclass))))
 
-  private def checkUniqueNames(beanName: String, methods: List[Method]): Unit =
-    methods.groupBy(_.getName).collectFirst { case (name, several) if several.sizeIs > 1 => name }.foreach { name =>
-      throw InvalidEventListenerException(
-        s"@EventListener methods of bean '$beanName' are overloaded as $name. Give each listener method its own name, " +
-          "because the name identifies the listener in logs and in the configuration"
+  private def uniqueNames(beanName: String, methods: List[Method]): Found[List[Method]] =
+    methods
+      .groupBy(_.getName)
+      .toList
+      .sortBy(_._1)
+      .collectFirst { case (name, several) if several.sizeIs > 1 => EventListenerError.OverloadedMethod(beanName, name) }
+      .toLeft(methods)
+
+  private def fromMethod(beanName: String, bean: AnyRef, method: Method): Found[RegisteredListener] =
+    for {
+      _         <- problemOf(method).map(EventListenerError.InvalidMethod(beanName, method.getName, _)).toLeft(())
+      eventType <-
+        known(EventListenerError.methodLabel(beanName, method.getName), GenericType.of(method.getGenericParameterTypes()(0)))
+    } yield {
+      val annotation = method.getAnnotation(classOf[EventListener])
+      RegisteredListener(
+        info(beanName, method.getName, eventType, annotation.async, annotation.blocking),
+        event => invoke(bean, method, event)
       )
     }
-
-  private def fromMethod(beanName: String, bean: AnyRef, method: Method): RegisteredListener = {
-    val label      = s"@EventListener method ${method.getName} of bean '$beanName'"
-    problemOf(method).foreach(problem => throw InvalidEventListenerException(s"$label $problem"))
-    val eventType  = GenericType.of(method.getGenericParameterTypes()(0))
-    checkEventType(label, eventType)
-    val annotation = method.getAnnotation(classOf[EventListener])
-    RegisteredListener(
-      info(beanName, method.getName, eventType, annotation.async, annotation.blocking),
-      event                           => invoke(bean, method, event)
-    )
-  }
 
   private def problemOf(method: Method): Option[String] =
     List(
@@ -60,18 +67,17 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
         s"cannot be made accessible, open the package ${method.getDeclaringClass.getPackageName} to Coilix"
     ).collectFirst { case (true, problem) => problem }
 
-  private def implemented(beanName: String, bean: AnyRef): List[RegisteredListener] =
+  private def implemented(beanName: String, bean: AnyRef): Found[List[RegisteredListener]] =
     bean match {
-      case listener: ApplicationEventListener[?] => List(fromTrait(beanName, listener))
-      case _ => Nil
+      case listener: ApplicationEventListener[?] => fromTrait(beanName, listener).map(List(_))
+      case _ => Right(Nil)
     }
 
-  private def fromTrait(beanName: String, listener: ApplicationEventListener[?]): RegisteredListener = {
-    val label     = s"ApplicationEventListener bean '$beanName'"
-    val eventType = traitArgument(label, listener)
-    val typed     = acceptingAll(listener)
-    RegisteredListener(info(beanName, "onEvent", eventType, listener.async, listener.blocking), event => typed.onEvent(event))
-  }
+  private def fromTrait(beanName: String, listener: ApplicationEventListener[?]): Found[RegisteredListener] =
+    traitArgument(beanName, listener).map { eventType =>
+      val typed = acceptingAll(listener)
+      RegisteredListener(info(beanName, "onEvent", eventType, listener.async, listener.blocking), event => typed.onEvent(event))
+    }
 
   /**
    * `listener` typed to accept any event. The cast is unchecked, because the event type is erased, but the bus delivers to
@@ -81,21 +87,18 @@ private[events] final class ReflectiveEventListenerScanner(settings: EventsSetti
   private def acceptingAll(listener: ApplicationEventListener[?]): ApplicationEventListener[AnyRef] =
     listener.asInstanceOf[ApplicationEventListener[AnyRef]]
 
-  private def traitArgument(label: String, listener: ApplicationEventListener[?]): GenericType =
+  private def traitArgument(beanName: String, listener: ApplicationEventListener[?]): Found[GenericType] =
     GenericType.of(listener.getClass).asSuper(classOf[ApplicationEventListener[?]]) match {
-      case Some(GenericType.Concrete(_, List(eventType))) =>
-        checkEventType(label, eventType)
-        eventType
-      case _                                              => throw InvalidEventListenerException(s"$label does not declare the type of its events")
+      case Some(GenericType.Concrete(_, List(eventType))) => known(EventListenerError.traitLabel(beanName), eventType)
+      case _                                              => Left(EventListenerError.UndeclaredEventType(beanName))
     }
 
-  private def checkEventType(label: String, eventType: GenericType): Unit =
-    if (eventType == GenericType.Wildcard || eventType.variables.nonEmpty) {
-      throw InvalidEventListenerException(
-        s"$label receives events of type $eventType, which is not known at runtime. Use a concrete event type, for example " +
-          "by extending ApplicationEventListener with a type argument in a class instead of a lambda"
-      )
-    }
+  private def known(label: String, eventType: GenericType): Found[GenericType] =
+    Either.cond(
+      eventType != GenericType.Wildcard && eventType.variables.isEmpty,
+      eventType,
+      EventListenerError.UnknownEventType(label, eventType)
+    )
 
   private def info(beanName: String, method: String, eventType: GenericType, async: Boolean, blocking: Boolean): EventListenerInfo =
     EventListenerInfo(s"$beanName.$method", eventType, async, settings.listener(beanName, method).retry, blocking)

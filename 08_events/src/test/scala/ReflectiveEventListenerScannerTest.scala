@@ -17,7 +17,7 @@ final class ReflectiveEventListenerScannerTest extends FunSuite {
 
   test("finds a private annotated method and calls it with an event") {
     val journal  = OrderJournal()
-    val listener = scanner.listenersOf("orderJournal", journal).loneElement
+    val listener = found("orderJournal", journal).loneElement
     listener.invoke(OrderEvent.Placed(4))
     assertEquals(
       (listener.info.name, listener.info.eventType, journal.placed.recorded),
@@ -25,16 +25,22 @@ final class ReflectiveEventListenerScannerTest extends FunSuite {
     )
   }
 
+  private def found(name: String, bean: AnyRef): List[RegisteredListener] =
+    scanner.listenersOf(name, bean).fold(error => fail(error.message), identity)
+
+  private def rejected(name: String, bean: AnyRef): String =
+    scanner.listenersOf(name, bean).fold(_.message, listeners => fail(s"Expected an error, got $listeners"))
+
   test("reads the event type of an ApplicationEventListener from its class") {
     assertEquals(
-      scanner.listenersOf("orderAudit", OrderAudit()).map(_.info.eventType),
+      found("orderAudit", OrderAudit()).map(_.info.eventType),
       List(GenericType.of(classOf[OrderEvent]))
     )
   }
 
   test("rejects methods that cannot receive events") {
     val messages = List("twoParameters" -> TwoParameters(), "returnsValue" -> ReturnsValue(), "overloaded" -> Overloaded())
-      .map { case (name, bean) => intercept[InvalidEventListenerException](scanner.listenersOf(name, bean)).getMessage }
+      .map { case (name, bean) => rejected(name, bean) }
     assertEquals(
       messages.map(_.takeWhile(_ != ',')),
       List(
@@ -45,9 +51,13 @@ final class ReflectiveEventListenerScannerTest extends FunSuite {
     )
   }
 
+  test("returns the problem of a listener as a typed error") {
+    assertEquals(scanner.listenersOf("overloaded", Overloaded()), Left(EventListenerError.OverloadedMethod("overloaded", "on")))
+  }
+
   test("rejects listeners whose event type is not known at runtime") {
     val messages = List("generic" -> GenericListener[Customer](), "lambda" -> LambdaListener.listener)
-      .map { case (name, bean) => intercept[InvalidEventListenerException](scanner.listenersOf(name, bean)).getMessage }
+      .map { case (name, bean) => rejected(name, bean) }
     assertEquals(
       messages.map(_.takeWhile(_ != '.')),
       List(
