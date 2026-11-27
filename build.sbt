@@ -7,17 +7,19 @@ ThisBuild / coverageFailOnMinimum                 := true
 ThisBuild / javafmtStyle                          := com.google.googlejavaformat.java.JavaFormatterOptions.Style.AOSP
 ThisBuild / javafmtFormatterCompatibleJavaVersion := 17
 ThisBuild / scalaVersion                          := "3.9.0"
+// Read only by IntelliJ, which sets the package prefix of each module from it.
+Global / excludeLintKeys += idePackagePrefix
 ThisBuild / scalacOptions ++= Seq("-no-indent", "-old-syntax", "-deprecation", "-feature", "-unchecked", "-Werror")
 ThisBuild / scalacOptions ++= javaOutputVersionOptions
 
 ThisBuild / organizationName     := "Coilix"
-ThisBuild / organizationHomepage := Some(url("https://github.com/Coilix"))
-ThisBuild / homepage             := Some(url("https://github.com/Coilix/coilix"))
+ThisBuild / organizationHomepage := Some(uri("https://github.com/Coilix"))
+ThisBuild / homepage             := Some(uri("https://github.com/Coilix/coilix"))
 ThisBuild / licenses             := List(License.Apache2)
 ThisBuild / startYear            := Some(2026)
 ThisBuild / scmInfo              := Some(
   ScmInfo(
-    url("https://github.com/Coilix/coilix"),
+    uri("https://github.com/Coilix/coilix"),
     "scm:git:https://github.com/Coilix/coilix.git",
     "scm:git:git@github.com:Coilix/coilix.git"
   )
@@ -27,7 +29,7 @@ ThisBuild / developers           := List(
     "pawelwojcik7",
     "Paweł Wójcik",
     "79653195+pawelwojcik7@users.noreply.github.com",
-    url("https://github.com/pawelwojcik7")
+    uri("https://github.com/pawelwojcik7")
   )
 )
 
