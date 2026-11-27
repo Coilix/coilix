@@ -9,6 +9,7 @@ import CodeBlock from '@theme/CodeBlock';
 import PaymentAudit from '!!raw-loader!@examples/scala/logging/PaymentAudit.scala';
 import LoggingYaml from '!!raw-loader!@examples/resources/guides/logging/application.yaml';
 import Troubleshooting from '!!raw-loader!@examples/scala/logging/Troubleshooting.scala';
+import OrderPayments from '!!raw-loader!@examples/scala/logging/OrderPayments.scala';
 
 Ta strona pokazuje, jak klasa aplikacji Coilix loguje. `@Slf4s` dodaje do oznaczonej klasy albo obiektu dwa prywatne pola: `log`, czyli zwykły `Logger` SLF4J, i `logF`, ten sam logger z metodami, które zwracają `IO[Unit]`. Kod napisany w `IO` używa `logF`, więc żadnego wywołania logu nie trzeba opakowywać w `IO(...)`.
 
@@ -35,6 +36,19 @@ Wtedy każda biblioteka aplikacji loguje w tym samym formacie co twój kod: bibl
 ```
 
 Bez modułu aplikacja zostaje przy własnym backendzie, np. Logback albo Log4j 2. Nie dodawaj innego backendu obok `coilix-logging`.
+
+## MDC w fiberach
+
+Z `coilix-logging` MDC ustawione w kodzie działającym w `IO` należy do fibera, nie do wątku. Zostaje, gdy fiber przechodzi na inny wątek, na przykład po `IO.blocking`, a fiber przez niego uruchomiony, taki jak asynchroniczny odbiorca zdarzeń albo procesor, zaczyna z jego kopią:
+
+<CodeBlock language="scala" title="OrderPayments.scala">{OrderPayments}</CodeBlock>
+
+Kod poza fiberem ma MDC swojego wątku. MDC idzie za fiberami dzięki śledzeniu kontekstu w cats-effect, które `CoilixIOApp` włącza przez `cats.effect.trackFiberContext=true`. Testy uruchamiane poza `CoilixIOApp` potrzebują tej właściwości od startu JVM:
+
+```scala
+Test / fork := true
+Test / javaOptions += "-Dcats.effect.trackFiberContext=true"
+```
 
 ## Poziomy i wyciszone loggery
 

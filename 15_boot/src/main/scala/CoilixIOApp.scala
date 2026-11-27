@@ -32,8 +32,13 @@ import scala.reflect.ClassTag
  * The number of compute threads and the detection of blocked threads are read before the command-line arguments are known, so
  * they come from the configuration files, system properties and environment variables, not from command-line options. When
  * the configuration cannot be loaded, the runtime starts with the defaults and the start reports the error.
+ *
+ * The application sets `cats.effect.trackFiberContext=true` before the runtime starts, unless the property is already set, so
+ * the MDC of the `logging` module can follow fibers.
  */
 trait CoilixIOApp extends IOApp {
+
+  CoilixIOApp.trackFiberContext()
 
   private lazy val environment: Environment = EnvironmentLoader.default.load(Map.empty).getOrElse(Environment.empty)
 
@@ -70,6 +75,16 @@ trait CoilixIOApp extends IOApp {
   private def applicationName: String = getClass.getSimpleName.stripSuffix("$")
 }
 
-/** The logger of [[dev.coilix.boot.CoilixIOApp]]. */
+/** The logger of [[dev.coilix.boot.CoilixIOApp]] and the settings it applies before the runtime starts. */
 @Slf4s
-object CoilixIOApp
+object CoilixIOApp {
+
+  /** The system property of cats-effect that keeps `IOLocal` values readable from the thread that runs a fiber. */
+  val TrackFiberContext: String = "cats.effect.trackFiberContext"
+
+  /** Sets [[TrackFiberContext]] to `true` unless it is already set. It must run before cats-effect starts its first fiber. */
+  def trackFiberContext(): Unit =
+    if (Option(System.getProperty(TrackFiberContext)).isEmpty) {
+      val _ = System.setProperty(TrackFiberContext, "true")
+    }
+}
