@@ -18,9 +18,11 @@ import java.util.concurrent.atomic.AtomicReference
  *   assertEquals(recordedEvents[OrderPlaced], List(OrderPlaced(order.id, order.customer)))
  * }
  * ```
+ *
+ * @param recorded
+ *   the recorded events, oldest first
  */
-final class EventRecorder extends ApplicationEventListener[AnyRef] {
-  private val recorded = AtomicReference(List.empty[AnyRef])
+case class EventRecorder(recorded: AtomicReference[List[AnyRef]]) extends ApplicationEventListener[AnyRef] {
 
   override def onEvent(event: AnyRef): IO[Unit] =
     IO(recorded.updateAndGet(_ :+ event)).void
@@ -37,4 +39,11 @@ final class EventRecorder extends ApplicationEventListener[AnyRef] {
 
   /** Forgets the recorded events, for example after the startup events of the context. */
   def clear(): Unit = recorded.set(Nil)
+}
+
+/** Factories of [[dev.coilix.testkit.EventRecorder]]. */
+object EventRecorder {
+
+  /** A recorder with no events. */
+  def apply(): EventRecorder = EventRecorder(AtomicReference(List.empty[AnyRef]))
 }

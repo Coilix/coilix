@@ -9,7 +9,7 @@ import scala.math.BigDecimal.RoundingMode
  *
  * This is the default [[dev.coilix.boot.StartupMessageFormatter]].
  */
-final class DefaultStartupMessageFormatter extends StartupMessageFormatter {
+case class DefaultStartupMessageFormatter() extends StartupMessageFormatter {
 
   override def starting(applicationName: String): String =
     s"Launching $applicationName"

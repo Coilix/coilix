@@ -10,7 +10,7 @@ import dev.coilix.annotation.Slf4s
  * [[dev.coilix.config.ComponentProvider.from]].
  */
 @Slf4s
-final class ConfigComponentProvider(override val environment: Environment) extends ComponentProvider {
+case class ConfigComponentProvider(override val environment: Environment) extends ComponentProvider {
 
   override def lookup[T: ConfigPath](default: => T): Either[ConfigError, T] =
     if (environment.contains(summon[ConfigPath[T]].path)) configured(summon[ConfigPath[T]])

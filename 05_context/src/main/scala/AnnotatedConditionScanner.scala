@@ -16,7 +16,7 @@ import java.lang.reflect.AnnotatedElement
  * @param classLoader
  *   the class loader that checks [[dev.coilix.annotation.ConditionalOnClass]]
  */
-final class AnnotatedConditionScanner(classLoader: ClassLoader) extends ConditionScanner {
+case class AnnotatedConditionScanner(classLoader: ClassLoader) extends ConditionScanner {
 
   override def scan(definition: BeanDefinition): BeanConditions =
     sources(definition).map(conditionsOf).foldLeft(BeanConditions.none)(combined)

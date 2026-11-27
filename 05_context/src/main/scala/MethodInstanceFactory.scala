@@ -12,7 +12,7 @@ import java.lang.reflect.Method
  * @param method
  *   the `@Bean` method
  */
-final case class MethodInstanceFactory(method: Method) extends InstanceFactory {
+case class MethodInstanceFactory(method: Method) extends InstanceFactory {
 
   override def create(arguments: List[AnyRef]): AnyRef =
     arguments match {

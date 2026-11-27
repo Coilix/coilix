@@ -18,7 +18,7 @@ import scala.jdk.CollectionConverters.*
  *   the configuration that can disable modules
  */
 @Slf4s
-final class ServiceLoaderModuleLoader(classLoader: ClassLoader, environment: Environment) extends ModuleLoader {
+case class ServiceLoaderModuleLoader(classLoader: ClassLoader, environment: Environment) extends ModuleLoader {
 
   override def load(): List[CoilixModule] =
     ServiceLoader.load(classOf[CoilixModule], classLoader).asScala.toList.sortBy(_.name).filter(enabled)

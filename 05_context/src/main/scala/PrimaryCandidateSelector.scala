@@ -13,7 +13,7 @@ import dev.coilix.common.GenericType
  * default
  * [[dev.coilix.context.CandidateSelector]].
  */
-final class PrimaryCandidateSelector extends CandidateSelector {
+case class PrimaryCandidateSelector() extends CandidateSelector {
 
   override def choose[A <: BeanDescriptor](
     requested:  GenericType,

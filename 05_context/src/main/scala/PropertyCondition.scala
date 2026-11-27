@@ -12,7 +12,7 @@ import dev.coilix.config.Environment
  * @param matchIfMissing
  *   whether the condition holds when the key is not set
  */
-final case class PropertyCondition(name: String, havingValue: String = "", matchIfMissing: Boolean = false)
+case class PropertyCondition(name: String, havingValue: String = "", matchIfMissing: Boolean = false)
     extends BeanCondition {
 
   override def matches(environment: Environment): Boolean =

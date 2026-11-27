@@ -10,7 +10,7 @@ package dev.coilix.context
  * @param steps
  *   the ready instances first, then the beans to create, each after its dependencies
  */
-final case class ContextPlan(steps: List[PlanStep]) {
+case class ContextPlan(steps: List[PlanStep]) {
 
   /** The ready instances, in order of registration. */
   def provided: List[RegisteredBean] =

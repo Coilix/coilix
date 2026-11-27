@@ -5,7 +5,7 @@ import dev.coilix.annotation.Configuration
 
 /** The beans of the boot module: `ioRunnerAdapter`. */
 @Configuration
-final class BootConfiguration {
+case class BootConfiguration() {
 
   /** Runs the [[dev.coilix.boot.IOApplicationRunner]] beans in one list with the other runners. */
   @Bean

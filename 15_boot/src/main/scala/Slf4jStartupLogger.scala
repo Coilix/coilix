@@ -14,7 +14,7 @@ import scala.concurrent.duration.FiniteDuration
  *   formats the messages
  */
 @Slf4s
-final class Slf4jStartupLogger(banner: BannerLoader, formatter: StartupMessageFormatter) extends StartupLogger {
+case class Slf4jStartupLogger(banner: BannerLoader, formatter: StartupMessageFormatter) extends StartupLogger {
 
   override def starting(applicationName: String): Unit = {
     banner.load().foreach(text => log.info(s"\n$text"))

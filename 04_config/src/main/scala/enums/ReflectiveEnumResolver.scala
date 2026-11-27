@@ -14,7 +14,7 @@ import scala.util.Try
  * case comes from [[dev.coilix.annotation.EnumName]] on the case, or from the case name in the code. This is the default
  * resolver, returned by [[dev.coilix.config.enums.EnumResolver.default]].
  */
-final class ReflectiveEnumResolver extends EnumResolver {
+case class ReflectiveEnumResolver() extends EnumResolver {
 
   override def isEnum(candidate: Class[?]): Boolean =
     candidate.isAnnotationPresent(classOf[Enumerated])

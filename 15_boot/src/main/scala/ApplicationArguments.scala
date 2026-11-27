@@ -13,7 +13,7 @@ package dev.coilix.boot
  * @param nonOptionArgs
  *   arguments that are not options, in order
  */
-final case class ApplicationArguments(
+case class ApplicationArguments(
   sourceArgs:    List[String],
   options:       Map[String, List[String]],
   nonOptionArgs: List[String]

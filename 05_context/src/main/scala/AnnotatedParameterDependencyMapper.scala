@@ -18,7 +18,7 @@ import java.lang.reflect.Parameter
  * [[dev.coilix.context.UnsupportedDependencyTypeException]]. This is the default
  * [[dev.coilix.context.ParameterDependencyMapper]].
  */
-final class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper) extends ParameterDependencyMapper {
+case class AnnotatedParameterDependencyMapper(typeMapper: DependencyTypeMapper) extends ParameterDependencyMapper {
 
   override def map(parameter: Parameter): Dependency =
     Option(parameter.getAnnotation(classOf[Value])).fold(qualified(

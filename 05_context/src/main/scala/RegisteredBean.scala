@@ -17,7 +17,7 @@ import dev.coilix.common.TypeInfo
  * @param lifecycle
  *   lifecycle methods of the bean, of which the `@PreDestroy` methods run when the context closes
  */
-final case class RegisteredBean(
+case class RegisteredBean(
   beanName:  String,
   beanType:  GenericType,
   isPrimary: Boolean,

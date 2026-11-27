@@ -30,7 +30,7 @@ import dev.coilix.common.GenericType
  *   names of beans created before this one and destroyed after it, without being injected, from
  *   [[dev.coilix.annotation.DependsOn]]
  */
-final case class BeanDefinition(
+case class BeanDefinition(
   beanName:     String,
   beanType:     GenericType,
   factory:      InstanceFactory,

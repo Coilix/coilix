@@ -9,7 +9,7 @@ import scala.util.Try
  *
  * Classes without a companion object, and parameters without a default, give `None`.
  */
-final class ScalaDefaultArguments extends DefaultArguments {
+case class ScalaDefaultArguments() extends DefaultArguments {
 
   private val companionSuffix     = "$"
   private val moduleField         = "MODULE$"

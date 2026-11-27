@@ -12,7 +12,7 @@ import dev.coilix.common.GenericType
  * @param completion
  *   gives the registry of the started context, shared by the registries built on the way to it
  */
-final class ImmutableBeanRegistry(entries: List[BeanEntry], selector: CandidateSelector, completion: RegistryCompletion)
+case class ImmutableBeanRegistry(entries: List[BeanEntry], selector: CandidateSelector, completion: RegistryCompletion)
     extends BeanRegistry {
 
   override def beans: List[RegisteredBean] = entries.flatMap(_.created)

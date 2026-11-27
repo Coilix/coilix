@@ -11,7 +11,7 @@ import scala.reflect.ClassTag
  * Gives a [[dev.coilix.boot.StartupError.NotABootApplication]] when the class is not annotated with `@CoilixApplication`. This
  * is the default [[dev.coilix.boot.BasePackageResolver]].
  */
-final class AnnotationBasePackageResolver extends BasePackageResolver {
+case class AnnotationBasePackageResolver() extends BasePackageResolver {
 
   override def resolve[T: ClassTag]: Either[StartupError, List[String]] =
     annotationOf(runtimeTypeOf[T]).map(annotation => basePackages(runtimeTypeOf[T], annotation))

@@ -38,7 +38,7 @@ import scala.jdk.CollectionConverters.*
  *   class loader used to find the files
  */
 @Slf4s
-final class ClasspathEnvironmentLoader(baseName: String, formats: List[ConfigFormat], classLoader: ClassLoader)
+case class ClasspathEnvironmentLoader(baseName: String, formats: List[ConfigFormat], classLoader: ClassLoader)
     extends EnvironmentLoader {
 
   private type Loaded[A] = Either[ConfigError, A]

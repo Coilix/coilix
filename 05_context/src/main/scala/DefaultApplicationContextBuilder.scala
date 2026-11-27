@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicReference
  *   destroys the beans when the built context closes
  */
 @Slf4s
-final class DefaultApplicationContextBuilder(
+case class DefaultApplicationContextBuilder(
   planner:      ContextPlanner,
   instantiator: BeanInstantiator,
   selector:     CandidateSelector,

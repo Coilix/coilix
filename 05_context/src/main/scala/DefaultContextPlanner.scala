@@ -12,7 +12,7 @@ package dev.coilix.context
  * @param resolver
  *   orders bean definitions by their dependencies
  */
-final class DefaultContextPlanner(filter: DefinitionFilter, resolver: DependencyResolver) extends ContextPlanner {
+case class DefaultContextPlanner(filter: DefinitionFilter, resolver: DependencyResolver) extends ContextPlanner {
 
   override def plan(definitions: List[BeanDefinition], provided: List[RegisteredBean]): Either[ContextError, ContextPlan] = {
     val kept = filter.filter(definitions, provided.map(_.beanClass)).map(withoutProvidedNames(provided.map(_.beanName)))

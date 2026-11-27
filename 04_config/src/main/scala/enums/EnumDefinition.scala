@@ -13,7 +13,7 @@ package enums
  * @param ignoreCase
  *   whether a name matches regardless of letter case
  */
-final case class EnumDefinition(enumType: Class[?], cases: List[EnumCase], ignoreCase: Boolean = false) {
+case class EnumDefinition(enumType: Class[?], cases: List[EnumCase], ignoreCase: Boolean = false) {
 
   /** The names of the cases, without aliases. */
   def names: List[String] =

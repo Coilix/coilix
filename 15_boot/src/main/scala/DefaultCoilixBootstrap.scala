@@ -47,7 +47,7 @@ import java.lang.annotation.Annotation
  *   creates the definition of the `collectedComponents` bean
  */
 @Slf4s
-final class DefaultCoilixBootstrap(
+case class DefaultCoilixBootstrap(
   scanner:   ClassPathScanner,
   builder:   ApplicationContextBuilder,
   modules:   ModuleLoader,

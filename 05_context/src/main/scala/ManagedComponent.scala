@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * @param destroyer
  *   runs the `@PreDestroy` methods
  */
-final class ManagedComponent[T](val instance: T, bean: RegisteredBean, destroyer: BeanDestroyer) extends AutoCloseable {
+case class ManagedComponent[T](instance: T, bean: RegisteredBean, destroyer: BeanDestroyer) extends AutoCloseable {
 
   private val open = AtomicBoolean(true)
 

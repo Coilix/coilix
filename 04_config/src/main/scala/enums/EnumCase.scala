@@ -11,7 +11,7 @@ package enums
  * @param aliases
  *   other names that also find the case when reading
  */
-final case class EnumCase(value: AnyRef, name: String, aliases: List[String] = Nil) {
+case class EnumCase(value: AnyRef, name: String, aliases: List[String] = Nil) {
 
   /** The name followed by the aliases. */
   def allNames: List[String] =

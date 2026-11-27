@@ -22,7 +22,7 @@ import scala.util.Try
  * @param inContainer
  *   whether the JVM runs in a container, where the memory limit is meant for this one application
  */
-final case class JvmMemoryOptions(
+case class JvmMemoryOptions(
   exitOnOutOfMemory:    Option[Boolean],
   crashOnOutOfMemory:   Option[Boolean],
   maxHeapBytes:         Long,

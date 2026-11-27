@@ -14,7 +14,7 @@ import dev.coilix.common.GenericType
  * @param requiredBy
  *   the name of the bean that declares the provider, used in error messages
  */
-final class RegistryProvider[T](registry: BeanRegistry, beanType: GenericType, requiredBy: String) extends Provider[T] {
+case class RegistryProvider[T](registry: BeanRegistry, beanType: GenericType, requiredBy: String) extends Provider[T] {
 
   override def get(): T =
     registry.complete.find(beanType).map(bean => typed(bean.instance)).getOrElse(throw missing)

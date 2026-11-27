@@ -15,7 +15,7 @@ import scala.util.Try
  * public method with the name of that parameter, which a case class field provides. This is the default resolver, returned
  * by [[dev.coilix.config.valuetype.ValueTypeResolver.default]].
  */
-final class ReflectiveValueTypeResolver extends ValueTypeResolver {
+case class ReflectiveValueTypeResolver() extends ValueTypeResolver {
 
   override def isValueType(candidate: Class[?]): Boolean =
     candidate.isAnnotationPresent(classOf[ValueType])

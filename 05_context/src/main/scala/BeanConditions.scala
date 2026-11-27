@@ -11,7 +11,7 @@ package dev.coilix.context
  * @param missingTypes
  *   the types another bean must provide to leave this bean out, or empty for the type of the bean itself
  */
-final case class BeanConditions(
+case class BeanConditions(
   conditions:    List[BeanCondition] = Nil,
   onlyIfMissing: Boolean             = false,
   missingTypes:  List[Class[?]]      = Nil

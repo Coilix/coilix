@@ -35,7 +35,7 @@ import dev.coilix.context.RegisteredBean
  * @param assemble
  *   creates the startup components from the loaded configuration
  */
-final class DefaultTestContextFactory(
+case class DefaultTestContextFactory(
   parser:            ArgumentsParser,
   environmentLoader: EnvironmentLoader,
   assemble: ComponentProvider => StartupComponents

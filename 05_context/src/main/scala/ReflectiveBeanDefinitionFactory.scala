@@ -38,7 +38,7 @@ import java.lang.reflect.Modifier
  * @param conditionScanner
  *   reads the conditions such as `@Profile`
  */
-final class ReflectiveBeanDefinitionFactory(
+case class ReflectiveBeanDefinitionFactory(
   constructorSelector: ConstructorSelector,
   parameterMapper:     ParameterDependencyMapper,
   nameGenerator:       BeanNameGenerator,

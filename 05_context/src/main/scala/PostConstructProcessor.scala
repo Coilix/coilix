@@ -11,7 +11,7 @@ import java.lang.reflect.Method
  * original exception as its cause. For a [[dev.coilix.context.ProxiedBean]] the methods run on the instance behind the proxy,
  * and the proxy is returned. This is the default [[dev.coilix.context.BeanPostProcessor]].
  */
-final class PostConstructProcessor extends BeanPostProcessor {
+case class PostConstructProcessor() extends BeanPostProcessor {
 
   override def postProcess(definition: BeanDefinition, instance: AnyRef): AnyRef = {
     definition.lifecycle.plainInit.foreach(invoke(definition, ProxiedBean.unwrap(instance)))

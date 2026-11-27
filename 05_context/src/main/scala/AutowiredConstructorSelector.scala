@@ -10,7 +10,7 @@ import java.lang.reflect.Constructor
  * class without public
  * constructors.
  */
-final class AutowiredConstructorSelector extends ConstructorSelector {
+case class AutowiredConstructorSelector() extends ConstructorSelector {
 
   override def select(beanClass: Class[?]): Constructor[?] =
     autowired(beanClass)

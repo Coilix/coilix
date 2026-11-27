@@ -14,7 +14,7 @@ import scala.util.Using
  * @param classLoader
  *   class loader used to find the resource
  */
-final class ClasspathBannerLoader(resource: String, classLoader: ClassLoader) extends BannerLoader {
+case class ClasspathBannerLoader(resource: String, classLoader: ClassLoader) extends BannerLoader {
 
   override def load(): Option[String] =
     Option(classLoader.getResource(resource)).map(read)

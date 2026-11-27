@@ -24,7 +24,7 @@ import java.lang.reflect.Method
  *   finds the lifecycle methods of the class of an instance that differs from the declared bean class
  */
 @Slf4s
-final class ReflectiveBeanInstantiator(
+case class ReflectiveBeanInstantiator(
   environment:      Environment,
   postProcessor:    BeanPostProcessor,
   lifecycleScanner: LifecycleMethodScanner = AnnotatedLifecycleMethodScanner()

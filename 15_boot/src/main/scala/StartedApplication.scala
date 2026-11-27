@@ -10,4 +10,4 @@ import dev.coilix.context.ConfigurableApplicationContext
  * @param arguments
  *   the parsed command-line arguments, to pass to the runners
  */
-final case class StartedApplication(context: ConfigurableApplicationContext, arguments: ApplicationArguments)
+case class StartedApplication(context: ConfigurableApplicationContext, arguments: ApplicationArguments)

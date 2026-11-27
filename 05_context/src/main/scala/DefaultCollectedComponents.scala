@@ -21,7 +21,7 @@ import scala.reflect.ClassTag
  * @param destroyer
  *   runs the `@PreDestroy` methods when an instance is closed
  */
-final class DefaultCollectedComponents(
+case class DefaultCollectedComponents(
   definitions:   List[BeanDefinition],
   arguments:     Map[Dependency, AnyRef],
   postProcessor: BeanPostProcessor,

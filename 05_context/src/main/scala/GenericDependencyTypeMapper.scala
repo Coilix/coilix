@@ -10,7 +10,7 @@ import java.lang.reflect.Type
  *
  * This is the default [[dev.coilix.context.DependencyTypeMapper]].
  */
-final class GenericDependencyTypeMapper extends DependencyTypeMapper {
+case class GenericDependencyTypeMapper() extends DependencyTypeMapper {
 
   override def map(parameterType: Type): Dependency =
     GenericType.of(parameterType) match {

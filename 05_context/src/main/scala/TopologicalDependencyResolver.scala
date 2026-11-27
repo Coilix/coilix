@@ -27,7 +27,7 @@ import scala.annotation.tailrec
  * @param selector
  *   chooses one bean when several match a required or optional dependency
  */
-final class TopologicalDependencyResolver(selector: CandidateSelector) extends DependencyResolver {
+case class TopologicalDependencyResolver(selector: CandidateSelector) extends DependencyResolver {
 
   override def resolve(definitions: List[BeanDefinition], provided: List[GenericType]): Either[ContextError, List[BeanDefinition]] =
     resolveLevels(definitions, provided).map(_.flatten)

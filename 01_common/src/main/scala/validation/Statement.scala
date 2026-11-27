@@ -9,7 +9,7 @@ package validation
  * @param violation
  *   reported when `condition` returns `false`
  */
-final case class Statement[T](condition: T => Boolean, violation: Violation) {
+case class Statement[T](condition: T => Boolean, violation: Violation) {
 
   /** Whether `value` follows the rule. */
   def holds(value: T): Boolean =

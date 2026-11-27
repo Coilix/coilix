@@ -13,7 +13,7 @@ import scala.jdk.CollectionConverters.*
  *
  * Errors from Typesafe Config are returned as [[dev.coilix.config.ConfigError.Unreadable]] with the path that was read.
  */
-final class TypesafeConfigTree(config: Config) extends ConfigTree {
+case class TypesafeConfigTree(config: Config) extends ConfigTree {
 
   override def contains(path: String): Boolean =
     read(path)(config.hasPath(path)).getOrElse(false)

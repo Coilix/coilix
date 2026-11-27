@@ -24,7 +24,7 @@ import scala.reflect.TypeTest
  *
  * Rules are checked in the order they were added, and violations are reported in the same order.
  */
-final case class Validator[T] private (statements: List[Statement[T]]) {
+case class Validator[T] private (statements: List[Statement[T]]) {
 
   /** The same as [[validate]]. */
   def apply(value: T): Either[List[Violation], T] =
