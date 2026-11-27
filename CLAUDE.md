@@ -56,17 +56,17 @@ Skrypt `tools/sbt-lite.sh` uruchamia sbt z krótkim podsumowaniem zamiast pełne
 
 | Katalog | Projekt sbt | Pakiet | Zawartość |
 |---|---|---|---|
-| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`, `ClassParameterInApi`), podpięte do każdego modułu Scali |
+| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`, `ClassParameterInApi`), podpięte do każdego modułu Scali, i `ThreadPrimitives` dla kodu głównego modułów runtime'u (`concurrency`, `events`, `diagnostics`, `processing`) |
 
 - Zasada z tego pliku, którą da się sprawdzić automatycznie, dostaje wart albo regułę (COILIX-00028).
-- Nowy wart dopisuje się do `coilixWarts` w `build.sbt` i dostaje testy munit z `WartTestTraverser`: przypadek zgłaszany, niezgłaszany i wyłączony przez `@SuppressWarnings`.
+- Nowy wart dopisuje się do `coilixWarts` w `build.sbt` (wart tylko dla modułów runtime'u do `runtimeWarts`) i dostaje testy munit z `WartTestTraverser`: przypadek zgłaszany, niezgłaszany i wyłączony przez `@SuppressWarnings`.
 - `WartTestTraverser` to makro, które uruchamia wart przy kompilacji testu, a zinc nie kompiluje testów ponownie po zmianie samego ciała wartu. Po zmianie wartu testy uruchamia się przez `sbt warts/clean warts/testFull`.
 
 ## Zasady kodu
 
 - Składnia tylko z klamrami `{}` i `if (...)`. Zakaz składni wcięć, `:` po nagłówku, `then`, `do` i `end` (wymusza `-no-indent -old-syntax`).
 - Zakaz `var`, `null`, `return`, `while` i mutowalnych kolekcji (wymusza wartremover). Zamiast tego rekurencja, `fold` i niemutowalne struktury. Mutowalność tylko tam, gdzie inaczej się nie da (np. API kompilatora).
-- Kontrakty, które runtime woła w kodzie aplikacji po starcie (procesory, odbiorcy zdarzeń, `@Scheduled`, `@Async`, wskaźniki zdrowia, przyszłe web i data), zwracają `cats.effect.IO`, a nie `Unit` ani `Future` (ADR 0042, migracja w COILIX-00031). Komponenty aplikacji i API Coilix używają konkretnych `IO`, `Resource[IO, _]` i `fs2.Stream[IO, _]`, bez tagless final i bez własnego typu efektu (ADR 0043). Runtime pisze się na `Ref`, `Deferred`, `Queue`, `Supervisor` i `Resource`, bez `synchronized`, `wait`/`notify`, `Atomic*` i `Thread.sleep`. Synchroniczny zostaje tylko kontener (skanowanie, plan, tworzenie beanów).
+- Kontrakty, które runtime woła w kodzie aplikacji po starcie (procesory, odbiorcy zdarzeń, `@Scheduled`, `@Async`, wskaźniki zdrowia, przyszłe web i data), zwracają `cats.effect.IO`, a nie `Unit` ani `Future` (ADR 0042, migracja w COILIX-00031). Komponenty aplikacji i API Coilix używają konkretnych `IO`, `Resource[IO, _]` i `fs2.Stream[IO, _]`, bez tagless final i bez własnego typu efektu (ADR 0043). Runtime pisze się na `Ref`, `Deferred`, `Queue`, `Supervisor` i `Resource`, bez `synchronized`, `wait`/`notify`, `Atomic*` i `Thread.sleep` (wymusza wart `ThreadPrimitives` w modułach runtime'u; wyjątek dla kodu na wątkach spoza puli, np. fabryki wątków, z `@SuppressWarnings` i uzasadnieniem w Scaladoc). Synchroniczny zostaje tylko kontener (skanowanie, plan, tworzenie beanów).
 - Zakaz wypisywania na konsolę: `println`, `print`, `printf`, `Console.*`, `System.out` i `System.err` (wymusza wart `ConsoleOutput`). Logowanie przez `@Slf4s`: pole `log` w zwykłym kodzie i `logF` (`IOLogger`, metody zwracają `IO[Unit]`) w kodzie w `IO`, bez opakowywania `log` w `IO(...)` (ADR 0046).
 - Zakaz `asInstanceOf` (wymusza `Wart.AsInstanceOf`). Rzutowanie, bez którego się nie da (typ wymazany w kodzie refleksyjnym), idzie do małej metody z `@SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))`, a jej Scaladoc mówi, dlaczego jest bezpieczne.
 - Najpierw interfejs (`trait`), potem implementacja. Domyślne złożenie implementacji w `default` w obiekcie towarzyszącym traitu.

@@ -58,6 +58,8 @@ object ExecutorServiceTaskExecutor {
     new ExecutorServiceTaskExecutor(settings.threadNamePrefix + "*", pool, settings.shutdownTimeout, fatalErrors, propagators)
   }
 
+  /** Names the workers; the counter is an atomic, because the pool creates its threads outside the runtime of cats-effect. */
+  @SuppressWarnings(Array("dev.coilix.warts.ThreadPrimitives"))
   private def workerFactory(prefix: String): ForkJoinPool.ForkJoinWorkerThreadFactory = {
     val counter = AtomicLong()
     pool => named(ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool), s"$prefix${counter.incrementAndGet()}")
