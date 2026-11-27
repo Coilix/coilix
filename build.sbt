@@ -50,6 +50,8 @@ lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
 lazy val coilixWarts: Seq[wartremover.Wart] =
   Seq("ConsoleOutput", "ClassParameterInApi").map(name => Wart.custom(s"dev.coilix.warts.$name"))
 
+lazy val runtimeWarts: Seq[wartremover.Wart] = Seq(Wart.custom("dev.coilix.warts.ThreadPrimitives"))
+
 lazy val javaRelease = "17"
 
 lazy val javaOutputVersionOptions: Seq[String] = Seq("-java-output-version", javaRelease)
@@ -190,13 +192,14 @@ lazy val context = slf4sModule("context", "05_context", "dev.coilix.context")
   )
 
 lazy val concurrency = slf4sModule("concurrency", "06_concurrency", "dev.coilix.concurrency")
+  .settings(Compile / compile / wartremoverErrors ++= runtimeWarts)
   .dependsOn(context)
   .settings(coreGroup)
   .settings(
     description              :=
-      "The IORuntime of Coilix as the only compute pool, fs2, blocking executors, a task scheduler and beans created in IO",
+      "The IORuntime of Coilix as the only compute pool, fs2, blocking executors, @Scheduled and @Async methods in IO and beans created in IO",
     libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
-    libraryDependencies ++= Seq(Dependencies.catsEffect, Dependencies.fs2Core),
+    libraryDependencies ++= Seq(Dependencies.catsEffect, Dependencies.fs2Core, Dependencies.munitCatsEffect % Test),
     libraryDependencies ++= Dependencies.log4jSlf4j.map(_ % Test),
     Test / parallelExecution := false
   )
@@ -207,6 +210,7 @@ lazy val cluster = slf4sModule("cluster", "07_cluster", "dev.coilix.cluster")
   .settings(description := "Replica identity and membership of Coilix applications that run as several replicas")
 
 lazy val applicationEvents = slf4sModule("events", "08_events", "dev.coilix.events")
+  .settings(Compile / compile / wartremoverErrors ++= runtimeWarts)
   .dependsOn(concurrency)
   .settings(coreGroup)
   .settings(
@@ -216,11 +220,13 @@ lazy val applicationEvents = slf4sModule("events", "08_events", "dev.coilix.even
   )
 
 lazy val diagnostics = slf4sModule("diagnostics", "09_diagnostics", "dev.coilix.diagnostics")
+  .settings(Compile / compile / wartremoverErrors ++= runtimeWarts)
   .dependsOn(applicationEvents)
   .settings(coreGroup)
   .settings(
-    description := "Health of Coilix applications and checks of their threads, such as deadlock detection",
-    Test / fork := true
+    description                                        := "Health of Coilix applications and checks of their threads, such as deadlock detection",
+    libraryDependencies += Dependencies.munitCatsEffect % Test,
+    Test / fork                                        := true
   )
 
 lazy val data = slf4sModule("data", "20_data", "dev.coilix.data")
@@ -241,6 +247,7 @@ lazy val processingAnnotations =
     .settings(description := "The @Processor annotation that marks background processors of Coilix")
 
 lazy val processing = slf4sModule("processing", "27_processing", "dev.coilix.processing")
+  .settings(Compile / compile / wartremoverErrors ++= runtimeWarts)
   .dependsOn(cluster, processingAnnotations, testkit % Test)
   .settings(featureGroup("processing"))
   .settings(

@@ -3,28 +3,29 @@ package dev.coilix.annotation;
 import java.lang.annotation.*;
 
 /**
- * Marks a method of a bean that runs on the task executor of the concurrency module instead of the
- * calling thread.
+ * Marks a method of a bean that returns {@code IO} and runs on the compute pool of the concurrency
+ * module, or on its blocking executor, instead of the calling fiber.
  *
- * <p>By default the method runs on the task executor, the compute pool of the application. A method
- * that waits, for example for a database or another service, sets {@link #blocking()}, so it runs
- * on the blocking executor and does not hold a thread of the compute pool.
+ * <p>A call returns an {@code IO}, and the bean is called only when that {@code IO} runs: on the
+ * compute pool by default, or on the blocking executor for a method that sets {@link #blocking()},
+ * for example one that waits for a database or another service. A method returning {@code IO[A]}
+ * gives its result to the caller. A method returning {@code IO[Unit]} is started on a fiber of its
+ * own and the caller does not wait for it; its failure is logged, and the fiber is cancelled when
+ * the context starts closing.
  *
- * <p>A method returning {@code Future[T]} gives the result of the run on the executor. A method
- * returning {@code Unit} is started and not waited for, and its failure is logged. The method must
- * be declared in a trait of the bean, because Coilix registers the bean as a proxy of that trait:
- * other beans inject the trait, not the class. A call from inside the bean ({@code this.method()})
- * does not pass the proxy and runs on the calling thread.
+ * <p>The method must be declared in a trait of the bean, because Coilix registers the bean as a
+ * proxy of that trait: other beans inject the trait, not the class. A call from inside the bean
+ * ({@code this.method()}) does not pass the proxy and runs on the calling fiber.
  *
  * <pre>
  * trait ReportService {
- *   def render(id: ReportId): Future[Report]
+ *   def render(id: ReportId): IO[Report]
  * }
  *
  * {@literal @}Service
  * final class PdfReportService(renderer: PdfRenderer) extends ReportService {
- *   {@literal @}Async
- *   override def render(id: ReportId): Future[Report] = Future.successful(renderer.render(id))
+ *   {@literal @}Async(blocking = true)
+ *   override def render(id: ReportId): IO[Report] = IO.pure(renderer.render(id))
  * }</pre>
  */
 @Retention(RetentionPolicy.RUNTIME)

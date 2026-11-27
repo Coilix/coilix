@@ -2,12 +2,16 @@ package dev.coilix.demo
 
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
+import dev.coilix.concurrency.AsyncTasks
 import dev.coilix.context.ConfigurableApplicationContext
+import dev.coilix.context.ProxiedBean
 import dev.coilix.demo.vehicle.Vin
 import dev.coilix.demo.workshop.BookingDesk
 import dev.coilix.demo.workshop.CheckInLog
 import dev.coilix.demo.workshop.FaultCodeExport
 import dev.coilix.demo.workshop.FaultLedger
+import dev.coilix.demo.workshop.FileJobArchive
+import dev.coilix.demo.workshop.JobArchive
 import dev.coilix.demo.workshop.LiftBoard
 import dev.coilix.demo.workshop.ModuleCensus
 import dev.coilix.demo.workshop.PortalSession
@@ -64,12 +68,27 @@ final class DemoIOTest extends CatsEffectSuite with CoilixIOSuite {
     val lifts  = bean[LiftBoard]
     val health = bean[Health]
     for {
-      _   <- IO((lifts.occupy(), lifts.occupy())) *> health.refresh()
-      full = (health.readiness, health.liveness, bean[BookingDesk].accepting)
-      _   <- IO(lifts.release()) *> health.refresh()
+      _         <- IO((lifts.occupy(), lifts.occupy())) *> health.refresh()
+      readiness <- health.readiness
+      liveness  <- health.liveness
+      full       = (readiness, liveness, bean[BookingDesk].accepting)
+      _         <- IO(lifts.release()) *> health.refresh()
+      freed     <- health.readiness
     } yield assertEquals(
-      (full, health.readiness, bean[BookingDesk].accepting),
+      (full, freed, bean[BookingDesk].accepting),
       ((HealthStatus.Degraded, HealthStatus.Up, false), HealthStatus.Up, true)
+    )
+  }
+
+  coilixTest("archives a report on the blocking executor and indexes it on a fiber through the @Async proxy") {
+    val archive = bean[JobArchive]
+    for {
+      line    <- archive.archive("test")
+      _       <- archive.index("test")
+      running <- bean[AsyncTasks].running.iterateUntil(_ == 0).timeout(5.seconds)
+    } yield assertEquals(
+      (ProxiedBean.unwrap(archive).isInstanceOf[FileJobArchive], line.contains("archived on coilix-blocking-"), running),
+      (true, true, 0)
     )
   }
 

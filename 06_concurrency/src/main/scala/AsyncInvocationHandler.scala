@@ -1,33 +1,33 @@
 package dev.coilix.concurrency
 
+import cats.effect.IO
 import dev.coilix.context.ProxiedBean
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
-import scala.runtime.BoxedUnit
 
 /**
  * Handles calls to the proxy of a bean with [[dev.coilix.annotation.Async]] methods.
  *
- * A call of an asynchronous method runs on `compute`, or on `blocking` for a method marked as blocking: a `Future` result is taken from the run, and a `Unit` method is started
- * without waiting. Every other call goes directly to `target` on the calling thread.
+ * A call of an asynchronous method returns an `IO` that calls the bean when it runs: on the compute pool, or on `blocking` for a
+ * method marked as blocking, so also the code that builds the effect of the method runs there. A method returning `IO[Unit]`
+ * is started on a fiber of `tasks` and the `IO` of the call ends at once. Every other call goes directly to `target` on the
+ * calling thread.
  *
  * @param target
  *   the bean behind the proxy
- * @param compute
- *   runs the asynchronous methods that do not block
  * @param blocking
  *   runs the asynchronous methods that block
+ * @param tasks
+ *   keeps the fibers of the methods that run without the caller waiting
  * @param asyncMethods
- *   whether each asynchronous method, by name and parameter types, blocks
+ *   the asynchronous methods by name and parameter types
  */
-final class AsyncInvocationHandler(
+case class AsyncInvocationHandler(
   target:       AnyRef,
-  compute:      TaskExecutor,
   blocking:     BlockingExecutor,
-  asyncMethods: Map[(String, List[Class[?]]), Boolean]
+  tasks:        AsyncTasks,
+  asyncMethods: Map[(String, List[Class[?]]), AsyncMethod]
 ) extends InvocationHandler {
 
   override def invoke(proxy: AnyRef, method: Method, arguments: Array[AnyRef]): AnyRef = {
@@ -35,30 +35,22 @@ final class AsyncInvocationHandler(
     if (method.getDeclaringClass == classOf[ProxiedBean]) target
     else {
       asyncMethods.get((method.getName, method.getParameterTypes.toList)) match {
-        case None         => call(method, values)
-        case Some(blocks) => dispatched(method, values, if (blocks) blocking else compute)
+        case None        => call(method, values)
+        case Some(async) => dispatched(async, placed(async, IO.defer(effect(method, values))))
       }
     }
   }
 
-  private def dispatched(method: Method, values: List[AnyRef], executor: ManagedExecutor): AnyRef =
-    if (classOf[Future[?]].isAssignableFrom(method.getReturnType)) submitted(method, values, executor)
-    else started(method, values, executor)
+  private def placed(async: AsyncMethod, run: IO[Any]): IO[Any] =
+    if (async.blocking) run.evalOn(blocking.executionContext) else IO.cede *> run
 
-  private def submitted(method: Method, values: List[AnyRef], executor: ManagedExecutor): Future[Any] =
-    executor
-      .submit(call(method, values))
-      .flatMap {
-        case future: Future[?] => future
-        case other => Future.successful(other)
-      }(using ExecutionContext.parasitic)
+  private def dispatched(async: AsyncMethod, run: IO[Any]): IO[Any] =
+    if (async.detached) tasks.start(async.label, run.void) else run
 
-  private def started(method: Method, values: List[AnyRef], executor: ManagedExecutor): AnyRef = {
-    executor.execute {
-      val _ = call(method, values)
-    }
-    BoxedUnit.UNIT
-  }
+  /** The effect returned by the bean. The cast cannot fail, because only methods that return `IO` are asynchronous. */
+  @SuppressWarnings(Array("org.wartremover.warts.AsInstanceOf"))
+  private def effect(method: Method, values: List[AnyRef]): IO[Any] =
+    call(method, values).asInstanceOf[IO[Any]]
 
   private def call(method: Method, values: List[AnyRef]): AnyRef =
     try {

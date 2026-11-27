@@ -13,9 +13,9 @@ case class StartupHealthListener(indicator: StartupHealthIndicator, health: Heal
 
   @EventListener
   private def onStarted(event: ApplicationStarted): IO[Unit] =
-    IO(indicator.started()) *> health.refresh()
+    indicator.started *> health.refresh()
 
   @EventListener
   private def onFailed(event: ApplicationFailed): IO[Unit] =
-    IO(indicator.failed(String.valueOf(event.failure.getMessage))) *> health.refresh()
+    indicator.failed(String.valueOf(event.failure.getMessage)) *> health.refresh()
 }

@@ -1,8 +1,10 @@
 package com.example
 package tasks
 
-import scala.concurrent.Future
+import cats.effect.IO
 
 trait InvoiceMailer {
-  def send(invoice: String): Future[String]
+  def send(invoice: String): IO[String]
+
+  def remind(invoice: String): IO[Unit]
 }

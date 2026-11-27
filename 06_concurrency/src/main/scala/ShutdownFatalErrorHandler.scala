@@ -16,6 +16,9 @@ import scala.util.control.NonFatal
  * process without running the shutdown hooks when closing and exiting take longer than `shutdownTimeout`, for example when
  * threads are deadlocked. Fatal errors that follow the first one are only logged.
  *
+ * It marks the first fatal error with an atomic, because it runs on the failing thread, which may be a thread of a broken
+ * runtime that can no longer run fibers.
+ *
  * @param settings
  *   the exit code and the time limit of closing
  * @param context
@@ -24,6 +27,7 @@ import scala.util.control.NonFatal
  *   ends the process
  */
 @Slf4s
+@SuppressWarnings(Array("dev.coilix.warts.ThreadPrimitives"))
 final class ShutdownFatalErrorHandler(
   settings:   FatalErrorSettings,
   context:    ConfigurableApplicationContext,

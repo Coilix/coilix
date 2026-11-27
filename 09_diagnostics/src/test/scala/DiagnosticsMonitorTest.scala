@@ -1,25 +1,23 @@
 package dev.coilix.diagnostics
 
-import cats.effect.unsafe.IORuntime
+import cats.effect.IO
+import cats.effect.Resource
+import cats.syntax.all.*
 import java.time.Clock
-import munit.FunSuite
+import munit.CatsEffectSuite
 import scala.concurrent.duration.DurationInt
 
-final class DiagnosticsMonitorTest extends FunSuite {
+final class DiagnosticsMonitorTest extends CatsEffectSuite {
 
   test("hands a deadlock to the fatal error handler once in the shutdown mode") {
     val fatalErrors = RecordingFatalErrorHandler()
     val monitor     = monitorOf(DeadlockAction.Shutdown, fatalErrors, SettableHealthIndicator("threads", HealthKind.Liveness))
-    val deadlock    = LockDeadlock("shutdown-deadlock")
-    try {
-      deadlock.awaitDeadlock()
-      val findings = monitor.runChecks()
-      val _        = monitor.runChecks()
-      assertEquals(findings.filter(_.kind == Finding.deadlock).map(_.severity), List(FindingSeverity.Critical))
-      assertEquals(fatalErrors.failures.map(_.getClass), List(classOf[ThreadDeadlockException]))
-      assert(fatalErrors.failures.head.getMessage.contains("shutdown-deadlock-1"), fatalErrors.failures.head.getMessage)
-    } finally {
-      deadlock.close()
+    deadlock("shutdown-deadlock").use { _ =>
+      (monitor.runChecks <* monitor.runChecks).map { findings =>
+        assertEquals(findings.filter(_.kind == Finding.deadlock).map(_.severity), List(FindingSeverity.Critical))
+        assertEquals(fatalErrors.failures.map(_.getClass), List(classOf[ThreadDeadlockException]))
+        assert(fatalErrors.failures.head.getMessage.contains("shutdown-deadlock-1"), fatalErrors.failures.head.getMessage)
+      }
     }
   }
 
@@ -28,14 +26,15 @@ final class DiagnosticsMonitorTest extends FunSuite {
     val health      = DefaultHealth(List(indicator), RecordingPublisher())
     val fatalErrors = RecordingFatalErrorHandler()
     val monitor     = monitorOf(DeadlockAction.Report, fatalErrors, indicator, health)
-    val deadlock    = LockDeadlock("report-deadlock")
-    try {
-      deadlock.awaitDeadlock()
-      val _ = monitor.runChecks()
-      assertEquals((health.liveness, fatalErrors.failures), (HealthStatus.Down, Nil))
-      assert(indicator.state.reason.contains("report-deadlock-2"), indicator.state.reason)
-    } finally {
-      deadlock.close()
+    deadlock("report-deadlock").use { _ =>
+      for {
+        _        <- monitor.runChecks
+        liveness <- health.liveness
+        state    <- indicator.state
+      } yield {
+        assertEquals((liveness, fatalErrors.failures), (HealthStatus.Down, Nil))
+        assert(state.reason.contains("report-deadlock-2"), state.reason)
+      }
     }
   }
 
@@ -50,49 +49,61 @@ final class DiagnosticsMonitorTest extends FunSuite {
       SettableHealthIndicator("threads", HealthKind.Liveness),
       health,
       RecordingFatalErrorHandler(),
-      Clock.systemUTC,
-      IORuntime.global
+      Clock.systemUTC
     )
-    memory.set(HealthState.degraded("memory is short"))
-    assertEquals((monitor.runChecks(), health.readiness), (Nil, HealthStatus.Degraded))
+    (memory.set(HealthState.degraded("memory is short")) *> monitor.runChecks, health.readiness).tupled
+      .assertEquals((Nil, HealthStatus.Degraded))
   }
 
   test("a failing check is skipped and the other checks still run") {
     val failing = new ThreadCheck {
       override def check(sample: ThreadSample, history: ThreadHistory): List[Finding] = throw IllegalStateException("broken")
     }
-    val monitor = DiagnosticsMonitor(
-      DiagnosticsSettings(),
-      ThreadSampler(5),
-      List(failing, ThreadCountCheck(1, Int.MaxValue)),
-      LoggingFindingReporter(1.minute, 10, Clock.systemUTC),
-      SettableHealthIndicator("threads", HealthKind.Liveness),
-      DefaultHealth(Nil, RecordingPublisher()),
-      RecordingFatalErrorHandler(),
-      Clock.systemUTC,
-      IORuntime.global
-    )
-    assertEquals(monitor.runChecks().map(_.kind), List(Finding.tooManyThreads))
+    monitorWith(List(failing, ThreadCountCheck(1, Int.MaxValue)), RecordingFatalErrorHandler()).runChecks
+      .map(_.map(_.kind))
+      .assertEquals(List(Finding.tooManyThreads))
   }
 
   test("a round survives a LinkageError of a check and hands only a VirtualMachineError to the fatal error handler") {
     val fatalErrors = RecordingFatalErrorHandler()
-    def throwing(failure: Throwable): DiagnosticsMonitor =
-      DiagnosticsMonitor(
-        DiagnosticsSettings(),
-        ThreadSampler(5),
-        List((_, _) => throw failure),
-        LoggingFindingReporter(1.minute, 10, Clock.systemUTC),
-        SettableHealthIndicator("threads", HealthKind.Liveness),
-        DefaultHealth(Nil, RecordingPublisher()),
-        fatalErrors,
-        Clock.systemUTC,
-        IORuntime.global
-      )
-    throwing(NoClassDefFoundError("dev/coilix/diagnostics/Missing")).round()
-    throwing(OutOfMemoryError("test")).round()
-    assertEquals(fatalErrors.failures.map(_.getClass), List(classOf[OutOfMemoryError]))
+    def throwing(failure: Throwable): DiagnosticsMonitor = monitorWith(List((_, _) => throw failure), fatalErrors)
+    (throwing(NoClassDefFoundError("dev/coilix/diagnostics/Missing")).round *> throwing(OutOfMemoryError("test")).round)
+      .map(_ => assertEquals(fatalErrors.failures.map(_.getClass), List(classOf[OutOfMemoryError])))
   }
+
+  test("a failing reporter fails only its round") {
+    val reporter = new FindingReporter {
+      override def report(findings: List[Finding]): IO[Unit] = IO.raiseError(IllegalStateException("no alerting"))
+    }
+    val monitor  = DiagnosticsMonitor(
+      DiagnosticsSettings(),
+      ThreadSampler(5),
+      Nil,
+      reporter,
+      SettableHealthIndicator("threads", HealthKind.Liveness),
+      DefaultHealth(Nil, RecordingPublisher()),
+      RecordingFatalErrorHandler(),
+      Clock.systemUTC
+    )
+    monitor.round.assertEquals(())
+  }
+
+  private def deadlock(prefix: String): Resource[IO, LockDeadlock] =
+    Resource.make(IO.blocking { val locks = LockDeadlock(prefix); locks.awaitDeadlock(); locks })(locks =>
+      IO.blocking(locks.close())
+    )
+
+  private def monitorWith(checks: List[ThreadCheck], fatalErrors: RecordingFatalErrorHandler): DiagnosticsMonitor =
+    DiagnosticsMonitor(
+      DiagnosticsSettings(),
+      ThreadSampler(5),
+      checks,
+      LoggingFindingReporter(1.minute, 10, Clock.systemUTC),
+      SettableHealthIndicator("threads", HealthKind.Liveness),
+      DefaultHealth(Nil, RecordingPublisher()),
+      fatalErrors,
+      Clock.systemUTC
+    )
 
   private def monitorOf(
     action:      DeadlockAction,
@@ -108,7 +119,6 @@ final class DiagnosticsMonitorTest extends FunSuite {
       indicator,
       health,
       fatalErrors,
-      Clock.systemUTC,
-      IORuntime.global
+      Clock.systemUTC
     )
 }

@@ -3,6 +3,7 @@
 - Status: proponowana
 - Data: 2026-11-25
 - Task: COILIX-00030 (krok 2, część 1)
+- Częściowo zastąpione przez: 0058 (kontrakty zdrowia i reportera w `IO`, monitor bez `Atomic*` i bez czekania na pulę)
 
 ## Kontekst
 

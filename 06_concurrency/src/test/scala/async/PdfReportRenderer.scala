@@ -1,30 +1,42 @@
 package dev.coilix.concurrency
 package async
 
+import cats.effect.IO
 import dev.coilix.annotation.Async
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.PostConstruct
 import dev.coilix.annotation.PreDestroy
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.LinkedBlockingQueue
-import scala.concurrent.Future
 
 @Component
 final class PdfReportRenderer extends ReportRenderer {
   val events: LinkedBlockingQueue[String] = LinkedBlockingQueue[String]()
 
-  @Async
-  override def render(name: String): Future[String] =
-    Future.successful(s"$name on ${Thread.currentThread.getName}")
+  val release: CountDownLatch = CountDownLatch(1)
 
   @Async
-  override def announce(name: String): Unit = events.add(s"announced $name on ${Thread.currentThread.getName}")
+  override def render(name: String): IO[String] =
+    IO.pure(s"$name on ${Thread.currentThread.getName}")
 
   @Async
-  override def fail(): Future[String] = throw IllegalStateException("cannot render")
+  override def announce(name: String): IO[Unit] = {
+    val thread = Thread.currentThread.getName
+    IO.interruptible(release.await()) *> IO(events.add(s"announced $name on $thread")).void
+  }
+
+  @Async
+  override def fail(): IO[String] = throw IllegalStateException("cannot render")
+
+  @Async
+  override def failLater(): IO[Unit] = IO.raiseError(IllegalStateException("cannot announce"))
 
   @Async(blocking = true)
-  override def archive(name: String): Future[String] =
-    Future.successful(s"$name archived on ${Thread.currentThread.getName}")
+  override def archive(name: String): IO[String] =
+    IO.pure(s"$name archived on ${Thread.currentThread.getName}")
+
+  @Async
+  override def hang(): IO[Unit] = (IO(events.add("hanging")) *> IO.never).onCancel(IO(events.add("cancelled")).void)
 
   override def callerThread(): String = Thread.currentThread.getName
 

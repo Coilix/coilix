@@ -8,11 +8,14 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * The threads are daemons, so they do not keep the JVM running. Coilix stops them when the context closes.
  *
+ * Its counter is an atomic, because the factory creates threads outside the runtime of cats-effect.
+ *
  * @param prefix
  *   the beginning of each thread name
  * @param uncaught
  *   receives the exceptions that end a thread, such as fatal errors; without it the JVM default applies
  */
+@SuppressWarnings(Array("dev.coilix.warts.ThreadPrimitives"))
 final class NamedThreadFactory(prefix: String, uncaught: Option[Thread.UncaughtExceptionHandler] = None) extends ThreadFactory {
 
   private val counter = AtomicLong()

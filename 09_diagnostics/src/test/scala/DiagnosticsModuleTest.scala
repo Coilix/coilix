@@ -1,5 +1,6 @@
 package dev.coilix.diagnostics
 
+import cats.syntax.all.*
 import com.typesafe.config.ConfigFactory
 import dev.coilix.concurrency.ConcurrencyModule
 import dev.coilix.config.ComponentProvider
@@ -23,8 +24,9 @@ final class DiagnosticsModuleTest extends FunSuite {
 
   test("registers the health, the threads indicator, the built-in checks and the monitor") {
     withContext("") { context =>
-      assertEquals(context.getBean[Health].indicators.map(_.name), List("startup", "threads"))
-      assertEquals(context.getBean[Health].liveness, HealthStatus.Up)
+      val health = context.getBean[Health]
+      assertEquals(SynchronousLifecycle.run(context, health.indicators).map(_.name), List("startup", "threads"))
+      assertEquals(SynchronousLifecycle.run(context, health.liveness), HealthStatus.Up)
       assertEquals(
         context.getBeansOfType[ThreadCheck].map(_.getClass.getSimpleName).sorted,
         List("DeadlockCheck", "LongBlockedCheck", "ThreadCountCheck", "ThreadGrowthCheck")
@@ -37,16 +39,22 @@ final class DiagnosticsModuleTest extends FunSuite {
     withContext("") { context =>
       val health    = context.getBean[Health]
       val publisher = context.getBean[EventPublisher]
-      SynchronousLifecycle.run(context, health.refresh())
-      val starting  = health.readiness
-      SynchronousLifecycle.run(context, publisher.publish(ApplicationStarted(context)))
-      val started   = (health.readiness, health.liveness)
-      SynchronousLifecycle.run(context, publisher.publish(ApplicationFailed(context, IllegalStateException("no database"))))
+      val starting  = SynchronousLifecycle.run(context, health.refresh() *> health.readiness)
+      val started   =
+        SynchronousLifecycle.run(
+          context,
+          publisher.publish(ApplicationStarted(context)) *> (health.readiness, health.liveness).tupled
+        )
+      val failed    = SynchronousLifecycle.run(
+        context,
+        publisher.publish(ApplicationFailed(context, IllegalStateException("no database"))) *>
+          (health.readiness, health.indicators).tupled
+      )
       assertEquals(
-        (starting, started, health.readiness),
+        (starting, started, failed._1),
         (HealthStatus.Down, (HealthStatus.Up, HealthStatus.Up), HealthStatus.Down)
       )
-      assert(health.indicators.exists(_.state.reason.contains("no database")), health.indicators)
+      assert(failed._2.exists(_.state.reason.contains("no database")), failed._2)
     }
   }
 
