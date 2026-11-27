@@ -1,7 +1,7 @@
 ---
 id: tasks-and-scheduling
 title: Zadania w tle i harmonogram
-description: Obliczenia na TaskExecutor, wywołania blokujące na BlockingExecutor i praca powtarzana przez @Scheduled albo TaskScheduler.
+description: Obliczenia na TaskExecutor, wywołania blokujące na BlockingExecutor i praca powtarzana przez @Scheduled albo strumień fs2.
 sidebar_position: 6
 ---
 
@@ -74,21 +74,19 @@ Oznacz metodę beana adnotacją `@Scheduled`, żeby uruchamiać ją cyklicznie. 
 
 <CodeBlock language="scala" title="PriceRefresher.scala">{PriceRefresher}</CodeBlock>
 
-Czasy zapisuje się jak wartości konfiguracji, np. `10s` albo `5 minutes`, albo jako placeholder z wartością domyślną, jak w przykładzie. Metoda nie przyjmuje parametrów i może być prywatna.
+Czasy zapisuje się jak wartości konfiguracji, np. `10s` albo `5 minutes`, albo jako placeholder z wartością domyślną, jak w przykładzie. Metoda nie przyjmuje parametrów, zwraca `IO[Unit]` i może być prywatna. Działa na własnym fiberze, który między uruchomieniami czeka przez `IO.sleep` i nie zajmuje w tym czasie wątku. Jeśli jedno uruchomienie zakończy się błędem, Coilix zapisze go w logu, a metoda uruchomi się ponownie zgodnie z harmonogramem. Uruchomienia tej samej metody nigdy na siebie nie nachodzą.
 
-Uruchomienia zaczynają się, gdy istnieją już wszystkie beany aplikacji, i kończą, gdy aplikacja zaczyna się zatrzymywać, przed zniszczeniem pierwszego beana. Metoda z parametrami, z ustawionym jednocześnie `fixedRate` i `fixedDelay`, bez żadnego z nich albo z czasem, którego nie da się odczytać, zatrzymuje start wyjątkiem `InvalidScheduledMethodException` z nazwą beana i metody.
+Uruchomienia zaczynają się, gdy istnieją już wszystkie beany aplikacji, i kończą, gdy aplikacja zaczyna się zatrzymywać, przed zniszczeniem pierwszego beana. Metoda z parametrami, niezwracająca `IO`, z ustawionym jednocześnie `fixedRate` i `fixedDelay`, bez żadnego z nich albo z czasem, którego nie da się odczytać, zatrzymuje start wyjątkiem `InvalidScheduledMethodException` z nazwą beana i metody.
 
 ## Zadanie powtarzane z kodu
 
-Gdy harmonogram jest znany dopiero w trakcie działania, użyj beana `TaskScheduler`. Uruchamia on zadanie raz po opóźnieniu (`schedule`), ze stałą częstotliwością (`scheduleAtFixedRate`) albo ze stałą przerwą między uruchomieniami (`scheduleWithFixedDelay`). Każda z tych metod zwraca `ScheduledTask` z metodą `cancel()`.
+Gdy harmonogram jest znany dopiero w trakcie działania, uruchom strumień fs2, np. `Stream.fixedDelay` albo `Stream.awakeEvery`, na fiberze. `ContextLifecycleListener` uruchamia go razem z kontekstem i anuluje w fazie zamykania `Producers`, tak jak metody `@Scheduled`; jednorazowe uruchomienie po opóźnieniu to `IO.sleep(delay) *> work`.
 
 <CodeBlock language="scala" title="StockRefresher.scala">{StockRefresher}</CodeBlock>
 
-Zadania z harmonogramu działają na osobnej puli `coilix-scheduler-<numer>`, domyślnie z jednym wątkiem. Jeśli jedno uruchomienie rzuci wyjątek, Coilix zapisze go w logu, a zadanie uruchomi się następnym razem. Uruchomienia tego samego zadania nigdy na siebie nie nachodzą.
-
 ## Ponawianie nieudanej pracy
 
-`RetryPolicy` określa, ile razy próbować nieudanej pracy i jak długo czekać między próbami. Czekanie zaczyna się od `initialDelay`, rośnie `multiplier` razy po każdej nieudanej próbie i nigdy nie przekracza `maxDelay`. `jitter` losowo rozrzuca każde czekanie, tutaj o najwyżej 20% w obie strony, żeby repliki, którym praca nie wyszła jednocześnie, nie ponawiały jej w tej samej chwili. `delayAfter(attempts)` zwraca czas czekania po tylu nieudanych próbach albo `None`, gdy prób już nie ma:
+`RetryPolicy` określa, ile razy próbować nieudanej pracy i jak długo czekać między próbami. Czekanie zaczyna się od `initialDelay`, rośnie `multiplier` razy po każdej nieudanej próbie i nigdy nie przekracza `maxDelay`. `jitter` losowo rozrzuca każde czekanie, tutaj o najwyżej 20% w obie strony, żeby repliki, którym praca nie wyszła jednocześnie, nie ponawiały jej w tej samej chwili. `delayAfter(attempts)` zwraca czas czekania po tylu nieudanych próbach albo `None`, gdy prób już nie ma, a `IO.sleep` go odczekuje:
 
 <CodeBlock language="scala" title="tasks/RetryingMailer.scala">{RetryingMailer}</CodeBlock>
 
@@ -96,17 +94,17 @@ Polityka nie ma stanu, więc jedna instancja obsłuży każde wywołanie. `Retry
 
 ## Konfiguracja wątków
 
-Wszystkie klucze pod `coilix.concurrency` są opcjonalne. Ta konfiguracja daje puli obliczeniowej cztery wątki, pozwala na najwyżej 20 równoczesnych wywołań blokujących, np. tyle, ile połączeń ma pula do bazy, i daje harmonogramowi dwa wątki:
+Wszystkie klucze pod `coilix.concurrency` są opcjonalne. Ta konfiguracja daje puli obliczeniowej cztery wątki, i pozwala na najwyżej 20 równoczesnych wywołań blokujących, np. tyle, ile połączeń ma pula do bazy:
 
 <CodeBlock language="yaml" title="application.yaml">{TasksYaml}</CodeBlock>
 
-Bez konfiguracji pula obliczeniowa ma `compute.threads` równe liczbie procesorów dostępnych dla JVM, czyli w kontenerze jego limitowi CPU. Wykonawca blokujący nie ma limitu, używa wątków wirtualnych, a przy `blocking.virtual-threads: false` używa najwyżej `blocking.platform-threads` wątków platformowych (domyślnie 64). Obaj przy zatrzymaniu aplikacji czekają 30 sekund na trwające zadania. Harmonogram ma jeden wątek `coilix-scheduler-<numer>` i domyślnie czeka 10 sekund. Metoda `@Scheduled` działa na tym wątku, więc metoda, która długo liczy albo czeka, przekazuje pracę jednemu z wykonawców.
+Bez konfiguracji pula obliczeniowa ma `compute.threads` równe liczbie procesorów dostępnych dla JVM, czyli w kontenerze jego limitowi CPU. Wykonawca blokujący nie ma limitu, używa wątków wirtualnych, a przy `blocking.virtual-threads: false` używa najwyżej `blocking.platform-threads` wątków platformowych (domyślnie 64). Obaj przy zatrzymaniu aplikacji czekają 30 sekund na trwające zadania.
 
 Trzymaj mniej więcej jeden wątek obliczeniowy na procesor. Więcej równocześnie liczących wątków niż procesorów sprawia tylko, że system przełącza się między nimi.
 
 ## Co się dzieje przy zatrzymaniu aplikacji
 
-Metody `@Scheduled` zatrzymują się najpierw, w fazie zamykania `Producers` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst). Wykonawca i harmonogram są zamykane jak inne beany przy zamykaniu kontekstu aplikacji, po beanach, które z nich korzystają. Harmonogram porzuca zadania, które jeszcze czekają na swój czas. Potem każdy z nich czeka do `shutdown-timeout` na trwające zadania, przerywa te, które nadal działają, i zapisuje w logu ostrzeżenie z liczbą niedokończonych zadań.
+Metody `@Scheduled` zatrzymują się najpierw: ich fibery są anulowane w fazie zamykania `Producers` opisanej w [cyklu życia beana](bean-lifecycle.mdx#reagowanie-na-cały-kontekst). Wykonawcy są zamykani jak inne beany przy zamykaniu kontekstu aplikacji, po beanach, które z nich korzystają. Każdy z nich czeka do `shutdown-timeout` na trwające zadania, przerywa te, które nadal działają, i zapisuje w logu ostrzeżenie z liczbą niedokończonych zadań.
 
 ## Własny wykonawca
 

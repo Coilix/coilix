@@ -23,7 +23,7 @@ Every other exception is a failure the application survives. A task, a scheduled
 
 ## What happens after a fatal error
 
-A fatal error thrown in a task of the `TaskExecutor`, in a task of the `TaskScheduler` (including `@Scheduled` methods) or in an asynchronous event listener goes to the `FatalErrorHandler` bean. In an application started as a `CoilixIOApp`, the handler also receives fatal errors of every other thread. By default it:
+A fatal error thrown in a task of the `TaskExecutor` or the `BlockingExecutor` goes to the `FatalErrorHandler` bean. A fatal error in a fiber, such as a `@Scheduled` method or an asynchronous event listener, goes to the cats-effect runtime, which in a `CoilixIOApp` hands it to the same handler. In an application started as a `CoilixIOApp`, the handler also receives fatal errors of every other thread. By default it:
 
 1. logs the error,
 2. closes the context on a new thread, so `@PreDestroy` methods run and asynchronous listeners get the usual time to finish,

@@ -18,5 +18,5 @@ final class EventDrainWatcher(registrar: ScheduledMethodRegistrar) extends Conte
 
   override def onContextStarted(context: ApplicationContext): IO[Unit] = IO.unit
 
-  override def onContextClosing: IO[Unit] = IO(tasksAtDrain.set(Some(registrar.activeTasks)))
+  override def onContextClosing: IO[Unit] = registrar.activeTasks.flatMap(active => IO(tasksAtDrain.set(Some(active))))
 }

@@ -1,6 +1,7 @@
 package com.example
 package tasks
 
+import dev.coilix.context.SynchronousLifecycle
 import dev.coilix.testkit.CoilixContextOps
 import dev.coilix.testkit.CoilixTestSetup
 import java.util.concurrent.TimeUnit
@@ -44,7 +45,7 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
     }
   }
 
-  test("the scheduler keeps refreshing until the context closes") {
+  test("a stream started from code keeps refreshing until the context closes") {
     setup.use {
       val refresher = bean[StockRefresher]
       assert(LazyList.range(0, 100).exists(_ => refresher.refreshes >= 2 || { Thread.sleep(50); false }))
@@ -53,7 +54,7 @@ final class TasksTest extends munit.FunSuite with CoilixContextOps {
 
   test("a failed mail is sent again after the wait of the retry policy") {
     setup.use {
-      bean[RetryingMailer].send("ann@example.com", "Your order has shipped")
+      SynchronousLifecycle.run(context, bean[RetryingMailer].send("ann@example.com", "Your order has shipped"))
       assert(mailSender.delivered.await(5, TimeUnit.SECONDS))
     }
   }

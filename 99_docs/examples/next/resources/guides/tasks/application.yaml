@@ -5,5 +5,3 @@ coilix:
     blocking:
       max-concurrency: 20
       shutdown-timeout: 1m
-    scheduler:
-      pool-size: 2

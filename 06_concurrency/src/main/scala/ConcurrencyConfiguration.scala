@@ -9,12 +9,13 @@ import dev.coilix.config.Environment
 import dev.coilix.context.ConfigurableApplicationContext
 
 /**
- * The beans of the concurrency module: `concurrencySettings`, `blockingExecutor` for calls that wait, `taskScheduler`, `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods,
- * `mdcContextPropagator`, which carries the MDC to tasks, and `fatalErrorSettings`, `processTerminator` and `fatalErrorHandler`, which react to fatal errors in the threads of the
- * executors and the scheduler.
+ * The beans of the concurrency module: `concurrencySettings`, `blockingExecutor` for calls that wait,
+ * `scheduledMethodRegistrar`, which runs the [[dev.coilix.annotation.Scheduled]] methods on fibers, `mdcContextPropagator`,
+ * which carries the MDC to tasks, and `fatalErrorSettings`, `processTerminator` and `fatalErrorHandler`, which react to fatal
+ * errors in the threads of the executors.
  *
  * The executor for computation is `ioTaskExecutor` of the [[dev.coilix.concurrency.CatsEffectConfiguration]], on the compute
- * pool of the cats-effect runtime. The executors and the scheduler are closed with the context, after the beans that depend on
+ * pool of the cats-effect runtime. The executors are closed with the context, after the beans that depend on
  * them. `blockingExecutor` is left out when another bean provides a [[dev.coilix.concurrency.BlockingExecutor]], so its pool is
  * not even created.
  */
@@ -43,15 +44,6 @@ final class ConcurrencyConfiguration {
     log.info(s"Blocking executor ${blocking.threadNamePrefix}* waits on $threads$limit")
     ExecutorServiceBlockingExecutor(blocking, fatalErrors, propagators)
   }
-
-  /** The scheduler configured under `coilix.concurrency.scheduler`. */
-  @Bean
-  def taskScheduler(
-    settings:    ConcurrencySettings,
-    fatalErrors: FatalErrorHandler,
-    propagators: List[ContextPropagator]
-  ): ScheduledExecutorTaskScheduler =
-    ScheduledExecutorTaskScheduler(settings.scheduler, fatalErrors, propagators)
 
   /** Carries the MDC of the submitting thread to tasks, unless `coilix.concurrency.propagate-mdc` is `false`. */
   @Bean
@@ -84,8 +76,8 @@ final class ConcurrencyConfiguration {
       case FatalErrorAction.Log      => LoggingFatalErrorHandler()
     }
 
-  /** Runs the methods annotated with [[dev.coilix.annotation.Scheduled]] on the task scheduler. */
+  /** Runs the methods annotated with [[dev.coilix.annotation.Scheduled]] on fibers. */
   @Bean
-  def scheduledMethodRegistrar(scheduler: TaskScheduler, environment: Option[Environment]): ScheduledMethodRegistrar =
-    ScheduledMethodRegistrar(scheduler, environment)
+  def scheduledMethodRegistrar(environment: Option[Environment]): ScheduledMethodRegistrar =
+    ScheduledMethodRegistrar(environment)
 }

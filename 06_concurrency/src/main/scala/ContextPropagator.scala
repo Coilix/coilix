@@ -4,8 +4,8 @@ package dev.coilix.concurrency
  * Carries a piece of thread-bound context, such as the logging MDC, from the thread that hands a task over to the thread that
  * runs it.
  *
- * The executors and the scheduler of the concurrency module capture the context of every [[dev.coilix.concurrency.ContextPropagator]]
- * bean when a task is submitted or scheduled, and run the task with it. The module registers a
+ * The executors of the concurrency module capture the context of every [[dev.coilix.concurrency.ContextPropagator]] bean when a
+ * task is submitted, and run the task with it. The module registers a
  * [[dev.coilix.concurrency.MdcContextPropagator]]; an application adds its own propagators as beans:
  *
  * ```scala
