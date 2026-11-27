@@ -7,7 +7,7 @@ const translations = path.join(website, 'i18n', 'pl', 'docusaurus-plugin-content
 const sections = ['Getting started', 'Guides', 'Reference', 'Migration'];
 const requiredFields = ['id', 'title', 'description', 'sidebar_position'];
 const inlineLanguages = ['scala', 'yaml', 'yml', 'hocon', 'conf', 'properties'];
-const buildLine = /^(libraryDependencies|addCompilerPlugin|addSbtPlugin|scalaVersion)\b/;
+const buildLine = /^(libraryDependencies|addCompilerPlugin|addSbtPlugin|scalaVersion|Test \/ \w+)\b/;
 
 function releasedLines() {
   const file = path.join(website, 'versions.json');

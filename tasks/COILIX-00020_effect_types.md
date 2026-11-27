@@ -156,7 +156,7 @@ Silnik działa natywnie w `IO`: backoff to `IO.sleep`, zatrzymanie to anulowanie
    - 5b część 2 (zrobione, ADR 0033): `@PostConstruct` i `@PreDestroy` zwracające `IO[Unit]`, `IOApplicationRunner` w jednej liście z `ApplicationRunner` przez `RunnerAdapter` z `boot`.
    - 5c część 1 (zrobione, ADR 0034): `CoilixIOApp` (runtime `IOApp` jako bean `ioRuntime`, czeka na anulowanie, `exit-after-runners`) i `CoilixIOStartup`.
    - 5c część 2 (zrobione, ADR 0035): moduł `24_testkit_cats_effect` (`useIO`, `resource`, `withIORuntime`, `CoilixIOSuite`).
-6. Przewodnik w obu językach przy każdym kroku. Później: beany generyczne w `F[_]` i most MDC dla fiberów.
+6. Przewodnik w obu językach przy każdym kroku. Później: beany generyczne w `F[_]` (wycofane przez COILIX-00032, ADR 0043) i most MDC dla fiberów (zrobiony, ADR 0054).
 
 ## Kryteria akceptacji
 

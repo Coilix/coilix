@@ -252,6 +252,7 @@ lazy val logging = slf4sModule("logging", "28_logging", "dev.coilix.logging")
     libraryDependencies ++= Dependencies.loggingBridges,
     libraryDependencies += Dependencies.munitCatsEffect % Test,
     Test / fork                                        := true,
+    Test / javaOptions += "-Dcats.effect.trackFiberContext=true",
     Test / parallelExecution                           := false
   )
 
@@ -290,6 +291,7 @@ lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
     Test / parallelExecution                           := false,
     run / fork                                         := true,
     run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
+    Test / javaOptions += "-Dcats.effect.trackFiberContext=true",
     run / outputStrategy                               := Some(StdoutOutput)
   )
 
@@ -317,6 +319,7 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
     run / outputStrategy                               := Some(StdoutOutput),
     Test / fork                                        := true,
     Test / javaOptions += s"-Dcoilix.docs.resources=${baseDirectory.value / "examples" / "next" / "resources"}",
+    Test / javaOptions += "-Dcats.effect.trackFiberContext=true",
     Compile / doc / tastyFiles                         := Def.uncached(
       Seq(
         (common / Compile / tastyFiles).value,
