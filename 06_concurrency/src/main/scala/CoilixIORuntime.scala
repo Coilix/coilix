@@ -13,12 +13,16 @@ import java.util.concurrent.atomic.AtomicBoolean
  * its runtime down by itself after a fatal error in a fiber; such a shutdown, which the context did not ask for, goes to
  * `fatalErrors` as an [[dev.coilix.concurrency.IORuntimeStoppedException]].
  *
+ * Its flags are atomics, because it runs on the thread that closes the context and on the threads of the runtime it owns,
+ * also after that runtime has stopped running fibers.
+ *
  * @param threads
  *   the number of compute threads
  * @param fatalErrors
  *   receives a shutdown of the runtime that the context did not ask for
  */
 @Slf4s
+@SuppressWarnings(Array("dev.coilix.warts.ThreadPrimitives"))
 final class CoilixIORuntime(threads: Int, fatalErrors: FatalErrorHandler) {
 
   private val closing = AtomicBoolean(false)

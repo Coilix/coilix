@@ -123,6 +123,7 @@ Konfiguracja w `.scalafix.conf` w korzeniu repo. CI dostaje krok `Check scalafix
 1. Ten szkic.
 2. Moduł `tools/warts`, wart `ConsoleOutput` w miejsce `ForbiddenCalls`, włączenie `Wart.AsInstanceOf` i porządek z trzema wystąpieniami. ADR. Zrobione (ADR 0038). Wystąpień `asInstanceOf` było 11: tablica z refleksji przeszła na dopasowanie wzorca, pozostałe są w małych metodach z `@SuppressWarnings` i uzasadnieniem w Scaladocu. Pomiar `clean Test/compile`: 17–20 s przed, 18–20 s po.
 3. `ClassParameterInApi` z przeglądem 129 wystąpień `Class[...]` i poprawkami publicznego API (zmiana niezgodna w `0.x`, wpis w changelogu, jeśli dotyczy wydanego API). Zrobione (ADR 0038). W `src/main` jest 199 wystąpień (168 `Class[?]`, 19 `Class[? <: Annotation]`, 12 `Class[T]` w typach zwracanych i polach). Jedyne naruszenie to publiczny konstruktor `ConfigPath(path, componentType)`, teraz prywatny.
+   Z COILIX-00031 (krok 8) doszedł wart `ThreadPrimitives` (`synchronized`, `wait`/`notify`, `Atomic*`, `Thread.sleep`) w kodzie głównym modułów runtime'u.
 4. `tools/scalafix-rules` i `tools/scalafix-tests`, reguły `NoPlainComments`, `OneTypePerFile`, `NoSpringNames`, krok CI i ruleset.
 5. `FullyQualifiedImports` z SemanticDB i raport `ExtractLongBranches`.
 6. `MissingScaladoc`.
