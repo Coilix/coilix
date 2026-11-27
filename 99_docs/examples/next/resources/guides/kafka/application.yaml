@@ -1,0 +1,23 @@
+coilix:
+  kafka:
+    clients:
+      default:
+        bootstrap-servers: kafka-1:9092,kafka-2:9092
+        consumer:
+          max-poll-records: 200
+        commit:
+          max-batch: 1000
+          max-interval: 2s
+        admin:
+          replication-factor: 3
+          min-in-sync-replicas: 2
+      telemetry:
+        bootstrap-servers: telemetry.example.com:9093
+        client-id: shop-telemetry
+        auth:
+          security-protocol: sasl-ssl
+          sasl-mechanism: SCRAM-SHA-512
+          sasl-jaas-config: ${?TELEMETRY_KAFKA_JAAS}
+        producer:
+          acks: all
+          linger: 20ms

@@ -11,6 +11,12 @@ object Dependencies {
   val munitCatsEffect: ModuleID = "org.typelevel"  %% "munit-cats-effect" % "2.2.1"
   val fs2Core:         ModuleID = "co.fs2"         %% "fs2-core"          % "3.16.0"
 
+  /** The Kafka client on fs2 and cats-effect, for the kafka module. */
+  val fs2Kafka: ModuleID = "com.github.fd4s" %% "fs2-kafka" % "3.9.1"
+
+  /** A Kafka broker inside the JVM of a test, in the Kafka version of fs2-kafka. */
+  val embeddedKafka: ModuleID = "io.github.embeddedkafka" %% "embedded-kafka" % "3.9.1"
+
   /**
    * Bridges that send java.util.logging, the Log4j 2 API and Commons Logging to SLF4J, so libraries that use them log through
    * the logging module.

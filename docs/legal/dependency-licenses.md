@@ -23,6 +23,11 @@
 | `org.scodec:scodec-bits_3` (przez fs2-core) | 1.2.5 | BSD-3-Clause | `concurrency` | tak |
 | `org.slf4j:jul-to-slf4j`, `jcl-over-slf4j` | 2.0.20 | MIT, Apache-2.0 | `logging` | tak |
 | `org.apache.logging.log4j:log4j-to-slf4j`, `log4j-api` | 2.26.1 | Apache-2.0 | `logging` | tak |
+| `com.github.fd4s:fs2-kafka_3` | 3.9.1 | Apache-2.0 | `kafka` | tak |
+| `org.apache.kafka:kafka-clients` (przez fs2-kafka) | 3.9.1 | Apache-2.0 | `kafka` | tak |
+| `com.github.luben:zstd-jni` (przez kafka-clients) | 1.5.6-4 | BSD-2-Clause | `kafka` | tak |
+| `org.lz4:lz4-java` (przez kafka-clients) | 1.8.0 | Apache-2.0 | `kafka` | tak |
+| `org.xerial.snappy:snappy-java` (przez kafka-clients) | 1.1.10.5 | Apache-2.0 | `kafka` | tak |
 
 `sbt dependencyLicenseInfo` pokazuje tylko pierwszą licencję z POM-a (dla javassist MPL 1.1, dla reflections WTFPL). Pełne listy z POM-ów potwierdzają, że obie biblioteki dają też Apache-2.0.
 
@@ -45,6 +50,8 @@ Nie są dystrybuowane z naszymi artefaktami, więc nie nakładają obowiązków 
 | `org.scalameta:munit` | Apache-2.0 |
 | `org.slf4j:slf4j-simple` (testy) | MIT |
 | `org.apache.logging.log4j:log4j-slf4j2-impl`, `log4j-core`, `log4j-api` (testy `concurrency`, bo `slf4j-simple` ma MDC, które niczego nie przechowuje) | Apache-2.0 |
+| `io.github.embeddedkafka:embedded-kafka_3` (testy `kafka` i `demo`, broker Kafki w JVM testu) | MIT |
+| `org.apache.kafka:kafka_2.13`, `org.apache.zookeeper:zookeeper` (przez embedded-kafka) | Apache-2.0 |
 | `org.wartremover:wartremover` (moduł narzędziowy `tools/warts`, niepublikowany) | Apache-2.0 |
 | sbt, sbt-wartremover, sbt-scalafmt, sbt-ide-settings, sbt-scoverage, sbt-java-formatter, google-java-format | Apache-2.0 |
 

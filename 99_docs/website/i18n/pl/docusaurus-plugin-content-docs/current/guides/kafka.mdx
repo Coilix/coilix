@@ -1,0 +1,69 @@
+---
+id: kafka
+title: Kafka
+description: Publikuj do kilku klastrów Kafki i czytaj z nich przez nazwanych klientów, tematy z typami, zatwierdzanie paczkami i klienta administracyjnego.
+sidebar_position: 15
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import KafkaYaml from '!!raw-loader!@examples/resources/guides/kafka/application.yaml';
+import ShopTopics from '!!raw-loader!@examples/scala/kafka/ShopTopics.scala';
+import OrderInvoicing from '!!raw-loader!@examples/scala/kafka/OrderInvoicing.scala';
+import TelemetryKafka from '!!raw-loader!@examples/scala/kafka/TelemetryKafka.scala';
+import PlantMonitor from '!!raw-loader!@examples/scala/kafka/PlantMonitor.scala';
+
+Ta strona pokazuje, jak aplikacja Coilix pracuje z Kafką. Moduł `coilix-kafka` daje jednego klienta na klaster, każdy z producentem, konsumentami i klientem administracyjnym, wszystko na fs2-kafka i `IO`. Aplikacja, która rozmawia z kilkoma klastrami, konfiguruje kilku klientów i wybiera ich po nazwie.
+
+## Dodaj moduł
+
+Dodaj `coilix-kafka` do zależności:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-kafka" % "<version>"
+```
+
+Moduł dodaje bean `kafkaClients`. Wyłącza go `coilix.modules.kafka.enabled = false`.
+
+## Skonfiguruj klientów
+
+Każdy wpis pod `coilix.kafka.clients` to jeden klient, nazwany swoim kluczem. Wymagane jest tylko `bootstrap-servers`:
+
+<CodeBlock language="yaml" title="application.yaml">{KafkaYaml}</CodeBlock>
+
+Klient ma własne dane logowania (`auth`, z hasłami i konfiguracją JAAS czytanymi jako sekrety), ustawienia konsumentów i producenta, paczki zatwierdzeń i ustawienia tematów, które tworzy jego klient administracyjny. Właściwości Kafki bez własnego ustawienia trafiają pod `consumer.properties`, `producer.properties` albo `admin.properties` z nazwami z Kafki. Bez `coilix.kafka` aplikacja nie ma klientów.
+
+## Zadeklaruj tematy
+
+`KafkaTopic` ma nazwę, kodeki kluczy i wartości, klienta swojego klastra (`default`, chyba że wskaże innego) i ustawienia, z którymi powstaje:
+
+<CodeBlock language="scala" title="ShopTopics.scala">{ShopTopics}</CodeBlock>
+
+Kodeki dla `String`, `Array[Byte]`, `Int`, `Long` i `UUID` są gotowe. Inny typ dostaje kodek przez `imap` gotowego, np. `TopicCodec[String].imap(OrderId(_))(_.value)`. Rekord, którego nie da się zdekodować, kończy czytający go strumień błędem `RecordDecodingException`.
+
+## Publikuj i czytaj
+
+`KafkaClients.forTopic` znajduje klienta tematu. `publish` i `publishAll` czekają, aż brokery potwierdzą rekordy, a `publishing` to `Pipe` dla strumieni:
+
+<CodeBlock language="scala" title="OrderInvoicing.scala">{OrderInvoicing}</CodeBlock>
+
+`subscribe` czyta temat jako członek grupy konsumentów, która dzieli partycje między repliki aplikacji. `assign` czyta wybrane partycje bez równoważenia grupy, a `consumer` otwiera konsumenta fs2-kafka do wszystkiego innego. Nic nie jest zatwierdzane samo: offsety przetworzonych rekordów idą przez `commits`, który zatwierdza je paczkami po `commit.max-batch` albo co `commit.max-interval`, więc każdy rekord jest przetworzony co najmniej raz.
+
+Zatwierdzanie działa, dopóki strumień czyta. Taki strumień kończ za `commits`, a nie przed nim, bo zakończenie czytania zamyka konsumenta, gdy offsety jeszcze czekają na swoją paczkę.
+
+## Kilka klastrów
+
+Komponent, który pracuje z jednym klastrem, może wstrzyknąć jego klienta. Zadeklaruj bean nazwany jak klient, a `@Qualifier` go znajdzie:
+
+<CodeBlock language="scala" title="TelemetryKafka.scala">{TelemetryKafka}</CodeBlock>
+
+<CodeBlock language="scala" title="PlantMonitor.scala">{PlantMonitor}</CodeBlock>
+
+`KafkaClients.client` rzuca `NoSuchKafkaClientException` z nazwami skonfigurowanych klientów, gdy klienta brakuje, a `find` zwraca `Option` dla kodu, który działa bez Kafki.
+
+## Klient administracyjny
+
+Każdy klient ma klienta administracyjnego, `client.admin`. `createTopics` tworzy tematy, których jeszcze nie ma, z ich `TopicSettings`, współczynnikiem replikacji i `min.insync.replicas` klienta. `partitionsOf`, `earliestOffsets`, `latestOffsets` i `committedOffsets` czytają stan tematów i grup, `alterOffsets` przesuwa offsety grupy bez członków, a `deleteGroups` usuwa stare grupy. Brakujący temat nie ma partycji, a brakująca grupa offsetów. Każda operacja czeka najwyżej `admin.timeout`, a operacja wolniejsza niż `admin.warn-if-slower-than` trafia do logu jako ostrzeżenie.
+
+## Zamykanie
+
+Producenci, konsumenci i klienci administracyjni zamykają się z kontekstem. Producent czeka `producer.close-timeout` (5 sekund) na rekordy w drodze, więc brak brokera nie wstrzymuje zamykania aplikacji, a konsument czeka `consumer.close-timeout` (10 sekund) na swoje zatwierdzenia.

@@ -1,0 +1,69 @@
+---
+id: kafka
+title: Kafka
+description: Publish to and read from several Kafka clusters with named clients, typed topics, batched commits and an admin client.
+sidebar_position: 15
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import KafkaYaml from '!!raw-loader!@examples/resources/guides/kafka/application.yaml';
+import ShopTopics from '!!raw-loader!@examples/scala/kafka/ShopTopics.scala';
+import OrderInvoicing from '!!raw-loader!@examples/scala/kafka/OrderInvoicing.scala';
+import TelemetryKafka from '!!raw-loader!@examples/scala/kafka/TelemetryKafka.scala';
+import PlantMonitor from '!!raw-loader!@examples/scala/kafka/PlantMonitor.scala';
+
+This page shows how a Coilix application works with Kafka. The `coilix-kafka` module gives one client per cluster, each with a producer, consumers and an admin client, all on fs2-kafka and `IO`. An application that talks to several clusters configures several clients and picks them by name.
+
+## Add the module
+
+Add `coilix-kafka` to the dependencies:
+
+```scala
+libraryDependencies += "dev.coilix" %% "coilix-kafka" % "<version>"
+```
+
+The module adds the `kafkaClients` bean. It can be turned off with `coilix.modules.kafka.enabled = false`.
+
+## Configure the clients
+
+Each entry under `coilix.kafka.clients` is one client, named by its key. Only `bootstrap-servers` is required:
+
+<CodeBlock language="yaml" title="application.yaml">{KafkaYaml}</CodeBlock>
+
+A client has its own credentials (`auth`, with passwords and the JAAS configuration read as secrets), consumer and producer settings, the batches of commits and the settings of the topics its admin client creates. Kafka properties without a setting of their own go under `consumer.properties`, `producer.properties` or `admin.properties` with their Kafka names. Without `coilix.kafka` the application has no clients.
+
+## Declare the topics
+
+A `KafkaTopic` has a name, the codecs of its keys and values, the client of its cluster (`default` unless it names another) and the settings it is created with:
+
+<CodeBlock language="scala" title="ShopTopics.scala">{ShopTopics}</CodeBlock>
+
+Codecs for `String`, `Array[Byte]`, `Int`, `Long` and `UUID` are given. Another type maps a given codec with `imap`, for example `TopicCodec[String].imap(OrderId(_))(_.value)`. A record that cannot be decoded fails the stream that reads it with `RecordDecodingException`.
+
+## Publish and read
+
+`KafkaClients.forTopic` finds the client of a topic. `publish` and `publishAll` wait until the brokers confirm the records, and `publishing` is a pipe for streams:
+
+<CodeBlock language="scala" title="OrderInvoicing.scala">{OrderInvoicing}</CodeBlock>
+
+`subscribe` reads a topic as a member of a consumer group, which shares the partitions among the replicas of the application. `assign` reads chosen partitions without the balancing of the group, and `consumer` opens a fs2-kafka consumer for anything else. Nothing is committed by itself: the offsets of processed records go through `commits`, which commits them in batches of `commit.max-batch` or every `commit.max-interval`, so every record is processed at least once.
+
+The commits run while the stream reads. End such a stream after `commits`, not before it, because ending the reading closes the consumer while offsets still wait for their batch.
+
+## Several clusters
+
+A component that works with one cluster can inject its client. Declare a bean named like the client, and `@Qualifier` finds it:
+
+<CodeBlock language="scala" title="TelemetryKafka.scala">{TelemetryKafka}</CodeBlock>
+
+<CodeBlock language="scala" title="PlantMonitor.scala">{PlantMonitor}</CodeBlock>
+
+`KafkaClients.client` throws `NoSuchKafkaClientException` with the configured names when a client is missing, and `find` returns an `Option` for code that works without Kafka.
+
+## Admin client
+
+Every client has an admin client, `client.admin`. `createTopics` creates the topics that do not exist yet with their `TopicSettings`, the replication factor and `min.insync.replicas` of the client. `partitionsOf`, `earliestOffsets`, `latestOffsets` and `committedOffsets` read the state of topics and groups, `alterOffsets` moves the offsets of a group without members and `deleteGroups` removes old groups. A missing topic gives no partitions and a missing group no offsets. Each operation waits at most `admin.timeout`, and an operation slower than `admin.warn-if-slower-than` is logged as a warning.
+
+## Closing
+
+The producers, consumers and admin clients close with the context. A producer waits `producer.close-timeout` (5 seconds) for records still in flight, so a missing broker does not hold up closing the application, and a consumer waits `consumer.close-timeout` (10 seconds) for its commits.

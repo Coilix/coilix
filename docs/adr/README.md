@@ -63,6 +63,7 @@ Decyzje 0002–0007 zapadły przed wprowadzeniem ADR i zostały zapisane wstecz 
 | [0056](0056-scheduled-on-fibers.md) | `@Scheduled` na fiberach, bez `TaskScheduler` | proponowana |
 | [0057](0057-async-in-io.md) | `@Async` w `IO` | proponowana |
 | [0058](0058-diagnostics-in-io.md) | Diagnostyka w `IO` | proponowana |
+| [0059](0059-kafka-module.md) | Moduł Kafki z nazwanymi klientami | proponowana |
 
 ## Nowa decyzja
 
