@@ -63,21 +63,6 @@ final class MdcPropagationTest extends FunSuite {
     }
   }
 
-  test("a scheduled task runs with the MDC of the thread that scheduled it") {
-    val scheduler = ScheduledExecutorTaskScheduler(SchedulerSettings(), propagators = mdc)
-    try {
-      val seen = AtomicReference[String]()
-      val done = CountDownLatch(1)
-      MDC.put("requestId", "R-5")
-      val _    = scheduler.schedule(10.millis) { seen.set(MDC.get("requestId")); done.countDown() }
-      MDC.clear()
-      assert(done.await(5, TimeUnit.SECONDS))
-      assertEquals(seen.get, "R-5")
-    } finally {
-      scheduler.close()
-    }
-  }
-
   test("the context restores every propagator, the first one outermost") {
     val order    = AtomicReference(List.empty[String])
     val snapshot = ContextPropagator.captureAll(List(recording("outer", order), recording("inner", order)))

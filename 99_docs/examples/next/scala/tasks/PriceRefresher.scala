@@ -1,6 +1,7 @@
 package com.example
 package tasks
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Scheduled
 import java.util.concurrent.atomic.AtomicInteger
@@ -12,7 +13,5 @@ final class PriceRefresher {
   def refreshes: Int = counter.get
 
   @Scheduled(fixedDelay = "${shop.price-refresh:50ms}", initialDelay = "10ms")
-  private def refresh(): Unit = {
-    val _ = counter.incrementAndGet()
-  }
+  private def refresh(): IO[Unit] = IO(counter.incrementAndGet()).void
 }

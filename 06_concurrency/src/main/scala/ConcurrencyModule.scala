@@ -5,8 +5,8 @@ import dev.coilix.context.DefinitionProcessor
 import dev.coilix.context.EffectInterpreter
 
 /**
- * Adds the cats-effect runtime and the [[dev.coilix.concurrency.TaskExecutor]] and [[dev.coilix.concurrency.TaskScheduler]]
- * beans to every application, runs [[dev.coilix.annotation.Scheduled]] methods and creates beans with
+ * Adds the cats-effect runtime and the [[dev.coilix.concurrency.TaskExecutor]] and [[dev.coilix.concurrency.BlockingExecutor]]
+ * beans to every application, runs [[dev.coilix.annotation.Scheduled]] methods on fibers and creates beans with
  * [[dev.coilix.annotation.Async]] methods as proxies.
  *
  * `IO` is the effect of the application: a `@Bean` method may return `IO[A]` or `Resource[IO, A]`, which the

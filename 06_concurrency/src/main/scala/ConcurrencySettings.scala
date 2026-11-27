@@ -9,13 +9,10 @@ import dev.coilix.config.Environment
  *   settings of the compute pool behind the `taskExecutor` bean
  * @param blocking
  *   settings of the `blockingExecutor` bean
- * @param scheduler
- *   settings of the `taskScheduler` bean
  */
 final case class ConcurrencySettings(
-  compute:   ComputeSettings   = ComputeSettings(),
-  blocking:  BlockingSettings  = BlockingSettings(),
-  scheduler: SchedulerSettings = SchedulerSettings()
+  compute:  ComputeSettings  = ComputeSettings(),
+  blocking: BlockingSettings = BlockingSettings()
 )
 
 /** Reading of [[dev.coilix.concurrency.ConcurrencySettings]] from the configuration. */

@@ -3,6 +3,7 @@ package dev.coilix.demo
 import cats.effect.ExitCode
 import cats.effect.IO
 import cats.effect.unsafe.IORuntime
+import cats.effect.unsafe.implicits.global
 import dev.coilix.boot.CoilixIOApp
 import dev.coilix.boot.CoilixIOStartup
 import dev.coilix.boot.StartupError
@@ -103,7 +104,7 @@ final class DemoFeaturesTest extends FunSuite with CoilixContextOps {
     val probe              = DrainProbe()
     val (opening, sweeper) = workshop.addBean(probe).use((bean[WorkshopOpening], bean[ClaimSweeper]))
     assertEquals(probe.sweepingAndOpenWhileDraining, Some((false, true)))
-    assertEquals((opening.isOpen, sweeper.isSweeping), (false, false))
+    assertEquals((opening.isOpen, sweeper.isSweeping.unsafeRunSync()), (false, false))
   }
 
   test("has no telematics uplink unless it is enabled") {

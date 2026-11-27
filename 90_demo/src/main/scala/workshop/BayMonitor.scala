@@ -1,6 +1,7 @@
 package dev.coilix.demo
 package workshop
 
+import cats.effect.IO
 import dev.coilix.annotation.Component
 import dev.coilix.annotation.Scheduled
 import dev.coilix.annotation.Slf4s
@@ -9,13 +10,12 @@ import dev.coilix.cluster.ReplicaIdentity
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * Checks the workshop bays on the Coilix task scheduler, every `workshop.bay-check-interval` (one second by default).
+ * Checks the workshop bays on a fiber of its own, every `workshop.bay-check-interval` (one second by default).
  *
  * With several replicas of the demo, each replica checks its own share of the `workshop.bays` bays, chosen by the
  * [[dev.coilix.cluster.ReplicaIdentity]].
  *
- * The log line shows the scheduler thread, such as `coilix-scheduler-1`. The demo stops after its runners, so the check
- * usually runs once.
+ * The demo stops after its runners, so the check usually runs once.
  */
 @Component
 @Slf4s
@@ -29,11 +29,10 @@ final class BayMonitor(identity: ReplicaIdentity, @Value("${workshop.bays:4}") b
   def checksDone: Int = checks.get
 
   @Scheduled(fixedRate = "${workshop.bay-check-interval:1s}")
-  private def checkBays(): Unit = {
-    val check = checks.incrementAndGet()
-    log.info(
-      s"Bay check $check on thread ${Thread.currentThread.getName}, replica ${identity.self.index} of ${identity.replicaCount}: " +
-        s"bays ${myBays.mkString(", ")} are free"
+  private def checkBays(): IO[Unit] =
+    IO(checks.incrementAndGet()).flatMap(check =>
+      logF.info(
+        s"Bay check $check, replica ${identity.self.index} of ${identity.replicaCount}: bays ${myBays.mkString(", ")} are free"
+      )
     )
-  }
 }
