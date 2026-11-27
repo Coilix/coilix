@@ -25,4 +25,14 @@ object Events {
    */
   def publish[E: TypeInfo](event: E)(using publisher: EventPublisher): Unit =
     publisher.publish(event)
+
+  /**
+   * Publishes `event` like [[dev.coilix.events.EventPublisher.tryPublish]], returning a closed context as a
+   * [[dev.coilix.events.PublishError]].
+   *
+   * @throws java.lang.Exception
+   *   the exception of the first synchronous listener that fails
+   */
+  def tryPublish[E: TypeInfo](event: E)(using publisher: EventPublisher): Either[PublishError, Unit] =
+    publisher.tryPublish(event)
 }
