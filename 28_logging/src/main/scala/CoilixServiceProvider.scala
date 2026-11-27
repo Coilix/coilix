@@ -10,13 +10,14 @@ import org.slf4j.spi.SLF4JServiceProvider
 /**
  * The SLF4J 2 provider of the `logging` module, found by SLF4J through `META-INF/services/org.slf4j.spi.SLF4JServiceProvider`.
  * Its loggers are created by [[dev.coilix.logging.CoilixLogging.factory]], and initializing it bridges `java.util.logging` to
- * SLF4J.
+ * SLF4J. Its MDC, a [[dev.coilix.logging.FiberMdcAdapter]], belongs to the fiber in code that runs in `IO`, so it follows the
+ * fiber across threads and into the fibers it starts.
  */
 final class CoilixServiceProvider extends SLF4JServiceProvider {
 
   private val markers = BasicMarkerFactory()
 
-  private val context = BasicMDCAdapter()
+  private val context = FiberMdcAdapter(BasicMDCAdapter(), FiberContext.create())
 
   override def getLoggerFactory: ILoggerFactory = CoilixLogging.factory
 
