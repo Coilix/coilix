@@ -5,6 +5,7 @@ import sbtdynver.DynVer
 import sbtdynver.DynVerPlugin.autoImport.*
 import sbtdynver.GitDescribeOutput
 import scala.sys.process.Process
+import scala.sys.process.ProcessLogger
 import scala.util.Try
 
 object ReleaseGroups {
@@ -179,6 +180,7 @@ object ReleaseGroups {
   private def fail(message: String): Nothing =
     throw new MessageOnlyException(message)
 
+  /** The output of `git`, or `None` when it fails, for example when no tag matches; its error output is discarded. */
   private def git(base: File, arguments: String*): Option[String] =
-    Try(Process("git" +: arguments, base).!!.trim).toOption
+    Try(Process("git" +: arguments, base).!!(ProcessLogger(_ => (), _ => ())).trim).toOption
 }
