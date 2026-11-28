@@ -36,6 +36,7 @@ Root projektu nie ma źródeł, tylko agreguje moduły.
 | `26_processing_annotations` | `processing-annotations` | `dev.coilix.processing.annotation` | Java | adnotacja `@Processor` (ADR 0037) |
 | `27_processing` | `processing` | `dev.coilix.processing` | Scala | procesory tła z shardami, nadzorem i `ProcessorManager` na `IO` (ADR 0037, 0044) |
 | `28_logging` | `logging` | `dev.coilix.logging` | Scala | backend SLF4J 2: poziomy per pakiet z `coilix.logging`, `LogLevels` w runtime, format i mosty JUL, Log4j 2, JCL (ADR 0046) |
+| `29_kafka` | `kafka` | `dev.coilix.kafka` | Scala | Kafka na fs2-kafka: nazwani klienci kilku klastrów, tematy z kodekami, zatwierdzanie paczkami i klient administracyjny (ADR 0059) |
 | `90_demo` | `demo` | `dev.coilix.demo` | Scala | aplikacja demo |
 | `99_docs` | `docs` | `com.example` | Scala, Docusaurus | przykłady do przewodników, wspólna dokumentacja API i strona `docs.coilix.dev` |
 
@@ -43,7 +44,7 @@ Plugin IntelliJ dla frameworka (`@Slf4s` w edytorze) jest w osobnym repozytorium
 
 `99_docs` nie jest publikowany. Kod Scali leży w `examples/next/scala` (a nie w `src/main/scala`) i jest w pakiecie `com.example`, bo pokazuje kod aplikacji użytkownika. Strona Docusaurus jest w `99_docs/website/` i podlega zasadom z `docs/process/documentation.md`.
 
-Moduły `data`, `web`, `security`, `processing` i `logging` są opcjonalne: rdzeń (`01`–`16`) nie zależy od nich ani od ich klas, moduły funkcji nie zależą od siebie nawzajem (połączenie idzie do modułu integracyjnego), a moduł funkcji podłącza się przez `CoilixModule` w `META-INF/services` i wyłącza kluczem `coilix.modules.<nazwa>.enabled = false`. Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji. Pilnuje tego `checkModuleLayers` przy `sbt testFull`, szczegóły w `docs/architecture/modularity.md`.
+Moduły `data`, `web`, `security`, `processing`, `logging` i `kafka` są opcjonalne: rdzeń (`01`–`16`) nie zależy od nich ani od ich klas, moduły funkcji nie zależą od siebie nawzajem (połączenie idzie do modułu integracyjnego), a moduł funkcji podłącza się przez `CoilixModule` w `META-INF/services` i wyłącza kluczem `coilix.modules.<nazwa>.enabled = false`. Ciężkie biblioteki zewnętrzne (serwer HTTP, JDBC, kryptografia) tylko w modułach funkcji. Pilnuje tego `checkModuleLayers` przy `sbt testFull`, szczegóły w `docs/architecture/modularity.md`.
 
 Nowy moduł dodaje się w `build.sbt` przez `scalaModule`, `slf4sModule` (z loggerem `@Slf4s`) albo `javaModule`. Artefakt dostaje nazwę `coilix-<projekt sbt>`, a każdy moduł potrzebuje `description` (trafia do POM-a). Moduł, którego nie publikujemy (`demo` i puste moduły funkcji do czasu pierwszej implementacji), dostaje `.settings(unpublished)`, czyli `publish / skip := true` bez bazy MiMa.
 Moduły używają `idePackagePrefix`, więc pliki leżą bezpośrednio w `src/main/scala`, bez katalogów pakietu.
@@ -56,7 +57,7 @@ Skrypt `tools/sbt-lite.sh` uruchamia sbt z krótkim podsumowaniem zamiast pełne
 
 | Katalog | Projekt sbt | Pakiet | Zawartość |
 |---|---|---|---|
-| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`, `ClassParameterInApi`), podpięte do każdego modułu Scali, i `ThreadPrimitives` dla kodu głównego modułów runtime'u (`concurrency`, `events`, `diagnostics`, `processing`) |
+| `tools/warts` | `warts` | `dev.coilix.warts` | własne warty wartremovera dla zasad kodu (`ConsoleOutput`, `ClassParameterInApi`), podpięte do każdego modułu Scali, i `ThreadPrimitives` dla kodu głównego modułów runtime'u (`concurrency`, `events`, `diagnostics`, `processing`, `kafka`) |
 
 - Zasada z tego pliku, którą da się sprawdzić automatycznie, dostaje wart albo regułę (COILIX-00028).
 - Nowy wart dopisuje się do `coilixWarts` w `build.sbt` (wart tylko dla modułów runtime'u do `runtimeWarts`) i dostaje testy munit z `WartTestTraverser`: przypadek zgłaszany, niezgłaszany i wyłączony przez `@SuppressWarnings`.

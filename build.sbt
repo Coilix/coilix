@@ -33,7 +33,7 @@ ThisBuild / developers           := List(
   )
 )
 
-ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "processing", "logging"))
+ReleaseGroups.buildSettings(Seq(ReleaseGroups.core, "data", "web", "security", "processing", "logging", "kafka"))
 
 lazy val forbiddenWarts: Seq[wartremover.Wart] = Seq(
   Wart.Var,
@@ -269,6 +269,19 @@ lazy val logging = slf4sModule("logging", "28_logging", "dev.coilix.logging")
     Test / parallelExecution                           := false
   )
 
+lazy val kafka = slf4sModule("kafka", "29_kafka", "dev.coilix.kafka")
+  .settings(Compile / compile / wartremoverErrors ++= runtimeWarts)
+  .dependsOn(context, testkit % Test)
+  .settings(featureGroup("kafka"))
+  .settings(
+    description              :=
+      "Kafka for Coilix on fs2-kafka: named clients for several clusters, typed topics, publishing, consuming with batched commits and an admin client",
+    libraryDependencies ++= Seq(Dependencies.fs2Kafka, Dependencies.fs2Core),
+    libraryDependencies ++= Seq(Dependencies.munitCatsEffect % Test, Dependencies.embeddedKafka % Test),
+    Test / fork              := true,
+    Test / parallelExecution := false
+  )
+
 lazy val security = slf4sModule("security", "22_security", "dev.coilix.security")
   .dependsOn(context)
   .settings(featureGroup("security"))
@@ -294,18 +307,18 @@ lazy val testkit = slf4sModule("testkit", "16_testkit", "dev.coilix.testkit")
   )
 
 lazy val demo = slf4sModule("demo", "90_demo", "dev.coilix.demo")
-  .dependsOn(boot, cluster, processing, logging, testkit % Test)
+  .dependsOn(boot, cluster, processing, logging, kafka, testkit % Test)
   .settings(unpublished)
   .settings(
-    coverageEnabled                                    := false,
+    coverageEnabled          := false,
     libraryDependencies ~= (_.filterNot(_.name == "slf4j-simple")),
-    libraryDependencies += Dependencies.munitCatsEffect % Test,
-    Test / fork                                        := true,
-    Test / parallelExecution                           := false,
-    run / fork                                         := true,
+    libraryDependencies ++= Seq(Dependencies.munitCatsEffect % Test, Dependencies.embeddedKafka % Test),
+    Test / fork              := true,
+    Test / parallelExecution := false,
+    run / fork               := true,
     run / javaOptions += "-XX:+ExitOnOutOfMemoryError",
     Test / javaOptions += "-Dcats.effect.trackFiberContext=true",
-    run / outputStrategy                               := Some(StdoutOutput)
+    run / outputStrategy     := Some(StdoutOutput)
   )
 
 lazy val apiSite =
@@ -318,7 +331,7 @@ def javadocMapping(line: String): String =
   s"-external-mappings:dev[.]coilix[.]annotation.*::javadoc::https://docs.coilix.dev/api/$line/javadoc/"
 
 lazy val docs = slf4sModule("docs", "99_docs", "com.example")
-  .dependsOn(boot, cluster, processing, logging, testkit % Test)
+  .dependsOn(boot, cluster, processing, logging, kafka, testkit % Test)
   .settings(unpublished)
   .settings(
     description                                        := "Compiled examples and the combined API documentation of the Coilix documentation site",
@@ -346,7 +359,8 @@ lazy val docs = slf4sModule("docs", "99_docs", "com.example")
         (boot / Compile / tastyFiles).value,
         (testkit / Compile / tastyFiles).value,
         (processing / Compile / tastyFiles).value,
-        (logging / Compile / tastyFiles).value
+        (logging / Compile / tastyFiles).value,
+        (kafka / Compile / tastyFiles).value
       ).flatten
     ),
     Compile / doc / dependencyClasspath ++= (slf4sPlugin / Compile / dependencyClasspath).value,
@@ -378,6 +392,7 @@ lazy val modules: Seq[ProjectReference] =
     processingAnnotations,
     processing,
     logging,
+    kafka,
     boot,
     testkit,
     demo,
