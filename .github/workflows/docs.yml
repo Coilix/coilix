@@ -119,9 +119,11 @@ jobs:
           else
             git worktree add --orphan -b gh-pages gh-pages
           fi
-      - name: Replace the guides and keep older API documentation
+      # intellij/ is the custom plugin repository of the Coilix Framework IntelliJ plugin, published from the
+      # coilix-intellij repo (its ADR-0002), so it survives every docs publish.
+      - name: Replace the guides and keep older API documentation and the IntelliJ plugin repository
         run: |
-          find gh-pages -mindepth 1 -maxdepth 1 ! -name .git ! -name api -exec rm -rf {} +
+          find gh-pages -mindepth 1 -maxdepth 1 ! -name .git ! -name api ! -name intellij -exec rm -rf {} +
           cp -R 99_docs/website/build/. gh-pages/
           echo "docs.coilix.dev" > gh-pages/CNAME
           touch gh-pages/.nojekyll
