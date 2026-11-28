@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugins>
+  <plugin id="dev.coilix.intellij" url="https://docs.coilix.dev/intellij/coilix-intellij-0.1.0.zip" version="0.1.0">
+    <idea-version since-build="263"/>
+    <name>Coilix Framework</name>
+    <vendor url="https://coilix.dev">Coilix</vendor>
+    <description>IDE support for the Coilix framework for Scala 3.</description>
+  </plugin>
+</plugins>
